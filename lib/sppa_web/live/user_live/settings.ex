@@ -15,7 +15,7 @@ defmodule SppaWeb.UserLive.Settings do
           <:subtitle>Manage your account email address and password settings</:subtitle>
         </.header>
       </div>
-
+      
       <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
         <.input
           field={@email_form[:email]}
@@ -23,12 +23,9 @@ defmodule SppaWeb.UserLive.Settings do
           label="Email"
           autocomplete="username"
           required
-        />
-        <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
+        /> <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
       </.form>
-
-      <div class="divider" />
-
+       <div class="divider" />
       <.form
         for={@password_form}
         id="password_form"
@@ -57,10 +54,7 @@ defmodule SppaWeb.UserLive.Settings do
           type="password"
           label="Confirm new password"
           autocomplete="new-password"
-        />
-        <.button variant="primary" phx-disable-with="Saving...">
-          Save Password
-        </.button>
+        /> <.button variant="primary" phx-disable-with="Saving...">Save Password</.button>
       </.form>
     </Layouts.app>
     """

@@ -11,7 +11,7 @@ defmodule SppaWeb.UserLive.Confirmation do
         <div class="text-center">
           <.header>Welcome {@user.email}</.header>
         </div>
-
+        
         <.form
           :if={!@user.confirmed_at}
           for={@form}
@@ -34,7 +34,7 @@ defmodule SppaWeb.UserLive.Confirmation do
             Confirm and log in only this time
           </.button>
         </.form>
-
+        
         <.form
           :if={@user.confirmed_at}
           for={@form}
@@ -46,9 +46,7 @@ defmodule SppaWeb.UserLive.Confirmation do
         >
           <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
           <%= if @current_scope do %>
-            <.button phx-disable-with="Logging in..." class="btn btn-primary w-full">
-              Log in
-            </.button>
+            <.button phx-disable-with="Logging in..." class="btn btn-primary w-full">Log in</.button>
           <% else %>
             <.button
               name={@form[:remember_me].name}
@@ -63,7 +61,7 @@ defmodule SppaWeb.UserLive.Confirmation do
             </.button>
           <% end %>
         </.form>
-
+        
         <p :if={!@user.confirmed_at} class="alert alert-outline mt-8">
           Tip: If you prefer passwords, you can enable them in the user settings.
         </p>
