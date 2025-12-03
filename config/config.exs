@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :sppa, :scopes,
+  user: [
+    default: true,
+    module: Sppa.Accounts.Scope,
+    assign_key: :current_scope,
+    access_path: [:user, :id],
+    schema_key: :user_id,
+    schema_type: :id,
+    schema_table: :users,
+    test_data_fixture: Sppa.AccountsFixtures,
+    test_setup_helper: :register_and_log_in_user
+  ]
+
 config :sppa,
   ecto_repos: [Sppa.Repo],
   generators: [timestamp_type: :utc_datetime]

@@ -1,6 +1,8 @@
 defmodule SppaWeb.Router do
   use SppaWeb, :router
 
+  import SppaWeb.UserAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,17 +10,11 @@ defmodule SppaWeb.Router do
     plug :put_root_layout, html: {SppaWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_scope_for_user
   end
 
   pipeline :api do
     plug :accepts, ["json"]
-  end
-
-  scope "/", SppaWeb do
-    pipe_through :browser
-
-    live "/", LoginLive
-    live "/login", LoginLive
   end
 
   # Other scopes may use custom stacks.
@@ -41,5 +37,35 @@ defmodule SppaWeb.Router do
       live_dashboard "/dashboard", metrics: SppaWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
+  end
+
+  ## Authentication routes
+
+  scope "/", SppaWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [{SppaWeb.UserAuth, :require_authenticated}] do
+      live "/dashboard", DashboardLive, :index
+      live "/users/settings", UserLive.Settings, :edit
+      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+    end
+
+    post "/users/update-password", UserSessionController, :update_password
+  end
+
+  scope "/", SppaWeb do
+    pipe_through [:browser]
+
+    live_session :current_user,
+      on_mount: [{SppaWeb.UserAuth, :mount_current_scope}] do
+      live "/", UserLive.Login, :new
+      live "/login", UserLive.Login, :new
+      live "/users/log-in", UserLive.Login, :new
+      live "/users/log-in/:token", UserLive.Confirmation, :new
+    end
+
+    post "/users/log-in", UserSessionController, :create
+    delete "/users/log-out", UserSessionController, :delete
   end
 end
