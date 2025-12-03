@@ -9,9 +9,9 @@ defmodule SppaWeb.UserLive.Confirmation do
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <div class="mx-auto max-w-sm">
         <div class="text-center">
-          <.header>Welcome {@user.email}</.header>
+          <.header>Selamat datang {@user.email}</.header>
         </div>
-        
+
         <.form
           :if={!@user.confirmed_at}
           for={@form}
@@ -34,7 +34,7 @@ defmodule SppaWeb.UserLive.Confirmation do
             Confirm and log in only this time
           </.button>
         </.form>
-        
+
         <.form
           :if={@user.confirmed_at}
           for={@form}
@@ -61,7 +61,7 @@ defmodule SppaWeb.UserLive.Confirmation do
             </.button>
           <% end %>
         </.form>
-        
+
         <p :if={!@user.confirmed_at} class="alert alert-outline mt-8">
           Tip: If you prefer passwords, you can enable them in the user settings.
         </p>
