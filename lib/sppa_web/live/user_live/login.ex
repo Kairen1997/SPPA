@@ -18,7 +18,7 @@ defmodule SppaWeb.UserLive.Login do
             <%!-- Logo Section --%>
             <div class="flex justify-center mb-8">
               <img
-                src={~p"/images/Logo JPKN.png"}
+                src={~p"/images/logojpkn.png"}
                 alt="JPKN Logo"
                 class="h-24 w-auto object-contain"
               />
