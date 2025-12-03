@@ -10,7 +10,7 @@ defmodule SppaWeb.UserLive.Login do
 
         <%!-- Login Form Container --%>
         <div class="relative z-10 mx-4" style="width: 600px; max-width: 90vw; min-width: 500px; flex-shrink: 0;">
-          <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700" style="box-sizing: border-box; padding: 40px; width: 100%;">
+          <div class="bg-white/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50" style="box-sizing: border-box; padding: 40px; width: 100%;">
             <%!-- Logo Section --%>
             <div class="flex justify-center mb-8">
               <img
@@ -30,8 +30,8 @@ defmodule SppaWeb.UserLive.Login do
             <%!-- Login Form --%>
             <.form for={@form} id="login-form" action={~p"/users/log-in"} method="post" phx-change="validate" class="space-y-6">
               <%!-- No K/P Field --%>
-              <div class="flex items-start gap-4">
-                <label for="user_no_kp" class="text-gray-700 dark:text-gray-300 font-medium w-28 text-sm pt-3">
+              <div class="flex items-center gap-4">
+                <label for="user_no_kp" class="text-gray-700 dark:text-gray-300 font-medium w-28 text-sm">
                   No K/P
                 </label>
                 <div class="flex-1">
@@ -39,14 +39,14 @@ defmodule SppaWeb.UserLive.Login do
                     field={@form[:no_kp]}
                     type="text"
                     placeholder="Masukkan No K/P"
-                    class="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-900"
+                    class="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-900 text-center"
                   />
                 </div>
               </div>
 
               <%!-- Password Field --%>
-              <div class="flex items-start gap-4">
-                <label for="user_password" class="text-gray-700 dark:text-gray-300 font-medium w-28 text-sm pt-3">
+              <div class="flex items-center gap-4">
+                <label for="user_password" class="text-gray-700 dark:text-gray-300 font-medium w-28 text-sm">
                   Kata Laluan
                 </label>
                 <div class="flex-1">
@@ -54,7 +54,7 @@ defmodule SppaWeb.UserLive.Login do
                     field={@form[:password]}
                     type="password"
                     placeholder="Masukkan Kata Laluan"
-                    class="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-900"
+                    class="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-900 text-center"
                   />
                 </div>
               </div>
