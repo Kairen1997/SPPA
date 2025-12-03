@@ -175,9 +175,11 @@ defmodule SppaWeb.DashboardLive do
               <button class="hover:bg-blue-700 p-2 rounded">
                 <.icon name="hero-user-circle" class="w-6 h-6" />
               </button>
-              <a href={~p"/users/log-out"} method="delete" class="hover:bg-blue-700 p-2 rounded">
-                <.icon name="hero-arrow-right-on-rectangle" class="w-6 h-6" />
-              </a>
+              <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
+                <button type="submit" class="hover:bg-blue-700 p-2 rounded">
+                  <.icon name="hero-arrow-right-on-rectangle" class="w-6 h-6" />
+                </button>
+              </.form>
             </div>
           </header>
 
