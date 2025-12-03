@@ -9,8 +9,8 @@ defmodule SppaWeb.UserLive.Login do
 
 
         <%!-- Login Form Container --%>
-        <div class="relative z-10 w-full max-w-2xl mx-4">
-          <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl p-10 border border-gray-200 dark:border-gray-700">
+        <div class="relative z-10 mx-4" style="width: 600px; max-width: 90vw; min-width: 500px; flex-shrink: 0;">
+          <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700" style="box-sizing: border-box; padding: 40px; width: 100%;">
             <%!-- Logo Section --%>
             <div class="flex justify-center mb-8">
               <img

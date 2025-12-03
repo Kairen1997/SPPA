@@ -11,27 +11,68 @@
 # and so on) as they will fail if something goes wrong.
 
 alias Sppa.Accounts
+alias Sppa.Accounts.User
+alias Sppa.Repo
 
-# Create default seed user
-IO.puts("Creating seed user...")
+# Helper function to create and confirm a user
+create_confirmed_user = fn no_kp, password, email, role_name ->
+  case Accounts.get_user_by_no_kp(no_kp) do
+    nil ->
+      case Accounts.create_user(%{
+        no_kp: no_kp,
+        password: password
+      }) do
+        {:ok, user} ->
+          # Update user with email and confirm
+          updated_user =
+            user
+            |> User.email_changeset(%{email: email}, validate_unique: false)
+            |> User.confirm_changeset()
+            |> Repo.update!()
 
-case Accounts.create_user(%{
-  no_kp: "123456789012",
-  password: "password123"
-}) do
-  {:ok, user} ->
-    IO.puts("✅ User created successfully!")
-    IO.puts("   No K/P: #{user.no_kp}")
-    IO.puts("   ID: #{user.id}")
+          IO.puts("✅ #{role_name} created successfully!")
+          IO.puts("   No K/P: #{updated_user.no_kp}")
+          IO.puts("   Email: #{updated_user.email}")
+          IO.puts("   ID: #{updated_user.id}")
 
-  {:error, changeset} ->
-    errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
+        {:error, changeset} ->
+          errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
+          IO.puts("❌ Failed to create #{role_name}:")
+          IO.inspect(errors)
+      end
 
-    # Check if user already exists
-    if Accounts.get_user_by_no_kp("123456789012") do
-      IO.puts("ℹ️  User with No K/P '123456789012' already exists. Skipping...")
-    else
-      IO.puts("❌ Failed to create user:")
-      IO.inspect(errors)
-    end
+    _existing_user ->
+      IO.puts("ℹ️  #{role_name} with No K/P '#{no_kp}' already exists. Skipping...")
+  end
 end
+
+IO.puts("\n=== Creating seed users ===\n")
+
+# Create Pembangun Sistem (System Developer)
+IO.puts("Creating Pembangun Sistem...")
+create_confirmed_user.(
+  "800101010101",
+  "pembangun123456",
+  "pembangun.sistem@sppa.gov.my",
+  "Pembangun Sistem"
+)
+
+# Create Projek Manajer (Project Manager)
+IO.puts("\nCreating Projek Manajer...")
+create_confirmed_user.(
+  "800202020202",
+  "projek12345678",
+  "projek.manajer@sppa.gov.my",
+  "Projek Manajer"
+)
+
+# Create Ketua Penolong Pengarah (Deputy Director Head)
+IO.puts("\nCreating Ketua Penolong Pengarah...")
+create_confirmed_user.(
+  "800303030303",
+  "ketua123456789",
+  "ketua.penolong.pengarah@sppa.gov.my",
+  "Ketua Penolong Pengarah"
+)
+
+IO.puts("\n=== Seed users creation completed ===\n")

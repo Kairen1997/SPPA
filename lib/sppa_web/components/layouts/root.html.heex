@@ -41,7 +41,7 @@
   </head>
   <body class={[
     "min-h-screen",
-    if(assigns[:hide_root_header], do: "", else: "bg-cover bg-center bg-no-repeat bg-fixed")
+    if(assigns[:hide_root_header], do: "", else: "bg-cover bg-center bg-no-repeat bg-scroll")
   ]} style={if(assigns[:hide_root_header], do: "", else: "background-image: url(" <> ~p"/images/Menara Kinabalu.jpg" <> ")")}>
     <%= unless assigns[:hide_root_header] do %>
       <header class="w-full relative z-10 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
