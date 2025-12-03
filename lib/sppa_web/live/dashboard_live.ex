@@ -13,24 +13,30 @@ defmodule SppaWeb.DashboardLive do
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      socket = assign(socket, :hide_root_header, true)
-      socket = assign(socket, :page_title, "Papan Pemuka")
       # Sidebar starts closed on mobile, but we'll show it by default on desktop via CSS
-      socket = assign(socket, :sidebar_open, false)
+      socket =
+        socket
+        |> assign(:hide_root_header, true)
+        |> assign(:page_title, "Papan Pemuka")
+        |> assign(:sidebar_open, false)
+        |> assign(:notifications_open, false)
 
       if connected?(socket) do
         stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
         activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
 
         {:ok,
          socket
          |> assign(:stats, stats)
-         |> assign(:activities, activities)}
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
       else
         {:ok,
          socket
          |> assign(:stats, %{})
-         |> assign(:activities, [])}
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
       end
     else
       socket =
@@ -53,5 +59,15 @@ defmodule SppaWeb.DashboardLive do
   @impl true
   def handle_event("close_sidebar", _params, socket) do
     {:noreply, assign(socket, :sidebar_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_notifications", _params, socket) do
+    {:noreply, update(socket, :notifications_open, &(!&1))}
+  end
+
+  @impl true
+  def handle_event("close_notifications", _params, socket) do
+    {:noreply, assign(socket, :notifications_open, false)}
   end
 end

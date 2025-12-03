@@ -44,7 +44,7 @@ defmodule SppaWeb.Layouts do
         <div class="mx-auto max-w-2xl space-y-4">{render_slot(@inner_block)}</div>
       </main>
     <% end %>
-     <.flash_group flash={@flash} />
+    <.flash_group flash={@flash} />
     """
   end
 
@@ -73,7 +73,7 @@ defmodule SppaWeb.Layouts do
         {gettext("Attempting to reconnect")}
         <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
-      
+
       <.flash
         id="server-error"
         kind={:error}
