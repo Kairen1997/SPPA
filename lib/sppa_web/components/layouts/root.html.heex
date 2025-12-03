@@ -51,7 +51,7 @@
           <%= if @current_scope do %>
             <span class="text-sm text-gray-700 dark:text-gray-300">{@current_scope.user.email}</span>
             <.link href={~p"/users/settings"} class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">Settings</.link>
-            <.link href={~p"/users/log-out"} method="delete" class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">Log out</.link>
+            <.link href={~p"/users/log-out"} method="delete" class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">Log keluar</.link>
           <% else %>
             <Layouts.theme_toggle />
             <.link href={~p"/users/log-in"} class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">Log in</.link>
