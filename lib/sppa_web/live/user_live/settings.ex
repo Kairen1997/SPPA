@@ -9,68 +9,59 @@ defmodule SppaWeb.UserLive.Settings do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="text-center">
-        <.header>
-          Account Settings
-          <:subtitle>Manage your account password settings</:subtitle>
-        </.header>
-      </div>
+      <div class="fixed inset-0 z-40 flex items-center justify-center bg-base-300/60">
+        <div class="max-w-xl w-full mx-4 bg-base-100 shadow-2xl rounded-2xl border border-base-200 p-6 sm:p-8 space-y-6">
+          <div class="text-center">
+            <.header>
+              Account Settings
+              <:subtitle>Manage your account password settings</:subtitle>
+            </.header>
+          </div>
 
-      <.form
-        for={@password_form}
-        id="password_form"
-        action={~p"/users/update-password"}
-        method="post"
-        phx-change="validate_password"
-        phx-submit="update_password"
-        phx-trigger-action={@trigger_submit}
-      >
-        <input
-          name={@password_form[:email].name}
-          type="hidden"
-          id="hidden_user_email"
-          autocomplete="username"
-          value={@current_email}
-        />
-        <.input
-          field={@password_form[:password]}
-          type="password"
-          label="New password"
-          autocomplete="new-password"
-          required
-        />
-        <.input
-          field={@password_form[:password_confirmation]}
-          type="password"
-          label="Confirm new password"
-          autocomplete="new-password"
-        /> <.button variant="primary" phx-disable-with="Saving...">Save Password</.button>
-      </.form>
+          <div class="flex justify-start">
+            <.link navigate={~p"/dashboard"}>
+              <.button>
+                Kembali ke Dashboard
+              </.button>
+            </.link>
+          </div>
+
+          <.form
+            for={@password_form}
+            id="password_form"
+            action={~p"/users/update-password"}
+            method="post"
+            phx-change="validate_password"
+            phx-submit="update_password"
+            phx-trigger-action={@trigger_submit}
+          >
+            <.input
+              field={@password_form[:password]}
+              type="password"
+              label="Kata Laluan Baharu"
+              autocomplete="new-password"
+              required
+            />
+            <.input
+              field={@password_form[:password_confirmation]}
+              type="password"
+              label="Sahkan Kata Laluan baharu"
+              autocomplete="new-password"
+            /> <.button variant="primary" phx-disable-with="Saving...">Simpan Kata Laluan</.button>
+          </.form>
+        </div>
+      </div>
     </Layouts.app>
     """
   end
 
   @impl true
-  def mount(%{"token" => token}, _session, socket) do
-    socket =
-      case Accounts.update_user_email(socket.assigns.current_scope.user, token) do
-        {:ok, _user} ->
-          put_flash(socket, :info, "Email changed successfully.")
-
-        {:error, _} ->
-          put_flash(socket, :error, "Email change link is invalid or it has expired.")
-      end
-
-    {:ok, push_navigate(socket, to: ~p"/users/settings")}
-  end
-
   def mount(_params, _session, socket) do
     user = socket.assigns.current_scope.user
     password_changeset = Accounts.change_user_password(user, %{}, hash_password: false)
 
     socket =
       socket
-      |> assign(:current_email, user.email)
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:trigger_submit, false)
 
