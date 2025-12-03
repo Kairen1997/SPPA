@@ -469,4 +469,150 @@ defmodule SppaWeb.CoreComponents do
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end
+
+  @doc """
+  Renders the main application sidebar used on the dashboard.
+
+  Accepts whether the sidebar is open plus the paths needed for links and logo.
+  """
+  attr :sidebar_open, :boolean, default: false
+  attr :dashboard_path, :string, required: true
+  attr :logo_src, :string, required: true
+
+  def dashboard_sidebar(assigns) do
+    ~H"""
+    <aside
+      class={[
+        "fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-gray-900 to-gray-800 text-white z-50 transform transition-transform duration-300 ease-in-out shadow-2xl",
+        if(@sidebar_open, do: "translate-x-0", else: "-translate-x-full")
+      ]}
+      id="sidebar"
+    >
+      <div class="h-full flex flex-col">
+        <div class="p-6 flex items-center justify-between border-b border-gray-700">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg overflow-hidden bg-white/5 border border-white/10 shadow-lg flex items-center justify-center">
+              <img
+                src={@logo_src}
+                alt="Logo JPKN"
+                class="w-full h-full object-contain"
+              />
+            </div>
+            <div class="flex flex-col">
+              <span class="text-sm text-gray-400">Jabatan Perdana Menteri</span>
+              <h2 class="text-xl font-bold leading-tight">JPKN</h2>
+            </div>
+          </div>
+          <button
+            phx-click="toggle_sidebar"
+            class="text-gray-400 hover:text-white hover:bg-gray-700 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-x-mark" class="w-5 h-5" />
+          </button>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4 px-3">
+          <.link
+            navigate={@dashboard_path}
+            phx-click="close_sidebar"
+            class={[
+              "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
+              "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md"
+            ]}
+          >
+            <.icon name="hero-squares-2x2" class="w-5 h-5" />
+            <span class="font-medium">Papan Pemuka</span>
+          </.link>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-folder" class="w-5 h-5" />
+            <span>Senarai Projek</span>
+          </a>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-clipboard-document-list" class="w-5 h-5" />
+            <span>Soal Selidik</span>
+          </a>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-document-magnifying-glass" class="w-5 h-5" />
+            <span>Analisis dan Rekabentuk</span>
+          </a>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-calendar-days" class="w-5 h-5" />
+            <span>Jadual Projek</span>
+          </a>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-code-bracket" class="w-5 h-5" />
+            <span>Pembangunan</span>
+          </a>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-arrow-path" class="w-5 h-5" />
+            <span>Pengurusan Perubahan</span>
+          </a>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-check-circle" class="w-5 h-5" />
+            <span>Ujian Penerimaan Pengguna</span>
+          </a>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-shield-check" class="w-5 h-5" />
+            <span>Ujian Keselamatan</span>
+          </a>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-server" class="w-5 h-5" />
+            <span>Penempatan</span>
+          </a>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-paper-airplane" class="w-5 h-5" />
+            <span>Penyerahan</span>
+          </a>
+          <a
+            href="#"
+            phx-click="close_sidebar"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          >
+            <.icon name="hero-chat-bubble-left-right" class="w-5 h-5" />
+            <span>Maklumbalas</span>
+          </a>
+        </nav>
+      </div>
+    </aside>
+    """
+  end
 end
