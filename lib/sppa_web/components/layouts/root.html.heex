@@ -7,9 +7,10 @@
     <.live_title default="Sppa" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
     </.live_title>
-    <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
+     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
+    
     <script>
       (() => {
         const setTheme = (theme) => {
@@ -29,6 +30,7 @@
         window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
       })();
     </script>
+    
     <style>
       * {
         scrollbar-width: none; /* Firefox */
@@ -39,26 +41,52 @@
       }
     </style>
   </head>
-  <body class={[
-    "min-h-screen",
-    if(assigns[:hide_root_header], do: "", else: "bg-cover bg-center bg-no-repeat bg-scroll")
-  ]} style={if(assigns[:hide_root_header], do: "", else: "background-image: url(" <> ~p"/images/Menara Kinabalu.jpg" <> ")")}>
+  
+  <body
+    class={[
+      "min-h-screen",
+      if(assigns[:hide_root_header], do: "", else: "bg-cover bg-center bg-no-repeat bg-scroll")
+    ]}
+    style={
+      if(assigns[:hide_root_header],
+        do: "",
+        else: "background-image: url(" <> ~p"/images/Menara Kinabalu.jpg" <> ")"
+      )
+    }
+  >
     <%= unless assigns[:hide_root_header] do %>
       <header class="w-full relative z-10 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
-
         <%!-- Right side: Navigation links, theme toggle, and auth links --%>
         <div class="flex items-center gap-4">
           <%= if @current_scope do %>
-            <span class="text-sm text-gray-700 dark:text-gray-300">{@current_scope.user.email}</span>
-            <.link href={~p"/users/settings"} class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">Settings</.link>
-            <.link href={~p"/users/log-out"} method="delete" class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">Log keluar</.link>
+            <span class="text-sm text-gray-700 dark:text-gray-300">
+              {@current_scope.user.email}
+            </span>
+            <.link
+              href={~p"/users/settings"}
+              class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+            >
+              Settings
+            </.link>
+            <.link
+              href={~p"/users/log-out"}
+              method="delete"
+              class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+            >
+              Log keluar
+            </.link>
           <% else %>
             <Layouts.theme_toggle />
-            <.link href={~p"/users/log-in"} class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">Log in</.link>
+            <.link
+              href={~p"/users/log-in"}
+              class="text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+            >
+              Log in
+            </.link>
           <% end %>
         </div>
       </header>
     <% end %>
-    {@inner_content}
+     {@inner_content}
   </body>
 </html>

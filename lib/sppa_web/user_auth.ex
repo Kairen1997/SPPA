@@ -38,7 +38,8 @@ defmodule SppaWeb.UserAuth do
     redirect_path =
       cond do
         user_return_to -> user_return_to
-        user && user.role == "pembangun sistem" -> ~p"/dashboard"
+        user && user.role in ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"] ->
+          ~p"/dashboard"
         true -> signed_in_path(conn)
       end
 
@@ -279,7 +280,10 @@ defmodule SppaWeb.UserAuth do
         else
           socket =
             socket
-            |> Phoenix.LiveView.put_flash(:error, "You do not have permission to access this page. Your role: #{user_role || "not set"}")
+            |> Phoenix.LiveView.put_flash(
+              :error,
+              "You do not have permission to access this page. Your role: #{user_role || "not set"}"
+            )
             |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
 
           {:halt, socket}
@@ -288,7 +292,10 @@ defmodule SppaWeb.UserAuth do
       true ->
         socket =
           socket
-          |> Phoenix.LiveView.put_flash(:error, "You do not have permission to access this page. Please contact administrator to set your role.")
+          |> Phoenix.LiveView.put_flash(
+            :error,
+            "You do not have permission to access this page. Please contact administrator to set your role."
+          )
           |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
 
         {:halt, socket}
@@ -308,7 +315,9 @@ defmodule SppaWeb.UserAuth do
 
   @doc "Returns the path to redirect to after log in."
   # Redirect pembangun sistem directly to dashboard
-  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %Accounts.User{role: "pembangun sistem"}}}}) do
+  def signed_in_path(%Plug.Conn{
+        assigns: %{current_scope: %Scope{user: %Accounts.User{role: "pembangun sistem"}}}
+      }) do
     ~p"/dashboard"
   end
 

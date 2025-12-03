@@ -19,10 +19,10 @@ create_confirmed_user = fn no_kp, password, email, role_name ->
   case Accounts.get_user_by_no_kp(no_kp) do
     nil ->
       case Accounts.create_user(%{
-        no_kp: no_kp,
-        password: password,
-        role: role_name
-      }) do
+             no_kp: no_kp,
+             password: password,
+             role: role_name
+           }) do
         {:ok, user} ->
           # Update user with email and confirm
           updated_user =
@@ -52,6 +52,7 @@ IO.puts("\n=== Creating seed users ===\n")
 
 # Create Pembangun Sistem (System Developer)
 IO.puts("Creating Pembangun Sistem...")
+
 create_confirmed_user.(
   "800101010101",
   "pembangun123456",
@@ -61,6 +62,7 @@ create_confirmed_user.(
 
 # Create Pengurus Projek (Project Manager)
 IO.puts("\nCreating Pengurus Projek...")
+
 create_confirmed_user.(
   "800202020202",
   "projek12345678",
@@ -70,6 +72,7 @@ create_confirmed_user.(
 
 # Create Ketua Penolong Pengarah (Deputy Director Head)
 IO.puts("\nCreating Ketua Penolong Pengarah...")
+
 create_confirmed_user.(
   "800303030303",
   "ketua123456789",

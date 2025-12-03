@@ -6,11 +6,15 @@ defmodule SppaWeb.UserLive.Login do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <div class="min-h-screen flex items-center justify-center relative overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 -my-20">
-
-
         <%!-- Login Form Container --%>
-        <div class="relative z-10 mx-4" style="width: 600px; max-width: 90vw; min-width: 500px; flex-shrink: 0;">
-          <div class="bg-white/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50" style="box-sizing: border-box; padding: 40px; width: 100%;">
+        <div
+          class="relative z-10 mx-4"
+          style="width: 600px; max-width: 90vw; min-width: 500px; flex-shrink: 0;"
+        >
+          <div
+            class="bg-white/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50"
+            style="box-sizing: border-box; padding: 40px; width: 100%;"
+          >
             <%!-- Logo Section --%>
             <div class="flex justify-center mb-8">
               <img
@@ -19,19 +23,27 @@ defmodule SppaWeb.UserLive.Login do
                 class="h-24 w-auto object-contain"
               />
             </div>
-
-            <%!-- System Title --%>
+             <%!-- System Title --%>
             <div class="text-center mb-10">
               <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 leading-relaxed">
                 Sistem Pengurusan Pembangunan Aplikasi
               </h2>
             </div>
-
-            <%!-- Login Form --%>
-            <.form for={@form} id="login-form" action={~p"/users/log-in"} method="post" phx-change="validate" class="space-y-6">
+             <%!-- Login Form --%>
+            <.form
+              for={@form}
+              id="login-form"
+              action={~p"/users/log-in"}
+              method="post"
+              phx-change="validate"
+              class="space-y-6"
+            >
               <%!-- No K/P Field --%>
               <div class="flex items-center gap-4">
-                <label for="user_no_kp" class="text-gray-700 dark:text-gray-300 font-medium w-28 text-sm">
+                <label
+                  for="user_no_kp"
+                  class="text-gray-700 dark:text-gray-300 font-medium w-28 text-sm"
+                >
                   No K/P
                 </label>
                 <div class="flex-1">
@@ -43,10 +55,12 @@ defmodule SppaWeb.UserLive.Login do
                   />
                 </div>
               </div>
-
-              <%!-- Password Field --%>
+               <%!-- Password Field --%>
               <div class="flex items-center gap-4">
-                <label for="user_password" class="text-gray-700 dark:text-gray-300 font-medium w-28 text-sm">
+                <label
+                  for="user_password"
+                  class="text-gray-700 dark:text-gray-300 font-medium w-28 text-sm"
+                >
                   Kata Laluan
                 </label>
                 <div class="flex-1">
@@ -58,8 +72,7 @@ defmodule SppaWeb.UserLive.Login do
                   />
                 </div>
               </div>
-
-              <%!-- Login Button --%>
+               <%!-- Login Button --%>
               <div class="pt-6">
                 <button
                   type="submit"
