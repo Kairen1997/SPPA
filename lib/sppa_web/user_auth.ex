@@ -35,9 +35,16 @@ defmodule SppaWeb.UserAuth do
   def log_in_user(conn, user, params \\ %{}) do
     user_return_to = get_session(conn, :user_return_to)
 
+    redirect_path =
+      cond do
+        user_return_to -> user_return_to
+        user && user.role == "pembangun sistem" -> ~p"/dashboard"
+        true -> signed_in_path(conn)
+      end
+
     conn
     |> create_or_extend_session(user, params)
-    |> redirect(to: user_return_to || signed_in_path(conn))
+    |> redirect(to: redirect_path)
   end
 
   @doc """
@@ -193,6 +200,11 @@ defmodule SppaWeb.UserAuth do
       on user_token.
       Redirects to login page if there's no logged user.
 
+    * `:require_sudo_mode` - Requires the user to be in sudo mode.
+
+    * `:require_dashboard_role` - Only allows access to users with roles:
+      "pembangun sistem", "pengurus projek", or "ketua penolong pengarah".
+
   ## Examples
 
   Use the `on_mount` lifecycle macro in LiveViews to mount or authenticate
@@ -245,11 +257,8 @@ defmodule SppaWeb.UserAuth do
     end
   end
 
-  @doc """
-  Handles mounting and authenticating the current_scope in LiveViews with role-based access.
-
-  Only allows access to users with roles: "pembangun sistem", "pengurus projek", or "ketua penolong pengarah".
-  """
+  # Handles mounting and authenticating the current_scope in LiveViews with role-based access.
+  # Only allows access to users with roles: "pembangun sistem", "pengurus projek", or "ketua penolong pengarah".
   def on_mount(:require_dashboard_role, _params, session, socket) do
     socket = mount_current_scope(socket, session)
 
@@ -265,12 +274,12 @@ defmodule SppaWeb.UserAuth do
         {:halt, socket}
 
       user_role = socket.assigns.current_scope.user.role ->
-        if user_role in allowed_roles do
+        if user_role && user_role in allowed_roles do
           {:cont, socket}
         else
           socket =
             socket
-            |> Phoenix.LiveView.put_flash(:error, "You do not have permission to access this page.")
+            |> Phoenix.LiveView.put_flash(:error, "You do not have permission to access this page. Your role: #{user_role || "not set"}")
             |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
 
           {:halt, socket}
@@ -279,7 +288,7 @@ defmodule SppaWeb.UserAuth do
       true ->
         socket =
           socket
-          |> Phoenix.LiveView.put_flash(:error, "You do not have permission to access this page.")
+          |> Phoenix.LiveView.put_flash(:error, "You do not have permission to access this page. Please contact administrator to set your role.")
           |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
 
         {:halt, socket}
@@ -298,7 +307,11 @@ defmodule SppaWeb.UserAuth do
   end
 
   @doc "Returns the path to redirect to after log in."
-  # the user was already logged in, redirect to dashboard
+  # Redirect pembangun sistem directly to dashboard
+  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %Accounts.User{role: "pembangun sistem"}}}}) do
+    ~p"/dashboard"
+  end
+
   def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %Accounts.User{}}}}) do
     ~p"/dashboard"
   end
