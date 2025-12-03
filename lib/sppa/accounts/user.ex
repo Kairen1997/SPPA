@@ -9,9 +9,12 @@ defmodule Sppa.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
+    field :role, :string
 
     timestamps(type: :utc_datetime)
   end
+
+  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @doc """
   A user changeset for registration and updates.
@@ -20,12 +23,21 @@ defmodule Sppa.Accounts.User do
   """
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:no_kp, :password])
+    |> cast(attrs, [:no_kp, :password, :role])
     |> validate_required([:no_kp, :password])
     |> validate_length(:password, min: 12, max: 72)
+    |> validate_role()
     |> unsafe_validate_unique(:no_kp, Sppa.Repo)
     |> unique_constraint(:no_kp)
     |> maybe_hash_password([])
+  end
+
+  defp validate_role(changeset) do
+    case get_change(changeset, :role) do
+      nil -> changeset
+      role when role in @allowed_roles -> changeset
+      _ -> add_error(changeset, :role, "must be one of: #{Enum.join(@allowed_roles, ", ")}")
+    end
   end
 
   @doc """

@@ -20,7 +20,8 @@ create_confirmed_user = fn no_kp, password, email, role_name ->
     nil ->
       case Accounts.create_user(%{
         no_kp: no_kp,
-        password: password
+        password: password,
+        role: role_name
       }) do
         {:ok, user} ->
           # Update user with email and confirm
@@ -33,6 +34,7 @@ create_confirmed_user = fn no_kp, password, email, role_name ->
           IO.puts("✅ #{role_name} created successfully!")
           IO.puts("   No K/P: #{updated_user.no_kp}")
           IO.puts("   Email: #{updated_user.email}")
+          IO.puts("   Role: #{updated_user.role}")
           IO.puts("   ID: #{updated_user.id}")
 
         {:error, changeset} ->
@@ -54,16 +56,16 @@ create_confirmed_user.(
   "800101010101",
   "pembangun123456",
   "pembangun.sistem@sppa.gov.my",
-  "Pembangun Sistem"
+  "pembangun sistem"
 )
 
-# Create Projek Manajer (Project Manager)
-IO.puts("\nCreating Projek Manajer...")
+# Create Pengurus Projek (Project Manager)
+IO.puts("\nCreating Pengurus Projek...")
 create_confirmed_user.(
   "800202020202",
   "projek12345678",
   "projek.manajer@sppa.gov.my",
-  "Projek Manajer"
+  "pengurus projek"
 )
 
 # Create Ketua Penolong Pengarah (Deputy Director Head)
@@ -72,7 +74,7 @@ create_confirmed_user.(
   "800303030303",
   "ketua123456789",
   "ketua.penolong.pengarah@sppa.gov.my",
-  "Ketua Penolong Pengarah"
+  "ketua penolong pengarah"
 )
 
 IO.puts("\n=== Seed users creation completed ===\n")

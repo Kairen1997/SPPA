@@ -245,6 +245,47 @@ defmodule SppaWeb.UserAuth do
     end
   end
 
+  @doc """
+  Handles mounting and authenticating the current_scope in LiveViews with role-based access.
+
+  Only allows access to users with roles: "pembangun sistem", "pengurus projek", or "ketua penolong pengarah".
+  """
+  def on_mount(:require_dashboard_role, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+
+    allowed_roles = ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+
+    cond do
+      !socket.assigns.current_scope || !socket.assigns.current_scope.user ->
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
+          |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+        {:halt, socket}
+
+      user_role = socket.assigns.current_scope.user.role ->
+        if user_role in allowed_roles do
+          {:cont, socket}
+        else
+          socket =
+            socket
+            |> Phoenix.LiveView.put_flash(:error, "You do not have permission to access this page.")
+            |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+          {:halt, socket}
+        end
+
+      true ->
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(:error, "You do not have permission to access this page.")
+          |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+        {:halt, socket}
+    end
+  end
+
   defp mount_current_scope(socket, session) do
     Phoenix.Component.assign_new(socket, :current_scope, fn ->
       {user, _} =

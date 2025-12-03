@@ -13,7 +13,8 @@ defmodule SppaWeb.UserSessionController do
   end
 
   # magic link login
-  defp create(conn, %{"user" => %{"token" => token} = user_params}, info) do
+  defp create(conn, %{"user" => %{"token" => token} = user_params}, info)
+       when is_binary(token) and byte_size(token) > 0 do
     case Accounts.login_user_by_magic_link(token) do
       {:ok, {user, tokens_to_disconnect}} ->
         UserAuth.disconnect_sessions(tokens_to_disconnect)
@@ -29,25 +30,9 @@ defmodule SppaWeb.UserSessionController do
     end
   end
 
-  # email + password login
-  defp create(conn, %{"user" => %{"email" => email} = user_params}, info) do
-    %{"password" => password} = user_params
-
-    if user = Accounts.get_user_by_email_and_password(email, password) do
-      conn
-      |> put_flash(:info, info)
-      |> UserAuth.log_in_user(user, user_params)
-    else
-      # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
-      conn
-      |> put_flash(:error, "Invalid email or password")
-      |> put_flash(:email, String.slice(email, 0, 160))
-      |> redirect(to: ~p"/users/log-in")
-    end
-  end
-
   # no_kp + password login
-  defp create(conn, %{"user" => %{"no_kp" => no_kp} = user_params}, info) do
+  defp create(conn, %{"user" => %{"no_kp" => no_kp} = user_params}, info)
+       when is_binary(no_kp) and byte_size(no_kp) > 0 do
     %{"password" => password} = user_params
 
     if user = Accounts.get_user_by_no_kp_and_password(no_kp, password) do
@@ -60,6 +45,13 @@ defmodule SppaWeb.UserSessionController do
       |> put_flash(:error, "Invalid No K/P or password")
       |> redirect(to: ~p"/users/log-in")
     end
+  end
+
+  # catch-all for invalid login attempts
+  defp create(conn, _params, _info) do
+    conn
+    |> put_flash(:error, "Please provide No K/P and password")
+    |> redirect(to: ~p"/users/log-in")
   end
 
   def update_password(conn, %{"user" => user_params} = params) do
