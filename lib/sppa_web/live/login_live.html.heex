@@ -1,0 +1,77 @@
+<div class="min-h-screen flex items-center justify-center relative overflow-hidden">
+  <%!-- Background Image with Overlay --%>
+  <div class="absolute inset-0 z-0">
+    <div
+      class="absolute inset-0 bg-cover bg-center bg-no-repeat bg-[url('/images/Menara%20Kinabalu.jpg')]"
+    >
+    </div>
+    <%!-- Dark overlay for better text readability --%>
+    <div class="absolute inset-0 bg-black/20"></div>
+  </div>
+
+
+  <%!-- Login Form Container --%>
+  <div class="relative z-10 w-full max-w-lg mx-4">
+    <div class="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl p-10 border border-white/40 ring-1 ring-white/30">
+      <%!-- Logo Section --%>
+      <div class="flex justify-center mb-8">
+        <img
+          src={~p"/images/Logo JPKN.png"}
+          alt="JPKN Logo"
+          class="h-24 w-auto object-contain drop-shadow-lg"
+        />
+      </div>
+
+      <%!-- System Title --%>
+      <div class="text-center mb-10">
+        <h2 class="text-xl font-semibold text-white leading-relaxed drop-shadow-lg">
+          Sistem Pengurusan Pembangunan Aplikasi
+        </h2>
+      </div>
+
+      <%!-- Login Form --%>
+      <.form for={@form} id="login-form" phx-change="validate" phx-submit="login" class="space-y-6">
+        <%!-- No K/P Field --%>
+        <div class="flex items-start gap-4">
+          <label for="user_no_kp" class="text-white font-medium w-28 text-sm pt-3 drop-shadow-md">
+            No K/P
+          </label>
+          <div class="flex-1">
+            <.input
+              field={@form[:no_kp]}
+              type="text"
+              placeholder="Masukkan No K/P"
+              class="w-full input input-bordered bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            />
+          </div>
+        </div>
+
+        <%!-- Password Field --%>
+        <div class="flex items-start gap-4">
+          <label for="user_password" class="text-white font-medium w-28 text-sm pt-3 drop-shadow-md">
+            Kata Laluan
+          </label>
+          <div class="flex-1">
+            <.input
+              field={@form[:password]}
+              type="password"
+              placeholder="Masukkan Kata Laluan"
+              class="w-full input input-bordered bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            />
+          </div>
+        </div>
+
+        <%!-- Login Button --%>
+        <div class="pt-6">
+          <button
+            type="submit"
+            class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3.5 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Log Masuk
+          </button>
+        </div>
+      </.form>
+    </div>
+  </div>
+</div>
+

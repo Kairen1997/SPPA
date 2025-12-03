@@ -17,7 +17,8 @@ defmodule SppaWeb.Router do
   scope "/", SppaWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", LoginLive
+    live "/login", LoginLive
   end
 
   # Other scopes may use custom stacks.
