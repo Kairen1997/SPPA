@@ -483,7 +483,7 @@ defmodule SppaWeb.CoreComponents do
     ~H"""
     <aside
       class={[
-        "fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-gray-900 to-gray-800 text-white z-50 transform transition-transform duration-300 ease-in-out shadow-2xl",
+        "fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-gray-900/80 to-gray-800/80 backdrop-blur-xl text-white z-50 transform transition-transform duration-300 ease-in-out shadow-2xl border-r border-white/10",
         if(@sidebar_open, do: "translate-x-0", else: "-translate-x-full")
       ]}
       id="sidebar"
@@ -491,17 +491,11 @@ defmodule SppaWeb.CoreComponents do
       <div class="h-full flex flex-col">
         <div class="p-6 flex items-center justify-between border-b border-gray-700">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg overflow-hidden bg-white/5 border border-white/10 shadow-lg flex items-center justify-center">
-              <img
-                src={@logo_src}
-                alt="Logo JPKN"
-                class="w-full h-full object-contain"
-              />
-            </div>
-            <div class="flex flex-col">
-              <span class="text-sm text-gray-400">Jabatan Perdana Menteri</span>
-              <h2 class="text-xl font-bold leading-tight">JPKN</h2>
-            </div>
+            <img
+              src={@logo_src}
+              alt="Logo JPKN"
+              class="h-9 w-auto object-contain"
+            />
           </div>
           <button
             phx-click="toggle_sidebar"

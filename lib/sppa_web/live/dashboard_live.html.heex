@@ -20,42 +20,34 @@
     <%!-- Main Content --%>
     <div class="flex-1 flex flex-col overflow-hidden">
       <%!-- Header --%>
-      <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md">
         <div class="flex items-center gap-4">
           <button
             phx-click="toggle_sidebar"
-            class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 p-2 rounded-lg transition-all duration-200"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
           >
             <.icon name="hero-bars-3" class="w-6 h-6" />
           </button>
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg overflow-hidden bg-white border border-gray-200 shadow-sm flex items-center justify-center">
-              <img
-                src={~p"/images/Logo JPKN.png"}
-                alt="Logo JPKN"
-                class="w-full h-full object-contain"
-              />
-            </div>
-            <div class="hidden sm:flex flex-col">
-              <span class="text-xs text-gray-500 uppercase tracking-wide">Dashboard</span>
-              <span class="text-sm font-semibold text-gray-800 leading-tight">JPKN</span>
-            </div>
+            <img
+              src={~p"/images/Logo JPKN.png"}
+              alt="Logo JPKN"
+              class="h-9 w-auto object-contain"
+            />
           </div>
-          <div class="hidden md:block h-6 w-px bg-gray-300"></div>
-          <h1 class="hidden md:block text-lg font-semibold text-gray-800">Papan Pemuka</h1>
         </div>
         <div class="flex items-center gap-3">
-          <button class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 p-2 rounded-lg transition-all duration-200 relative">
+          <button class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200 relative">
             <.icon name="hero-bell" class="w-5 h-5" />
             <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
-          <button class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 p-2 rounded-lg transition-all duration-200">
+          <button class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200">
             <.icon name="hero-user-circle" class="w-6 h-6" />
           </button>
           <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
             <button
               type="submit"
-              class="text-gray-600 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all duration-200"
+              class="text-white hover:text-red-100 hover:bg-red-500/30 p-2 rounded-lg transition-all duration-200"
             >
               <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5" />
             </button>
