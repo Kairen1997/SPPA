@@ -176,6 +176,54 @@ defmodule SppaWeb.SoalSelidikLive do
   end
 
   @impl true
+  def handle_event("remove_last_section", _params, socket) do
+    sections = socket.assigns.sections || []
+
+    # Jika tiada sebarang bahagian, tidak buat apa-apa
+    if sections == [] do
+      {:noreply, socket}
+    else
+      current_category = current_category(sections, socket.assigns.current_page)
+
+      sections_in_category =
+        sections
+        |> sections_for_category(current_category)
+
+      case List.last(sections_in_category) do
+        nil ->
+          {:noreply, socket}
+
+        %{id: section_id} ->
+          stream_name = String.to_atom("#{section_id}_rows")
+
+          # Buang bahagian daripada senarai dan kosongkan stream barisnya
+          sections =
+            sections
+            |> Enum.reject(&(&1.id == section_id))
+
+          socket =
+            if Map.has_key?(socket.assigns.streams, stream_name) do
+              stream(socket, stream_name, [], reset: true)
+            else
+              socket
+            end
+
+          # Pastikan current_page masih dalam julat selepas buang bahagian
+          total_pages = total_pages_for_categories(sections)
+
+          current_page =
+            if socket.assigns.current_page > total_pages do
+              total_pages
+            else
+              socket.assigns.current_page
+            end
+
+          {:noreply, socket |> assign(:sections, sections) |> assign(:current_page, current_page)}
+      end
+    end
+  end
+
+  @impl true
   def handle_event("add_row", %{"section_id" => section_id}, socket) do
     # Validate section_id
     if is_nil(section_id) or section_id == "" do
@@ -205,10 +253,67 @@ defmodule SppaWeb.SoalSelidikLive do
   end
 
   @impl true
-  def handle_event("remove_row", %{"section_id" => section_id, "id" => id}, socket) do
+  def handle_event("remove_last_row", %{"section_id" => section_id}, socket) do
     stream_name = get_stream_name(section_id)
-    socket = stream_delete(socket, stream_name, id)
-    {:noreply, renumber_stream(stream_name, socket)}
+    streams = socket.assigns.streams || %{}
+
+    case Map.get(streams, stream_name) do
+      %Phoenix.LiveView.LiveStream{} = stream ->
+        last_entry = stream |> Enum.to_list() |> List.last()
+
+        case last_entry do
+          {dom_id, _row} ->
+            socket = stream_delete(socket, stream_name, dom_id)
+            {:noreply, renumber_stream(stream_name, socket)}
+
+          nil ->
+            {:noreply, socket}
+        end
+
+      _other ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event(
+        "update_row",
+        %{
+          "section_id" => section_id,
+          "row_id" => row_id,
+          "field" => field,
+          "value" => value
+        },
+        socket
+      ) do
+    stream_name = get_stream_name(section_id)
+    streams = socket.assigns.streams || %{}
+
+    case Map.get(streams, stream_name) do
+      %Phoenix.LiveView.LiveStream{} = stream ->
+        field_atom =
+          case field do
+            "soalan" -> :soalan
+            "maklumbalas" -> :maklumbalas
+            "catatan" -> :catatan
+            _ -> nil
+          end
+
+        updated_rows =
+          stream
+          |> Enum.map(fn {dom_id, row} ->
+            if dom_id == row_id and field_atom do
+              Map.put(row, field_atom, value)
+            else
+              row
+            end
+          end)
+
+        {:noreply, stream(socket, stream_name, updated_rows, reset: true)}
+
+      _other ->
+        {:noreply, socket}
+    end
   end
 
   @impl true
@@ -311,13 +416,13 @@ defmodule SppaWeb.SoalSelidikLive do
         rows_with_no =
           stream
           |> Enum.map(fn {_dom_id, row} -> row end)
-                     |> Enum.with_index(1)
+          |> Enum.with_index(1)
           |> Enum.map(fn {row, new_no} -> Map.put(row, :no, new_no) end)
 
         stream(socket, stream_name, rows_with_no, reset: true)
 
       _other ->
-    socket
+        socket
     end
   end
 end

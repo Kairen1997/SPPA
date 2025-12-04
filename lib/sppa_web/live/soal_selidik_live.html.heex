@@ -172,8 +172,11 @@
                              @sections,
                              SppaWeb.SoalSelidikLive.current_category(@sections, @current_page)
                            )}
+                    class="mb-4"
+                  >
+                  <div
                     id={section.id}
-                    class="section-container border border-gray-300 overflow-hidden mb-4 avoid-break"
+                    class="section-container border border-gray-300 overflow-hidden avoid-break"
                   >
                   <%!-- Section Header --%>
                   <div class="bg-blue-100 px-3 py-2 border-b border-gray-400">
@@ -193,15 +196,6 @@
                           )
                         }
                       />
-                      <button
-                        type="button"
-                        phx-click="remove_section"
-                        phx-value-id={section.id}
-                        class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors duration-200"
-                        title="Buang bahagian"
-                      >
-                        <.icon name="hero-trash" class="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
                   <div class="bg-blue-50 px-3 py-2 border-b border-gray-400">
@@ -215,22 +209,21 @@
                   </div>
                   <%!-- Section Rows --%>
                   <div class="p-2">
-                    <table class="w-full border-collapse text-xs">
+                    <table class="w-full border-collapse text-xs border border-gray-400">
                       <thead>
                         <tr class="bg-gray-100 border border-gray-400">
                           <th class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">No</th>
                           <th class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 38%;">Soalan</th>
-                          <th class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 23%;">Maklumbalas</th>
-                          <th class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 23%;">Catatan</th>
-                          <th class="px-2 py-1.5 text-left font-semibold text-gray-700" style="width: 10%;">Tindakan</th>
+                          <th class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 28%;">Maklumbalas</th>
+                          <th class="px-2 py-1.5 text-left font-semibold text-gray-700" style="width: 28%;">Catatan</th>
                         </tr>
                       </thead>
-                      <tbody id={"#{section.id}_rows"} phx-update="stream" class="divide-y divide-gray-300">
+                      <tbody id={"#{section.id}_rows"} phx-update="stream">
                         <tr
                           :for={{id, row} <- SppaWeb.SoalSelidikLive.get_section_rows(@streams, section.id)}
                           id={id}
                         >
-                          <td class="px-2 py-2 border-r border-gray-400 align-top">
+                          <td class="px-2 py-2 border border-gray-400 align-top">
                             <div class="px-1.5 py-1 text-xs font-medium text-gray-900">
                               {row.no}
                             </div>
@@ -240,56 +233,94 @@
                               value={row.no}
                             />
                           </td>
-                          <td class="px-2 py-2 border-r border-gray-400 align-top">
+                          <td class="px-2 py-2 border border-gray-400 align-top">
                             <textarea
                               name={"soal_selidik[sections][#{section.id}][rows][#{id}][soalan]"}
                               rows="3"
-                              class="w-full px-1.5 py-1 text-xs border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                              phx-blur="update_row"
+                              phx-value-section_id={section.id}
+                              phx-value-row_id={id}
+                              phx-value-field="soalan"
+                              class="w-full px-1.5 py-1 text-xs border-0 focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
                               placeholder="Soalan..."
                             >{row.soalan}</textarea>
                           </td>
-                          <td class="px-2 py-2 border-r border-gray-400 align-top">
-                            <textarea
-                              name={"soal_selidik[sections][#{section.id}][rows][#{id}][maklumbalas]"}
-                              rows="3"
-                              class="w-full px-1.5 py-1 text-xs border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                              placeholder="Maklumbalas..."
-                            >{row.maklumbalas}</textarea>
+                          <td class="px-2 py-2 border border-gray-400 align-top">
+                            <%= if section.category == "NON-FUNCTIONAL REQUIREMENT" do %>
+                              <input
+                                type="text"
+                                name={"soal_selidik[sections][#{section.id}][rows][#{id}][maklumbalas]"}
+                                value={row.maklumbalas}
+                                phx-blur="update_row"
+                                phx-value-section_id={section.id}
+                                phx-value-row_id={id}
+                                phx-value-field="maklumbalas"
+                                class="w-full px-1.5 py-1 text-xs border-0 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                placeholder="Maklumbalas..."
+                              />
+                            <% else %>
+                              <textarea
+                                name={"soal_selidik[sections][#{section.id}][rows][#{id}][maklumbalas]"}
+                                rows="3"
+                                phx-blur="update_row"
+                                phx-value-section_id={section.id}
+                                phx-value-row_id={id}
+                                phx-value-field="maklumbalas"
+                                class="w-full px-1.5 py-1 text-xs border-0 focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
+                                placeholder="Maklumbalas..."
+                              >{row.maklumbalas}</textarea>
+                            <% end %>
                           </td>
-                          <td class="px-2 py-2 border-r border-gray-400 align-top">
-                            <textarea
-                              name={"soal_selidik[sections][#{section.id}][rows][#{id}][catatan]"}
-                              rows="3"
-                              class="w-full px-1.5 py-1 text-xs border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                              placeholder="Catatan..."
-                            >{row.catatan}</textarea>
-                          </td>
-                          <td class="px-2 py-2 align-top">
-                            <button
-                              type="button"
-                              phx-click="remove_row"
-                              phx-value-section_id={section.id}
-                              phx-value-id={id}
-                              class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors duration-200"
-                              title="Buang baris"
-                            >
-                              <.icon name="hero-trash" class="w-4 h-4" />
-                            </button>
+                          <td class="px-2 py-2 border border-gray-400 align-top">
+                            <%= if section.category == "NON-FUNCTIONAL REQUIREMENT" do %>
+                              <input
+                                type="text"
+                                name={"soal_selidik[sections][#{section.id}][rows][#{id}][catatan]"}
+                                value={row.catatan}
+                                phx-blur="update_row"
+                                phx-value-section_id={section.id}
+                                phx-value-row_id={id}
+                                phx-value-field="catatan"
+                                class="w-full px-1.5 py-1 text-xs border-0 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                placeholder="Catatan..."
+                              />
+                            <% else %>
+                              <textarea
+                                name={"soal_selidik[sections][#{section.id}][rows][#{id}][catatan]"}
+                                rows="3"
+                                phx-blur="update_row"
+                                phx-value-section_id={section.id}
+                                phx-value-row_id={id}
+                                phx-value-field="catatan"
+                                class="w-full px-1.5 py-1 text-xs border-0 focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
+                                placeholder="Catatan..."
+                              >{row.catatan}</textarea>
+                            <% end %>
                           </td>
                         </tr>
                       </tbody>
                     </table>
-                    <div class="mt-2">
-                      <button
-                        type="button"
-                        phx-click="add_row"
-                        phx-value-section_id={section.id}
-                        class="px-3 py-1.5 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors duration-200 flex items-center gap-1"
-                      >
-                        <.icon name="hero-plus" class="w-4 h-4" />
-                        <span>Tambah Baris</span>
-                      </button>
-                    </div>
+                  </div>
+                  </div>
+                  <div class="flex justify-end gap-2 mt-2 mb-2">
+                    <button
+                      type="button"
+                      phx-click="remove_last_row"
+                      phx-value-section_id={section.id}
+                      class="px-4 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center gap-2 shadow-sm"
+                    >
+                      <.icon name="hero-trash" class="w-4 h-4" />
+                      <span>Padam Baris</span>
+                    </button>
+                    <button
+                      type="button"
+                      phx-click="add_row"
+                      phx-value-section_id={section.id}
+                      class="px-4 py-1.5 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center gap-2 shadow-sm"
+                    >
+                      <.icon name="hero-plus" class="w-4 h-4" />
+                      <span>Tambah Baris</span>
+                    </button>
                   </div>
                 </div>
 
@@ -381,8 +412,8 @@
                 </div>
               </div>
 
-              <%!-- Add Section Button --%>
-              <div class="mb-4">
+              <%!-- Add / Remove Section Buttons --%>
+              <div class="mb-4 flex gap-2">
                 <button
                   type="button"
                   phx-click="add_section"
@@ -390,6 +421,14 @@
                 >
                   <.icon name="hero-plus" class="w-5 h-5" />
                   <span>Tambah Bahagian</span>
+                </button>
+                <button
+                  type="button"
+                  phx-click="remove_last_section"
+                  class="px-4 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors duration-200 flex items-center gap-2"
+                >
+                  <.icon name="hero-trash" class="w-5 h-5" />
+                  <span>Padam Bahagian</span>
                 </button>
               </div>
 
