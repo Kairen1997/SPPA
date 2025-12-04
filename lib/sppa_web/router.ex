@@ -44,18 +44,19 @@ defmodule SppaWeb.Router do
   scope "/", SppaWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    live_session :require_authenticated_user,
-      on_mount: [{SppaWeb.UserAuth, :require_authenticated}] do
-      live "/users/settings", UserLive.Settings, :edit
-      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
-    end
-
     live_session :require_dashboard_role,
       on_mount: [{SppaWeb.UserAuth, :require_dashboard_role}] do
+      live "/dashboard-pp", DashboardPPLive, :index
       live "/dashboard", DashboardLive, :index
       live "/projek", ProjekLive, :index
       live "/projek/:id", ProjekLive, :show
       live "/soal-selidik", SoalSelidikLive, :index
+    end
+
+    live_session :require_authenticated_user,
+      on_mount: [{SppaWeb.UserAuth, :require_authenticated}] do
+      live "/users/settings", UserLive.Settings, :edit
+      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
     end
 
     post "/users/update-password", UserSessionController, :update_password

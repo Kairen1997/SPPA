@@ -183,7 +183,6 @@ defmodule SppaWeb.ProjectListLive do
     <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
       <div class="flex min-h-screen flex-col bg-[#F4F5FB] text-gray-800">
         <.topbar current_scope={@current_scope} />
-
         <.sidebar
           current_scope={@current_scope}
           desktop_sidebar_visible={@desktop_sidebar_visible}
@@ -198,13 +197,10 @@ defmodule SppaWeb.ProjectListLive do
                   <span class="text-xs font-semibold tracking-[0.2em] text-gray-400">
                     SENARAI PROJEK
                   </span>
-                  <span class="text-2xl font-semibold tracking-wide text-gray-800">
-                    Tapisan
-                  </span>
+                  <span class="text-2xl font-semibold tracking-wide text-gray-800">Tapisan</span>
                 </div>
               </div>
-
-              <%!-- Filter section --%>
+               <%!-- Filter section --%>
               <div class="rounded-xl bg-white p-6 shadow-sm">
                 <.form
                   for={%{}}
@@ -214,40 +210,43 @@ defmodule SppaWeb.ProjectListLive do
                 >
                   <%!-- Status Projek dropdown --%>
                   <div class="flex-1 min-w-[200px]">
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
-                      Status Projek
-                    </label>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">Status Projek</label>
                     <select
                       name="status"
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     >
                       <option value="">Semua</option>
+                      
                       <option value="Dalam Pembangunan">Dalam Pembangunan</option>
+                      
                       <option value="Ditangguhkan">Ditangguhkan</option>
+                      
                       <option value="UAT">UAT</option>
+                      
                       <option value="Pengurusan Perubahan">Pengurusan Perubahan</option>
+                      
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
-
-                  <%!-- Fasa Semasa dropdown --%>
+                   <%!-- Fasa Semasa dropdown --%>
                   <div class="flex-1 min-w-[200px]">
-                    <label class="mb-2 block text-sm font-medium text-gray-700">
-                      Fasa Semasa
-                    </label>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">Fasa Semasa</label>
                     <select
                       name="phase"
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     >
                       <option value="">Semua</option>
+                      
                       <option value="Analisis dan Rekabentuk">Analisis dan Rekabentuk</option>
+                      
                       <option value="Pembangunan">Pembangunan</option>
+                      
                       <option value="UAT">UAT</option>
+                      
                       <option value="Penyerahan">Penyerahan</option>
                     </select>
                   </div>
-
-                  <%!-- Search input --%>
+                   <%!-- Search input --%>
                   <div class="flex-1 min-w-[200px]">
                     <label class="mb-2 block text-sm font-medium text-gray-700">Carian</label>
                     <input
@@ -257,8 +256,7 @@ defmodule SppaWeb.ProjectListLive do
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     />
                   </div>
-
-                  <%!-- New Project button --%>
+                   <%!-- New Project button --%>
                   <div class="flex-shrink-0">
                     <button
                       type="button"
@@ -270,8 +268,7 @@ defmodule SppaWeb.ProjectListLive do
                   </div>
                 </.form>
               </div>
-
-              <%!-- Projects table --%>
+               <%!-- Projects table --%>
               <div class="overflow-hidden rounded-xl bg-white shadow-sm">
                 <table class="w-full">
                   <thead class="bg-gray-50">
@@ -279,47 +276,56 @@ defmodule SppaWeb.ProjectListLive do
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Nama Projek
                       </th>
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Status
                       </th>
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Fasa Semasa
                       </th>
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Progress
                       </th>
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Dokumen
                       </th>
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Tindakan
                       </th>
                     </tr>
                   </thead>
+                  
                   <tbody class="divide-y divide-gray-200 bg-white">
                     <tr :for={project <- @projects} class="hover:bg-gray-50">
                       <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                         {project.name}
                       </td>
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                        <span
-                          class={[
-                            "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
-                            status_badge_class(project.status)
-                          ]}
-                        >
+                        <span class={[
+                          "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
+                          status_badge_class(project.status)
+                        ]}>
                           {project.status}
                         </span>
                       </td>
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {get_phase(project)}
                       </td>
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {get_progress(project)}%
                       </td>
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {get_documents(project)}
                       </td>
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm">
                         <button
                           type="button"
@@ -329,6 +335,7 @@ defmodule SppaWeb.ProjectListLive do
                         </button>
                       </td>
                     </tr>
+                    
                     <tr :if={@projects == []}>
                       <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">
                         Tiada projek dijumpai
@@ -337,8 +344,7 @@ defmodule SppaWeb.ProjectListLive do
                   </tbody>
                 </table>
               </div>
-
-              <%!-- Pagination --%>
+               <%!-- Pagination --%>
               <div :if={@total_pages > 1} class="flex justify-center">
                 <nav class="flex items-center gap-2" aria-label="Pagination">
                   <button
@@ -349,7 +355,6 @@ defmodule SppaWeb.ProjectListLive do
                   >
                     Sebelum
                   </button>
-
                   <span
                     :for={page_num <- pagination_pages(@page, @total_pages)}
                     :if={page_num == :ellipsis}
@@ -372,7 +377,6 @@ defmodule SppaWeb.ProjectListLive do
                   >
                     {page_num}
                   </button>
-
                   <button
                     :if={@page < @total_pages}
                     phx-click="paginate"
@@ -386,8 +390,7 @@ defmodule SppaWeb.ProjectListLive do
             </div>
           </main>
         </.sidebar>
-
-        <%!-- New Project Modal --%>
+         <%!-- New Project Modal --%>
         <div
           :if={@show_modal}
           class="fixed inset-0 z-50 overflow-y-auto"
@@ -398,8 +401,7 @@ defmodule SppaWeb.ProjectListLive do
         >
           <%!-- Backdrop --%>
           <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-
-          <%!-- Modal container --%>
+           <%!-- Modal container --%>
           <div class="flex min-h-full items-center justify-center p-4">
             <div
               class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -410,10 +412,12 @@ defmodule SppaWeb.ProjectListLive do
                 <div class="flex items-center justify-between">
                   <div>
                     <h2 class="text-2xl font-bold text-white">Projek Baru</h2>
+                    
                     <p class="mt-1 text-sm text-blue-100">
                       Lengkapkan maklumat di bawah untuk mencipta projek baharu
                     </p>
                   </div>
+                  
                   <button
                     type="button"
                     phx-click="close_modal"
@@ -424,8 +428,7 @@ defmodule SppaWeb.ProjectListLive do
                   </button>
                 </div>
               </div>
-
-              <%!-- Modal body --%>
+               <%!-- Modal body --%>
               <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
                 <.form
                   for={@form}
@@ -439,10 +442,10 @@ defmodule SppaWeb.ProjectListLive do
                   <div class="space-y-5">
                     <div class="border-b border-gray-200 pb-2">
                       <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
+                      
                       <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
                     </div>
-
-                    <%!-- Nama Projek --%>
+                     <%!-- Nama Projek --%>
                     <div>
                       <.input
                         field={@form[:name]}
@@ -453,8 +456,7 @@ defmodule SppaWeb.ProjectListLive do
                         class="w-full"
                       />
                     </div>
-
-                    <%!-- Jabatan/Agensi --%>
+                     <%!-- Jabatan/Agensi --%>
                     <div>
                       <.input
                         field={@form[:department]}
@@ -465,14 +467,16 @@ defmodule SppaWeb.ProjectListLive do
                       />
                     </div>
                   </div>
-
-                  <%!-- Team Assignment Section --%>
+                   <%!-- Team Assignment Section --%>
                   <div class="space-y-5">
                     <div class="border-b border-gray-200 pb-2">
                       <h3 class="text-lg font-semibold text-gray-900">Penugasan Pasukan</h3>
-                      <p class="mt-1 text-sm text-gray-500">Tetapkan pengurus projek dan pembangun sistem</p>
+                      
+                      <p class="mt-1 text-sm text-gray-500">
+                        Tetapkan pengurus projek dan pembangun sistem
+                      </p>
                     </div>
-
+                    
                     <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                       <%!-- Pengurus Projek --%>
                       <div>
@@ -481,32 +485,39 @@ defmodule SppaWeb.ProjectListLive do
                           type="select"
                           label="Pengurus Projek"
                           prompt="Pilih Pengurus Projek"
-                          options={Enum.map(@users, fn user -> {"#{user.no_kp} - #{user.role || "N/A"}", user.id} end)}
+                          options={
+                            Enum.map(@users, fn user ->
+                              {"#{user.no_kp} - #{user.role || "N/A"}", user.id}
+                            end)
+                          }
                           class="w-full"
                         />
                       </div>
-
-                      <%!-- Pembangun Sistem --%>
+                       <%!-- Pembangun Sistem --%>
                       <div>
                         <.input
                           field={@form[:developer_id]}
                           type="select"
                           label="Pembangun Sistem"
                           prompt="Pilih Pembangun Sistem"
-                          options={Enum.map(@users, fn user -> {"#{user.no_kp} - #{user.role || "N/A"}", user.id} end)}
+                          options={
+                            Enum.map(@users, fn user ->
+                              {"#{user.no_kp} - #{user.role || "N/A"}", user.id}
+                            end)
+                          }
                           class="w-full"
                         />
                       </div>
                     </div>
                   </div>
-
-                  <%!-- Timeline Section --%>
+                   <%!-- Timeline Section --%>
                   <div class="space-y-5">
                     <div class="border-b border-gray-200 pb-2">
                       <h3 class="text-lg font-semibold text-gray-900">Jadual Projek</h3>
+                      
                       <p class="mt-1 text-sm text-gray-500">Tetapkan tarikh mula dan jangkaan siap</p>
                     </div>
-
+                    
                     <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                       <%!-- Tarikh Mula --%>
                       <div>
@@ -517,8 +528,7 @@ defmodule SppaWeb.ProjectListLive do
                           class="w-full"
                         />
                       </div>
-
-                      <%!-- Tarikh Jangkaan Siap --%>
+                       <%!-- Tarikh Jangkaan Siap --%>
                       <div>
                         <.input
                           field={@form[:expected_completion_date]}
@@ -529,14 +539,16 @@ defmodule SppaWeb.ProjectListLive do
                       </div>
                     </div>
                   </div>
-
-                  <%!-- Documents Section --%>
+                   <%!-- Documents Section --%>
                   <div class="space-y-5">
                     <div class="border-b border-gray-200 pb-2">
                       <h3 class="text-lg font-semibold text-gray-900">Dokumen Sokongan</h3>
-                      <p class="mt-1 text-sm text-gray-500">Muat naik dokumen yang berkaitan dengan projek</p>
+                      
+                      <p class="mt-1 text-sm text-gray-500">
+                        Muat naik dokumen yang berkaitan dengan projek
+                      </p>
                     </div>
-
+                    
                     <div>
                       <label class="mb-2 block text-sm font-medium text-gray-700">
                         Dokumen Sokongan
@@ -544,7 +556,10 @@ defmodule SppaWeb.ProjectListLive do
                       </label>
                       <div class="mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-8 transition hover:border-[#2F80ED] hover:bg-gray-50">
                         <div class="text-center">
-                          <.icon name="hero-document-arrow-up" class="mx-auto h-12 w-12 text-gray-400" />
+                          <.icon
+                            name="hero-document-arrow-up"
+                            class="mx-auto h-12 w-12 text-gray-400"
+                          />
                           <div class="mt-4 flex text-sm leading-6 text-gray-600">
                             <label
                               for="file-upload"
@@ -562,6 +577,7 @@ defmodule SppaWeb.ProjectListLive do
                             </label>
                             <p class="pl-1">atau seret dan lepaskan</p>
                           </div>
+                          
                           <p class="mt-2 text-xs leading-5 text-gray-600">
                             PDF, DOC, DOCX sehingga 10MB setiap fail
                           </p>
@@ -569,8 +585,7 @@ defmodule SppaWeb.ProjectListLive do
                       </div>
                     </div>
                   </div>
-
-                  <%!-- Form Actions --%>
+                   <%!-- Form Actions --%>
                   <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
                     <button
                       type="button"
@@ -649,10 +664,29 @@ defmodule SppaWeb.ProjectListLive do
         [1, 2, 3, 4, 5, :ellipsis, total_pages - 1, total_pages]
 
       current_page >= total_pages - 3 ->
-        [1, 2, :ellipsis, total_pages - 4, total_pages - 3, total_pages - 2, total_pages - 1, total_pages]
+        [
+          1,
+          2,
+          :ellipsis,
+          total_pages - 4,
+          total_pages - 3,
+          total_pages - 2,
+          total_pages - 1,
+          total_pages
+        ]
 
       true ->
-        [1, 2, :ellipsis, current_page - 1, current_page, current_page + 1, :ellipsis, total_pages - 1, total_pages]
+        [
+          1,
+          2,
+          :ellipsis,
+          current_page - 1,
+          current_page,
+          current_page + 1,
+          :ellipsis,
+          total_pages - 1,
+          total_pages
+        ]
     end
   end
 end

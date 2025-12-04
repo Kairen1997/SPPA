@@ -1,0 +1,361 @@
+defmodule SppaWeb.DashboardPPLive do
+  use SppaWeb, :live_view
+
+  alias Sppa.Projects
+
+  @impl true
+  def mount(_params, _session, socket) do
+    user_role =
+      socket.assigns.current_scope && socket.assigns.current_scope.user &&
+        socket.assigns.current_scope.user.role
+
+    if user_role == "pengurus projek" do
+      # Match the pembangun sistem dashboard layout: overlay sidebar + top header
+      socket =
+        socket
+        |> assign(:hide_root_header, true)
+        |> assign(:page_title, "Papan Pemuka Pengurus Projek")
+        |> assign(:sidebar_open, false)
+        |> assign(:notifications_open, false)
+
+      if connected?(socket) do
+        stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
+
+        {:ok,
+         socket
+         |> assign(:stats, stats)
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
+      else
+        {:ok,
+         socket
+         |> assign(:stats, %{})
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
+      end
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(
+          :error,
+          "Anda tidak mempunyai kebenaran untuk mengakses halaman ini."
+        )
+        |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+      {:ok, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("toggle_sidebar", _params, socket) do
+    {:noreply, update(socket, :sidebar_open, &(!&1))}
+  end
+
+  @impl true
+  def handle_event("close_sidebar", _params, socket) do
+    {:noreply, assign(socket, :sidebar_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_notifications", _params, socket) do
+    {:noreply, update(socket, :notifications_open, &(!&1))}
+  end
+
+  @impl true
+  def handle_event("close_notifications", _params, socket) do
+    {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+      <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
+        <%!-- Overlay --%>
+        <div
+          class={[
+            "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
+            if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+          ]}
+          phx-click="close_sidebar"
+        >
+        </div>
+         <%!-- Sidebar --%>
+        <.dashboard_sidebar
+          sidebar_open={@sidebar_open}
+          dashboard_path={~p"/dashboard-pp"}
+          logo_src={~p"/images/logojpkn.png"}
+          current_scope={@current_scope}
+        /> <%!-- Main Content --%>
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <%!-- Header --%>
+          <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md">
+            <div class="flex items-center gap-4">
+              <button
+                phx-click="toggle_sidebar"
+                class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+              >
+                <.icon name="hero-bars-3" class="w-6 h-6" />
+              </button>
+              <div class="flex items-center gap-4">
+                <img
+                  src={~p"/images/Jata-Sabah.png"}
+                  alt="Jata Wilayah Sabah"
+                  class="h-12 w-auto object-contain"
+                />
+                <img
+                  src={~p"/images/logojpkn.png"}
+                  alt="Logo JPKN"
+                  class="h-12 w-auto object-contain"
+                />
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <button
+                  type="button"
+                  phx-click="toggle_notifications"
+                  class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600 focus-visible:ring-white"
+                  aria-label="Notifikasi"
+                  aria-expanded={@notifications_open}
+                >
+                  <.icon name="hero-bell" class="w-5 h-5" />
+                  <%= if @notifications_count > 0 do %>
+                    <span class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 h-4 min-w-[1rem] rounded-full bg-red-500 text-[0.6rem] font-semibold leading-none text-white shadow-sm">
+                      {@notifications_count}
+                    </span>
+                  <% else %>
+                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  <% end %>
+                </button>
+                <%= if @notifications_open do %>
+                  <div
+                    class="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl border border-blue-100 overflow-hidden z-50 origin-top-right animate-[fadeIn_0.18s_ease-out]"
+                    phx-click-away="close_notifications"
+                  >
+                    <div class="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700">
+                      <p class="text-sm font-semibold text-white">Notifikasi</p>
+
+                      <p class="text-xs text-blue-100">
+                        <%= if @notifications_count > 0 do %>
+                          Anda mempunyai {@notifications_count} aktiviti terkini
+                        <% else %>
+                          Tiada notifikasi baharu buat masa ini
+                        <% end %>
+                      </p>
+                    </div>
+
+                    <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 bg-white">
+                      <%= if Enum.empty?(@activities) do %>
+                        <div class="px-4 py-6 flex flex-col items-center justify-center text-center">
+                          <.icon name="hero-inbox" class="w-10 h-10 text-gray-300 mb-2" />
+                          <p class="text-sm font-medium text-gray-600">Tiada aktiviti terkini</p>
+
+                          <p class="text-xs text-gray-400 mt-1">
+                            Notifikasi baharu akan dipaparkan di sini sebaik sahaja terdapat kemaskini.
+                          </p>
+                        </div>
+                      <% else %>
+                        <%= for activity <- @activities do %>
+                          <div class="px-4 py-3 hover:bg-blue-50/60 transition-colors duration-150">
+                            <div class="flex items-start gap-3">
+                              <div class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-sm">
+                                <.icon name="hero-bell-alert" class="w-4 h-4 text-white" />
+                              </div>
+
+                              <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold text-gray-900 truncate">
+                                  {activity.name}
+                                </p>
+
+                                <p class="mt-0.5 text-[0.70rem] text-gray-600 line-clamp-2">
+                                  Status terkini projek dikemaskini kepada <span class="font-semibold">{activity.status}</span>.
+                                </p>
+
+                                <div class="mt-1 flex items-center gap-2 text-[0.65rem] text-gray-400">
+                                  <.icon name="hero-clock" class="w-3 h-3" />
+                                  <%= if activity.last_updated do %>
+                                    {Calendar.strftime(activity.last_updated, "%d/%m/%Y %H:%M")}
+                                  <% else %>
+                                    <span>-</span>
+                                  <% end %>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+
+              <.link
+                navigate={~p"/users/settings"}
+                class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+              >
+                <.icon name="hero-user-circle" class="w-6 h-6" />
+              </.link>
+              <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
+                <button
+                  type="submit"
+                  class="text-white hover:text-red-100 hover:bg-red-500/30 p-2 rounded-lg transition-all duration-200"
+                >
+                  <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5" />
+                </button>
+              </.form>
+            </div>
+          </header>
+           <%!-- Dashboard Content --%>
+          <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
+            <div class="max-w-7xl mx-auto">
+              <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                  Dashboard Pengurus Projek
+                </h1>
+
+                <p class="text-gray-600">Gambaran keseluruhan projek dan aktiviti terkini</p>
+              </div>
+               <%!-- Summary Cards --%>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <%!-- Total Projects --%>
+                <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                  <div class="flex items-center justify-between mb-4">
+                    <.icon name="hero-folder-open" class="w-8 h-8 text-yellow-800 opacity-80" />
+                  </div>
+
+                  <div class="text-4xl font-bold text-gray-900 mb-1">
+                    {@stats[:total_projects] || 0}
+                  </div>
+
+                  <div class="text-sm font-medium text-gray-800">Jumlah Projek</div>
+                </div>
+                 <%!-- In Development --%>
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                  <div class="flex items-center justify-between mb-4">
+                    <.icon name="hero-cog-6-tooth" class="w-8 h-8 text-white opacity-90" />
+                  </div>
+
+                  <div class="text-4xl font-bold text-white mb-1">{@stats[:in_development] || 0}</div>
+
+                  <div class="text-sm font-medium text-blue-50">Dalam Pembangunan</div>
+                </div>
+                 <%!-- Completed --%>
+                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                  <div class="flex items-center justify-between mb-4">
+                    <.icon name="hero-check-badge" class="w-8 h-8 text-white opacity-90" />
+                  </div>
+
+                  <div class="text-4xl font-bold text-white mb-1">{@stats[:completed] || 0}</div>
+
+                  <div class="text-sm font-medium text-green-50">Projek Selesai</div>
+                </div>
+              </div>
+               <%!-- Latest Activities --%>
+              <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <.icon name="hero-clock" class="w-5 h-5 text-gray-600" />
+                      <h2 class="text-xl font-semibold text-gray-900">Aktiviti Terkini</h2>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Nama Projek
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Pembangun / Pengurus Projek
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Status Terkini
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Tarikh Akhir Kemaskini
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <%= if Enum.empty?(@activities) do %>
+                        <tr>
+                          <td colspan="4" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                              <.icon name="hero-inbox" class="w-12 h-12 text-gray-400 mb-3" />
+                              <p class="text-gray-500 font-medium">Tiada aktiviti terkini</p>
+                            </div>
+                          </td>
+                        </tr>
+                      <% else %>
+                        <%= for activity <- @activities do %>
+                          <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                              <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                                  <.icon name="hero-folder" class="w-5 h-5 text-white" />
+                                </div>
+
+                                <div class="text-sm font-medium text-gray-900">{activity.name}</div>
+                              </div>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                              <div class="text-sm text-gray-600">
+                                <%= if activity.developer do %>
+                                  <div class="flex items-center gap-2 mb-1">
+                                    <.icon name="hero-code-bracket" class="w-4 h-4 text-gray-400" />
+                                    <span>{activity.developer.email}</span>
+                                  </div>
+                                <% end %>
+
+                                <%= if activity.project_manager do %>
+                                  <div class="flex items-center gap-2">
+                                    <.icon name="hero-user" class="w-4 h-4 text-gray-400" />
+                                    <span>{activity.project_manager.email}</span>
+                                  </div>
+                                <% end %>
+                              </div>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {activity.status}
+                              </span>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                              <div class="flex items-center text-sm text-gray-600">
+                                <.icon name="hero-calendar" class="w-4 h-4 text-gray-400 mr-2" />
+                                <%= if activity.last_updated do %>
+                                  {Calendar.strftime(activity.last_updated, "%d/%m/%Y %H:%M")}
+                                <% else %>
+                                  <span class="text-gray-400">-</span>
+                                <% end %>
+                              </div>
+                            </td>
+                          </tr>
+                        <% end %>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </Layouts.app>
+    """
+  end
+end

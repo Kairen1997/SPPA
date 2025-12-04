@@ -17,15 +17,11 @@ defmodule SppaWeb.UserLive.Settings do
               <:subtitle>Manage your account password settings</:subtitle>
             </.header>
           </div>
-
+          
           <div class="flex justify-start">
-            <.link navigate={~p"/dashboard"}>
-              <.button>
-                Kembali ke Dashboard
-              </.button>
-            </.link>
+            <.link navigate={~p"/dashboard"}><.button>Kembali ke Dashboard</.button></.link>
           </div>
-
+          
           <.form
             for={@password_form}
             id="password_form"
