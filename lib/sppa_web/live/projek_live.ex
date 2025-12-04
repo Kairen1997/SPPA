@@ -14,6 +14,21 @@ defmodule SppaWeb.ProjekLive do
     mount_index(socket)
   end
 
+  @impl true
+  def handle_params(params, _uri, socket) do
+    tab = Map.get(params, "tab", "overview")
+    {:noreply, assign(socket, :current_tab, normalize_tab(tab))}
+  end
+
+  defp normalize_tab("soal-selidik"), do: "Soal Selidik"
+  defp normalize_tab("spesifikasi-aplikasi"), do: "Spesifikasi Aplikasi"
+  defp normalize_tab("jadual-projek"), do: "Jadual Projek"
+  defp normalize_tab("pengaturcaraan"), do: "Pengaturcaraan"
+  defp normalize_tab("pengurus-perubahan"), do: "Pengurus Perubahan"
+  defp normalize_tab("ujian-keselamatan"), do: "Ujian Keselamatan"
+  defp normalize_tab("maklumbalas-pelanggan"), do: "Maklumbalas Pelanggan"
+  defp normalize_tab(_), do: "Overview"
+
   defp mount_index(socket) do
     # Verify user has required role (defense in depth - router already checks this)
     user_role =
@@ -96,6 +111,7 @@ defmodule SppaWeb.ProjekLive do
            |> assign(:project, project)
            |> assign(:projects, [])
            |> assign(:current_tab, "Overview")
+           |> assign(:soal_selidik_document, get_soal_selidik_document(project.nama))
            |> assign(:progress, overview_data.progress)
            |> assign(:timeline, overview_data.timeline)
            |> assign(:current_tasks, overview_data.current_tasks)
@@ -765,6 +781,51 @@ defmodule SppaWeb.ProjekLive do
       activity_log: activity_log,
       fasa_code: fasa_code,
       fasa_name: fasa_name
+    }
+  end
+
+  # Get soal selidik document data - will be replaced with database query later
+  defp get_soal_selidik_document(system_name) do
+    %{
+      document_id: "JPKN-BPA-01/B1",
+      system_name: system_name,
+      sections: [
+        %{
+          title: "PENDAFTARAN DAN LOG MASUK",
+          questions: [
+            %{
+              number: 1,
+              question: "Adakah sistem perlu pendaftaran pengguna baru? (atau hanya menggunakan pengguna SM2)",
+              response: nil,
+              notes: nil
+            },
+            %{
+              number: 2,
+              question: "Apakah jenis login yang digunakan?",
+              response: nil,
+              notes: nil,
+              options: ["ID/EMEL & Kata Laluan", "Single Sign On", "Integrasi sistem sedia ada"]
+            },
+            %{
+              number: 3,
+              question: "Adakah perlu log audit untuk semua aktiviti pengguna?",
+              response: nil,
+              notes: nil
+            }
+          ]
+        },
+        %{
+          title: "PENGURUSAN DATA",
+          questions: [
+            %{
+              number: 4,
+              question: "Apakah jenis data yang perlu dikendalikan oleh sistem?",
+              response: nil,
+              notes: nil
+            }
+          ]
+        }
+      ]
     }
   end
 end

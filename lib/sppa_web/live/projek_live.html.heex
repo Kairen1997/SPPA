@@ -81,10 +81,11 @@
             <%!-- Navigation Tabs --%>
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 mb-6">
               <div class="border-b border-gray-200">
-                <nav class="flex space-x-1 px-6" aria-label="Tabs">
-                  <button
+                <nav class="flex space-x-1 px-6 overflow-x-auto" aria-label="Tabs">
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=overview"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "Overview",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -92,10 +93,11 @@
                     ]}
                   >
                     Overview
-                  </button>
-                  <button
+                  </.link>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=soal-selidik"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "Soal Selidik",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -103,10 +105,11 @@
                     ]}
                   >
                     Soal Selidik
-                  </button>
-                  <button
+                  </.link>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=spesifikasi-aplikasi"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "Spesifikasi Aplikasi",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -114,10 +117,11 @@
                     ]}
                   >
                     Spesifikasi Aplikasi
-                  </button>
-                  <button
+                  </.link>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=jadual-projek"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "Jadual Projek",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -125,10 +129,11 @@
                     ]}
                   >
                     Jadual Projek
-                  </button>
-                  <button
+                  </.link>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=pengaturcaraan"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "Pengaturcaraan",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -136,10 +141,11 @@
                     ]}
                   >
                     Pengaturcaraan
-                  </button>
-                  <button
+                  </.link>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=pengurus-perubahan"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "Pengurus Perubahan",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -147,10 +153,11 @@
                     ]}
                   >
                     Pengurus Perubahan
-                  </button>
-                  <button
+                  </.link>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=uat"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "UAT",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -158,10 +165,11 @@
                     ]}
                   >
                     UAT
-                  </button>
-                  <button
+                  </.link>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=ujian-keselamatan"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "Ujian Keselamatan",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -169,10 +177,11 @@
                     ]}
                   >
                     Ujian Keselamatan
-                  </button>
-                  <button
+                  </.link>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=penempatan"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "Penempatan",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -180,10 +189,11 @@
                     ]}
                   >
                     Penempatan
-                  </button>
-                  <button
+                  </.link>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=penyerahan"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "Penyerahan",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -191,10 +201,11 @@
                     ]}
                   >
                     Penyerahan
-                  </button>
-                  <button
+                  </.link>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=maklumbalas-pelanggan"}
                     class={[
-                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200",
+                      "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                       if(@current_tab == "Maklumbalas Pelanggan",
                         do: "border-green-500 text-green-600",
                         else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -202,13 +213,129 @@
                     ]}
                   >
                     Maklumbalas Pelanggan
-                  </button>
+                  </.link>
                 </nav>
               </div>
             </div>
 
-            <%!-- Project Information --%>
-            <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
+            <%!-- Tab Content --%>
+            <%= if @current_tab == "Soal Selidik" do %>
+              <%!-- Soal Selidik Content --%>
+              <div class="space-y-6">
+                <%!-- Print Button --%>
+                <div class="flex justify-end mb-4 print:hidden">
+                  <button
+                    id="print-soal-selidik-btn"
+                    phx-hook="PrintDocument"
+                    data-target="soal-selidik-document"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  >
+                    <.icon name="hero-printer" class="w-5 h-5" />
+                    <span>Cetak Dokumen</span>
+                  </button>
+                </div>
+                <%!-- Document Display --%>
+                <div id="soal-selidik-document" class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 print:shadow-none print:border-0">
+                  <%!-- Document Header --%>
+                  <div class="mb-6">
+                    <%!-- Logo --%>
+                    <div class="flex justify-center mb-4">
+                      <img
+                        src={~p"/images/logojpkn.png"}
+                        alt="Logo JPKN"
+                        class="h-16 w-auto object-contain"
+                      />
+                    </div>
+                    <div class="flex justify-between items-start mb-4">
+                      <div class="flex-1">
+                        <h2 class="text-2xl font-bold text-gray-900 text-center mb-2">
+                          TEMPLATE SOAL SELIDIK KAJIAN KEPERLUAN PEMBANGUNAN APLIKASI
+                        </h2>
+                      </div>
+                      <div class="text-sm text-gray-600 font-medium">
+                        {@soal_selidik_document.document_id}
+                      </div>
+                    </div>
+                    <div class="text-center mb-4">
+                      <div class="text-lg font-semibold text-gray-800">
+                        Nama Sistem : {@soal_selidik_document.system_name}
+                      </div>
+                    </div>
+                  </div>
+
+                  <%!-- Questionnaire Table --%>
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full border-collapse border border-gray-300">
+                      <thead>
+                        <tr class="bg-gray-100">
+                          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700 w-16">
+                            No
+                          </th>
+                          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                            Soalan
+                          </th>
+                          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700 w-64">
+                            Maklumbalas
+                          </th>
+                          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700 w-64">
+                            Catatan
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <%= for section <- @soal_selidik_document.sections do %>
+                          <tr>
+                            <td colspan="4" class="border border-gray-300 px-4 py-2 bg-gray-50">
+                              <div class="font-semibold text-gray-900">{section.title}</div>
+                            </td>
+                          </tr>
+                          <%= for question <- section.questions do %>
+                            <tr class="hover:bg-gray-50">
+                              <td class="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
+                                {question.number}
+                              </td>
+                              <td class="border border-gray-300 px-4 py-3 text-sm text-gray-700">
+                                <div class="mb-2">{question.question}</div>
+                                <%= if Map.has_key?(question, :options) && question.options do %>
+                                  <div class="mt-2 space-y-1">
+                                    <%= for option <- question.options do %>
+                                      <div class="text-sm text-gray-600">
+                                        • {option}
+                                      </div>
+                                    <% end %>
+                                  </div>
+                                <% end %>
+                              </td>
+                              <td class="border border-gray-300 px-4 py-3">
+                                <div class="w-full px-3 py-2 text-sm text-gray-400 min-h-[60px]">
+                                  <%= if question.response do %>
+                                    {question.response}
+                                  <% else %>
+                                    -
+                                  <% end %>
+                                </div>
+                              </td>
+                              <td class="border border-gray-300 px-4 py-3">
+                                <div class="w-full px-3 py-2 text-sm text-gray-400 min-h-[60px]">
+                                  <%= if question.notes do %>
+                                    {question.notes}
+                                  <% else %>
+                                    -
+                                  <% end %>
+                                </div>
+                              </td>
+                            </tr>
+                          <% end %>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            <% else %>
+              <%!-- Overview Content (existing) --%>
+              <%!-- Project Information --%>
+              <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
               <h2 class="text-xl font-semibold text-gray-900 mb-4">Informasi Projek</h2>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="flex justify-between py-2 border-b border-gray-100">
@@ -328,6 +455,7 @@
                 </div>
               </div>
             </div>
+            <% end %>
           </div>
         <% else %>
           <%!-- Projek List Content --%>

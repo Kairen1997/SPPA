@@ -126,3 +126,72 @@
     pointer-events: none;
   }
 }
+
+/* Print styles for Soal Selidik Document */
+@media print {
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the soal selidik document and all its contents */
+  #soal-selidik-document,
+  #soal-selidik-document * {
+    visibility: visible;
+  }
+
+  /* Position the document at the top-left of the page */
+  #soal-selidik-document {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: block !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Ensure logo is visible and properly sized when printing */
+  #soal-selidik-document img[alt="Logo JPKN"] {
+    display: block !important;
+    max-height: 80px;
+    width: auto;
+    margin: 0 auto 1rem auto;
+  }
+
+  /* Prevent page breaks inside table rows */
+  #soal-selidik-document table tr {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure table borders are visible when printing */
+  #soal-selidik-document table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  #soal-selidik-document table th,
+  #soal-selidik-document table td {
+    border: 1px solid #000 !important;
+  }
+
+  /* Ensure text is black for printing */
+  #soal-selidik-document {
+    color: #000 !important;
+  }
+
+  /* Reset body and html for printing */
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
