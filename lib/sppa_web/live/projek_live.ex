@@ -1,0 +1,330 @@
+defmodule SppaWeb.ProjekLive do
+  use SppaWeb, :live_view
+
+  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+
+  @impl true
+  def mount(%{"id" => id}, _session, socket) do
+    # Handle show action - view project details
+    mount_show(String.to_integer(id), socket)
+  end
+
+  def mount(_params, _session, socket) do
+    # Handle index action - list all projects
+    mount_index(socket)
+  end
+
+  defp mount_index(socket) do
+    # Verify user has required role (defense in depth - router already checks this)
+    user_role =
+      socket.assigns.current_scope && socket.assigns.current_scope.user &&
+        socket.assigns.current_scope.user.role
+
+    if user_role && user_role in @allowed_roles do
+      socket =
+        socket
+        |> assign(:hide_root_header, true)
+        |> assign(:page_title, "Senarai Projek")
+        |> assign(:sidebar_open, false)
+        |> assign(:notifications_open, false)
+
+      if connected?(socket) do
+        # Mock data - will be replaced with database queries later
+        # Filter projects based on user role
+        projects = list_projects(socket.assigns.current_scope, user_role)
+
+        {:ok,
+         socket
+         |> assign(:projects, projects)}
+      else
+        {:ok,
+         socket
+         |> assign(:projects, [])}
+      end
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(
+          :error,
+          "Anda tidak mempunyai kebenaran untuk mengakses halaman ini."
+        )
+        |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+      {:ok, socket}
+    end
+  end
+
+  defp mount_show(project_id, socket) do
+    # Verify user has required role (defense in depth - router already checks this)
+    user_role =
+      socket.assigns.current_scope && socket.assigns.current_scope.user &&
+        socket.assigns.current_scope.user.role
+
+    if user_role && user_role in @allowed_roles do
+      socket =
+        socket
+        |> assign(:hide_root_header, true)
+        |> assign(:page_title, "Butiran Projek")
+        |> assign(:sidebar_open, false)
+        |> assign(:notifications_open, false)
+
+      if connected?(socket) do
+        # Get project details - will be replaced with database query later
+        project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+
+        if project do
+          {:ok,
+           socket
+           |> assign(:project, project)
+           |> assign(:projects, [])}
+        else
+          socket =
+            socket
+            |> assign(:project, nil)
+            |> assign(:projects, [])
+            |> Phoenix.LiveView.put_flash(
+              :error,
+              "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk melihat projek ini."
+            )
+            |> Phoenix.LiveView.redirect(to: ~p"/projek")
+
+          {:ok, socket}
+        end
+      else
+        {:ok,
+         socket
+         |> assign(:project, nil)
+         |> assign(:projects, [])}
+      end
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(
+          :error,
+          "Anda tidak mempunyai kebenaran untuk mengakses halaman ini."
+        )
+        |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+      {:ok, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("toggle_sidebar", _params, socket) do
+    {:noreply, update(socket, :sidebar_open, &(!&1))}
+  end
+
+  @impl true
+  def handle_event("close_sidebar", _params, socket) do
+    {:noreply, assign(socket, :sidebar_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_notifications", _params, socket) do
+    {:noreply, update(socket, :notifications_open, &(!&1))}
+  end
+
+  @impl true
+  def handle_event("close_notifications", _params, socket) do
+    {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  # Mock data function - will be replaced with database queries later
+  # Filters projects based on user role:
+  # - Developers see projects where they are assigned as developer
+  # - Project managers see projects where they are assigned as project manager
+  # - Directors/Admins see all projects
+  defp list_projects(current_scope, user_role) do
+    current_user_id = current_scope.user.id
+
+    all_projects = [
+      %{
+        id: 1,
+        nama: "Sistem Pengurusan Projek A",
+        status: "Dalam Pembangunan",
+        fasa: "Pembangunan",
+        tarikh_mula: ~D[2024-01-15],
+        tarikh_siap: ~D[2024-06-30],
+        pengurus_projek: "Ahmad bin Abdullah",
+        developer_id: 1,
+        project_manager_id: 2,
+        isu: "Tiada",
+        tindakan: "Teruskan pembangunan"
+      },
+      %{
+        id: 2,
+        nama: "Sistem Analisis Data B",
+        status: "Ujian Penerimaan Pengguna",
+        fasa: "UAT",
+        tarikh_mula: ~D[2023-11-01],
+        tarikh_siap: ~D[2024-05-15],
+        pengurus_projek: "Siti Nurhaliza",
+        developer_id: 1,
+        project_manager_id: 3,
+        isu: "Perlu pembetulan pada modul laporan",
+        tindakan: "Selesaikan isu sebelum penyerahan"
+      },
+      %{
+        id: 3,
+        nama: "Portal E-Services C",
+        status: "Selesai",
+        fasa: "Penyerahan",
+        tarikh_mula: ~D[2023-06-01],
+        tarikh_siap: ~D[2024-01-31],
+        pengurus_projek: "Mohd Faizal",
+        developer_id: 2,
+        project_manager_id: 4,
+        isu: "Tiada",
+        tindakan: "Projek telah diserahkan"
+      },
+      %{
+        id: 4,
+        nama: "Sistem Pengurusan Dokumen D",
+        status: "Ditangguhkan",
+        fasa: "Analisis dan Rekabentuk",
+        tarikh_mula: ~D[2024-02-01],
+        tarikh_siap: ~D[2024-08-31],
+        pengurus_projek: "Nurul Aina",
+        developer_id: 3,
+        project_manager_id: 5,
+        isu: "Menunggu kelulusan bajet tambahan",
+        tindakan: "Sambung semula selepas kelulusan"
+      },
+      %{
+        id: 5,
+        nama: "Aplikasi Mobile E",
+        status: "Dalam Pembangunan",
+        fasa: "Pembangunan",
+        tarikh_mula: ~D[2024-03-01],
+        tarikh_siap: ~D[2024-09-30],
+        pengurus_projek: "Lim Wei Ming",
+        developer_id: 1,
+        project_manager_id: 2,
+        isu: "Masalah integrasi dengan API",
+        tindakan: "Selesaikan integrasi API"
+      }
+    ]
+
+    # Filter based on user role
+    case user_role do
+      "pembangun sistem" ->
+        # Developers see projects where they are assigned as developer
+        # For mock data, we'll show projects where developer_id matches (using user id as proxy)
+        # In real implementation, this would check developer_id == current_user.id
+        Enum.filter(all_projects, fn p -> p.developer_id == current_user_id end)
+
+      "pengurus projek" ->
+        # Project managers see projects where they are assigned as project manager
+        # For mock data, we'll show projects where project_manager_id matches
+        # In real implementation, this would check project_manager_id == current_user.id
+        Enum.filter(all_projects, fn p -> p.project_manager_id == current_user_id end)
+
+      "ketua penolong pengarah" ->
+        # Directors/Admins see all projects
+        all_projects
+
+      _ ->
+        # Default: show no projects for unknown roles
+        []
+    end
+  end
+
+  # Get a single project by ID - will be replaced with database query later
+  defp get_project_by_id(project_id, current_scope, user_role) do
+    current_user_id = current_scope.user.id
+
+    all_projects = [
+      %{
+        id: 1,
+        nama: "Sistem Pengurusan Projek A",
+        status: "Dalam Pembangunan",
+        fasa: "Pembangunan",
+        tarikh_mula: ~D[2024-01-15],
+        tarikh_siap: ~D[2024-06-30],
+        pengurus_projek: "Ahmad bin Abdullah",
+        developer_id: 1,
+        project_manager_id: 2,
+        isu: "Tiada",
+        tindakan: "Teruskan pembangunan",
+        keterangan: "Sistem pengurusan projek yang komprehensif untuk menguruskan semua aspek projek IT di JPKN."
+      },
+      %{
+        id: 2,
+        nama: "Sistem Analisis Data B",
+        status: "Ujian Penerimaan Pengguna",
+        fasa: "UAT",
+        tarikh_mula: ~D[2023-11-01],
+        tarikh_siap: ~D[2024-05-15],
+        pengurus_projek: "Siti Nurhaliza",
+        developer_id: 1,
+        project_manager_id: 3,
+        isu: "Perlu pembetulan pada modul laporan",
+        tindakan: "Selesaikan isu sebelum penyerahan",
+        keterangan: "Sistem untuk menganalisis data dan menjana laporan automatik."
+      },
+      %{
+        id: 3,
+        nama: "Portal E-Services C",
+        status: "Selesai",
+        fasa: "Penyerahan",
+        tarikh_mula: ~D[2023-06-01],
+        tarikh_siap: ~D[2024-01-31],
+        pengurus_projek: "Mohd Faizal",
+        developer_id: 2,
+        project_manager_id: 4,
+        isu: "Tiada",
+        tindakan: "Projek telah diserahkan",
+        keterangan: "Portal e-services untuk kemudahan awam mengakses perkhidmatan JPKN secara dalam talian."
+      },
+      %{
+        id: 4,
+        nama: "Sistem Pengurusan Dokumen D",
+        status: "Ditangguhkan",
+        fasa: "Analisis dan Rekabentuk",
+        tarikh_mula: ~D[2024-02-01],
+        tarikh_siap: ~D[2024-08-31],
+        pengurus_projek: "Nurul Aina",
+        developer_id: 3,
+        project_manager_id: 5,
+        isu: "Menunggu kelulusan bajet tambahan",
+        tindakan: "Sambung semula selepas kelulusan",
+        keterangan: "Sistem untuk menguruskan dokumen digital dengan sistem pengesanan dan versi."
+      },
+      %{
+        id: 5,
+        nama: "Aplikasi Mobile E",
+        status: "Dalam Pembangunan",
+        fasa: "Pembangunan",
+        tarikh_mula: ~D[2024-03-01],
+        tarikh_siap: ~D[2024-09-30],
+        pengurus_projek: "Lim Wei Ming",
+        developer_id: 1,
+        project_manager_id: 2,
+        isu: "Masalah integrasi dengan API",
+        tindakan: "Selesaikan integrasi API",
+        keterangan: "Aplikasi mobile untuk akses mudah kepada perkhidmatan JPKN melalui telefon pintar."
+      }
+    ]
+
+    # Find project by ID
+    project = Enum.find(all_projects, fn p -> p.id == project_id end)
+
+    # Check if user has permission to view this project
+    cond do
+      is_nil(project) ->
+        nil
+
+      user_role == "pembangun sistem" ->
+        if project.developer_id == current_user_id, do: project, else: nil
+
+      user_role == "pengurus projek" ->
+        if project.project_manager_id == current_user_id, do: project, else: nil
+
+      user_role == "ketua penolong pengarah" ->
+        project
+
+      true ->
+        nil
+    end
+  end
+end

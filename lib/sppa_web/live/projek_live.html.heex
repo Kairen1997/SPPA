@@ -1,0 +1,203 @@
+<Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+  <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
+    <%!-- Overlay --%>
+    <div
+      class={[
+        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+      ]}
+      phx-click="close_sidebar"
+    >
+    </div>
+
+    <%!-- Sidebar --%>
+    <.dashboard_sidebar
+      sidebar_open={@sidebar_open}
+      dashboard_path={~p"/dashboard"}
+      logo_src={~p"/images/logojpkn.png"}
+    />
+
+    <%!-- Main Content --%>
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <%!-- Header --%>
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md">
+        <div class="flex items-center gap-4">
+          <button
+            phx-click="toggle_sidebar"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-bars-3" class="w-6 h-6" />
+          </button>
+          <div class="flex items-center gap-3">
+            <img
+              src={~p"/images/Jata-Sabah.png"}
+              alt="Jata Wilayah Sabah"
+              class="h-9 w-auto object-contain"
+            />
+            <img
+              src={~p"/images/logojpkn.png"}
+              alt="Logo JPKN"
+              class="h-9 w-auto object-contain"
+            />
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <.link
+            navigate={~p"/users/settings"}
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-user-circle" class="w-6 h-6" />
+          </.link>
+          <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
+            <button
+              type="submit"
+              class="text-white hover:text-red-100 hover:bg-red-500/30 p-2 rounded-lg transition-all duration-200"
+            >
+              <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5" />
+            </button>
+          </.form>
+        </div>
+      </header>
+
+      <%!-- Projek List Content --%>
+      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
+        <div class="max-w-7xl mx-auto">
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Senarai Projek</h1>
+            <p class="text-gray-600">Senarai lengkap semua projek dan status terkini</p>
+          </div>
+
+          <%!-- Projects Table --%>
+          <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <.icon name="hero-folder" class="w-5 h-5 text-gray-600" />
+                  <h2 class="text-xl font-semibold text-gray-900">Semua Projek</h2>
+                </div>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Nama Projek
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Status Projek
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Fasa Pembangunan
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Tarikh Mula
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Tarikh Siap
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Pengurus Projek
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Isu
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Tindakan
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <%= if Enum.empty?(@projects) do %>
+                    <tr>
+                      <td colspan="8" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                          <.icon name="hero-inbox" class="w-12 h-12 text-gray-400 mb-3" />
+                          <p class="text-gray-500 font-medium">Tiada projek ditemui</p>
+                        </div>
+                      </td>
+                    </tr>
+                  <% else %>
+                    <%= for project <- @projects do %>
+                      <tr class="hover:bg-gray-50 transition-colors duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                              <.icon name="hero-folder" class="w-5 h-5 text-white" />
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">{project.nama}</div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class={[
+                              "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
+                              case project.status do
+                                "Selesai" ->
+                                  "bg-green-100 text-green-800"
+                                "Dalam Pembangunan" ->
+                                  "bg-blue-100 text-blue-800"
+                                "Ujian Penerimaan Pengguna" ->
+                                  "bg-purple-100 text-purple-800"
+                                "Ditangguhkan" ->
+                                  "bg-red-100 text-red-800"
+                                _ ->
+                                  "bg-gray-100 text-gray-800"
+                              end
+                            ]}
+                          >
+                            {project.status}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm text-gray-600">{project.fasa}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center text-sm text-gray-600">
+                            <.icon name="hero-calendar" class="w-4 h-4 text-gray-400 mr-2" />
+                            {Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center text-sm text-gray-600">
+                            <.icon name="hero-calendar" class="w-4 h-4 text-gray-400 mr-2" />
+                            {Calendar.strftime(project.tarikh_siap, "%d/%m/%Y")}
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center text-sm text-gray-600">
+                            <.icon name="hero-user" class="w-4 h-4 text-gray-400 mr-2" />
+                            {project.pengurus_projek}
+                          </div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="text-sm text-gray-600 max-w-xs">
+                            <%= if project.isu == "Tiada" do %>
+                              <span class="text-gray-400">Tiada</span>
+                            <% else %>
+                              <span class="text-orange-600 font-medium">{project.isu}</span>
+                            <% end %>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <.link
+                            navigate={~p"/projek/#{project.id}"}
+                            class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200"
+                          >
+                            <.icon name="hero-eye" class="w-4 h-4" />
+                            <span>Lihat Butiran</span>
+                          </.link>
+                        </td>
+                      </tr>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</Layouts.app>
+
