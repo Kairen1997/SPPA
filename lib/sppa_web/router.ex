@@ -53,6 +53,7 @@ defmodule SppaWeb.Router do
     live_session :require_dashboard_role,
       on_mount: [{SppaWeb.UserAuth, :require_dashboard_role}] do
       live "/dashboard", DashboardLive, :index
+      live "/senarai-projek", ProjectListLive, :index
     end
 
     post "/users/update-password", UserSessionController, :update_password
