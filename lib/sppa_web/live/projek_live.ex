@@ -88,10 +88,24 @@ defmodule SppaWeb.ProjekLive do
         project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
 
         if project do
+          # Get overview data for the project
+          overview_data = get_project_overview(project_id, project)
+
           {:ok,
            socket
            |> assign(:project, project)
-           |> assign(:projects, [])}
+           |> assign(:projects, [])
+           |> assign(:current_tab, "Overview")
+           |> assign(:progress, overview_data.progress)
+           |> assign(:timeline, overview_data.timeline)
+           |> assign(:current_tasks, overview_data.current_tasks)
+           |> assign(:change_requests, overview_data.change_requests)
+           |> assign(:statuses, overview_data.statuses)
+           |> assign(:activity_log, overview_data.activity_log)
+           |> assign(:fasa_code, overview_data.fasa_code)
+           |> assign(:fasa_name, overview_data.fasa_name)
+           |> assign(:tarikh_mula_formatted, format_date_malay(project.tarikh_mula))
+           |> assign(:tarikh_siap_formatted, format_date_malay(project.tarikh_siap))}
         else
           socket =
             socket
@@ -615,5 +629,81 @@ defmodule SppaWeb.ProjekLive do
     paginated = Enum.slice(projects, start_index, per_page)
 
     {paginated, total_pages}
+  end
+
+  # Format date in Malay format (e.g., "10 Mac 2025")
+  defp format_date_malay(date) do
+    month_names = %{
+      1 => "Januari", 2 => "Februari", 3 => "Mac", 4 => "April",
+      5 => "Mei", 6 => "Jun", 7 => "Julai", 8 => "Ogos",
+      9 => "September", 10 => "Oktober", 11 => "November", 12 => "Disember"
+    }
+
+    day = date.day
+    month = month_names[date.month]
+    year = date.year
+
+    "#{day} #{month} #{year}"
+  end
+
+  # Get project overview data - will be replaced with database queries later
+  defp get_project_overview(project_id, project) do
+    # Map fasa to development phase code and name
+    {fasa_code, fasa_name} = case project.fasa do
+      "Analisis dan Rekabentuk" -> {"B2", "Rekabentuk"}
+      "Pembangunan" -> {"B4", "Pembangunan"}
+      "UAT" -> {"B5", "UAT"}
+      "Penyerahan" -> {"Dep", "Penyerahan"}
+      _ -> {"B2", "Rekabentuk"}
+    end
+
+    # Calculate progress based on fasa (mock calculation)
+    progress = case project.fasa do
+      "Analisis dan Rekabentuk" -> 30
+      "Pembangunan" -> 60
+      "UAT" -> 80
+      "Penyerahan" -> 100
+      _ -> 30
+    end
+
+    # Timeline milestones
+    timeline = ["B1", "B2", "B4", "B5", "Dep"]
+
+    # Current tasks (mock data)
+    current_tasks = [
+      "Finalize UI design",
+      "Update BPA B2"
+    ]
+
+    # Change request summary (mock data)
+    change_requests = %{
+      new: 3,
+      approved: 12,
+      rejected: 2
+    }
+
+    # Status badges (mock data)
+    statuses = [
+      %{label: "UAT", status: "In Progress"},
+      %{label: "Deployment", status: "Ready"}
+    ]
+
+    # Activity log (mock data)
+    activity_log = [
+      %{time: "11:45 AM", type: "approved", message: "CR-04 Approved by Admin"},
+      %{time: "11:32 AM", type: "submitted", message: "B2 Submitted by Developer"},
+      %{time: "11:15 AM", type: "updated", message: "Milestone updated to Phase 3"}
+    ]
+
+    %{
+      progress: progress,
+      timeline: timeline,
+      current_tasks: current_tasks,
+      change_requests: change_requests,
+      statuses: statuses,
+      activity_log: activity_log,
+      fasa_code: fasa_code,
+      fasa_name: fasa_name
+    }
   end
 end
