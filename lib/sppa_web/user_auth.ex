@@ -38,7 +38,8 @@ defmodule SppaWeb.UserAuth do
     redirect_path =
       cond do
         user_return_to -> user_return_to
-        user && user.role == "pembangun sistem" -> ~p"/dashboard"
+        user && user.role in ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"] ->
+          ~p"/dashboard"
         true -> signed_in_path(conn)
       end
 

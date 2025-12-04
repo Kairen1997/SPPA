@@ -4,9 +4,11 @@ defmodule Sppa.Repo.Migrations.CreateUsersAuthTables do
   def change do
     execute "CREATE EXTENSION IF NOT EXISTS citext", ""
 
-    alter table(:users) do
+    create table(:users) do
       add :email, :citext
       add :confirmed_at, :utc_datetime
+
+      timestamps(type: :utc_datetime)
     end
 
     create unique_index(:users, [:email])

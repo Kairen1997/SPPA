@@ -22,9 +22,15 @@ defmodule SppaWeb.DashboardLive do
         |> assign(:notifications_open, false)
 
       if connected?(socket) do
-        stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
+        new_stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
         activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
         notifications_count = length(activities)
+
+        # Merge stats preserving displayed values - once a stat shows a value, don't let it go to zero
+        displayed_stats =
+          socket.assigns
+          |> Map.get(:stats, fallback_stats)
+          |> merge_stats_preserving_values(new_stats)
 
         {:ok,
          socket
@@ -49,6 +55,33 @@ defmodule SppaWeb.DashboardLive do
 
       {:ok, socket}
     end
+  end
+
+  # Helper function to merge stats, preserving displayed values
+  # Once a stat has been displayed with a value, it won't revert to zero
+  defp merge_stats_preserving_values(existing_stats, new_stats) do
+    Enum.reduce(new_stats, existing_stats, fn {key, new_value}, acc ->
+      existing_value = Map.get(acc, key)
+
+      # If we have an existing value that was displayed (non-zero), preserve it when new value is zero
+      # Otherwise, use the new value
+      updated_value =
+        cond do
+          # If existing value exists and is non-zero, and new value is zero, keep existing
+          existing_value && existing_value > 0 && new_value == 0 ->
+            existing_value
+
+          # Always use new value if it's greater than 0
+          new_value && new_value > 0 ->
+            new_value
+
+          # If new value is zero, preserve existing value (which could be a fallback)
+          true ->
+            existing_value
+        end
+
+      Map.put(acc, key, updated_value)
+    end)
   end
 
   @impl true
