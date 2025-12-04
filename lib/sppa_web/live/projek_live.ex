@@ -202,7 +202,7 @@ defmodule SppaWeb.ProjekLive do
   # - Project managers see projects where they are assigned as project manager
   # - Directors/Admins see all projects
   defp list_projects(current_scope, user_role) do
-    current_user_id = current_scope.user.id
+    _current_user_id = current_scope.user.id
 
     all_projects = [
       %{
