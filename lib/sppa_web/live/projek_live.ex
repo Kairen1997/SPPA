@@ -715,11 +715,12 @@ defmodule SppaWeb.ProjekLive do
   defp get_project_overview(_project_id, project) do
     # Map fasa to development phase code and name
     {fasa_code, fasa_name} = case project.fasa do
-      "Analisis dan Rekabentuk" -> {"B2", "Rekabentuk"}
+      "Soal Selidik" -> {"B1", "Soal Selidik kajian keperluan pembangunan aplikasi"}
+      "Analisis dan Rekabentuk" -> {"B2", "Analisis dan Rekabentuk"}
       "Pembangunan" -> {"B4", "Pembangunan"}
       "UAT" -> {"B5", "UAT"}
-      "Penyerahan" -> {"Dep", "Penyerahan"}
-      _ -> {"B2", "Rekabentuk"}
+      "Penyerahan" -> {"B6", "Penyerahan"}
+      _ -> {"B1", "Soal Selidik kajian keperluan pembangunan aplikasi"}
     end
 
     # Calculate progress based on dates and phase
