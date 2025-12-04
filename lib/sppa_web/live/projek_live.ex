@@ -223,30 +223,114 @@ defmodule SppaWeb.ProjekLive do
         project_manager_id: 2,
         isu: "Masalah integrasi dengan API",
         tindakan: "Selesaikan integrasi API"
+      },
+      %{
+        id: 6,
+        nama: "Sistem Pengurusan Inventori F",
+        status: "Dalam Pembangunan",
+        fasa: "Pembangunan",
+        tarikh_mula: ~D[2024-04-15],
+        tarikh_siap: ~D[2024-10-31],
+        pengurus_projek: "Ahmad bin Abdullah",
+        developer_id: 2,
+        project_manager_id: 2,
+        isu: "Tiada",
+        tindakan: "Teruskan pembangunan modul inventori"
+      },
+      %{
+        id: 7,
+        nama: "Portal Pelanggan G",
+        status: "Ujian Penerimaan Pengguna",
+        fasa: "UAT",
+        tarikh_mula: ~D[2023-12-01],
+        tarikh_siap: ~D[2024-07-15],
+        pengurus_projek: "Siti Nurhaliza",
+        developer_id: 2,
+        project_manager_id: 3,
+        isu: "Isu keselamatan data perlu disemak",
+        tindakan: "Lengkapkan audit keselamatan"
+      },
+      %{
+        id: 8,
+        nama: "Sistem Laporan Automatik H",
+        status: "Selesai",
+        fasa: "Penyerahan",
+        tarikh_mula: ~D[2023-08-01],
+        tarikh_siap: ~D[2024-02-28],
+        pengurus_projek: "Mohd Faizal",
+        developer_id: 3,
+        project_manager_id: 4,
+        isu: "Tiada",
+        tindakan: "Projek telah diserahkan dan beroperasi"
+      },
+      %{
+        id: 9,
+        nama: "Aplikasi Web Responsif I",
+        status: "Dalam Pembangunan",
+        fasa: "Pembangunan",
+        tarikh_mula: ~D[2024-05-01],
+        tarikh_siap: ~D[2024-11-30],
+        pengurus_projek: "Nurul Aina",
+        developer_id: 1,
+        project_manager_id: 5,
+        isu: "Perlu penambahbaikan pada reka bentuk UI",
+        tindakan: "Kemaskini reka bentuk mengikut spesifikasi"
+      },
+      %{
+        id: 10,
+        nama: "Sistem Integrasi API J",
+        status: "Ujian Penerimaan Pengguna",
+        fasa: "UAT",
+        tarikh_mula: ~D[2024-01-10],
+        tarikh_siap: ~D[2024-06-30],
+        pengurus_projek: "Lim Wei Ming",
+        developer_id: 3,
+        project_manager_id: 2,
+        isu: "Masalah dengan endpoint tertentu",
+        tindakan: "Betulkan endpoint yang bermasalah"
+      },
+      %{
+        id: 11,
+        nama: "Sistem Backup dan Pemulihan K",
+        status: "Selesai",
+        fasa: "Penyerahan",
+        tarikh_mula: ~D[2023-09-15],
+        tarikh_siap: ~D[2024-03-31],
+        pengurus_projek: "Ahmad bin Abdullah",
+        developer_id: 2,
+        project_manager_id: 2,
+        isu: "Tiada",
+        tindakan: "Sistem telah diserahkan dan beroperasi"
+      },
+      %{
+        id: 12,
+        nama: "Portal Pentadbiran L",
+        status: "Ditangguhkan",
+        fasa: "Analisis dan Rekabentuk",
+        tarikh_mula: ~D[2024-06-01],
+        tarikh_siap: ~D[2024-12-31],
+        pengurus_projek: "Siti Nurhaliza",
+        developer_id: 1,
+        project_manager_id: 3,
+        isu: "Menunggu kelulusan dari pihak pengurusan",
+        tindakan: "Sambung semula selepas kelulusan"
       }
     ]
 
     # Filter based on user role
+    # Temporarily showing all projects for pagination testing
+    # TODO: Re-enable role-based filtering when ready
     case user_role do
-      "pembangun sistem" ->
-        # Developers see projects where they are assigned as developer
-        # For mock data, we'll show projects where developer_id matches (using user id as proxy)
-        # In real implementation, this would check developer_id == current_user.id
-        Enum.filter(all_projects, fn p -> p.developer_id == current_user_id end)
-
-      "pengurus projek" ->
-        # Project managers see projects where they are assigned as project manager
-        # For mock data, we'll show projects where project_manager_id matches
-        # In real implementation, this would check project_manager_id == current_user.id
-        Enum.filter(all_projects, fn p -> p.project_manager_id == current_user_id end)
-
       "ketua penolong pengarah" ->
         # Directors/Admins see all projects
         all_projects
 
       _ ->
-        # Default: show no projects for unknown roles
-        []
+        # For testing pagination, show all projects to all roles
+        # TODO: Re-enable role-based filtering:
+        # "pembangun sistem" -> Enum.filter(all_projects, fn p -> p.developer_id == current_user_id end)
+        # "pengurus projek" -> Enum.filter(all_projects, fn p -> p.project_manager_id == current_user_id end)
+        all_projects
     end
   end
 
@@ -324,6 +408,104 @@ defmodule SppaWeb.ProjekLive do
         isu: "Masalah integrasi dengan API",
         tindakan: "Selesaikan integrasi API",
         keterangan: "Aplikasi mobile untuk akses mudah kepada perkhidmatan JPKN melalui telefon pintar."
+      },
+      %{
+        id: 6,
+        nama: "Sistem Pengurusan Inventori F",
+        status: "Dalam Pembangunan",
+        fasa: "Pembangunan",
+        tarikh_mula: ~D[2024-04-15],
+        tarikh_siap: ~D[2024-10-31],
+        pengurus_projek: "Ahmad bin Abdullah",
+        developer_id: 2,
+        project_manager_id: 2,
+        isu: "Tiada",
+        tindakan: "Teruskan pembangunan modul inventori",
+        keterangan: "Sistem untuk menguruskan inventori peralatan dan aset JPKN dengan kemas kini masa nyata."
+      },
+      %{
+        id: 7,
+        nama: "Portal Pelanggan G",
+        status: "Ujian Penerimaan Pengguna",
+        fasa: "UAT",
+        tarikh_mula: ~D[2023-12-01],
+        tarikh_siap: ~D[2024-07-15],
+        pengurus_projek: "Siti Nurhaliza",
+        developer_id: 2,
+        project_manager_id: 3,
+        isu: "Isu keselamatan data perlu disemak",
+        tindakan: "Lengkapkan audit keselamatan",
+        keterangan: "Portal untuk pelanggan mengakses maklumat dan perkhidmatan JPKN dengan mudah."
+      },
+      %{
+        id: 8,
+        nama: "Sistem Laporan Automatik H",
+        status: "Selesai",
+        fasa: "Penyerahan",
+        tarikh_mula: ~D[2023-08-01],
+        tarikh_siap: ~D[2024-02-28],
+        pengurus_projek: "Mohd Faizal",
+        developer_id: 3,
+        project_manager_id: 4,
+        isu: "Tiada",
+        tindakan: "Projek telah diserahkan dan beroperasi",
+        keterangan: "Sistem untuk menjana laporan automatik berdasarkan data yang dikumpulkan."
+      },
+      %{
+        id: 9,
+        nama: "Aplikasi Web Responsif I",
+        status: "Dalam Pembangunan",
+        fasa: "Pembangunan",
+        tarikh_mula: ~D[2024-05-01],
+        tarikh_siap: ~D[2024-11-30],
+        pengurus_projek: "Nurul Aina",
+        developer_id: 1,
+        project_manager_id: 5,
+        isu: "Perlu penambahbaikan pada reka bentuk UI",
+        tindakan: "Kemaskini reka bentuk mengikut spesifikasi",
+        keterangan: "Aplikasi web yang responsif untuk akses melalui pelbagai peranti."
+      },
+      %{
+        id: 10,
+        nama: "Sistem Integrasi API J",
+        status: "Ujian Penerimaan Pengguna",
+        fasa: "UAT",
+        tarikh_mula: ~D[2024-01-10],
+        tarikh_siap: ~D[2024-06-30],
+        pengurus_projek: "Lim Wei Ming",
+        developer_id: 3,
+        project_manager_id: 2,
+        isu: "Masalah dengan endpoint tertentu",
+        tindakan: "Betulkan endpoint yang bermasalah",
+        keterangan: "Sistem untuk mengintegrasikan pelbagai sistem melalui API yang standard."
+      },
+      %{
+        id: 11,
+        nama: "Sistem Backup dan Pemulihan K",
+        status: "Selesai",
+        fasa: "Penyerahan",
+        tarikh_mula: ~D[2023-09-15],
+        tarikh_siap: ~D[2024-03-31],
+        pengurus_projek: "Ahmad bin Abdullah",
+        developer_id: 2,
+        project_manager_id: 2,
+        isu: "Tiada",
+        tindakan: "Sistem telah diserahkan dan beroperasi",
+        keterangan: "Sistem untuk backup dan pemulihan data secara automatik dan berkala."
+      },
+      %{
+        id: 12,
+        nama: "Portal Pentadbiran L",
+        status: "Ditangguhkan",
+        fasa: "Analisis dan Rekabentuk",
+        tarikh_mula: ~D[2024-06-01],
+        tarikh_siap: ~D[2024-12-31],
+        pengurus_projek: "Siti Nurhaliza",
+        developer_id: 1,
+        project_manager_id: 3,
+        isu: "Menunggu kelulusan dari pihak pengurusan",
+        tindakan: "Sambung semula selepas kelulusan",
+        keterangan: "Portal untuk pentadbiran dalaman dengan akses terhad kepada kakitangan yang berkenaan."
       }
     ]
 
