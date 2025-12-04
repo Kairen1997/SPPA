@@ -103,3 +103,26 @@
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
 /* This file is for your main application CSS */
+
+/* Auto-hide flash toasts after 5 seconds */
+.flash-auto-hide {
+  animation: flash-fade-out 5s ease-in-out forwards;
+}
+
+@keyframes flash-fade-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  80% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+  }
+}

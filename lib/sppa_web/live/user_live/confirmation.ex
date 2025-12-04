@@ -9,7 +9,7 @@ defmodule SppaWeb.UserLive.Confirmation do
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <div class="mx-auto max-w-sm">
         <div class="text-center">
-          <.header>Welcome {@user.email}</.header>
+          <.header>Selamat datang {@user.email}</.header>
         </div>
 
         <.form
@@ -46,9 +46,7 @@ defmodule SppaWeb.UserLive.Confirmation do
         >
           <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
           <%= if @current_scope do %>
-            <.button phx-disable-with="Logging in..." class="btn btn-primary w-full">
-              Log in
-            </.button>
+            <.button phx-disable-with="Logging in..." class="btn btn-primary w-full">Log in</.button>
           <% else %>
             <.button
               name={@form[:remember_me].name}

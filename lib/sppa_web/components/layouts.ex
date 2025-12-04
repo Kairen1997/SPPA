@@ -41,12 +41,9 @@ defmodule SppaWeb.Layouts do
       {render_slot(@inner_block)}
     <% else %>
       <main class="px-4 py-20 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl space-y-4">
-          {render_slot(@inner_block)}
-        </div>
+        <div class="mx-auto max-w-2xl space-y-4">{render_slot(@inner_block)}</div>
       </main>
     <% end %>
-
     <.flash_group flash={@flash} />
     """
   end
@@ -64,9 +61,7 @@ defmodule SppaWeb.Layouts do
   def flash_group(assigns) do
     ~H"""
     <div id={@id} aria-live="polite">
-      <.flash kind={:info} flash={@flash} />
-      <.flash kind={:error} flash={@flash} />
-
+      <.flash kind={:info} flash={@flash} /> <.flash kind={:error} flash={@flash} />
       <.flash
         id="client-error"
         kind={:error}
@@ -103,7 +98,6 @@ defmodule SppaWeb.Layouts do
     ~H"""
     <div class="relative flex flex-row items-center border-2 border-gray-300 dark:border-gray-600 bg-gray-200 dark:bg-gray-700 rounded-full p-1">
       <div class="absolute w-1/2 h-[calc(100%-0.5rem)] rounded-full bg-white dark:bg-gray-800 transition-all duration-200 left-1 [[data-theme=light]_&]:left-1 [[data-theme=dark]_&]:left-[calc(50%+0.125rem)]" />
-
       <button
         class="relative flex p-1.5 cursor-pointer w-1/2 justify-center z-10"
         phx-click={JS.dispatch("phx:set-theme")}
@@ -112,7 +106,6 @@ defmodule SppaWeb.Layouts do
       >
         <.icon name="hero-sun" class="size-4 text-gray-700 dark:text-gray-300" />
       </button>
-
       <button
         class="relative flex p-1.5 cursor-pointer w-1/2 justify-center z-10"
         phx-click={JS.dispatch("phx:set-theme")}

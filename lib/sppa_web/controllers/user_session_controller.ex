@@ -9,7 +9,7 @@ defmodule SppaWeb.UserSessionController do
   end
 
   def create(conn, params) do
-    create(conn, params, "Welcome back!")
+    create(conn, params, "Selamat datang")
   end
 
   # magic link login
@@ -69,7 +69,7 @@ defmodule SppaWeb.UserSessionController do
 
   def delete(conn, _params) do
     conn
-    |> put_flash(:info, "Logged out successfully.")
+    |> put_flash(:info, "Berjaya Log Keluar.")
     |> UserAuth.log_out_user()
   end
 end
