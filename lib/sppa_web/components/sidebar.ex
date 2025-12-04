@@ -89,6 +89,23 @@ defmodule SppaWeb.Components.Sidebar do
             />
             <span>Projek</span>
           </.link>
+
+          <.link
+            navigate={~p"/soal-selidik"}
+            class={[
+              "flex items-center gap-3 px-7 py-3 font-medium transition",
+              if(@current_path == "/soal-selidik",
+                do: "border-l-4 border-yellow-300 bg-[#0C304B] shadow-inner",
+                else: "text-gray-200 hover:bg-[#0C304B]"
+              )
+            ]}
+          >
+            <.icon
+              name="hero-clipboard-document-list"
+              class={if(@current_path == "/soal-selidik", do: "h-5 w-5 text-yellow-300", else: "h-5 w-5 text-gray-300")}
+            />
+            <span>Soal Selidik</span>
+          </.link>
         </nav>
       </aside>
 

@@ -73,7 +73,7 @@ defmodule SppaWeb.CoreComponents do
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
-          
+
           <p>{msg}</p>
         </div>
          <div class="flex-1" />
@@ -291,10 +291,10 @@ defmodule SppaWeb.CoreComponents do
     <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
       <div>
         <h1 class="text-lg font-semibold leading-8">{render_slot(@inner_block)}</h1>
-        
+
         <p :if={@subtitle != []} class="text-sm text-base-content/70">{render_slot(@subtitle)}</p>
       </div>
-      
+
       <div class="flex-none">{render_slot(@actions)}</div>
     </header>
     """
@@ -336,11 +336,11 @@ defmodule SppaWeb.CoreComponents do
       <thead>
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>
-          
+
           <th :if={@action != []}><span class="sr-only">{gettext("Actions")}</span></th>
         </tr>
       </thead>
-      
+
       <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
         <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
           <td
@@ -350,7 +350,7 @@ defmodule SppaWeb.CoreComponents do
           >
             {render_slot(col, @row_item.(row))}
           </td>
-          
+
           <td :if={@action != []} class="w-0 font-semibold">
             <div class="flex gap-4">
               <%= for action <- @action do %>
@@ -384,7 +384,7 @@ defmodule SppaWeb.CoreComponents do
       <li :for={item <- @item} class="list-row">
         <div class="list-col-grow">
           <div class="font-bold">{item.title}</div>
-          
+
           <div>{render_slot(item)}</div>
         </div>
       </li>
@@ -524,14 +524,14 @@ defmodule SppaWeb.CoreComponents do
             <.icon name="hero-folder" class="w-5 h-5" />
             <span>Senarai Projek</span>
           </.link>
-          <a
-            href="#"
+          <.link
+            navigate={~p"/soal-selidik"}
             phx-click="close_sidebar"
             class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
           >
             <.icon name="hero-clipboard-document-list" class="w-5 h-5" />
             <span>Soal Selidik</span>
-          </a>
+          </.link>
           <a
             href="#"
             phx-click="close_sidebar"
