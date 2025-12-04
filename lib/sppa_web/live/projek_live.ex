@@ -717,7 +717,7 @@ defmodule SppaWeb.ProjekLive do
     {fasa_code, fasa_name} = case project.fasa do
       "Soal Selidik" -> {"B1", "Soal Selidik kajian keperluan pembangunan aplikasi"}
       "Analisis dan Rekabentuk" -> {"B2", "Analisis dan Rekabentuk"}
-      "Pembangunan" -> {"B4", "Pembangunan"}
+      "Pembangunan" -> {"B4", "Jadual Projek"}
       "UAT" -> {"B5", "UAT"}
       "Penyerahan" -> {"B6", "Penyerahan"}
       _ -> {"B1", "Soal Selidik kajian keperluan pembangunan aplikasi"}
