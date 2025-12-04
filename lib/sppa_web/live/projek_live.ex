@@ -29,24 +29,30 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:notifications_open, false)
         |> assign(:page, 1)
         |> assign(:per_page, 10)
+        |> assign(:search_term, "")
+        |> assign(:status_filter, "")
+        |> assign(:fasa_filter, "")
 
       if connected?(socket) do
         # Mock data - will be replaced with database queries later
         # Filter projects based on user role
         all_projects = list_projects(socket.assigns.current_scope, user_role)
-        {paginated_projects, total_pages} = paginate_projects(all_projects, socket.assigns.page, socket.assigns.per_page)
+        filtered_projects = filter_projects(all_projects, socket.assigns.search_term, socket.assigns.status_filter, socket.assigns.fasa_filter)
+        {paginated_projects, total_pages} = paginate_projects(filtered_projects, socket.assigns.page, socket.assigns.per_page)
 
         {:ok,
          socket
          |> assign(:projects, paginated_projects)
          |> assign(:all_projects, all_projects)
+         |> assign(:filtered_projects, filtered_projects)
          |> assign(:total_pages, total_pages)
-         |> assign(:total_count, length(all_projects))}
+         |> assign(:total_count, length(filtered_projects))}
       else
         {:ok,
          socket
          |> assign(:projects, [])
          |> assign(:all_projects, [])
+         |> assign(:filtered_projects, [])
          |> assign(:total_pages, 0)
          |> assign(:total_count, 0)}
       end
@@ -141,13 +147,53 @@ defmodule SppaWeb.ProjekLive do
   @impl true
   def handle_event("change_page", %{"page" => page}, socket) do
     page = String.to_integer(page)
-    {paginated_projects, total_pages} = paginate_projects(socket.assigns.all_projects, page, socket.assigns.per_page)
+    filtered_projects = filter_projects(socket.assigns.all_projects, socket.assigns.search_term, socket.assigns.status_filter, socket.assigns.fasa_filter)
+    {paginated_projects, total_pages} = paginate_projects(filtered_projects, page, socket.assigns.per_page)
 
     {:noreply,
      socket
      |> assign(:page, page)
      |> assign(:projects, paginated_projects)
-     |> assign(:total_pages, total_pages)}
+     |> assign(:filtered_projects, filtered_projects)
+     |> assign(:total_pages, total_pages)
+     |> assign(:total_count, length(filtered_projects))}
+  end
+
+  @impl true
+  def handle_event("filter_projects", params, socket) do
+    search_term = Map.get(params, "search_term", "") |> String.trim()
+    status_filter = Map.get(params, "status_filter", "")
+    fasa_filter = Map.get(params, "fasa_filter", "")
+
+    filtered_projects = filter_projects(socket.assigns.all_projects, search_term, status_filter, fasa_filter)
+    {paginated_projects, total_pages} = paginate_projects(filtered_projects, 1, socket.assigns.per_page)
+
+    {:noreply,
+     socket
+     |> assign(:search_term, search_term)
+     |> assign(:status_filter, status_filter)
+     |> assign(:fasa_filter, fasa_filter)
+     |> assign(:page, 1)
+     |> assign(:projects, paginated_projects)
+     |> assign(:filtered_projects, filtered_projects)
+     |> assign(:total_pages, total_pages)
+     |> assign(:total_count, length(filtered_projects))}
+  end
+
+  @impl true
+  def handle_event("clear_filters", _params, socket) do
+    {paginated_projects, total_pages} = paginate_projects(socket.assigns.all_projects, 1, socket.assigns.per_page)
+
+    {:noreply,
+     socket
+     |> assign(:search_term, "")
+     |> assign(:status_filter, "")
+     |> assign(:fasa_filter, "")
+     |> assign(:page, 1)
+     |> assign(:projects, paginated_projects)
+     |> assign(:filtered_projects, socket.assigns.all_projects)
+     |> assign(:total_pages, total_pages)
+     |> assign(:total_count, length(socket.assigns.all_projects))}
   end
 
   # Mock data function - will be replaced with database queries later
@@ -529,6 +575,34 @@ defmodule SppaWeb.ProjekLive do
       true ->
         nil
     end
+  end
+
+  # Filter projects based on search term, status, and fasa
+  defp filter_projects(projects, search_term, status_filter, fasa_filter) do
+    projects
+    |> filter_by_search(search_term)
+    |> filter_by_status(status_filter)
+    |> filter_by_fasa(fasa_filter)
+  end
+
+  defp filter_by_search(projects, ""), do: projects
+  defp filter_by_search(projects, search_term) do
+    search_lower = String.downcase(search_term)
+    Enum.filter(projects, fn project ->
+      String.contains?(String.downcase(project.nama), search_lower) ||
+        String.contains?(String.downcase(project.pengurus_projek || ""), search_lower) ||
+        String.contains?(String.downcase(project.isu || ""), search_lower)
+    end)
+  end
+
+  defp filter_by_status(projects, ""), do: projects
+  defp filter_by_status(projects, status) do
+    Enum.filter(projects, fn project -> project.status == status end)
+  end
+
+  defp filter_by_fasa(projects, ""), do: projects
+  defp filter_by_fasa(projects, fasa) do
+    Enum.filter(projects, fn project -> project.fasa == fasa end)
   end
 
   # Paginate projects list
