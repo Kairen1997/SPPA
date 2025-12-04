@@ -105,12 +105,26 @@ defmodule SppaWeb.ProjekLive do
            |> assign(:fasa_code, overview_data.fasa_code)
            |> assign(:fasa_name, overview_data.fasa_name)
            |> assign(:tarikh_mula_formatted, format_date_malay(project.tarikh_mula))
-           |> assign(:tarikh_siap_formatted, format_date_malay(project.tarikh_siap))}
+           |> assign(:tarikh_siap_formatted, format_date_malay(project.tarikh_siap))
+           |> assign(:page, 1)
+           |> assign(:per_page, 10)
+           |> assign(:total_pages, 0)
+           |> assign(:total_count, 0)
+           |> assign(:search_term, "")
+           |> assign(:status_filter, "")
+           |> assign(:fasa_filter, "")}
         else
           socket =
             socket
             |> assign(:project, nil)
             |> assign(:projects, [])
+            |> assign(:page, 1)
+            |> assign(:per_page, 10)
+            |> assign(:total_pages, 0)
+            |> assign(:total_count, 0)
+            |> assign(:search_term, "")
+            |> assign(:status_filter, "")
+            |> assign(:fasa_filter, "")
             |> Phoenix.LiveView.put_flash(
               :error,
               "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk melihat projek ini."
@@ -123,7 +137,14 @@ defmodule SppaWeb.ProjekLive do
         {:ok,
          socket
          |> assign(:project, nil)
-         |> assign(:projects, [])}
+         |> assign(:projects, [])
+         |> assign(:page, 1)
+         |> assign(:per_page, 10)
+         |> assign(:total_pages, 0)
+         |> assign(:total_count, 0)
+         |> assign(:search_term, "")
+         |> assign(:status_filter, "")
+         |> assign(:fasa_filter, "")}
       end
     else
       socket =
@@ -395,8 +416,8 @@ defmodule SppaWeb.ProjekLive do
   end
 
   # Get a single project by ID - will be replaced with database query later
-  defp get_project_by_id(project_id, current_scope, user_role) do
-    current_user_id = current_scope.user.id
+  defp get_project_by_id(project_id, current_scope, _user_role) do
+    _current_user_id = current_scope.user.id
 
     all_projects = [
       %{
@@ -573,22 +594,27 @@ defmodule SppaWeb.ProjekLive do
     project = Enum.find(all_projects, fn p -> p.id == project_id end)
 
     # Check if user has permission to view this project
-    cond do
-      is_nil(project) ->
-        nil
+    # Temporarily allowing all users to view all projects (consistent with list_projects)
+    # TODO: Re-enable role-based filtering when ready:
+    # cond do
+    #   is_nil(project) ->
+    #     nil
+    #
+    #   user_role == "pembangun sistem" ->
+    #     if project.developer_id == current_user_id, do: project, else: nil
+    #
+    #   user_role == "pengurus projek" ->
+    #     if project.project_manager_id == current_user_id, do: project, else: nil
+    #
+    #   user_role == "ketua penolong pengarah" ->
+    #     project
+    #
+    #   true ->
+    #     nil
+    # end
 
-      user_role == "pembangun sistem" ->
-        if project.developer_id == current_user_id, do: project, else: nil
-
-      user_role == "pengurus projek" ->
-        if project.project_manager_id == current_user_id, do: project, else: nil
-
-      user_role == "ketua penolong pengarah" ->
-        project
-
-      true ->
-        nil
-    end
+    # For now, allow all authenticated users to view all projects (for testing)
+    project
   end
 
   # Filter projects based on search term, status, and fasa
@@ -646,8 +672,47 @@ defmodule SppaWeb.ProjekLive do
     "#{day} #{month} #{year}"
   end
 
+  # Calculate project progress based on dates and phase
+  defp calculate_progress(tarikh_mula, tarikh_siap, fasa, status) do
+    today = Date.utc_today()
+
+    # If project is completed, return 100%
+    if status == "Selesai" do
+      100
+    else
+      # Phase-based progress (primary indicator)
+      # Timeline phases: B1 (0-20%), B2 (20-40%), B4 (40-60%), B5 (60-80%), Dep (80-100%)
+      phase_progress = case fasa do
+        "Analisis dan Rekabentuk" -> 30  # B2 phase: 20-40% range, use 30% as midpoint
+        "Pembangunan" -> 50              # B4 phase: 40-60% range, use 50% as midpoint
+        "UAT" -> 70                      # B5 phase: 60-80% range, use 70% as midpoint
+        "Penyerahan" -> 90               # Dep phase: 80-100% range, use 90% as midpoint
+        _ -> 10                          # Default/B1 phase: 0-20% range, use 10% as midpoint
+      end
+
+      # Calculate date-based progress as a secondary check
+      total_days = Date.diff(tarikh_siap, tarikh_mula)
+      elapsed_days = Date.diff(today, tarikh_mula)
+
+      date_progress = cond do
+        total_days <= 0 -> phase_progress  # Invalid date range, use phase progress
+        elapsed_days < 0 -> 0             # Project hasn't started yet
+        elapsed_days >= total_days -> 95   # Past due date, show 95% (not 100% until completed)
+        true -> div(elapsed_days * 100, total_days)  # Normal date-based calculation
+      end
+
+      # Use phase progress as primary, but adjust if dates suggest significantly different progress
+      # This ensures phase is respected but dates provide reality check
+      cond do
+        date_progress > phase_progress + 20 -> min(date_progress, 95)  # Date suggests much more progress
+        date_progress < phase_progress - 20 -> max(date_progress, 0)   # Date suggests much less progress
+        true -> phase_progress  # Use phase progress if dates are reasonably aligned
+      end
+    end
+  end
+
   # Get project overview data - will be replaced with database queries later
-  defp get_project_overview(project_id, project) do
+  defp get_project_overview(_project_id, project) do
     # Map fasa to development phase code and name
     {fasa_code, fasa_name} = case project.fasa do
       "Analisis dan Rekabentuk" -> {"B2", "Rekabentuk"}
@@ -657,14 +722,9 @@ defmodule SppaWeb.ProjekLive do
       _ -> {"B2", "Rekabentuk"}
     end
 
-    # Calculate progress based on fasa (mock calculation)
-    progress = case project.fasa do
-      "Analisis dan Rekabentuk" -> 30
-      "Pembangunan" -> 60
-      "UAT" -> 80
-      "Penyerahan" -> 100
-      _ -> 30
-    end
+    # Calculate progress based on dates and phase
+    # First, try date-based calculation (elapsed time vs total time)
+    progress = calculate_progress(project.tarikh_mula, project.tarikh_siap, project.fasa, project.status)
 
     # Timeline milestones
     timeline = ["B1", "B2", "B4", "B5", "Dep"]
