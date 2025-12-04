@@ -25,11 +25,37 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/sppa"
 import topbar from "../vendor/topbar"
 
+// Print Document Hook
+const PrintDocument = {
+  mounted() {
+    this.el.addEventListener("click", (e) => {
+      e.preventDefault()
+      const targetId = this.el.dataset.target
+      
+      if (targetId) {
+        // Add a class to body to indicate printing mode
+        document.body.classList.add("printing")
+        
+        // Trigger print dialog
+        window.print()
+        
+        // Remove printing class after print dialog closes
+        setTimeout(() => {
+          document.body.classList.remove("printing")
+        }, 100)
+      }
+    })
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {
+    ...colocatedHooks,
+    PrintDocument
+  },
 })
 
 // Show progress bar on live navigation and form submits
