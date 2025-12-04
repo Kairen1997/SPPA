@@ -1,0 +1,360 @@
+<Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+  <style>
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+      
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .page-break {
+        page-break-after: always;
+        break-after: page;
+      }
+      
+      .avoid-break {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      
+      .section-container {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      
+      .section-container + .section-container {
+        page-break-before: auto;
+        break-before: auto;
+      }
+      
+      .a4-page {
+        page-break-after: always;
+        break-after: page;
+        width: 297mm;
+        min-height: 210mm;
+        padding: 15mm 20mm;
+        margin: 0;
+      }
+      
+      .a4-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+    }
+    
+    @media screen {
+      .a4-page {
+        width: 297mm;
+        min-height: 210mm;
+        max-height: 210mm;
+        padding: 15mm 20mm;
+        margin-bottom: 20mm;
+        background: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      
+      .a4-content {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      
+      .section-container {
+        min-height: fit-content;
+      }
+    }
+  </style>
+  <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
+    <%!-- Overlay --%>
+    <div
+      class={[
+        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+      ]}
+      phx-click="close_sidebar"
+    >
+    </div>
+
+    <%!-- Sidebar --%>
+    <.dashboard_sidebar
+      sidebar_open={@sidebar_open}
+      dashboard_path={~p"/dashboard"}
+      logo_src={~p"/images/logojpkn.png"}
+    />
+
+    <%!-- Main Content --%>
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <%!-- Header --%>
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md">
+        <div class="flex items-center gap-4">
+          <button
+            phx-click="toggle_sidebar"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-bars-3" class="w-6 h-6" />
+          </button>
+          <div class="flex items-center gap-3">
+            <img
+              src={~p"/images/Jata-Sabah.png"}
+              alt="Jata Wilayah Sabah"
+              class="h-9 w-auto object-contain"
+            />
+            <img
+              src={~p"/images/logojpkn.png"}
+              alt="Logo JPKN"
+              class="h-9 w-auto object-contain"
+            />
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <.link
+            navigate={~p"/users/settings"}
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-user-circle" class="w-6 h-6" />
+          </.link>
+          <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
+            <button
+              type="submit"
+              class="text-white hover:text-red-100 hover:bg-red-500/30 p-2 rounded-lg transition-all duration-200"
+            >
+              <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5" />
+            </button>
+          </.form>
+        </div>
+      </header>
+
+      <%!-- Form Content --%>
+      <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6" id="main-content">
+        <div class="mx-auto" style="width: 297mm; max-width: 297mm;" id="pages-container">
+          <%!-- A4 Paper Container (Landscape) --%>
+          <div class="a4-page bg-white shadow-lg" style="font-family: Arial, sans-serif; font-size: 11pt;" id="page-1">
+            <div class="a4-content">
+              <%!-- Document Header --%>
+              <div class="mb-6 text-center avoid-break">
+                <div class="flex justify-end mb-3">
+                  <span class="text-xs text-gray-600 font-bold">{@document_id}</span>
+                </div>
+                <div class="flex justify-center mb-4">
+                  <img
+                    src={~p"/images/logojpkn.png"}
+                    alt="Logo JPKN"
+                    class="h-16 w-auto object-contain"
+                  />
+                </div>
+                <h1 class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight" style="font-size: 11pt;">
+                  Template Soal Selidik Kajian Keperluan Pembangunan Aplikasi
+                </h1>
+                <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
+                  <span>Nama Sistem :</span>
+                  <input
+                    type="text"
+                    name="soal_selidik[nama_sistem]"
+                    value={Phoenix.HTML.Form.input_value(@form, :nama_sistem)}
+                    class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Masukkan Nama Sistem"
+                  />
+                </div>
+              </div>
+
+              <%!-- Form --%>
+              <.form for={@form} phx-change="validate" phx-submit="save" id="soal-selidik-form" class="space-y-4">
+                <div id="sections" phx-update="stream">
+                  <div :for={{section_id, section} <- @streams.sections} id={section_id} class="section-container border border-gray-300 overflow-hidden mb-4 avoid-break">
+                  <%!-- Section Header --%>
+                  <div class="bg-blue-100 px-3 py-2 border-b border-gray-400">
+                    <div class="flex items-center justify-between gap-2">
+                      <input
+                        type="text"
+                        name={"soal_selidik[sections][#{section_id}][category]"}
+                        value={section.category}
+                        readonly
+                        class="flex-1 px-2 py-1 text-xs font-bold text-gray-900 uppercase tracking-wide border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
+                        placeholder="Kategori (cth: FUNCTIONAL REQUIREMENT)"
+                      />
+                      <button
+                        type="button"
+                        phx-click="remove_section"
+                        phx-value-id={section_id}
+                        class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors duration-200"
+                        title="Buang bahagian"
+                      >
+                        <.icon name="hero-trash" class="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div class="bg-blue-50 px-3 py-2 border-b border-gray-400">
+                    <input
+                      type="text"
+                      name={"soal_selidik[sections][#{section_id}][title]"}
+                      value={section.title}
+                      class="w-full px-2 py-1 text-xs font-bold text-gray-900 uppercase tracking-wide border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Tajuk Bahagian..."
+                    />
+                  </div>
+                  <%!-- Section Rows --%>
+                  <div class="p-2">
+                    <table class="w-full border-collapse text-xs">
+                      <thead>
+                        <tr class="bg-gray-100 border border-gray-400">
+                          <th class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">No</th>
+                          <th class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 38%;">Soalan</th>
+                          <th class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 23%;">Maklumbalas</th>
+                          <th class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 23%;">Catatan</th>
+                          <th class="px-2 py-1.5 text-left font-semibold text-gray-700" style="width: 10%;">Tindakan</th>
+                        </tr>
+                      </thead>
+                      <tbody id={"#{section_id}_rows"} phx-update="stream" class="divide-y divide-gray-300">
+                        <tr :for={{id, row} <- SppaWeb.SoalSelidikLive.get_section_rows(@streams, section_id)} id={id}>
+                          <td class="px-2 py-2 border-r border-gray-400 align-top">
+                            <div class="px-1.5 py-1 text-xs font-medium text-gray-900">
+                              {row.no}
+                            </div>
+                            <input
+                              type="hidden"
+                              name={"soal_selidik[sections][#{section_id}][rows][#{id}][no]"}
+                              value={row.no}
+                            />
+                          </td>
+                          <td class="px-2 py-2 border-r border-gray-400 align-top">
+                            <textarea
+                              name={"soal_selidik[sections][#{section_id}][rows][#{id}][soalan]"}
+                              rows="3"
+                              class="w-full px-1.5 py-1 text-xs border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                              placeholder="Soalan..."
+                            >{row.soalan}</textarea>
+                          </td>
+                          <td class="px-2 py-2 border-r border-gray-400 align-top">
+                            <textarea
+                              name={"soal_selidik[sections][#{section_id}][rows][#{id}][maklumbalas]"}
+                              rows="3"
+                              class="w-full px-1.5 py-1 text-xs border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                              placeholder="Maklumbalas..."
+                            >{row.maklumbalas}</textarea>
+                          </td>
+                          <td class="px-2 py-2 border-r border-gray-400 align-top">
+                            <textarea
+                              name={"soal_selidik[sections][#{section_id}][rows][#{id}][catatan]"}
+                              rows="3"
+                              class="w-full px-1.5 py-1 text-xs border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                              placeholder="Catatan..."
+                            >{row.catatan}</textarea>
+                          </td>
+                          <td class="px-2 py-2 align-top">
+                            <button
+                              type="button"
+                              phx-click="remove_row"
+                              phx-value-section_id={section_id}
+                              phx-value-id={id}
+                              class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors duration-200"
+                              title="Buang baris"
+                            >
+                              <.icon name="hero-trash" class="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div class="mt-2">
+                      <button
+                        type="button"
+                        phx-click="add_row"
+                        phx-value-section_id={section_id}
+                        class="px-3 py-1.5 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors duration-200 flex items-center gap-1"
+                      >
+                        <.icon name="hero-plus" class="w-4 h-4" />
+                        <span>Tambah Baris</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <%!-- Add Section Button --%>
+              <div class="mb-4">
+                <button
+                  type="button"
+                  phx-click="add_section"
+                  class="px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2"
+                >
+                  <.icon name="hero-plus" class="w-5 h-5" />
+                  <span>Tambah Bahagian</span>
+                </button>
+              </div>
+
+              <%!-- Submit Button --%>
+              <div class="flex justify-end gap-3 pt-4 avoid-break">
+                <button
+                  type="button"
+                  class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
+                >
+                  Simpan Soal Selidik
+                </button>
+              </div>
+            </.form>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <script>
+    (function() {
+      function checkPageOverflow() {
+        const page = document.querySelector('.a4-page');
+        const content = page?.querySelector('.a4-content');
+        if (!page || !content) return;
+        
+        // A4 landscape: 210mm height, minus padding (30mm total)
+        const maxHeight = 210 * 3.779527559 - 30 * 3.779527559; // Convert mm to px
+        const currentHeight = content.scrollHeight;
+        
+        if (currentHeight > maxHeight) {
+          content.style.maxHeight = maxHeight + 'px';
+          content.style.overflowY = 'auto';
+        } else {
+          content.style.maxHeight = 'none';
+          content.style.overflowY = 'visible';
+        }
+      }
+      
+      // Run on load
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkPageOverflow);
+      } else {
+        checkPageOverflow();
+      }
+      
+      // Re-check after LiveView updates
+      document.addEventListener('phx:update', checkPageOverflow);
+      
+      // Watch for content changes
+      const observer = new MutationObserver(() => {
+        setTimeout(checkPageOverflow, 100);
+      });
+      
+      const pagesContainer = document.getElementById('pages-container');
+      if (pagesContainer) {
+        observer.observe(pagesContainer, {
+          childList: true,
+          subtree: true
+        });
+      }
+    })();
+  </script>
+</Layouts.app>
+

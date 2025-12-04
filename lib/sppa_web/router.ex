@@ -55,6 +55,7 @@ defmodule SppaWeb.Router do
       live "/dashboard", DashboardLive, :index
       live "/projek", ProjekLive, :index
       live "/projek/:id", ProjekLive, :show
+      live "/soal-selidik", SoalSelidikLive, :index
     end
 
     post "/users/update-password", UserSessionController, :update_password
