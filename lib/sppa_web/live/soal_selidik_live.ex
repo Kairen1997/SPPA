@@ -276,33 +276,48 @@ defmodule SppaWeb.SoalSelidikLive do
     |> categories_from_sections()
     |> length()
   end
-
   defp get_next_row_number(stream_name, socket) do
     streams = socket.assigns.streams || %{}
-    stream = Map.get(streams, stream_name, %{})
-    if map_size(stream) == 0 do
-      1
-    else
-      max_no = stream
-               |> Enum.map(fn {_id, row} -> row.no || 0 end)
-               |> Enum.max(fn -> 0 end)
-      max_no + 1
+
+    case Map.get(streams, stream_name) do
+      # Belum ada sebarang baris untuk section ini
+      nil ->
+        1
+
+      %Phoenix.LiveView.LiveStream{} = stream ->
+        max_no =
+          stream
+          |> Enum.reduce(0, fn {_dom_id, row}, acc ->
+            row_no = Map.get(row, :no, 0) || 0
+            if row_no > acc, do: row_no, else: acc
+          end)
+
+        max_no + 1
+
+      # Fallback untuk sebarang struktur lain yang tidak dijangka
+      _other ->
+        1
     end
   end
 
   defp renumber_stream(stream_name, socket) do
     streams = socket.assigns.streams || %{}
-    stream = Map.get(streams, stream_name, %{})
 
-    renumbered_rows = stream
-                     |> Enum.to_list()
+    case Map.get(streams, stream_name) do
+      nil ->
+        socket
+
+      %Phoenix.LiveView.LiveStream{} = stream ->
+        rows_with_no =
+          stream
+          |> Enum.map(fn {_dom_id, row} -> row end)
                      |> Enum.with_index(1)
-                     |> Enum.map(fn {{id, row}, new_no} ->
-                       updated_row = Map.put(row, :no, new_no)
-                       {id, updated_row}
-                     end)
+          |> Enum.map(fn {row, new_no} -> Map.put(row, :no, new_no) end)
 
+        stream(socket, stream_name, rows_with_no, reset: true)
+
+      _other ->
     socket
-    |> stream(stream_name, renumbered_rows, reset: true)
+    end
   end
 end
