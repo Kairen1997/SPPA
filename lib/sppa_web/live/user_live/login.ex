@@ -18,18 +18,18 @@ defmodule SppaWeb.UserLive.Login do
             <%!-- Logo Section --%>
             <div class="flex justify-center mb-8">
               <img
-                src={~p"/images/Logo JPKN.png"}
+                src={~p"/images/logojpkn.png"}
                 alt="JPKN Logo"
                 class="h-24 w-auto object-contain"
               />
             </div>
-             <%!-- System Title --%>
+            <%!-- System Title --%>
             <div class="text-center mb-10">
               <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 leading-relaxed">
                 Sistem Pengurusan Pembangunan Aplikasi
               </h2>
             </div>
-             <%!-- Login Form --%>
+            <%!-- Login Form --%>
             <.form
               for={@form}
               id="login-form"
@@ -55,7 +55,7 @@ defmodule SppaWeb.UserLive.Login do
                   />
                 </div>
               </div>
-               <%!-- Password Field --%>
+              <%!-- Password Field --%>
               <div class="flex items-center gap-4">
                 <label
                   for="user_password"
@@ -72,7 +72,7 @@ defmodule SppaWeb.UserLive.Login do
                   />
                 </div>
               </div>
-               <%!-- Login Button --%>
+              <%!-- Login Button --%>
               <div class="pt-6">
                 <button
                   type="submit"
