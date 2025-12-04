@@ -27,6 +27,7 @@ defmodule SppaWeb.DashboardLive do
         notifications_count = length(activities)
 
         # Merge stats preserving displayed values - once a stat shows a value, don't let it go to zero
+        fallback_stats = %{}
         displayed_stats =
           socket.assigns
           |> Map.get(:stats, fallback_stats)
@@ -34,7 +35,7 @@ defmodule SppaWeb.DashboardLive do
 
         {:ok,
          socket
-         |> assign(:stats, stats)
+         |> assign(:stats, displayed_stats)
          |> assign(:activities, activities)
          |> assign(:notifications_count, notifications_count)}
       else

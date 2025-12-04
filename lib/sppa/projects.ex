@@ -33,44 +33,30 @@ defmodule Sppa.Projects do
 
   @doc """
   Gets dashboard statistics for a user scope.
+  Optimized to use a single query instead of multiple separate queries.
   """
   def get_dashboard_stats(current_scope) do
-    base_query = from(p in Project, where: p.user_id == ^current_scope.user.id)
-
-    total_projects = Repo.aggregate(base_query, :count, :id)
-
-    in_development =
-      base_query
-      |> where([p], p.status == "Dalam Pembangunan")
-      |> Repo.aggregate(:count, :id)
-
-    completed =
-      base_query
-      |> where([p], p.status == "Selesai")
-      |> Repo.aggregate(:count, :id)
-
-    on_hold =
-      base_query
-      |> where([p], p.status == "Ditangguhkan")
-      |> Repo.aggregate(:count, :id)
-
-    uat =
-      base_query
-      |> where([p], p.status == "UAT")
-      |> Repo.aggregate(:count, :id)
-
-    change_management =
-      base_query
-      |> where([p], p.status == "Pengurusan Perubahan")
-      |> Repo.aggregate(:count, :id)
+    result =
+      from(p in Project,
+        where: p.user_id == ^current_scope.user.id,
+        select: %{
+          total_projects: count(p.id),
+          in_development: filter(count(p.id), p.status == "Dalam Pembangunan"),
+          completed: filter(count(p.id), p.status == "Selesai"),
+          on_hold: filter(count(p.id), p.status == "Ditangguhkan"),
+          uat: filter(count(p.id), p.status == "UAT"),
+          change_management: filter(count(p.id), p.status == "Pengurusan Perubahan")
+        }
+      )
+      |> Repo.one()
 
     %{
-      total_projects: total_projects || 0,
-      in_development: in_development || 0,
-      completed: completed || 0,
-      on_hold: on_hold || 0,
-      uat: uat || 0,
-      change_management: change_management || 0
+      total_projects: result.total_projects || 0,
+      in_development: result.in_development || 0,
+      completed: result.completed || 0,
+      on_hold: result.on_hold || 0,
+      uat: result.uat || 0,
+      change_management: result.change_management || 0
     }
   end
 

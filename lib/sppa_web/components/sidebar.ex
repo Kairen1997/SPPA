@@ -74,10 +74,10 @@ defmodule SppaWeb.Components.Sidebar do
           </.link>
 
           <.link
-            navigate={~p"/senarai-projek"}
+            navigate={~p"/projek"}
             class={[
               "flex items-center gap-3 px-7 py-3 font-medium transition",
-              if(@current_path == "/senarai-projek",
+              if(@current_path == "/projek",
                 do: "border-l-4 border-yellow-300 bg-[#0C304B] shadow-inner",
                 else: "text-gray-200 hover:bg-[#0C304B]"
               )
@@ -85,7 +85,7 @@ defmodule SppaWeb.Components.Sidebar do
           >
             <.icon
               name="hero-folder"
-              class={if(@current_path == "/senarai-projek", do: "h-5 w-5 text-yellow-300", else: "h-5 w-5 text-gray-300")}
+              class={if(@current_path == "/projek", do: "h-5 w-5 text-yellow-300", else: "h-5 w-5 text-gray-300")}
             />
             <span>Projek</span>
           </.link>
