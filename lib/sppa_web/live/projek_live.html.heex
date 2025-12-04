@@ -194,6 +194,66 @@
                 </tbody>
               </table>
             </div>
+            <%!-- Pagination --%>
+            <%= if @total_pages > 0 do %>
+              <div class="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+                <div class="flex items-center justify-between">
+                  <div class="text-sm text-gray-600">
+                    Menunjukkan <span class="font-medium text-gray-900"><%=(@page - 1) * @per_page + 1%></span>
+                    hingga
+                    <span class="font-medium text-gray-900">
+                      <%=min(@page * @per_page, @total_count)%>
+                    </span>
+                    daripada <span class="font-medium text-gray-900">{@total_count}</span> projek
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button
+                      phx-click="change_page"
+                      phx-value-page={@page - 1}
+                      disabled={@page == 1}
+                      class={[
+                        "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                        if(@page == 1,
+                          do: "text-gray-400 bg-gray-100 cursor-not-allowed",
+                          else: "text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 hover:border-gray-400"
+                        )
+                      ]}
+                    >
+                      <.icon name="hero-chevron-left" class="w-4 h-4" />
+                    </button>
+                    <%= for page_num <- max(1, @page - 2)..min(@total_pages, @page + 2) do %>
+                      <button
+                        phx-click="change_page"
+                        phx-value-page={page_num}
+                        class={[
+                          "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                          if(page_num == @page,
+                            do: "text-white bg-blue-600 hover:bg-blue-700 shadow-md",
+                            else: "text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 hover:border-gray-400"
+                          )
+                        ]}
+                      >
+                        <%= page_num %>
+                      </button>
+                    <% end %>
+                    <button
+                      phx-click="change_page"
+                      phx-value-page={@page + 1}
+                      disabled={@page == @total_pages}
+                      class={[
+                        "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                        if(@page == @total_pages,
+                          do: "text-gray-400 bg-gray-100 cursor-not-allowed",
+                          else: "text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 hover:border-gray-400"
+                        )
+                      ]}
+                    >
+                      <.icon name="hero-chevron-right" class="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            <% end %>
           </div>
         </div>
       </main>

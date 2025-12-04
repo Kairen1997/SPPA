@@ -27,19 +27,28 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:page_title, "Senarai Projek")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:page, 1)
+        |> assign(:per_page, 10)
 
       if connected?(socket) do
         # Mock data - will be replaced with database queries later
         # Filter projects based on user role
-        projects = list_projects(socket.assigns.current_scope, user_role)
+        all_projects = list_projects(socket.assigns.current_scope, user_role)
+        {paginated_projects, total_pages} = paginate_projects(all_projects, socket.assigns.page, socket.assigns.per_page)
 
         {:ok,
          socket
-         |> assign(:projects, projects)}
+         |> assign(:projects, paginated_projects)
+         |> assign(:all_projects, all_projects)
+         |> assign(:total_pages, total_pages)
+         |> assign(:total_count, length(all_projects))}
       else
         {:ok,
          socket
-         |> assign(:projects, [])}
+         |> assign(:projects, [])
+         |> assign(:all_projects, [])
+         |> assign(:total_pages, 0)
+         |> assign(:total_count, 0)}
       end
     else
       socket =
@@ -127,6 +136,18 @@ defmodule SppaWeb.ProjekLive do
   @impl true
   def handle_event("close_notifications", _params, socket) do
     {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("change_page", %{"page" => page}, socket) do
+    page = String.to_integer(page)
+    {paginated_projects, total_pages} = paginate_projects(socket.assigns.all_projects, page, socket.assigns.per_page)
+
+    {:noreply,
+     socket
+     |> assign(:page, page)
+     |> assign(:projects, paginated_projects)
+     |> assign(:total_pages, total_pages)}
   end
 
   # Mock data function - will be replaced with database queries later
@@ -326,5 +347,17 @@ defmodule SppaWeb.ProjekLive do
       true ->
         nil
     end
+  end
+
+  # Paginate projects list
+  defp paginate_projects(projects, page, per_page) do
+    total_count = length(projects)
+    total_pages = if total_count > 0, do: div(total_count + per_page - 1, per_page), else: 0
+    page = max(1, min(page, total_pages))
+
+    start_index = (page - 1) * per_page
+    paginated = Enum.slice(projects, start_index, per_page)
+
+    {paginated, total_pages}
   end
 end
