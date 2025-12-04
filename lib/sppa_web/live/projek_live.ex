@@ -52,8 +52,17 @@ defmodule SppaWeb.ProjekLive do
         # Mock data - will be replaced with database queries later
         # Filter projects based on user role
         all_projects = list_projects(socket.assigns.current_scope, user_role)
-        filtered_projects = filter_projects(all_projects, socket.assigns.search_term, socket.assigns.status_filter, socket.assigns.fasa_filter)
-        {paginated_projects, total_pages} = paginate_projects(filtered_projects, socket.assigns.page, socket.assigns.per_page)
+
+        filtered_projects =
+          filter_projects(
+            all_projects,
+            socket.assigns.search_term,
+            socket.assigns.status_filter,
+            socket.assigns.fasa_filter
+          )
+
+        {paginated_projects, total_pages} =
+          paginate_projects(filtered_projects, socket.assigns.page, socket.assigns.per_page)
 
         {:ok,
          socket
@@ -198,8 +207,17 @@ defmodule SppaWeb.ProjekLive do
   @impl true
   def handle_event("change_page", %{"page" => page}, socket) do
     page = String.to_integer(page)
-    filtered_projects = filter_projects(socket.assigns.all_projects, socket.assigns.search_term, socket.assigns.status_filter, socket.assigns.fasa_filter)
-    {paginated_projects, total_pages} = paginate_projects(filtered_projects, page, socket.assigns.per_page)
+
+    filtered_projects =
+      filter_projects(
+        socket.assigns.all_projects,
+        socket.assigns.search_term,
+        socket.assigns.status_filter,
+        socket.assigns.fasa_filter
+      )
+
+    {paginated_projects, total_pages} =
+      paginate_projects(filtered_projects, page, socket.assigns.per_page)
 
     {:noreply,
      socket
@@ -216,8 +234,11 @@ defmodule SppaWeb.ProjekLive do
     status_filter = Map.get(params, "status_filter", "")
     fasa_filter = Map.get(params, "fasa_filter", "")
 
-    filtered_projects = filter_projects(socket.assigns.all_projects, search_term, status_filter, fasa_filter)
-    {paginated_projects, total_pages} = paginate_projects(filtered_projects, 1, socket.assigns.per_page)
+    filtered_projects =
+      filter_projects(socket.assigns.all_projects, search_term, status_filter, fasa_filter)
+
+    {paginated_projects, total_pages} =
+      paginate_projects(filtered_projects, 1, socket.assigns.per_page)
 
     {:noreply,
      socket
@@ -233,7 +254,8 @@ defmodule SppaWeb.ProjekLive do
 
   @impl true
   def handle_event("clear_filters", _params, socket) do
-    {paginated_projects, total_pages} = paginate_projects(socket.assigns.all_projects, 1, socket.assigns.per_page)
+    {paginated_projects, total_pages} =
+      paginate_projects(socket.assigns.all_projects, 1, socket.assigns.per_page)
 
     {:noreply,
      socket
@@ -448,7 +470,8 @@ defmodule SppaWeb.ProjekLive do
         project_manager_id: 2,
         isu: "Tiada",
         tindakan: "Teruskan pembangunan",
-        keterangan: "Sistem pengurusan projek yang komprehensif untuk menguruskan semua aspek projek IT di JPKN."
+        keterangan:
+          "Sistem pengurusan projek yang komprehensif untuk menguruskan semua aspek projek IT di JPKN."
       },
       %{
         id: 2,
@@ -476,7 +499,8 @@ defmodule SppaWeb.ProjekLive do
         project_manager_id: 4,
         isu: "Tiada",
         tindakan: "Projek telah diserahkan",
-        keterangan: "Portal e-services untuk kemudahan awam mengakses perkhidmatan JPKN secara dalam talian."
+        keterangan:
+          "Portal e-services untuk kemudahan awam mengakses perkhidmatan JPKN secara dalam talian."
       },
       %{
         id: 4,
@@ -504,7 +528,8 @@ defmodule SppaWeb.ProjekLive do
         project_manager_id: 2,
         isu: "Masalah integrasi dengan API",
         tindakan: "Selesaikan integrasi API",
-        keterangan: "Aplikasi mobile untuk akses mudah kepada perkhidmatan JPKN melalui telefon pintar."
+        keterangan:
+          "Aplikasi mobile untuk akses mudah kepada perkhidmatan JPKN melalui telefon pintar."
       },
       %{
         id: 6,
@@ -518,7 +543,8 @@ defmodule SppaWeb.ProjekLive do
         project_manager_id: 2,
         isu: "Tiada",
         tindakan: "Teruskan pembangunan modul inventori",
-        keterangan: "Sistem untuk menguruskan inventori peralatan dan aset JPKN dengan kemas kini masa nyata."
+        keterangan:
+          "Sistem untuk menguruskan inventori peralatan dan aset JPKN dengan kemas kini masa nyata."
       },
       %{
         id: 7,
@@ -532,7 +558,8 @@ defmodule SppaWeb.ProjekLive do
         project_manager_id: 3,
         isu: "Isu keselamatan data perlu disemak",
         tindakan: "Lengkapkan audit keselamatan",
-        keterangan: "Portal untuk pelanggan mengakses maklumat dan perkhidmatan JPKN dengan mudah."
+        keterangan:
+          "Portal untuk pelanggan mengakses maklumat dan perkhidmatan JPKN dengan mudah."
       },
       %{
         id: 8,
@@ -602,7 +629,8 @@ defmodule SppaWeb.ProjekLive do
         project_manager_id: 3,
         isu: "Menunggu kelulusan dari pihak pengurusan",
         tindakan: "Sambung semula selepas kelulusan",
-        keterangan: "Portal untuk pentadbiran dalaman dengan akses terhad kepada kakitangan yang berkenaan."
+        keterangan:
+          "Portal untuk pentadbiran dalaman dengan akses terhad kepada kakitangan yang berkenaan."
       }
     ]
 
@@ -642,8 +670,10 @@ defmodule SppaWeb.ProjekLive do
   end
 
   defp filter_by_search(projects, ""), do: projects
+
   defp filter_by_search(projects, search_term) do
     search_lower = String.downcase(search_term)
+
     Enum.filter(projects, fn project ->
       String.contains?(String.downcase(project.nama), search_lower) ||
         String.contains?(String.downcase(project.pengurus_projek || ""), search_lower) ||
@@ -652,11 +682,13 @@ defmodule SppaWeb.ProjekLive do
   end
 
   defp filter_by_status(projects, ""), do: projects
+
   defp filter_by_status(projects, status) do
     Enum.filter(projects, fn project -> project.status == status end)
   end
 
   defp filter_by_fasa(projects, ""), do: projects
+
   defp filter_by_fasa(projects, fasa) do
     Enum.filter(projects, fn project -> project.fasa == fasa end)
   end
@@ -676,9 +708,18 @@ defmodule SppaWeb.ProjekLive do
   # Format date in Malay format (e.g., "10 Mac 2025")
   defp format_date_malay(date) do
     month_names = %{
-      1 => "Januari", 2 => "Februari", 3 => "Mac", 4 => "April",
-      5 => "Mei", 6 => "Jun", 7 => "Julai", 8 => "Ogos",
-      9 => "September", 10 => "Oktober", 11 => "November", 12 => "Disember"
+      1 => "Januari",
+      2 => "Februari",
+      3 => "Mac",
+      4 => "April",
+      5 => "Mei",
+      6 => "Jun",
+      7 => "Julai",
+      8 => "Ogos",
+      9 => "September",
+      10 => "Oktober",
+      11 => "November",
+      12 => "Disember"
     }
 
     day = date.day
@@ -698,31 +739,45 @@ defmodule SppaWeb.ProjekLive do
     else
       # Phase-based progress (primary indicator)
       # Timeline phases: B1 (0-20%), B2 (20-40%), B4 (40-60%), B5 (60-80%), Dep (80-100%)
-      phase_progress = case fasa do
-        "Analisis dan Rekabentuk" -> 30  # B2 phase: 20-40% range, use 30% as midpoint
-        "Pembangunan" -> 50              # B4 phase: 40-60% range, use 50% as midpoint
-        "UAT" -> 70                      # B5 phase: 60-80% range, use 70% as midpoint
-        "Penyerahan" -> 90               # Dep phase: 80-100% range, use 90% as midpoint
-        _ -> 10                          # Default/B1 phase: 0-20% range, use 10% as midpoint
-      end
+      phase_progress =
+        case fasa do
+          # B2 phase: 20-40% range, use 30% as midpoint
+          "Analisis dan Rekabentuk" -> 30
+          # B4 phase: 40-60% range, use 50% as midpoint
+          "Pembangunan" -> 50
+          # B5 phase: 60-80% range, use 70% as midpoint
+          "UAT" -> 70
+          # Dep phase: 80-100% range, use 90% as midpoint
+          "Penyerahan" -> 90
+          # Default/B1 phase: 0-20% range, use 10% as midpoint
+          _ -> 10
+        end
 
       # Calculate date-based progress as a secondary check
       total_days = Date.diff(tarikh_siap, tarikh_mula)
       elapsed_days = Date.diff(today, tarikh_mula)
 
-      date_progress = cond do
-        total_days <= 0 -> phase_progress  # Invalid date range, use phase progress
-        elapsed_days < 0 -> 0             # Project hasn't started yet
-        elapsed_days >= total_days -> 95   # Past due date, show 95% (not 100% until completed)
-        true -> div(elapsed_days * 100, total_days)  # Normal date-based calculation
-      end
+      date_progress =
+        cond do
+          # Invalid date range, use phase progress
+          total_days <= 0 -> phase_progress
+          # Project hasn't started yet
+          elapsed_days < 0 -> 0
+          # Past due date, show 95% (not 100% until completed)
+          elapsed_days >= total_days -> 95
+          # Normal date-based calculation
+          true -> div(elapsed_days * 100, total_days)
+        end
 
       # Use phase progress as primary, but adjust if dates suggest significantly different progress
       # This ensures phase is respected but dates provide reality check
       cond do
-        date_progress > phase_progress + 20 -> min(date_progress, 95)  # Date suggests much more progress
-        date_progress < phase_progress - 20 -> max(date_progress, 0)   # Date suggests much less progress
-        true -> phase_progress  # Use phase progress if dates are reasonably aligned
+        # Date suggests much more progress
+        date_progress > phase_progress + 20 -> min(date_progress, 95)
+        # Date suggests much less progress
+        date_progress < phase_progress - 20 -> max(date_progress, 0)
+        # Use phase progress if dates are reasonably aligned
+        true -> phase_progress
       end
     end
   end
@@ -730,18 +785,20 @@ defmodule SppaWeb.ProjekLive do
   # Get project overview data - will be replaced with database queries later
   defp get_project_overview(_project_id, project) do
     # Map fasa to development phase code and name
-    {fasa_code, fasa_name} = case project.fasa do
-      "Soal Selidik" -> {"B1", "Soal Selidik kajian keperluan pembangunan aplikasi"}
-      "Analisis dan Rekabentuk" -> {"B2", "Analisis dan Rekabentuk"}
-      "Pembangunan" -> {"B4", "Jadual Projek"}
-      "UAT" -> {"B5", "UAT"}
-      "Penyerahan" -> {"B6", "Penyerahan"}
-      _ -> {"B1", "Soal Selidik kajian keperluan pembangunan aplikasi"}
-    end
+    {fasa_code, fasa_name} =
+      case project.fasa do
+        "Soal Selidik" -> {"B1", "Soal Selidik kajian keperluan pembangunan aplikasi"}
+        "Analisis dan Rekabentuk" -> {"B2", "Analisis dan Rekabentuk"}
+        "Pembangunan" -> {"B4", "Jadual Projek"}
+        "UAT" -> {"B5", "UAT"}
+        "Penyerahan" -> {"B6", "Penyerahan"}
+        _ -> {"B1", "Soal Selidik kajian keperluan pembangunan aplikasi"}
+      end
 
     # Calculate progress based on dates and phase
     # First, try date-based calculation (elapsed time vs total time)
-    progress = calculate_progress(project.tarikh_mula, project.tarikh_siap, project.fasa, project.status)
+    progress =
+      calculate_progress(project.tarikh_mula, project.tarikh_siap, project.fasa, project.status)
 
     # Timeline milestones
     timeline = ["B1", "B2", "B4", "B5", "Dep"]
@@ -795,7 +852,8 @@ defmodule SppaWeb.ProjekLive do
           questions: [
             %{
               number: 1,
-              question: "Adakah sistem perlu pendaftaran pengguna baru? (atau hanya menggunakan pengguna SM2)",
+              question:
+                "Adakah sistem perlu pendaftaran pengguna baru? (atau hanya menggunakan pengguna SM2)",
               response: nil,
               notes: nil
             },

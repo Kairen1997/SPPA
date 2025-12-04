@@ -474,10 +474,12 @@ defmodule SppaWeb.CoreComponents do
   Renders the main application sidebar used on the dashboard.
 
   Accepts whether the sidebar is open plus the paths needed for links and logo.
+  Optionally takes the `current_scope` to allow role-based menu options.
   """
   attr :sidebar_open, :boolean, default: false
   attr :dashboard_path, :string, required: true
   attr :logo_src, :string, required: true
+  attr :current_scope, :any, default: nil
 
   def dashboard_sidebar(assigns) do
     ~H"""
@@ -490,11 +492,11 @@ defmodule SppaWeb.CoreComponents do
     >
       <div class="h-full flex flex-col">
         <div class="p-6 flex items-center justify-between border-b border-gray-700">
-          <div class="flex items-center gap-3">
+          <div class="flex-1 flex items-center justify-center">
             <img
               src={@logo_src}
               alt="Logo JPKN"
-              class="h-9 w-auto object-contain"
+              class="h-24 w-auto object-contain"
             />
           </div>
           <button
@@ -504,106 +506,143 @@ defmodule SppaWeb.CoreComponents do
             <.icon name="hero-x-mark" class="w-5 h-5" />
           </button>
         </div>
+
         <nav class="flex-1 overflow-y-auto py-4 px-3">
-          <.link
-            navigate={@dashboard_path}
-            phx-click="close_sidebar"
-            class={[
-              "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-              "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md"
-            ]}
-          >
-            <.icon name="hero-squares-2x2" class="w-5 h-5" />
-            <span class="font-medium">Papan Pemuka</span>
-          </.link>
-          <.link
-            navigate={~p"/projek"}
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-folder" class="w-5 h-5" />
-            <span>Senarai Projek</span>
-          </.link>
-          <.link
-            navigate={~p"/soal-selidik"}
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-clipboard-document-list" class="w-5 h-5" />
-            <span>Soal Selidik</span>
-          </.link>
-          <a
-            href="#"
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-document-magnifying-glass" class="w-5 h-5" />
-            <span>Analisis dan Rekabentuk</span>
-          </a>
-          <a
-            href="#"
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-calendar-days" class="w-5 h-5" />
-            <span>Jadual Projek</span>
-          </a>
-          <a
-            href="#"
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-code-bracket" class="w-5 h-5" />
-            <span>Pembangunan</span>
-          </a>
-          <a
-            href="#"
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-arrow-path" class="w-5 h-5" />
-            <span>Pengurusan Perubahan</span>
-          </a>
-          <a
-            href="#"
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-check-circle" class="w-5 h-5" />
-            <span>Ujian Penerimaan Pengguna</span>
-          </a>
-          <a
-            href="#"
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-shield-check" class="w-5 h-5" />
-            <span>Ujian Keselamatan</span>
-          </a>
-          <a
-            href="#"
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-server" class="w-5 h-5" />
-            <span>Penempatan</span>
-          </a>
-          <a
-            href="#"
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-paper-airplane" class="w-5 h-5" />
-            <span>Penyerahan</span>
-          </a>
-          <a
-            href="#"
-            phx-click="close_sidebar"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <.icon name="hero-chat-bubble-left-right" class="w-5 h-5" />
-            <span>Maklumbalas</span>
-          </a>
+          <%= if @current_scope && @current_scope.user && @current_scope.user.role == "pengurus projek" do %>
+            <div class="space-y-1">
+              <.link
+                navigate={@dashboard_path}
+                phx-click="close_sidebar"
+                class={[
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                  "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md"
+                ]}
+              >
+                <.icon name="hero-squares-2x2" class="w-5 h-5" />
+                <span class="font-medium">Papan Pemuka</span>
+              </.link>
+              <.link
+                navigate={~p"/projek"}
+                phx-click="close_sidebar"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-200 hover:text-white hover:bg-gray-700/70 transition-all duration-200"
+              >
+                <.icon name="hero-folder" class="w-5 h-5" />
+                <span class="font-medium">Senarai Projek</span>
+              </.link>
+            </div>
+            <div class="mt-4 border-t border-gray-700/70 pt-4">
+              <div class="mb-2 flex items-center gap-2 px-4 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-gray-400">
+                <.icon name="hero-squares-plus" class="w-4 h-4 text-amber-300" />
+                <span>Modul</span>
+              </div>
+              <a
+                href="#"
+                phx-click="close_sidebar"
+                class="flex items-center gap-2 pl-10 pr-4 py-1.5 text-sm text-gray-200 hover:text-white hover:bg-gray-700/60 rounded-lg transition-all duration-200"
+              >
+                <.icon name="hero-arrow-long-right" class="w-4 h-4 text-emerald-400" />
+                <span>Modul Projek</span>
+              </a>
+              <a
+                href="#"
+                phx-click="close_sidebar"
+                class="mt-1 flex items-center gap-2 pl-10 pr-4 py-1.5 text-sm text-gray-200 hover:text-white hover:bg-gray-700/60 rounded-lg transition-all duration-200"
+              >
+                <.icon name="hero-arrow-long-right" class="w-4 h-4 text-emerald-400" />
+                <span>Pelan Modul</span>
+              </a>
+            </div>
+          <% else %>
+            <.link
+              navigate={@dashboard_path}
+              phx-click="close_sidebar"
+              class={[
+                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
+                "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md"
+              ]}
+            >
+              <.icon name="hero-squares-2x2" class="w-5 h-5" />
+              <span class="font-medium">Papan Pemuka</span>
+            </.link>
+            <.link
+              navigate={~p"/projek"}
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-folder" class="w-5 h-5" /> <span>Senarai Projek</span>
+            </.link>
+            <.link
+              navigate={~p"/soal-selidik"}
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-clipboard-document-list" class="w-5 h-5" /> <span>Soal Selidik</span>
+            </.link>
+            <a
+              href="#"
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-document-magnifying-glass" class="w-5 h-5" />
+              <span>Analisis dan Rekabentuk</span>
+            </a>
+            <a
+              href="#"
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-calendar-days" class="w-5 h-5" /> <span>Jadual Projek</span>
+            </a>
+            <a
+              href="#"
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-code-bracket" class="w-5 h-5" /> <span>Pembangunan</span>
+            </a>
+            <a
+              href="#"
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-arrow-path" class="w-5 h-5" /> <span>Pengurusan Perubahan</span>
+            </a>
+            <a
+              href="#"
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-check-circle" class="w-5 h-5" /> <span>Ujian Penerimaan Pengguna</span>
+            </a>
+            <a
+              href="#"
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-shield-check" class="w-5 h-5" /> <span>Ujian Keselamatan</span>
+            </a>
+            <a
+              href="#"
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-server" class="w-5 h-5" /> <span>Penempatan</span>
+            </a>
+            <a
+              href="#"
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-paper-airplane" class="w-5 h-5" /> <span>Penyerahan</span>
+            </a>
+            <a
+              href="#"
+              phx-click="close_sidebar"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            >
+              <.icon name="hero-chat-bubble-left-right" class="w-5 h-5" /> <span>Maklumbalas</span>
+            </a>
+          <% end %>
         </nav>
       </div>
     </aside>

@@ -28,6 +28,7 @@ defmodule SppaWeb.DashboardLive do
 
         # Merge stats preserving displayed values - once a stat shows a value, don't let it go to zero
         fallback_stats = %{}
+
         displayed_stats =
           socket.assigns
           |> Map.get(:stats, fallback_stats)
