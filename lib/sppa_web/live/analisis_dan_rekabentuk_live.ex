@@ -75,14 +75,25 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         |> assign(:current_path, "/analisis-dan-rekabentuk")
         |> assign(:document_id, "JPKN-BPA-01/B2")
         |> assign(:form, to_form(%{}, as: :analisis_dan_rekabentuk))
+        |> assign(:current_step, 1)
+        |> assign(:selected_module_id, nil)
+        |> assign(:selected_module, nil)
+        |> assign(:expanded_modules, MapSet.new())
+        |> assign(:show_pdf_modal, false)
+        |> assign(:pdf_data, nil)
 
-      # Initialize modules as a stream
+      # Initialize modules as a stream and also keep a list for processing
+      # Configure stream to use module.id as the DOM id
+      socket = stream_configure(socket, :modules, dom_id: &"module_#{&1.id}")
+
       socket =
         initial_modules
         |> Enum.reduce(socket, fn module, acc ->
           stream(acc, :modules, [module])
         end)
         |> assign(:modules_count, length(initial_modules))
+        |> assign(:modules_list, initial_modules)
+        |> update_summary()
 
       {:ok, socket}
     else
@@ -119,9 +130,130 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   end
 
   @impl true
+  def handle_event("generate_pdf", _params, socket) do
+    # Generate dummy data
+    dummy_data = generate_dummy_data(socket)
+
+    {:noreply,
+     socket
+     |> assign(:show_pdf_modal, true)
+     |> assign(:pdf_data, dummy_data)}
+  end
+
+  @impl true
+  def handle_event("close_pdf_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_pdf_modal, false)
+     |> assign(:pdf_data, nil)}
+  end
+
+  defp generate_dummy_data(socket) do
+    modules = get_modules_from_stream(socket)
+    form_data = socket.assigns.form.params || %{}
+
+    # Get current date in DD/MM/YYYY format
+    today =
+      Date.utc_today()
+      |> Date.to_string()
+      |> String.split("-")
+      |> Enum.reverse()
+      |> Enum.join("/")
+
+    %{
+      document_id: socket.assigns.document_id || "JPKN-BPA-01/B2",
+      nama_projek: Map.get(form_data, "nama_projek") || "Sistem Pengurusan Permohonan Aplikasi (SPPA)",
+      nama_agensi: Map.get(form_data, "nama_agensi") || "Jabatan Pendaftaran Negara Sabah (JPKN)",
+      versi: Map.get(form_data, "versi") || "1.0.0",
+      tarikh_semakan: Map.get(form_data, "tarikh_semakan") || today,
+      rujukan_perubahan: Map.get(form_data, "rujukan_perubahan") || "Mesyuarat Jawatankuasa Teknologi Maklumat - 15 Disember 2024",
+      modules: modules,
+      total_modules: length(modules),
+      total_functions:
+        modules
+        |> Enum.map(fn module -> length(module.functions) end)
+        |> Enum.sum(),
+      prepared_by_name: Map.get(form_data, "prepared_by_name") || "Ahmad bin Abdullah",
+      prepared_by_position: Map.get(form_data, "prepared_by_position") || "Pengurus Projek",
+      prepared_by_date: Map.get(form_data, "prepared_by_date") || today,
+      approved_by_name: Map.get(form_data, "approved_by_name") || "Dr. Siti binti Hassan",
+      approved_by_position: Map.get(form_data, "approved_by_position") || "Ketua Penolong Pengarah",
+      approved_by_date: Map.get(form_data, "approved_by_date") || today
+    }
+  end
+
+  @impl true
+  def handle_event("prev_step", _params, socket) do
+    current_step = socket.assigns.current_step || 1
+
+    if current_step > 1 do
+      {:noreply, assign(socket, :current_step, current_step - 1)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("go_to_step", %{"step" => step}, socket) do
+    step_num = String.to_integer(step)
+    if step_num >= 1 and step_num <= 4 do
+      {:noreply, assign(socket, :current_step, step_num)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("select_module", %{"module_id" => module_id}, socket) do
+    selected_module = get_selected_module_by_id(socket, module_id)
+
+    {:noreply,
+     socket
+     |> assign(:selected_module_id, module_id)
+     |> assign(:selected_module, selected_module)
+     |> assign(:current_step, 3)}
+  end
+
+  @impl true
+  def handle_event("next_step", _params, socket) do
+    current_step = socket.assigns.current_step || 1
+    max_step = 4
+
+    socket = if current_step < max_step do
+      new_step = current_step + 1
+      # Update selected_module if we're going to step 3
+      socket = if new_step == 3 and socket.assigns.selected_module_id do
+        selected_module = get_selected_module_by_id(socket, socket.assigns.selected_module_id)
+        assign(socket, :selected_module, selected_module)
+      else
+        socket
+      end
+      assign(socket, :current_step, new_step)
+    else
+      socket
+    end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("toggle_module_expand", %{"module_id" => module_id}, socket) do
+    expanded = socket.assigns.expanded_modules || MapSet.new()
+
+    expanded =
+      if MapSet.member?(expanded, module_id) do
+        MapSet.delete(expanded, module_id)
+      else
+        MapSet.put(expanded, module_id)
+      end
+
+    {:noreply, assign(socket, :expanded_modules, expanded)}
+  end
+
+  @impl true
   def handle_event("validate", %{"analisis_dan_rekabentuk" => params}, socket) do
     form = to_form(params, as: :analisis_dan_rekabentuk)
-    {:noreply, assign(socket, form: form)}
+    {:noreply, socket |> assign(form: form) |> update_summary()}
   end
 
   @impl true
@@ -153,23 +285,27 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     {:noreply,
      socket
      |> stream(:modules, [new_module])
-     |> update(:modules_count, &(&1 + 1))}
+     |> update(:modules_list, fn list -> (list || []) ++ [new_module] end)
+     |> update(:modules_count, &(&1 + 1))
+     |> update_summary()}
   end
 
   @impl true
   def handle_event("remove_module", %{"id" => module_id}, socket) do
     modules =
       get_modules_from_stream(socket)
-      |> Enum.reject(fn {_id, module} -> module.id == module_id end)
+      |> Enum.reject(fn module -> module.id == module_id end)
       |> Enum.with_index(1)
-      |> Enum.map(fn {{id, module}, new_number} ->
-        {id, Map.put(module, :number, new_number)}
+      |> Enum.map(fn {module, new_number} ->
+        Map.put(module, :number, new_number)
       end)
 
     {:noreply,
      socket
      |> stream(:modules, modules, reset: true)
-     |> update(:modules_count, fn count -> max(0, count - 1) end)}
+     |> assign(:modules_list, modules)
+     |> update(:modules_count, fn count -> max(0, count - 1) end)
+     |> update_summary()}
   end
 
   @impl true
@@ -179,15 +315,28 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     updated_modules =
       get_modules_from_stream(socket)
-      |> Enum.map(fn {id, module} ->
+      |> Enum.map(fn module ->
         if module.id == module_id do
-          {id, Map.put(module, :name, name)}
+          Map.put(module, :name, name)
         else
-          {id, module}
+          module
         end
       end)
 
-    {:noreply, stream(socket, :modules, updated_modules, reset: true)}
+    socket = socket
+      |> stream(:modules, updated_modules, reset: true)
+      |> assign(:modules_list, updated_modules)
+      |> update_summary()
+
+    # Update selected_module if it's the one being edited
+    socket = if socket.assigns.selected_module_id == module_id do
+      selected_module = get_selected_module_by_id(socket, module_id)
+      assign(socket, :selected_module, selected_module)
+    else
+      socket
+    end
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -202,32 +351,48 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     updated_modules =
       get_modules_from_stream(socket)
-      |> Enum.map(fn {id, module} ->
+      |> Enum.map(fn module ->
         if module.id == module_id do
           updated_functions = module.functions ++ [new_function]
-          {id, Map.put(module, :functions, updated_functions)}
+          Map.put(module, :functions, updated_functions)
         else
-          {id, module}
+          module
         end
       end)
 
-    {:noreply, stream(socket, :modules, updated_modules, reset: true)}
+    socket = socket
+      |> stream(:modules, updated_modules, reset: true)
+      |> assign(:modules_list, updated_modules)
+      |> update_summary()
+
+    # Update selected_module if it's the one being edited
+    socket = if socket.assigns.selected_module_id == module_id do
+      selected_module = get_selected_module_by_id(socket, module_id)
+      assign(socket, :selected_module, selected_module)
+    else
+      socket
+    end
+
+    {:noreply, socket}
   end
 
   @impl true
   def handle_event("remove_function", %{"module_id" => module_id, "func_id" => func_id}, socket) do
     updated_modules =
       get_modules_from_stream(socket)
-      |> Enum.map(fn {id, module} ->
+      |> Enum.map(fn module ->
         if module.id == module_id do
           updated_functions = Enum.reject(module.functions, &(&1.id == func_id))
-          {id, Map.put(module, :functions, updated_functions)}
+          Map.put(module, :functions, updated_functions)
         else
-          {id, module}
+          module
         end
       end)
 
-    {:noreply, stream(socket, :modules, updated_modules, reset: true)}
+    {:noreply, socket
+      |> stream(:modules, updated_modules, reset: true)
+      |> assign(:modules_list, updated_modules)
+      |> update_summary()}
   end
 
   @impl true
@@ -254,7 +419,20 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         end
       end)
 
-    {:noreply, stream(socket, :modules, updated_modules, reset: true)}
+    socket = socket
+      |> stream(:modules, updated_modules, reset: true)
+      |> assign(:modules_list, updated_modules)
+      |> update_summary()
+
+    # Update selected_module if it's the one being edited
+    socket = if socket.assigns.selected_module_id == module_id do
+      selected_module = get_selected_module_by_id(socket, module_id)
+      assign(socket, :selected_module, selected_module)
+    else
+      socket
+    end
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -268,7 +446,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     updated_modules =
       get_modules_from_stream(socket)
-      |> Enum.map(fn {id, module} ->
+      |> Enum.map(fn module ->
         if module.id == module_id do
           updated_functions =
             Enum.map(module.functions, fn func ->
@@ -279,20 +457,23 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
                 func
               end
             end)
-          {id, Map.put(module, :functions, updated_functions)}
+          Map.put(module, :functions, updated_functions)
         else
-          {id, module}
+          module
         end
       end)
 
-    {:noreply, stream(socket, :modules, updated_modules, reset: true)}
+    {:noreply, socket
+      |> stream(:modules, updated_modules, reset: true)
+      |> assign(:modules_list, updated_modules)
+      |> update_summary()}
   end
 
   @impl true
   def handle_event("remove_sub_function", %{"module_id" => module_id, "func_id" => func_id, "sub_func_id" => sub_func_id}, socket) do
     updated_modules =
       get_modules_from_stream(socket)
-      |> Enum.map(fn {id, module} ->
+      |> Enum.map(fn module ->
         if module.id == module_id do
           updated_functions =
             Enum.map(module.functions, fn func ->
@@ -303,13 +484,26 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
                 func
               end
             end)
-          {id, Map.put(module, :functions, updated_functions)}
+          Map.put(module, :functions, updated_functions)
         else
-          {id, module}
+          module
         end
       end)
 
-    {:noreply, stream(socket, :modules, updated_modules, reset: true)}
+    socket = socket
+      |> stream(:modules, updated_modules, reset: true)
+      |> assign(:modules_list, updated_modules)
+      |> update_summary()
+
+    # Update selected_module if it's the one being edited
+    socket = if socket.assigns.selected_module_id == module_id do
+      selected_module = get_selected_module_by_id(socket, module_id)
+      assign(socket, :selected_module, selected_module)
+    else
+      socket
+    end
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -321,7 +515,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     updated_modules =
       get_modules_from_stream(socket)
-      |> Enum.map(fn {id, module} ->
+      |> Enum.map(fn module ->
         if module.id == module_id do
           updated_functions =
             Enum.map(module.functions, fn func ->
@@ -339,24 +533,53 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
                 func
               end
             end)
-          {id, Map.put(module, :functions, updated_functions)}
+          Map.put(module, :functions, updated_functions)
         else
-          {id, module}
+          module
         end
       end)
 
-    {:noreply, stream(socket, :modules, updated_modules, reset: true)}
+    {:noreply, socket
+      |> stream(:modules, updated_modules, reset: true)
+      |> assign(:modules_list, updated_modules)
+      |> update_summary()}
   end
 
   defp get_modules_from_stream(socket) do
-    case Map.get(socket.assigns.streams || %{}, :modules) do
-      %Phoenix.LiveView.LiveStream{} = stream -> Enum.to_list(stream)
-      _ -> []
-    end
+    # Use the modules_list assign for processing instead of converting stream
+    socket.assigns.modules_list || []
   end
 
   defp get_next_module_number(socket) do
     # Use modules_count assign to get next number
     (socket.assigns.modules_count || 0) + 1
+  end
+
+  defp get_selected_module_by_id(socket, module_id) do
+    get_modules_from_stream(socket)
+    |> Enum.find_value(fn module ->
+      if module.id == module_id, do: module
+    end)
+  end
+
+  defp update_summary(socket) do
+    modules = get_modules_from_stream(socket)
+    form_data = socket.assigns.form.params || %{}
+
+    summary = %{
+      nama_projek: Map.get(form_data, "nama_projek", ""),
+      nama_agensi: Map.get(form_data, "nama_agensi", ""),
+      versi: Map.get(form_data, "versi", ""),
+      ringkasan_projek: Map.get(form_data, "ringkasan_projek", ""),
+      total_modules: length(modules),
+      total_functions:
+        modules
+        |> Enum.map(fn module -> length(module.functions) end)
+        |> Enum.sum(),
+      platform: Map.get(form_data, "platform_sistem", ""),
+      user_roles: Map.get(form_data, "user_roles", "")
+    }
+
+    assign(socket, :summary, summary)
   end
 end
