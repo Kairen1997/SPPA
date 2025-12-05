@@ -339,6 +339,49 @@
                       </div>
                     </div>
                   </div>
+                <% end %>
+
+                <%!-- Pagination controls for sections --%>
+                <div class="flex items-center justify-between mt-2 text-xs text-gray-700">
+                  <div>
+                    Halaman {@current_page} daripada
+                    {SppaWeb.SoalSelidikLive.total_pages_for_categories(@sections)}
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      phx-click="prev_page"
+                      class={[
+                        "px-3 py-1.5 rounded border text-xs font-medium transition-colors duration-200",
+                        @current_page == 1 &&
+                          "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed",
+                        @current_page > 1 &&
+                          "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      ]}
+                      disabled={@current_page == 1}
+                    >
+                      Sebelum
+                    </button>
+                    <button
+                      type="button"
+                      phx-click="next_page"
+                      class={[
+                        "px-3 py-1.5 rounded border text-xs font-medium transition-colors duration-200",
+                        @current_page ==
+                            SppaWeb.SoalSelidikLive.total_pages_for_categories(@sections) &&
+                          "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed",
+                        @current_page <
+                            SppaWeb.SoalSelidikLive.total_pages_for_categories(@sections) &&
+                          "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      ]}
+                      disabled={
+                        @current_page ==
+                          SppaWeb.SoalSelidikLive.total_pages_for_categories(@sections)
+                      }
+                    >
+                      Seterusnya
+                    </button>
+                  </div>
                 </div>
                  <%!-- Add Section Button --%>
                 <div class="mb-4">

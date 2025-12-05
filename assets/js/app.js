@@ -48,13 +48,77 @@ const PrintDocument = {
   }
 }
 
+// Update Section Category Hook
+const UpdateSectionCategory = {
+  mounted() {
+    this.debounceTimer = null
+    
+    this.handleInput = (e) => {
+      // Clear existing timer
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer)
+      }
+      
+      // Set new timer to debounce updates
+      this.debounceTimer = setTimeout(() => {
+        const sectionId = this.el.dataset.sectionId
+        const value = this.el.value
+        
+        this.pushEvent("update_section_category", {
+          section_id: sectionId,
+          category: value
+        })
+      }, 300) // 300ms debounce
+    }
+    
+    this.el.addEventListener("input", this.handleInput)
+  },
+  
+  updated() {
+    // Re-attach listener if element is updated
+    if (this.handleInput) {
+      this.el.removeEventListener("input", this.handleInput)
+    }
+    
+    this.debounceTimer = null
+    this.handleInput = (e) => {
+      // Clear existing timer
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer)
+      }
+      
+      // Set new timer to debounce updates
+      this.debounceTimer = setTimeout(() => {
+        const sectionId = this.el.dataset.sectionId
+        const value = this.el.value
+        
+        this.pushEvent("update_section_category", {
+          section_id: sectionId,
+          category: value
+        })
+      }, 300) // 300ms debounce
+    }
+    this.el.addEventListener("input", this.handleInput)
+  },
+  
+  destroyed() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer)
+    }
+    if (this.handleInput) {
+      this.el.removeEventListener("input", this.handleInput)
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   hooks: {
     ...colocatedHooks,
-    PrintDocument
+    PrintDocument,
+    UpdateSectionCategory
   },
 })
 
