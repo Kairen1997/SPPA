@@ -4,6 +4,7 @@ defmodule SppaWeb.Components.Topbar do
   """
   use Phoenix.Component
   import SppaWeb.CoreComponents
+
   use Phoenix.VerifiedRoutes,
     endpoint: SppaWeb.Endpoint,
     router: SppaWeb.Router,
@@ -19,48 +20,48 @@ defmodule SppaWeb.Components.Topbar do
     if user_role == "pengurus projek" do
       ~H"""
       <header class="flex h-20 w-full items-center justify-between bg-[#0057D9] px-8 shadow-md">
-      <div class="flex items-center gap-5">
-        <img
-          src={~p"/images/channels4_profile-1-48.png"}
-          alt="Logo Negeri"
-          class="h-16 w-16"
-        />
-        <img
-          src={~p"/images/logojpkn-1-1-6.png"}
-          alt="Logo JPKN"
-          class="h-16 w-auto"
-        />
-      </div>
-
-      <div class="flex items-center gap-5">
-        <div class="hidden flex-col items-end text-xs text-blue-100 sm:flex">
-          <span class="uppercase tracking-wide opacity-80">Pengguna Log Masuk</span>
-          <span class="font-semibold text-white">
-            {(@current_scope && @current_scope.user && @current_scope.user.no_kp) ||
-              "Nama Pengguna"}
-          </span>
+        <div class="flex items-center gap-5">
+          <img
+            src={~p"/images/channels4_profile-1-48.png"}
+            alt="Logo Negeri"
+            class="h-16 w-16"
+          />
+          <img
+            src={~p"/images/logojpkn-1-1-6.png"}
+            alt="Logo JPKN"
+            class="h-16 w-auto"
+          />
         </div>
-
-        <div class="flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm shadow-sm">
-          <.icon name="hero-user-circle" class="h-5 w-5 text-white" />
-          <span class="text-white sm:hidden">
-            {(@current_scope && @current_scope.user && @current_scope.user.no_kp) ||
-              "Nama Pengguna"}
-          </span>
+        
+        <div class="flex items-center gap-5">
+          <div class="hidden flex-col items-end text-xs text-blue-100 sm:flex">
+            <span class="uppercase tracking-wide opacity-80">Pengguna Log Masuk</span>
+            <span class="font-semibold text-white">
+              {(@current_scope && @current_scope.user && @current_scope.user.no_kp) ||
+                "Nama Pengguna"}
+            </span>
+          </div>
+          
+          <div class="flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm shadow-sm">
+            <.icon name="hero-user-circle" class="h-5 w-5 text-white" />
+            <span class="text-white sm:hidden">
+              {(@current_scope && @current_scope.user && @current_scope.user.no_kp) ||
+                "Nama Pengguna"}
+            </span>
+          </div>
+          
+          <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
+            <button
+              type="submit"
+              class="inline-flex h-10 w-10 items-center justify-center rounded-full text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0057D9] focus-visible:ring-white"
+              aria-label="Log keluar"
+            >
+              <.icon name="hero-arrow-right-on-rectangle" class="h-6 w-6" />
+            </button>
+          </.form>
         </div>
-
-        <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
-          <button
-            type="submit"
-            class="inline-flex h-10 w-10 items-center justify-center rounded-full text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0057D9] focus-visible:ring-white"
-            aria-label="Log keluar"
-          >
-            <.icon name="hero-arrow-right-on-rectangle" class="h-6 w-6" />
-          </button>
-        </.form>
-      </div>
-    </header>
-    """
+      </header>
+      """
     else
       ~H"""
       <div></div>

@@ -37,10 +37,17 @@ defmodule SppaWeb.UserAuth do
 
     redirect_path =
       cond do
-        user_return_to -> user_return_to
-        user && user.role in ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"] ->
+        user_return_to ->
+          user_return_to
+
+        user && user.role == "pengurus projek" ->
+          ~p"/dashboard-pp"
+
+        user && user.role in ["pembangun sistem", "ketua penolong pengarah"] ->
           ~p"/dashboard"
-        true -> signed_in_path(conn)
+
+        true ->
+          signed_in_path(conn)
       end
 
     conn
@@ -319,6 +326,12 @@ defmodule SppaWeb.UserAuth do
         assigns: %{current_scope: %Scope{user: %Accounts.User{role: "pembangun sistem"}}}
       }) do
     ~p"/dashboard"
+  end
+
+  def signed_in_path(%Plug.Conn{
+        assigns: %{current_scope: %Scope{user: %Accounts.User{role: "pengurus projek"}}}
+      }) do
+    ~p"/dashboard-pp"
   end
 
   def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %Accounts.User{}}}}) do

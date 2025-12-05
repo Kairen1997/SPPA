@@ -43,9 +43,11 @@ defmodule SppaWeb.SoalSelidikLive do
         sections
         |> Enum.reduce(socket, fn section, acc ->
           stream_name = String.to_atom("#{section.id}_rows")
+
           initial_rows = [
             %{id: "#{section.id}_row_1", no: 1, soalan: "", maklumbalas: "", catatan: ""}
           ]
+
           stream(acc, stream_name, initial_rows)
         end)
 
@@ -104,6 +106,7 @@ defmodule SppaWeb.SoalSelidikLive do
   @impl true
   def handle_event("add_section", _params, socket) do
     section_id = "section_#{System.unique_integer([:positive])}"
+
     new_section = %{
       id: section_id,
       category: "",
@@ -230,6 +233,7 @@ defmodule SppaWeb.SoalSelidikLive do
       socket =
         socket
         |> Phoenix.LiveView.put_flash(:error, "Ralat: ID bahagian tidak sah.")
+
       {:noreply, socket}
     else
       stream_name = get_stream_name(section_id)
@@ -239,6 +243,7 @@ defmodule SppaWeb.SoalSelidikLive do
 
       # Create new blank row
       row_id = "#{section_id}_row_#{System.unique_integer([:positive])}"
+
       new_row = %{
         id: row_id,
         no: next_no,
@@ -383,46 +388,34 @@ defmodule SppaWeb.SoalSelidikLive do
   end
   defp get_next_row_number(stream_name, socket) do
     streams = socket.assigns.streams || %{}
+    stream = Map.get(streams, stream_name, %{})
 
-    case Map.get(streams, stream_name) do
-      # Belum ada sebarang baris untuk section ini
-      nil ->
-        1
+    if map_size(stream) == 0 do
+      1
+    else
+      max_no =
+        stream
+        |> Enum.map(fn {_id, row} -> row.no || 0 end)
+        |> Enum.max(0)
 
-      %Phoenix.LiveView.LiveStream{} = stream ->
-        max_no =
-          stream
-          |> Enum.reduce(0, fn {_dom_id, row}, acc ->
-            row_no = Map.get(row, :no, 0) || 0
-            if row_no > acc, do: row_no, else: acc
-          end)
-
-        max_no + 1
-
-      # Fallback untuk sebarang struktur lain yang tidak dijangka
-      _other ->
-        1
+      max_no + 1
     end
   end
 
   defp renumber_stream(stream_name, socket) do
     streams = socket.assigns.streams || %{}
+    stream = Map.get(streams, stream_name, %{})
 
-    case Map.get(streams, stream_name) do
-      nil ->
-        socket
+    renumbered_rows =
+      stream
+      |> Enum.to_list()
+      |> Enum.with_index(1)
+      |> Enum.map(fn {{id, row}, new_no} ->
+        updated_row = Map.put(row, :no, new_no)
+        {id, updated_row}
+      end)
 
-      %Phoenix.LiveView.LiveStream{} = stream ->
-        rows_with_no =
-          stream
-          |> Enum.map(fn {_dom_id, row} -> row end)
-          |> Enum.with_index(1)
-          |> Enum.map(fn {row, new_no} -> Map.put(row, :no, new_no) end)
-
-        stream(socket, stream_name, rows_with_no, reset: true)
-
-      _other ->
-        socket
-    end
+    socket
+    |> stream(stream_name, renumbered_rows, reset: true)
   end
 end

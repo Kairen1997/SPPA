@@ -199,9 +199,7 @@ if developer && project_manager && owner do
       |> Repo.insert!()
     end)
 
-    IO.puts(
-      "✅ Sample projects created for developer for 'Aktiviti Terkini' schedule.\n"
-    )
+    IO.puts("✅ Sample projects created for developer for 'Aktiviti Terkini' schedule.\n")
   else
     IO.puts(
       "ℹ️  Developer already has #{developer_existing_count} project(s). Skipping developer project seeds.\n"
