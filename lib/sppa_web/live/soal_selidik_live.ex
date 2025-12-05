@@ -16,7 +16,12 @@ defmodule SppaWeb.SoalSelidikLive do
         %{
           id: "section_1",
           category: "FUNCTIONAL REQUIREMENT",
-          title: "PENDAFTARAN DAN LOG MASUK"
+          title: ""
+        },
+        %{
+          id: "section_9",
+          category: "NON-FUNCTIONAL REQUIREMENT",
+          title: ""
         }
       ]
 
@@ -29,10 +34,11 @@ defmodule SppaWeb.SoalSelidikLive do
         |> assign(:current_path, "/soal-selidik")
         |> assign(:document_id, "JPKN-BPA-01/B1")
         |> assign(:system_name, "")
+        |> assign(:sections, sections)
+        |> assign(:current_page, 1)
         |> assign(:form, to_form(%{}, as: :soal_selidik))
-        |> stream(:sections, sections)
 
-      # Initialize rows for each section
+      # Initialize sections as a stream and rows for each section
       socket =
         sections
         |> Enum.reduce(socket, fn section, acc ->
@@ -42,7 +48,9 @@ defmodule SppaWeb.SoalSelidikLive do
             %{id: "#{section.id}_row_1", no: 1, soalan: "", maklumbalas: "", catatan: ""}
           ]
 
-          stream(acc, stream_name, initial_rows)
+          acc
+          |> stream(:sections, [section])
+          |> stream(stream_name, initial_rows)
         end)
 
       {:ok, socket}
@@ -107,12 +115,43 @@ defmodule SppaWeb.SoalSelidikLive do
       title: ""
     }
 
+    # add new section to list and stream
+    sections = socket.assigns.sections ++ [new_section]
+
     socket =
       socket
+      |> assign(:sections, sections)
       |> stream(:sections, [new_section])
       |> stream(String.to_atom("#{section_id}_rows"), [
         %{id: "#{section_id}_row_1", no: 1, soalan: "", maklumbalas: "", catatan: ""}
       ])
+
+    total_pages = total_pages_for_categories(sections)
+
+    socket =
+      socket
+      |> assign(:current_page, total_pages)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("update_section_category", %{"section_id" => section_id, "category" => category}, socket) do
+    sections = socket.assigns.sections || []
+
+    updated_sections =
+      Enum.map(sections, fn section ->
+        if section.id == section_id do
+          Map.put(section, :category, category)
+        else
+          section
+        end
+      end)
+
+    socket =
+      socket
+      |> assign(:sections, updated_sections)
+      |> stream(:sections, updated_sections, reset: true)
 
     {:noreply, socket}
   end
@@ -121,10 +160,17 @@ defmodule SppaWeb.SoalSelidikLive do
   def handle_event("remove_section", %{"id" => section_id}, socket) do
     stream_name = String.to_atom("#{section_id}_rows")
 
-    # Remove the section and clear its rows stream
+    # Remove the section from list
+    sections =
+      socket.assigns.sections
+      |> Enum.reject(&(&1.id == section_id))
+
     socket =
       socket
-      |> stream_delete(:sections, section_id)
+      |> assign(:sections, sections)
+
+    # Reset the sections stream with the updated list
+    socket = stream(socket, :sections, sections, reset: true)
 
     # Clear the rows stream if it exists
     socket =
@@ -134,7 +180,73 @@ defmodule SppaWeb.SoalSelidikLive do
         socket
       end
 
-    {:noreply, socket}
+    # Ensure current_page is still within bounds after removal
+    total_pages = total_pages_for_categories(sections)
+
+    current_page =
+      if socket.assigns.current_page > total_pages do
+        total_pages
+      else
+        socket.assigns.current_page
+      end
+
+    {:noreply, socket |> assign(:current_page, current_page)}
+  end
+
+  @impl true
+  def handle_event("remove_last_section", _params, socket) do
+    sections = socket.assigns.sections || []
+
+    # Jika tiada sebarang bahagian, tidak buat apa-apa
+    if sections == [] do
+      {:noreply, socket}
+    else
+      current_category = current_category(sections, socket.assigns.current_page)
+
+      sections_in_category =
+        sections
+        |> sections_for_category(current_category)
+
+      case List.last(sections_in_category) do
+        nil ->
+          {:noreply, socket}
+
+        %{id: section_id} ->
+          stream_name = String.to_atom("#{section_id}_rows")
+
+          # Buang bahagian daripada senarai
+          sections =
+            sections
+            |> Enum.reject(&(&1.id == section_id))
+
+          socket =
+            socket
+            |> assign(:sections, sections)
+
+          # Reset the sections stream with the updated list
+          socket = stream(socket, :sections, sections, reset: true)
+
+          # Kosongkan stream barisnya
+          socket =
+            if Map.has_key?(socket.assigns.streams, stream_name) do
+              stream(socket, stream_name, [], reset: true)
+            else
+              socket
+            end
+
+          # Pastikan current_page masih dalam julat selepas buang bahagian
+          total_pages = total_pages_for_categories(sections)
+
+          current_page =
+            if socket.assigns.current_page > total_pages do
+              total_pages
+            else
+              socket.assigns.current_page
+            end
+
+          {:noreply, socket |> assign(:current_page, current_page)}
+      end
+    end
   end
 
   @impl true
@@ -169,10 +281,108 @@ defmodule SppaWeb.SoalSelidikLive do
   end
 
   @impl true
-  def handle_event("remove_row", %{"section_id" => section_id, "id" => id}, socket) do
+  def handle_event("remove_row", %{"section_id" => section_id, "id" => row_id}, socket) do
     stream_name = get_stream_name(section_id)
-    socket = stream_delete(socket, stream_name, id)
-    {:noreply, renumber_stream(stream_name, socket)}
+    streams = socket.assigns.streams || %{}
+
+    case Map.get(streams, stream_name) do
+      %Phoenix.LiveView.LiveStream{} ->
+        socket = stream_delete(socket, stream_name, row_id)
+        {:noreply, renumber_stream(stream_name, socket)}
+
+      _other ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("remove_last_row", %{"section_id" => section_id}, socket) do
+    stream_name = get_stream_name(section_id)
+    streams = socket.assigns.streams || %{}
+
+    case Map.get(streams, stream_name) do
+      %Phoenix.LiveView.LiveStream{} = stream ->
+        last_entry = stream |> Enum.to_list() |> List.last()
+
+        case last_entry do
+          {dom_id, _row} ->
+            socket = stream_delete(socket, stream_name, dom_id)
+            {:noreply, renumber_stream(stream_name, socket)}
+
+          nil ->
+            {:noreply, socket}
+        end
+
+      _other ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event(
+        "update_row",
+        %{
+          "section_id" => section_id,
+          "row_id" => row_id,
+          "field" => field,
+          "value" => value
+        },
+        socket
+      ) do
+    stream_name = get_stream_name(section_id)
+    streams = socket.assigns.streams || %{}
+
+    case Map.get(streams, stream_name) do
+      %Phoenix.LiveView.LiveStream{} = stream ->
+        field_atom =
+          case field do
+            "soalan" -> :soalan
+            "maklumbalas" -> :maklumbalas
+            "catatan" -> :catatan
+            _ -> nil
+          end
+
+        updated_rows =
+          stream
+          |> Enum.map(fn {dom_id, row} ->
+            if dom_id == row_id and field_atom do
+              Map.put(row, field_atom, value)
+            else
+              row
+            end
+          end)
+
+        {:noreply, stream(socket, stream_name, updated_rows, reset: true)}
+
+      _other ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("next_page", _params, socket) do
+    total_pages = total_pages_for_categories(socket.assigns.sections)
+
+    new_page =
+      if socket.assigns.current_page < total_pages do
+        socket.assigns.current_page + 1
+      else
+        socket.assigns.current_page
+      end
+
+    {:noreply, assign(socket, :current_page, new_page)}
+  end
+
+  @impl true
+  def handle_event("prev_page", _params, socket) do
+    new_page =
+      if socket.assigns.current_page > 1 do
+        socket.assigns.current_page - 1
+      else
+        socket.assigns.current_page
+      end
+
+    {:noreply, assign(socket, :current_page, new_page)}
   end
 
   defp get_stream_name(section_id) when is_binary(section_id) do
@@ -191,6 +401,29 @@ defmodule SppaWeb.SoalSelidikLive do
 
   def get_section_rows(_streams, _section_id), do: %{}
 
+  def categories_from_sections(sections) do
+    sections
+    |> Enum.map(& &1.category)
+    |> Enum.uniq()
+  end
+
+  def current_category(sections, current_page) do
+    sections
+    |> categories_from_sections()
+    |> Enum.at(current_page - 1)
+  end
+
+  def sections_for_category(sections, nil), do: sections
+
+  def sections_for_category(sections, category) do
+    Enum.filter(sections, &(&1.category == category))
+  end
+
+  def total_pages_for_categories(sections) do
+    sections
+    |> categories_from_sections()
+    |> length()
+  end
   defp get_next_row_number(stream_name, socket) do
     streams = socket.assigns.streams || %{}
     stream = Map.get(streams, stream_name, %{})

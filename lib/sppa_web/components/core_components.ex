@@ -589,14 +589,14 @@ defmodule SppaWeb.CoreComponents do
             >
               <.icon name="hero-clipboard-document-list" class="w-5 h-5" /> <span>Soal Selidik</span>
             </.link>
-            <a
-              href="#"
+            <.link
+              navigate={~p"/analisis-dan-rekabentuk"}
               phx-click="close_sidebar"
               class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
             >
               <.icon name="hero-document-magnifying-glass" class="w-5 h-5" />
               <span>Analisis dan Rekabentuk</span>
-            </a>
+            </.link>
             <a
               href="#"
               phx-click="close_sidebar"
