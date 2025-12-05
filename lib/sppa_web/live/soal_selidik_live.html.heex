@@ -163,47 +163,42 @@
               <%!-- Tabs --%>
               <div class="mb-6">
                 <div class="border-b border-gray-300">
-                  <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                  <div class="flex items-center justify-between mb-2">
+                    <nav class="-mb-px flex space-x-8 flex-1" aria-label="Tabs">
+                      <button
+                        :for={tab <- @tabs}
+                        phx-click="switch_tab"
+                        phx-value-tab={tab.id}
+                        class={[
+                          "group relative whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center gap-2",
+                          @active_tab == tab.id &&
+                            "border-blue-500 text-blue-600",
+                          @active_tab != tab.id &&
+                            "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        ]}
+                      >
+                        <span>{tab.label}</span>
+                        <button
+                          :if={tab.removable}
+                          phx-click="remove_tab"
+                          phx-value-tab_id={tab.id}
+                          class="opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-red-500 hover:text-red-700"
+                          title="Buang tab"
+                          onclick="event.stopPropagation(); return false;"
+                        >
+                          <.icon name="hero-x-mark" class="w-4 h-4" />
+                        </button>
+                      </button>
+                    </nav>
                     <button
-                      phx-click="switch_tab"
-                      phx-value-tab="fr"
-                      class={[
-                        "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200",
-                        @active_tab == "fr" &&
-                          "border-blue-500 text-blue-600",
-                        @active_tab != "fr" &&
-                          "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      ]}
+                      phx-click="show_add_tab_modal"
+                      class="ml-4 px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                      title="Tambah tab baru"
                     >
-                      Functional Requirement
+                      <.icon name="hero-plus" class="w-4 h-4" />
+                      <span>Tambah Tab</span>
                     </button>
-                    <button
-                      phx-click="switch_tab"
-                      phx-value-tab="nfr"
-                      class={[
-                        "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200",
-                        @active_tab == "nfr" &&
-                          "border-blue-500 text-blue-600",
-                        @active_tab != "nfr" &&
-                          "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      ]}
-                    >
-                      Non-Functional Requirement
-                    </button>
-                    <button
-                      phx-click="switch_tab"
-                      phx-value-tab="disediakan_oleh"
-                      class={[
-                        "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200",
-                        @active_tab == "disediakan_oleh" &&
-                          "border-blue-500 text-blue-600",
-                        @active_tab != "disediakan_oleh" &&
-                          "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      ]}
-                    >
-                      Disediakan Oleh
-                    </button>
-                  </nav>
+                  </div>
                 </div>
               </div>
               
@@ -322,6 +317,48 @@
                         <span>Jana PDF</span>
                       </button>
                       
+                      <div class="flex gap-3">
+                        <button
+                          type="button"
+                          class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
+                        >
+                          Simpan Soal Selidik
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <%!-- Custom Tabs Content --%>
+                <div
+                  :for={tab <- @tabs}
+                  class={["space-y-4", if(@active_tab != tab.id or tab.type != :custom, do: "hidden")]}
+                >
+                  <div class="border border-gray-300 rounded-lg overflow-hidden p-6 bg-white">
+                    <h2 class="text-lg font-bold text-gray-900 mb-6">
+                      {tab.label}
+                    </h2>
+                    
+                    <div class="space-y-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Kandungan:</label>
+                        <textarea
+                          name={"soal_selidik[custom_tabs][#{tab.id}][content]"}
+                          rows="10"
+                          class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Masukkan kandungan untuk tab ini..."
+                        ></textarea>
+                      </div>
+                    </div>
+                    
+                    <%!-- Action Buttons for Custom Tabs --%>
+                    <div class="flex justify-end items-center gap-3 pt-6 mt-6 border-t border-gray-300">
                       <div class="flex gap-3">
                         <button
                           type="button"
@@ -618,6 +655,85 @@
             Cetak / Simpan sebagai PDF
           </button>
         </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%!-- Add Tab Modal --%>
+  <%= if @show_add_tab_modal do %>
+    <div
+      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
+      phx-click="close_add_tab_modal"
+      phx-key="escape"
+      phx-window-keydown="close_add_tab_modal"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+        phx-click-away="close_add_tab_modal"
+      >
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-gray-900">Tambah Tab Baru</h2>
+          <button
+            phx-click="close_add_tab_modal"
+            class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
+            title="Tutup"
+          >
+            <.icon name="hero-x-mark" class="w-6 h-6" />
+          </button>
+        </div>
+
+        <.form
+          for={@new_tab_form}
+          phx-change="validate_new_tab"
+          phx-submit="add_tab"
+          id="add-tab-form"
+          class="space-y-5"
+        >
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Label Tab <span class="text-red-500">*</span>
+            </label>
+            <.input
+              field={@new_tab_form[:label]}
+              type="text"
+              placeholder="Contoh: Tab Baru"
+              required
+            />
+            <p :if={@new_tab_form[:label].errors != []} class="mt-1 text-xs text-red-600">
+              <%= Enum.at(@new_tab_form[:label].errors, 0) %>
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              ID Tab (Opsional)
+            </label>
+            <.input
+              field={@new_tab_form[:id]}
+              type="text"
+              placeholder="Akan dijana secara automatik jika kosong"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              ID akan digunakan untuk mengenal pasti tab. Jika kosong, ID akan dijana dari label.
+            </p>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              phx-click="close_add_tab_modal"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow transition-all duration-200"
+            >
+              Tambah Tab
+            </button>
+          </div>
+        </.form>
       </div>
     </div>
   <% end %>
