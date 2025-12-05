@@ -88,6 +88,7 @@ defmodule SppaWeb.DashboardPPLive do
           dashboard_path={~p"/dashboard-pp"}
           logo_src={~p"/images/logojpkn.png"}
           current_scope={@current_scope}
+          current_path="/dashboard-pp"
         /> <%!-- Main Content --%>
         <div class="flex-1 flex flex-col overflow-hidden">
           <%!-- Header --%>

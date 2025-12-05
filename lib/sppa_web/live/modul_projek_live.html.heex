@@ -1,0 +1,850 @@
+<Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+  <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
+    <%!-- Overlay --%>
+    <div
+      class={[
+        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+      ]}
+      phx-click="close_sidebar"
+    >
+    </div>
+     <%!-- Sidebar --%>
+    <.dashboard_sidebar
+      sidebar_open={@sidebar_open}
+      dashboard_path={~p"/dashboard-pp"}
+      logo_src={~p"/images/logojpkn.png"}
+      current_scope={@current_scope}
+      current_path={"/projek/#{@project_id}/modul"}
+    /> <%!-- Main Content --%>
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <%!-- Header --%>
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md">
+        <div class="flex items-center gap-4">
+          <button
+            phx-click="toggle_sidebar"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-bars-3" class="w-6 h-6" />
+          </button>
+          <div class="flex items-center gap-4">
+            <img
+              src={~p"/images/Jata-Sabah.png"}
+              alt="Jata Wilayah Sabah"
+              class="h-12 w-auto object-contain"
+            />
+            <img
+              src={~p"/images/logojpkn.png"}
+              alt="Logo JPKN"
+              class="h-12 w-auto object-contain"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <.link
+            navigate={~p"/users/settings"}
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-user-circle" class="w-6 h-6" />
+          </.link>
+          <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
+            <button
+              type="submit"
+              class="text-white hover:text-red-100 hover:bg-red-500/30 p-2 rounded-lg transition-all duration-200"
+            >
+              <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5" />
+            </button>
+          </.form>
+        </div>
+      </header>
+       <%!-- Content --%>
+      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
+        <div class="max-w-[1600px] mx-auto">
+          <%!-- Back Button --%>
+          <div class="mb-4">
+            <.link
+              navigate={~p"/senarai-projek"}
+              class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+            >
+              <.icon name="hero-arrow-left" class="w-4 h-4" />
+              <span>Kembali ke Senarai Projek</span>
+            </.link>
+          </div>
+          
+          <%!-- Page Header --%>
+          <div class="mb-8 flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                Modul Projek: {@project.nama}
+              </h1>
+              
+              <p class="text-gray-600">Urus dan tetapkan tugasan kepada pembangun sistem</p>
+            </div>
+            
+            <%!-- New Task Button --%>
+            <button
+              phx-click="open_new_task_modal"
+              class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <.icon name="hero-plus-circle" class="w-5 h-5" />
+              <span>Tugasan Baru</span>
+            </button>
+          </div>
+          
+          <%!-- Kanban Board --%>
+          <div class="flex gap-6 overflow-x-auto pb-4">
+            <%!-- Todo Column --%>
+            <div class="flex-shrink-0 w-80">
+              <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-gray-400"></div>
+                      <h3 class="text-sm font-semibold text-gray-700">Belum Bermula</h3>
+                    </div>
+                    <span class="text-xs font-medium text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+                      {length(Enum.filter(@tasks, fn t -> t.status == "todo" end))}
+                    </span>
+                  </div>
+                </div>
+                <div class="p-3 space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
+                  <%= for task <- Enum.filter(@tasks, fn t -> t.status == "todo" end) do %>
+                    <div
+                      class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                      phx-click="open_edit_task_modal"
+                      phx-value-task_id={task.id}
+                    >
+                      <div class="flex items-start justify-between mb-2">
+                        <h4 class="text-sm font-semibold text-gray-900 flex-1 pr-2">
+                          {task.title}
+                        </h4>
+                        <button
+                          phx-click="delete_task"
+                          phx-value-task_id={task.id}
+                          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                          onclick="event.stopPropagation();"
+                        >
+                          <.icon name="hero-trash" class="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      <%= if task.description do %>
+                        <p class="text-xs text-gray-600 mb-3 line-clamp-2">
+                          {task.description}
+                        </p>
+                      <% end %>
+                      
+                      <div class="flex items-center gap-2 mb-3">
+                        <span class={[
+                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
+                          case task.priority do
+                            "high" -> "bg-red-100 text-red-800 border-red-200"
+                            "medium" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                            "low" -> "bg-green-100 text-green-800 border-green-200"
+                            _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                          end
+                        ]}>
+                          {case task.priority do
+                            "high" -> "Tinggi"
+                            "medium" -> "Sederhana"
+                            "low" -> "Rendah"
+                            _ -> "Sederhana"
+                          end}
+                        </span>
+                      </div>
+                      
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <%= if task.developer_name do %>
+                            <div class="flex items-center gap-1.5">
+                              <.icon name="hero-user" class="w-3.5 h-3.5 text-gray-400" />
+                              <span class="text-xs text-gray-600">{task.developer_name}</span>
+                            </div>
+                          <% else %>
+                            <span class="text-xs text-gray-400">Tiada pembangun</span>
+                          <% end %>
+                        </div>
+                        <%= if task.due_date do %>
+                          <div class="flex items-center gap-1">
+                            <.icon name="hero-calendar" class="w-3.5 h-3.5 text-gray-400" />
+                            <span class="text-xs text-gray-500">
+                              {Calendar.strftime(task.due_date, "%d/%m/%Y")}
+                            </span>
+                          </div>
+                        <% end %>
+                      </div>
+                      
+                      <div class="mt-3 pt-3 border-t border-gray-100">
+                        <select
+                          phx-change="update_task_status"
+                          phx-value-task_id={task.id}
+                          name="status"
+                          class="w-full text-xs border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onclick="event.stopPropagation();"
+                        >
+                          <option value="todo" selected={task.status == "todo"}>Belum Bermula</option>
+                          <option value="in_progress" selected={task.status == "in_progress"}>Sedang Dijalankan</option>
+                          <option value="review" selected={task.status == "review"}>Semakan</option>
+                          <option value="done" selected={task.status == "done"}>Selesai</option>
+                        </select>
+                      </div>
+                    </div>
+                  <% end %>
+                  
+                  <%= if Enum.empty?(Enum.filter(@tasks, fn t -> t.status == "todo" end)) do %>
+                    <div class="text-center py-8 text-gray-400">
+                      <p class="text-sm">Tiada tugasan</p>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            
+            <%!-- In Progress Column --%>
+            <div class="flex-shrink-0 w-80">
+              <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 bg-blue-50 border-b border-gray-200">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <h3 class="text-sm font-semibold text-gray-700">Sedang Dijalankan</h3>
+                    </div>
+                    <span class="text-xs font-medium text-gray-500 bg-blue-200 px-2 py-0.5 rounded-full">
+                      {length(Enum.filter(@tasks, fn t -> t.status == "in_progress" end))}
+                    </span>
+                  </div>
+                </div>
+                <div class="p-3 space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
+                  <%= for task <- Enum.filter(@tasks, fn t -> t.status == "in_progress" end) do %>
+                    <div
+                      class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                      phx-click="open_edit_task_modal"
+                      phx-value-task_id={task.id}
+                    >
+                      <div class="flex items-start justify-between mb-2">
+                        <h4 class="text-sm font-semibold text-gray-900 flex-1 pr-2">
+                          {task.title}
+                        </h4>
+                        <button
+                          phx-click="delete_task"
+                          phx-value-task_id={task.id}
+                          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                          onclick="event.stopPropagation();"
+                        >
+                          <.icon name="hero-trash" class="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      <%= if task.description do %>
+                        <p class="text-xs text-gray-600 mb-3 line-clamp-2">
+                          {task.description}
+                        </p>
+                      <% end %>
+                      
+                      <div class="flex items-center gap-2 mb-3">
+                        <span class={[
+                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
+                          case task.priority do
+                            "high" -> "bg-red-100 text-red-800 border-red-200"
+                            "medium" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                            "low" -> "bg-green-100 text-green-800 border-green-200"
+                            _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                          end
+                        ]}>
+                          {case task.priority do
+                            "high" -> "Tinggi"
+                            "medium" -> "Sederhana"
+                            "low" -> "Rendah"
+                            _ -> "Sederhana"
+                          end}
+                        </span>
+                      </div>
+                      
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <%= if task.developer_name do %>
+                            <div class="flex items-center gap-1.5">
+                              <.icon name="hero-user" class="w-3.5 h-3.5 text-gray-400" />
+                              <span class="text-xs text-gray-600">{task.developer_name}</span>
+                            </div>
+                          <% else %>
+                            <span class="text-xs text-gray-400">Tiada pembangun</span>
+                          <% end %>
+                        </div>
+                        <%= if task.due_date do %>
+                          <div class="flex items-center gap-1">
+                            <.icon name="hero-calendar" class="w-3.5 h-3.5 text-gray-400" />
+                            <span class="text-xs text-gray-500">
+                              {Calendar.strftime(task.due_date, "%d/%m/%Y")}
+                            </span>
+                          </div>
+                        <% end %>
+                      </div>
+                      
+                      <div class="mt-3 pt-3 border-t border-gray-100">
+                        <select
+                          phx-change="update_task_status"
+                          phx-value-task_id={task.id}
+                          name="status"
+                          class="w-full text-xs border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onclick="event.stopPropagation();"
+                        >
+                          <option value="todo" selected={task.status == "todo"}>Belum Bermula</option>
+                          <option value="in_progress" selected={task.status == "in_progress"}>Sedang Dijalankan</option>
+                          <option value="review" selected={task.status == "review"}>Semakan</option>
+                          <option value="done" selected={task.status == "done"}>Selesai</option>
+                        </select>
+                      </div>
+                    </div>
+                  <% end %>
+                  
+                  <%= if Enum.empty?(Enum.filter(@tasks, fn t -> t.status == "in_progress" end)) do %>
+                    <div class="text-center py-8 text-gray-400">
+                      <p class="text-sm">Tiada tugasan</p>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            
+            <%!-- Review Column --%>
+            <div class="flex-shrink-0 w-80">
+              <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 bg-purple-50 border-b border-gray-200">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-purple-500"></div>
+                      <h3 class="text-sm font-semibold text-gray-700">Semakan</h3>
+                    </div>
+                    <span class="text-xs font-medium text-gray-500 bg-purple-200 px-2 py-0.5 rounded-full">
+                      {length(Enum.filter(@tasks, fn t -> t.status == "review" end))}
+                    </span>
+                  </div>
+                </div>
+                <div class="p-3 space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
+                  <%= for task <- Enum.filter(@tasks, fn t -> t.status == "review" end) do %>
+                    <div
+                      class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                      phx-click="open_edit_task_modal"
+                      phx-value-task_id={task.id}
+                    >
+                      <div class="flex items-start justify-between mb-2">
+                        <h4 class="text-sm font-semibold text-gray-900 flex-1 pr-2">
+                          {task.title}
+                        </h4>
+                        <button
+                          phx-click="delete_task"
+                          phx-value-task_id={task.id}
+                          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                          onclick="event.stopPropagation();"
+                        >
+                          <.icon name="hero-trash" class="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      <%= if task.description do %>
+                        <p class="text-xs text-gray-600 mb-3 line-clamp-2">
+                          {task.description}
+                        </p>
+                      <% end %>
+                      
+                      <div class="flex items-center gap-2 mb-3">
+                        <span class={[
+                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
+                          case task.priority do
+                            "high" -> "bg-red-100 text-red-800 border-red-200"
+                            "medium" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                            "low" -> "bg-green-100 text-green-800 border-green-200"
+                            _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                          end
+                        ]}>
+                          {case task.priority do
+                            "high" -> "Tinggi"
+                            "medium" -> "Sederhana"
+                            "low" -> "Rendah"
+                            _ -> "Sederhana"
+                          end}
+                        </span>
+                      </div>
+                      
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <%= if task.developer_name do %>
+                            <div class="flex items-center gap-1.5">
+                              <.icon name="hero-user" class="w-3.5 h-3.5 text-gray-400" />
+                              <span class="text-xs text-gray-600">{task.developer_name}</span>
+                            </div>
+                          <% else %>
+                            <span class="text-xs text-gray-400">Tiada pembangun</span>
+                          <% end %>
+                        </div>
+                        <%= if task.due_date do %>
+                          <div class="flex items-center gap-1">
+                            <.icon name="hero-calendar" class="w-3.5 h-3.5 text-gray-400" />
+                            <span class="text-xs text-gray-500">
+                              {Calendar.strftime(task.due_date, "%d/%m/%Y")}
+                            </span>
+                          </div>
+                        <% end %>
+                      </div>
+                      
+                      <div class="mt-3 pt-3 border-t border-gray-100">
+                        <select
+                          phx-change="update_task_status"
+                          phx-value-task_id={task.id}
+                          name="status"
+                          class="w-full text-xs border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onclick="event.stopPropagation();"
+                        >
+                          <option value="todo" selected={task.status == "todo"}>Belum Bermula</option>
+                          <option value="in_progress" selected={task.status == "in_progress"}>Sedang Dijalankan</option>
+                          <option value="review" selected={task.status == "review"}>Semakan</option>
+                          <option value="done" selected={task.status == "done"}>Selesai</option>
+                        </select>
+                      </div>
+                    </div>
+                  <% end %>
+                  
+                  <%= if Enum.empty?(Enum.filter(@tasks, fn t -> t.status == "review" end)) do %>
+                    <div class="text-center py-8 text-gray-400">
+                      <p class="text-sm">Tiada tugasan</p>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            
+            <%!-- Done Column --%>
+            <div class="flex-shrink-0 w-80">
+              <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 bg-green-50 border-b border-gray-200">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                      <h3 class="text-sm font-semibold text-gray-700">Selesai</h3>
+                    </div>
+                    <span class="text-xs font-medium text-gray-500 bg-green-200 px-2 py-0.5 rounded-full">
+                      {length(Enum.filter(@tasks, fn t -> t.status == "done" end))}
+                    </span>
+                  </div>
+                </div>
+                <div class="p-3 space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
+                  <%= for task <- Enum.filter(@tasks, fn t -> t.status == "done" end) do %>
+                    <div
+                      class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer group opacity-75"
+                      phx-click="open_edit_task_modal"
+                      phx-value-task_id={task.id}
+                    >
+                      <div class="flex items-start justify-between mb-2">
+                        <h4 class="text-sm font-semibold text-gray-900 flex-1 pr-2 line-through">
+                          {task.title}
+                        </h4>
+                        <button
+                          phx-click="delete_task"
+                          phx-value-task_id={task.id}
+                          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                          onclick="event.stopPropagation();"
+                        >
+                          <.icon name="hero-trash" class="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      <%= if task.description do %>
+                        <p class="text-xs text-gray-600 mb-3 line-clamp-2">
+                          {task.description}
+                        </p>
+                      <% end %>
+                      
+                      <div class="flex items-center gap-2 mb-3">
+                        <span class={[
+                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
+                          case task.priority do
+                            "high" -> "bg-red-100 text-red-800 border-red-200"
+                            "medium" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                            "low" -> "bg-green-100 text-green-800 border-green-200"
+                            _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                          end
+                        ]}>
+                          {case task.priority do
+                            "high" -> "Tinggi"
+                            "medium" -> "Sederhana"
+                            "low" -> "Rendah"
+                            _ -> "Sederhana"
+                          end}
+                        </span>
+                      </div>
+                      
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <%= if task.developer_name do %>
+                            <div class="flex items-center gap-1.5">
+                              <.icon name="hero-user" class="w-3.5 h-3.5 text-gray-400" />
+                              <span class="text-xs text-gray-600">{task.developer_name}</span>
+                            </div>
+                          <% else %>
+                            <span class="text-xs text-gray-400">Tiada pembangun</span>
+                          <% end %>
+                        </div>
+                        <%= if task.due_date do %>
+                          <div class="flex items-center gap-1">
+                            <.icon name="hero-calendar" class="w-3.5 h-3.5 text-gray-400" />
+                            <span class="text-xs text-gray-500">
+                              {Calendar.strftime(task.due_date, "%d/%m/%Y")}
+                            </span>
+                          </div>
+                        <% end %>
+                      </div>
+                      
+                      <div class="mt-3 pt-3 border-t border-gray-100">
+                        <select
+                          phx-change="update_task_status"
+                          phx-value-task_id={task.id}
+                          name="status"
+                          class="w-full text-xs border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          onclick="event.stopPropagation();"
+                        >
+                          <option value="todo" selected={task.status == "todo"}>Belum Bermula</option>
+                          <option value="in_progress" selected={task.status == "in_progress"}>Sedang Dijalankan</option>
+                          <option value="review" selected={task.status == "review"}>Semakan</option>
+                          <option value="done" selected={task.status == "done"}>Selesai</option>
+                        </select>
+                      </div>
+                    </div>
+                  <% end %>
+                  
+                  <%= if Enum.empty?(Enum.filter(@tasks, fn t -> t.status == "done" end)) do %>
+                    <div class="text-center py-8 text-gray-400">
+                      <p class="text-sm">Tiada tugasan</p>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <%!-- New Task Modal --%>
+  <div
+    :if={@show_new_task_modal}
+    class="fixed inset-0 z-50 overflow-y-auto"
+    phx-click="close_new_task_modal"
+    phx-click-away="close_new_task_modal"
+    role="dialog"
+    aria-modal="true"
+  >
+    <%!-- Backdrop --%>
+    <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+     <%!-- Modal container --%>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div
+        class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+        phx-click-away="close_new_task_modal"
+      >
+        <%!-- Modal header --%>
+        <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-white">Tugasan Baru</h2>
+              
+              <p class="mt-1 text-sm text-blue-100">
+                Cipta tugasan baharu dan tetapkan kepada pembangun sistem
+              </p>
+            </div>
+            
+            <button
+              type="button"
+              phx-click="close_new_task_modal"
+              class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+              aria-label="Tutup"
+            >
+              <.icon name="hero-x-mark" class="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+         <%!-- Modal body --%>
+        <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+          <.form
+            for={@form}
+            phx-change="validate_task"
+            phx-submit="save_task"
+            id="new-task-form"
+            class="space-y-6"
+          >
+            <%!-- Hidden project_id field --%>
+            <input type="hidden" name="task[project_id]" value={@project_id} />
+            
+            <%!-- Task Title --%>
+            <div>
+              <.input
+                field={@form[:title]}
+                type="text"
+                label="Tajuk Tugasan"
+                required
+                placeholder="Masukkan tajuk tugasan"
+                class="w-full"
+              />
+            </div>
+            
+            <%!-- Task Description --%>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Penerangan
+              </label>
+              <textarea
+                name="task[description]"
+                rows="4"
+                placeholder="Masukkan penerangan tugasan..."
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+              ><%= if @form[:description] && @form[:description].value, do: @form[:description].value, else: "" %></textarea>
+            </div>
+            
+            <%!-- Task Assignment and Priority --%>
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <%!-- Assign to Developer --%>
+              <div>
+                <.input
+                  field={@form[:developer_id]}
+                  type="select"
+                  label="Tetapkan Kepada"
+                  prompt="Pilih Pembangun Sistem"
+                  options={
+                    Enum.map(@developers, fn developer ->
+                      {"#{developer.email || developer.no_kp}", developer.id}
+                    end)
+                  }
+                  class="w-full"
+                />
+              </div>
+              
+              <%!-- Priority --%>
+              <div>
+                <.input
+                  field={@form[:priority]}
+                  type="select"
+                  label="Keutamaan"
+                  options={[
+                    {"Tinggi", "high"},
+                    {"Sederhana", "medium"},
+                    {"Rendah", "low"}
+                  ]}
+                  class="w-full"
+                />
+              </div>
+            </div>
+            
+            <%!-- Due Date and Status --%>
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <%!-- Due Date --%>
+              <div>
+                <.input
+                  field={@form[:due_date]}
+                  type="date"
+                  label="Tarikh Akhir"
+                  class="w-full"
+                />
+              </div>
+              
+              <%!-- Status --%>
+              <div>
+                <.input
+                  field={@form[:status]}
+                  type="select"
+                  label="Status"
+                  options={[
+                    {"Belum Bermula", "todo"},
+                    {"Sedang Dijalankan", "in_progress"},
+                    {"Semakan", "review"},
+                    {"Selesai", "done"}
+                  ]}
+                  class="w-full"
+                />
+              </div>
+            </div>
+            
+             <%!-- Form Actions --%>
+            <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
+              <button
+                type="button"
+                phx-click="close_new_task_modal"
+                class="rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                class="rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+              >
+                Simpan Tugasan
+              </button>
+            </div>
+          </.form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <%!-- Edit Task Modal --%>
+  <div
+    :if={@show_edit_task_modal && @selected_task}
+    class="fixed inset-0 z-50 overflow-y-auto"
+    phx-click="close_edit_task_modal"
+    phx-click-away="close_edit_task_modal"
+    role="dialog"
+    aria-modal="true"
+  >
+    <%!-- Backdrop --%>
+    <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+     <%!-- Modal container --%>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div
+        class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+        phx-click-away="close_edit_task_modal"
+      >
+        <%!-- Modal header --%>
+        <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-white">Kemaskini Tugasan</h2>
+              
+              <p class="mt-1 text-sm text-blue-100">
+                Kemaskini maklumat tugasan
+              </p>
+            </div>
+            
+            <button
+              type="button"
+              phx-click="close_edit_task_modal"
+              class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+              aria-label="Tutup"
+            >
+              <.icon name="hero-x-mark" class="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+         <%!-- Modal body --%>
+        <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+          <.form
+            for={@form}
+            phx-change="validate_task"
+            phx-submit="update_task"
+            id="edit-task-form"
+            class="space-y-6"
+          >
+            <%!-- Hidden project_id field --%>
+            <input type="hidden" name="task[project_id]" value={@project_id} />
+            
+            <%!-- Task Title --%>
+            <div>
+              <.input
+                field={@form[:title]}
+                type="text"
+                label="Tajuk Tugasan"
+                required
+                placeholder="Masukkan tajuk tugasan"
+                class="w-full"
+              />
+            </div>
+            
+            <%!-- Task Description --%>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Penerangan
+              </label>
+              <textarea
+                name="task[description]"
+                rows="4"
+                placeholder="Masukkan penerangan tugasan..."
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+              ><%= if @form[:description] && @form[:description].value, do: @form[:description].value, else: "" %></textarea>
+            </div>
+            
+            <%!-- Task Assignment and Priority --%>
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <%!-- Assign to Developer --%>
+              <div>
+                <.input
+                  field={@form[:developer_id]}
+                  type="select"
+                  label="Tetapkan Kepada"
+                  prompt="Pilih Pembangun Sistem"
+                  options={
+                    Enum.map(@developers, fn developer ->
+                      {"#{developer.email || developer.no_kp}", developer.id}
+                    end)
+                  }
+                  class="w-full"
+                />
+              </div>
+              
+              <%!-- Priority --%>
+              <div>
+                <.input
+                  field={@form[:priority]}
+                  type="select"
+                  label="Keutamaan"
+                  options={[
+                    {"Tinggi", "high"},
+                    {"Sederhana", "medium"},
+                    {"Rendah", "low"}
+                  ]}
+                  class="w-full"
+                />
+              </div>
+            </div>
+            
+            <%!-- Due Date and Status --%>
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <%!-- Due Date --%>
+              <div>
+                <.input
+                  field={@form[:due_date]}
+                  type="date"
+                  label="Tarikh Akhir"
+                  class="w-full"
+                />
+              </div>
+              
+              <%!-- Status --%>
+              <div>
+                <.input
+                  field={@form[:status]}
+                  type="select"
+                  label="Status"
+                  options={[
+                    {"Belum Bermula", "todo"},
+                    {"Sedang Dijalankan", "in_progress"},
+                    {"Semakan", "review"},
+                    {"Selesai", "done"}
+                  ]}
+                  class="w-full"
+                />
+              </div>
+            </div>
+            
+             <%!-- Form Actions --%>
+            <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
+              <button
+                type="button"
+                phx-click="close_edit_task_modal"
+                class="rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                class="rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+              >
+                Kemaskini Tugasan
+              </button>
+            </div>
+          </.form>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layouts.app>
+

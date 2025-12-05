@@ -19,20 +19,20 @@ defmodule SppaWeb.Components.Topbar do
 
     if user_role == "pengurus projek" do
       ~H"""
-      <header class="flex h-20 w-full items-center justify-between bg-[#0057D9] px-8 shadow-md">
+      <header class="flex h-24 w-full items-center justify-between bg-[#0057D9] px-8 shadow-md">
         <div class="flex items-center gap-5">
           <img
             src={~p"/images/channels4_profile-1-48.png"}
             alt="Logo Negeri"
-            class="h-16 w-16"
+            class="h-24 w-24 object-contain"
           />
           <img
             src={~p"/images/logojpkn-1-1-6.png"}
             alt="Logo JPKN"
-            class="h-16 w-auto"
+            class="h-24 w-auto object-contain"
           />
         </div>
-        
+
         <div class="flex items-center gap-5">
           <div class="hidden flex-col items-end text-xs text-blue-100 sm:flex">
             <span class="uppercase tracking-wide opacity-80">Pengguna Log Masuk</span>
@@ -41,7 +41,7 @@ defmodule SppaWeb.Components.Topbar do
                 "Nama Pengguna"}
             </span>
           </div>
-          
+
           <div class="flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm shadow-sm">
             <.icon name="hero-user-circle" class="h-5 w-5 text-white" />
             <span class="text-white sm:hidden">
@@ -49,7 +49,7 @@ defmodule SppaWeb.Components.Topbar do
                 "Nama Pengguna"}
             </span>
           </div>
-          
+
           <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
             <button
               type="submit"

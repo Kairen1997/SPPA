@@ -480,6 +480,7 @@ defmodule SppaWeb.CoreComponents do
   attr :dashboard_path, :string, required: true
   attr :logo_src, :string, required: true
   attr :current_scope, :any, default: nil
+  attr :current_path, :string, default: "/dashboard-pp", doc: "Current path for active link highlighting"
 
   def dashboard_sidebar(assigns) do
     ~H"""
@@ -515,16 +516,25 @@ defmodule SppaWeb.CoreComponents do
                 phx-click="close_sidebar"
                 class={[
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                  "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md"
+                  if(@current_path == "/dashboard-pp",
+                    do: "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md",
+                    else: "text-gray-200 hover:text-white hover:bg-gray-700/70"
+                  )
                 ]}
               >
                 <.icon name="hero-squares-2x2" class="w-5 h-5" />
                 <span class="font-medium">Papan Pemuka</span>
               </.link>
               <.link
-                navigate={~p"/projek"}
+                navigate={~p"/senarai-projek"}
                 phx-click="close_sidebar"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-200 hover:text-white hover:bg-gray-700/70 transition-all duration-200"
+                class={[
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                  if(@current_path == "/senarai-projek",
+                    do: "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md",
+                    else: "text-gray-200 hover:text-white hover:bg-gray-700/70"
+                  )
+                ]}
               >
                 <.icon name="hero-folder" class="w-5 h-5" />
                 <span class="font-medium">Senarai Projek</span>
@@ -535,18 +545,19 @@ defmodule SppaWeb.CoreComponents do
                 <.icon name="hero-squares-plus" class="w-4 h-4 text-amber-300" />
                 <span>Modul</span>
               </div>
+              <p class="pl-10 pr-4 py-1.5 text-xs text-gray-400 italic">
+                Akses modul melalui Senarai Projek
+              </p>
               <a
                 href="#"
                 phx-click="close_sidebar"
-                class="flex items-center gap-2 pl-10 pr-4 py-1.5 text-sm text-gray-200 hover:text-white hover:bg-gray-700/60 rounded-lg transition-all duration-200"
-              >
-                <.icon name="hero-arrow-long-right" class="w-4 h-4 text-emerald-400" />
-                <span>Modul Projek</span>
-              </a>
-              <a
-                href="#"
-                phx-click="close_sidebar"
-                class="mt-1 flex items-center gap-2 pl-10 pr-4 py-1.5 text-sm text-gray-200 hover:text-white hover:bg-gray-700/60 rounded-lg transition-all duration-200"
+                class={[
+                  "mt-1 flex items-center gap-2 pl-10 pr-4 py-1.5 text-sm rounded-lg transition-all duration-200",
+                  if(String.contains?(@current_path, "/modul"),
+                    do: "bg-gray-700/70 text-white",
+                    else: "text-gray-200 hover:text-white hover:bg-gray-700/60"
+                  )
+                ]}
               >
                 <.icon name="hero-arrow-long-right" class="w-4 h-4 text-emerald-400" />
                 <span>Pelan Modul</span>
