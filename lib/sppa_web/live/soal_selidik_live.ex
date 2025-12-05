@@ -157,6 +157,8 @@ defmodule SppaWeb.SoalSelidikLive do
         |> assign(:fr_categories, @fr_categories)
         |> assign(:nfr_categories, @nfr_categories)
         |> assign(:form, to_form(%{}, as: :soal_selidik))
+        |> assign(:show_pdf_modal, false)
+        |> assign(:pdf_data, nil)
 
       {:ok, socket}
     else
@@ -213,6 +215,123 @@ defmodule SppaWeb.SoalSelidikLive do
       |> assign(:form, to_form(params, as: :soal_selidik))
 
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("generate_pdf", _params, socket) do
+    dummy_data = generate_dummy_data_for_pdf()
+
+    {:noreply,
+      socket
+     |> assign(:show_pdf_modal, true)
+     |> assign(:pdf_data, dummy_data)}
+  end
+
+  @impl true
+  def handle_event("close_pdf_modal", _params, socket) do
+    {:noreply,
+      socket
+     |> assign(:show_pdf_modal, false)
+     |> assign(:pdf_data, nil)}
+  end
+
+  defp generate_dummy_data_for_pdf do
+    %{
+      nama_sistem: "Sistem Pengurusan Projek Aplikasi (SPPA)",
+      document_id: "JPKN-BPA-01/B1",
+      fr_categories: @fr_categories,
+      nfr_categories: @nfr_categories,
+      fr_data: %{
+        pendaftaran_login: %{
+          "1" => %{maklumbalas: "Ya", catatan: "Sistem memerlukan pendaftaran pengguna untuk akses terkawal"},
+          "2" => %{maklumbalas: ["Kata laluan", "OTP"], catatan: "Menggunakan kata laluan dan OTP untuk keselamatan tambahan"},
+          "3" => %{maklumbalas: "Tidak", catatan: "Pendaftaran hanya dilakukan oleh admin"},
+          "4" => %{maklumbalas: "30 minit", catatan: "Sesi akan tamat selepas 30 minit tidak aktif"},
+          "5" => %{maklumbalas: "Ya", catatan: "Pengguna boleh reset kata laluan melalui email"}
+        },
+        pengurusan_data: %{
+          "1" => %{maklumbalas: "Data projek, pengguna, dokumen, dan laporan", catatan: "Sistem perlu mengurus pelbagai jenis data"},
+          "2" => %{maklumbalas: "Ya", catatan: "Import data pukal diperlukan untuk migrasi data"},
+          "3" => %{maklumbalas: ["Excel", "CSV"], catatan: "Format Excel dan CSV adalah keutamaan"},
+          "4" => %{maklumbalas: "Ya", catatan: "Export data diperlukan untuk backup dan laporan"},
+          "5" => %{maklumbalas: "7 tahun", catatan: "Mematuhi keperluan penyimpanan rekod kerajaan"},
+          "6" => %{maklumbalas: "Ya", catatan: "Backup harian secara automatik"}
+        },
+        proses_kerja: %{
+          "1" => %{maklumbalas: "Permohonan projek → Kelulusan → Pembangunan → Ujian → Penempatan", catatan: "Alur kerja utama sistem"},
+          "2" => %{maklumbalas: "Ya", catatan: "Workflow approval diperlukan untuk kelulusan projek"},
+          "3" => %{maklumbalas: "3 peringkat", catatan: "Pengurus Projek → Ketua Penolong Pengarah → Pengarah"},
+          "4" => %{maklumbalas: "Ya", catatan: "Notifikasi diperlukan untuk proses kelulusan"},
+          "5" => %{maklumbalas: ["Email", "Dalam Sistem"], catatan: "Notifikasi melalui email dan dalam sistem"}
+        },
+        laporan: %{
+          "1" => %{maklumbalas: "Laporan status projek, laporan kemajuan, laporan kewangan, laporan audit", catatan: "Pelbagai jenis laporan diperlukan"},
+          "2" => %{maklumbalas: "Ya", catatan: "Semua laporan perlu boleh dieksport"},
+          "3" => %{maklumbalas: ["PDF", "Excel"], catatan: "Format PDF dan Excel adalah keutamaan"},
+          "4" => %{maklumbalas: "Ya", catatan: "Laporan bulanan perlu dijana secara automatik"},
+          "5" => %{maklumbalas: "Bulanan", catatan: "Laporan bulanan untuk pengurusan atasan"}
+        },
+        integrasi: %{
+          "1" => %{maklumbalas: "Ya", catatan: "Perlu berintegrasi dengan sistem sedia ada"},
+          "2" => %{maklumbalas: "Sistem HR, Sistem Kewangan, Sistem Email", catatan: "Integrasi dengan sistem utama organisasi"},
+          "3" => %{maklumbalas: ["REST API", "Database"], catatan: "Menggunakan REST API dan sambungan database"},
+          "4" => %{maklumbalas: "Kedua-dua", catatan: "Real-time untuk data kritikal, batch untuk data besar"},
+          "5" => %{maklumbalas: "Ya", catatan: "API diperlukan untuk sistem luaran"}
+        },
+        role_akses: %{
+          "1" => %{maklumbalas: "Admin, Pengurus Projek, Pembangun Sistem, Ketua Penolong Pengarah, Pengarah", catatan: "Pelbagai peranan dengan akses berbeza"},
+          "2" => %{maklumbalas: "Ya", catatan: "RBAC diperlukan untuk kawalan akses yang ketat"},
+          "3" => %{maklumbalas: "Ya", catatan: "Permission granular untuk fungsi tertentu"},
+          "4" => %{maklumbalas: "Ya", catatan: "Audit log untuk keselamatan dan compliance"},
+          "5" => %{maklumbalas: "Admin sistem dan Pengarah", catatan: "Akses admin terhad kepada pengguna tertentu"}
+        },
+        peraturan_polisi: %{
+          "1" => %{maklumbalas: "PDPA, Polisi Keselamatan IT, Polisi Pengurusan Data", catatan: "Mematuhi semua peraturan dan polisi organisasi"},
+          "2" => %{maklumbalas: "Ya", catatan: "Mematuhi piawaian keselamatan yang ditetapkan"},
+          "3" => %{maklumbalas: "Ya", catatan: "Mematuhi PDPA untuk perlindungan data peribadi"},
+          "4" => %{maklumbalas: ["ISO 27001", "PDPA"], catatan: "Mematuhi ISO 27001 dan PDPA"},
+          "5" => %{maklumbalas: "Ya", catatan: "Compliance reporting diperlukan untuk audit"}
+        },
+        lain_lain_ciri: %{
+          "1" => %{maklumbalas: "Dashboard interaktif, kalendar projek, notifikasi real-time, carian lanjutan", catatan: "Ciri tambahan untuk meningkatkan pengalaman pengguna"},
+          "2" => %{maklumbalas: "Ya", catatan: "Multi-bahasa diperlukan untuk pengguna pelbagai bahasa"},
+          "3" => %{maklumbalas: ["Bahasa Melayu", "English"], catatan: "Bahasa Melayu dan English adalah keutamaan"},
+          "4" => %{maklumbalas: "Ya", catatan: "Tema gelap/terang untuk keselesaan pengguna"},
+          "5" => %{maklumbalas: "Sokongan untuk pengguna kurang upaya, aksesibiliti penuh", catatan: "Keperluan khas untuk aksesibiliti"}
+        }
+      },
+      nfr_data: %{
+        keselamatan: %{
+          "1" => %{maklumbalas: "Tinggi", catatan: "Data sensitif memerlukan tahap keselamatan tinggi"},
+          "2" => %{maklumbalas: "Ya", catatan: "Semua data perlu dienkripsi"},
+          "3" => %{maklumbalas: ["At Rest", "In Transit"], catatan: "Enkripsi untuk data at rest dan in transit"},
+          "4" => %{maklumbalas: "Ya", catatan: "2FA diperlukan untuk akses admin"},
+          "5" => %{maklumbalas: "Ya", catatan: "Audit trail untuk semua aktiviti pengguna"},
+          "6" => %{maklumbalas: "7 tahun", catatan: "Mematuhi keperluan penyimpanan rekod"}
+        },
+        akses_capaian: %{
+          "1" => %{maklumbalas: "500 pengguna serentak", catatan: "Sistem perlu menyokong sehingga 500 pengguna serentak"},
+          "2" => %{maklumbalas: "Ya", catatan: "Akses dari luar pejabat melalui VPN"},
+          "3" => %{maklumbalas: ["Desktop", "Laptop", "Mobile"], catatan: "Sokongan untuk desktop, laptop dan mobile"},
+          "4" => %{maklumbalas: ["Chrome", "Firefox", "Edge"], catatan: "Sokongan untuk pelayar utama"},
+          "5" => %{maklumbalas: "Tidak", catatan: "Akses offline tidak diperlukan"},
+          "6" => %{maklumbalas: "5 Mbps", catatan: "Kelajuan minimum 5 Mbps untuk prestasi optimum"}
+        },
+        usability: %{
+          "1" => %{maklumbalas: "Tinggi", catatan: "Sistem perlu mudah digunakan oleh semua peringkat pengguna"},
+          "2" => %{maklumbalas: "Ya", catatan: "Panduan pengguna dalam talian diperlukan"},
+          "3" => %{maklumbalas: "Ya", catatan: "Tooltip dan bantuan kontekstual untuk memudahkan pengguna"},
+          "4" => %{maklumbalas: "2 jam", catatan: "Latihan 2 jam untuk pengguna baru"},
+          "5" => %{maklumbalas: "Ya", catatan: "Mematuhi piawaian aksesibiliti"},
+          "6" => %{maklumbalas: ["WCAG 2.1"], catatan: "Mematuhi WCAG 2.1 Level AA"}
+        }
+      },
+      disediakan_oleh: %{
+        nama: "Ahmad bin Abdullah",
+        jawatan: "Pengurus Projek",
+        tarikh: Date.utc_today() |> Date.to_string()
+      }
+    }
   end
 
 end
