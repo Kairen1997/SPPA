@@ -648,4 +648,136 @@ defmodule SppaWeb.CoreComponents do
     </aside>
     """
   end
+
+  @doc """
+  Renders a requirement table for the soal selidik form.
+
+  ## Examples
+
+      <.requirement_table
+        id="pendaftaran-login"
+        title="Pendaftaran & Login"
+        questions={@questions}
+        form={@form}
+        tab_type="fr"
+        category_key="pendaftaran_login"
+      />
+  """
+  attr :id, :string, required: true, doc: "unique id for the table"
+  attr :title, :string, required: true, doc: "category title"
+  attr :questions, :list, required: true, doc: "list of question maps"
+  attr :form, :any, required: true, doc: "the form struct"
+  attr :tab_type, :string, required: true, doc: "either 'fr' or 'nfr'"
+  attr :category_key, :string, required: true, doc: "category key for form params"
+
+  def requirement_table(assigns) do
+    ~H"""
+    <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+      <table class="w-full border-collapse text-sm">
+        <thead>
+          <tr class="bg-gray-100 border-b border-gray-400">
+            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">
+              No
+            </th>
+            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 40%;">
+              Soalan
+            </th>
+            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 27%;">
+              Maklumbalas
+            </th>
+            <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 27%;">
+              Catatan
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-300">
+          <tr :for={question <- @questions} class="hover:bg-gray-50">
+            <td class="px-3 py-2 border-r border-gray-400 align-top">
+              <div class="px-2 py-1 text-sm font-medium text-gray-900">
+                {question.no}
+              </div>
+            </td>
+            <td class="px-3 py-2 border-r border-gray-400 align-top">
+              <div class="px-2 py-1 text-sm text-gray-800">
+                {question.soalan}
+              </div>
+            </td>
+            <td class="px-3 py-2 border-r border-gray-400 align-top">
+              <%= cond do %>
+                <% question.type == :text -> %>
+                  <input
+                    type="text"
+                    name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
+                    value={Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Masukkan maklumbalas..."
+                  />
+                <% question.type == :textarea -> %>
+                  <textarea
+                    name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
+                    rows="3"
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    placeholder="Masukkan maklumbalas..."
+                  >{Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}</textarea>
+                <% question.type == :select -> %>
+                  <select
+                    name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">-- Pilih --</option>
+                    <option
+                      :for={option <- question.options || []}
+                      value={option}
+                      selected={
+                        Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") == option
+                      }
+                    >
+                      {option}
+                    </option>
+                  </select>
+                <% question.type == :checkbox -> %>
+                  <div class="flex flex-col gap-2">
+                    <%= for option <- question.options || [] do %>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas][]"}
+                          value={option}
+                          checked={
+                            case Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") do
+                              values when is_list(values) -> option in values
+                              value when is_binary(value) -> value == option
+                              _ -> false
+                            end
+                          }
+                          class="rounded border-gray-400 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <span class="text-sm text-gray-700">{option}</span>
+                      </label>
+                    <% end %>
+                  </div>
+                <% true -> %>
+                  <input
+                    type="text"
+                    name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
+                    value={Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Masukkan maklumbalas..."
+                  />
+              <% end %>
+            </td>
+            <td class="px-3 py-2 align-top">
+              <textarea
+                name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][catatan]"}
+                rows="3"
+                class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                placeholder="Catatan..."
+              >{Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.catatan") || ""}</textarea>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    """
+  end
 end

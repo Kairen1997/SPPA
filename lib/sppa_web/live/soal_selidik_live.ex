@@ -3,6 +3,139 @@ defmodule SppaWeb.SoalSelidikLive do
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
+  # Functional Requirements Categories
+  @fr_categories [
+    %{
+      key: "pendaftaran_login",
+      title: "Pendaftaran & Login",
+      questions: [
+        %{no: 1, soalan: "Adakah sistem memerlukan pendaftaran pengguna?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 2, soalan: "Apakah kaedah autentikasi yang diperlukan?", type: :checkbox, options: ["Kata laluan", "OTP", "Biometrik", "SSO"]},
+        %{no: 3, soalan: "Adakah sistem perlu menyokong pendaftaran sendiri (self-registration)?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 4, soalan: "Berapa lama tempoh sesi pengguna sebelum logout automatik?", type: :text},
+        %{no: 5, soalan: "Adakah sistem perlu menyokong reset kata laluan?", type: :select, options: ["Ya", "Tidak"]}
+      ]
+    },
+    %{
+      key: "pengurusan_data",
+      title: "Pengurusan Data",
+      questions: [
+        %{no: 1, soalan: "Apakah jenis data utama yang perlu diuruskan?", type: :textarea},
+        %{no: 2, soalan: "Adakah sistem perlu menyokong import data pukal?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 3, soalan: "Apakah format fail yang perlu disokong untuk import?", type: :checkbox, options: ["Excel", "CSV", "JSON", "XML"]},
+        %{no: 4, soalan: "Adakah sistem perlu menyokong export data?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 5, soalan: "Berapa lama data perlu disimpan dalam sistem?", type: :text},
+        %{no: 6, soalan: "Adakah sistem perlu menyokong backup data automatik?", type: :select, options: ["Ya", "Tidak"]}
+      ]
+    },
+    %{
+      key: "proses_kerja",
+      title: "Proses Kerja",
+      questions: [
+        %{no: 1, soalan: "Apakah alur kerja utama yang perlu dilaksanakan?", type: :textarea},
+        %{no: 2, soalan: "Adakah sistem perlu menyokong workflow approval?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 3, soalan: "Berapa peringkat approval yang diperlukan?", type: :text},
+        %{no: 4, soalan: "Adakah sistem perlu menyokong notifikasi untuk proses kerja?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 5, soalan: "Apakah kaedah notifikasi yang diperlukan?", type: :checkbox, options: ["Email", "SMS", "Push Notification", "Dalam Sistem"]}
+      ]
+    },
+    %{
+      key: "laporan",
+      title: "Laporan",
+      questions: [
+        %{no: 1, soalan: "Apakah jenis laporan yang diperlukan?", type: :textarea},
+        %{no: 2, soalan: "Adakah laporan perlu boleh dieksport?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 3, soalan: "Apakah format eksport yang diperlukan?", type: :checkbox, options: ["PDF", "Excel", "CSV", "Word"]},
+        %{no: 4, soalan: "Adakah laporan perlu dijadualkan secara automatik?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 5, soalan: "Berapa kerap laporan perlu dijana?", type: :text}
+      ]
+    },
+    %{
+      key: "integrasi",
+      title: "Integrasi",
+      questions: [
+        %{no: 1, soalan: "Adakah sistem perlu berintegrasi dengan sistem lain?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 2, soalan: "Sistem manakah yang perlu diintegrasikan?", type: :textarea},
+        %{no: 3, soalan: "Apakah protokol komunikasi yang diperlukan?", type: :checkbox, options: ["REST API", "SOAP", "FTP", "Database"]},
+        %{no: 4, soalan: "Adakah integrasi perlu real-time atau batch?", type: :select, options: ["Real-time", "Batch", "Kedua-dua"]},
+        %{no: 5, soalan: "Adakah sistem perlu menyokong API untuk sistem luaran?", type: :select, options: ["Ya", "Tidak"]}
+      ]
+    },
+    %{
+      key: "role_akses",
+      title: "Role & Akses",
+      questions: [
+        %{no: 1, soalan: "Apakah peranan pengguna yang perlu disokong?", type: :textarea},
+        %{no: 2, soalan: "Adakah sistem perlu menyokong role-based access control (RBAC)?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 3, soalan: "Adakah sistem perlu menyokong permission granular?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 4, soalan: "Adakah sistem perlu menyokong audit log untuk akses?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 5, soalan: "Siapa yang perlu mempunyai akses admin?", type: :text}
+      ]
+    },
+    %{
+      key: "peraturan_polisi",
+      title: "Peraturan / Polisi",
+      questions: [
+        %{no: 1, soalan: "Apakah peraturan atau polisi yang perlu dipatuhi?", type: :textarea},
+        %{no: 2, soalan: "Adakah sistem perlu mematuhi piawaian keselamatan tertentu?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 3, soalan: "Adakah sistem perlu mematuhi peraturan privasi data?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 4, soalan: "Apakah piawaian keselamatan yang perlu dipatuhi?", type: :checkbox, options: ["ISO 27001", "PDPA", "ISO 9001", "Lain-lain"]},
+        %{no: 5, soalan: "Adakah sistem perlu menyokong compliance reporting?", type: :select, options: ["Ya", "Tidak"]}
+      ]
+    },
+    %{
+      key: "lain_lain_ciri",
+      title: "Lain-lain Ciri Fungsian",
+      questions: [
+        %{no: 1, soalan: "Adakah terdapat ciri fungsian tambahan yang diperlukan?", type: :textarea},
+        %{no: 2, soalan: "Adakah sistem perlu menyokong multi-bahasa?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 3, soalan: "Apakah bahasa yang perlu disokong?", type: :checkbox, options: ["Bahasa Melayu", "English", "Bahasa Cina", "Bahasa Tamil"]},
+        %{no: 4, soalan: "Adakah sistem perlu menyokong tema gelap/terang?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 5, soalan: "Adakah terdapat keperluan khas lain?", type: :textarea}
+      ]
+    }
+  ]
+
+  # Non-Functional Requirements Categories
+  @nfr_categories [
+    %{
+      key: "keselamatan",
+      title: "Keselamatan",
+      questions: [
+        %{no: 1, soalan: "Apakah tahap keselamatan data yang diperlukan?", type: :select, options: ["Rendah", "Sederhana", "Tinggi", "Sangat Tinggi"]},
+        %{no: 2, soalan: "Adakah data perlu dienkripsi?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 3, soalan: "Apakah jenis enkripsi yang diperlukan?", type: :checkbox, options: ["At Rest", "In Transit", "Kedua-dua"]},
+        %{no: 4, soalan: "Adakah sistem perlu menyokong two-factor authentication (2FA)?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 5, soalan: "Adakah sistem perlu menyokong audit trail?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 6, soalan: "Berapa lama audit trail perlu disimpan?", type: :text}
+      ]
+    },
+    %{
+      key: "akses_capaian",
+      title: "Akses / Capaian",
+      questions: [
+        %{no: 1, soalan: "Berapa ramai pengguna serentak yang perlu disokong?", type: :text},
+        %{no: 2, soalan: "Adakah sistem perlu boleh diakses dari luar pejabat?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 3, soalan: "Apakah peranti yang perlu disokong?", type: :checkbox, options: ["Desktop", "Laptop", "Tablet", "Mobile"]},
+        %{no: 4, soalan: "Apakah pelayar web yang perlu disokong?", type: :checkbox, options: ["Chrome", "Firefox", "Safari", "Edge"]},
+        %{no: 5, soalan: "Adakah sistem perlu menyokong akses offline?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 6, soalan: "Apakah kelajuan sambungan internet minimum yang diperlukan?", type: :text}
+      ]
+    },
+    %{
+      key: "usability",
+      title: "Usability",
+      questions: [
+        %{no: 1, soalan: "Apakah tahap kemudahan penggunaan yang diperlukan?", type: :select, options: ["Asas", "Sederhana", "Tinggi"]},
+        %{no: 2, soalan: "Adakah sistem perlu menyokong panduan pengguna dalam talian?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 3, soalan: "Adakah sistem perlu menyokong tooltip dan bantuan kontekstual?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 4, soalan: "Berapa lama masa latihan yang diperlukan untuk pengguna baru?", type: :text},
+        %{no: 5, soalan: "Adakah sistem perlu mematuhi piawaian aksesibiliti?", type: :select, options: ["Ya", "Tidak"]},
+        %{no: 6, soalan: "Apakah piawaian aksesibiliti yang perlu dipatuhi?", type: :checkbox, options: ["WCAG 2.1", "Section 508", "Lain-lain"]}
+      ]
+    }
+  ]
+
   @impl true
   def mount(_params, _session, socket) do
     # Verify user has required role (defense in depth - router already checks this)
@@ -11,20 +144,6 @@ defmodule SppaWeb.SoalSelidikLive do
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      # Initialize sections
-      sections = [
-        %{
-          id: "section_1",
-          category: "FUNCTIONAL REQUIREMENT",
-          title: ""
-        },
-        %{
-          id: "section_9",
-          category: "NON-FUNCTIONAL REQUIREMENT",
-          title: ""
-        }
-      ]
-
       socket =
         socket
         |> assign(:hide_root_header, true)
@@ -34,24 +153,10 @@ defmodule SppaWeb.SoalSelidikLive do
         |> assign(:current_path, "/soal-selidik")
         |> assign(:document_id, "JPKN-BPA-01/B1")
         |> assign(:system_name, "")
-        |> assign(:sections, sections)
-        |> assign(:current_page, 1)
+        |> assign(:active_tab, "fr")
+        |> assign(:fr_categories, @fr_categories)
+        |> assign(:nfr_categories, @nfr_categories)
         |> assign(:form, to_form(%{}, as: :soal_selidik))
-
-      # Initialize sections as a stream and rows for each section
-      socket =
-        sections
-        |> Enum.reduce(socket, fn section, acc ->
-          stream_name = String.to_atom("#{section.id}_rows")
-
-          initial_rows = [
-            %{id: "#{section.id}_row_1", no: 1, soalan: "", maklumbalas: "", catatan: ""}
-          ]
-
-          acc
-          |> stream(:sections, [section])
-          |> stream(stream_name, initial_rows)
-        end)
 
       {:ok, socket}
     else
@@ -88,6 +193,11 @@ defmodule SppaWeb.SoalSelidikLive do
   end
 
   @impl true
+  def handle_event("switch_tab", %{"tab" => tab}, socket) do
+    {:noreply, assign(socket, :active_tab, tab)}
+  end
+
+  @impl true
   def handle_event("validate", %{"soal_selidik" => params}, socket) do
     form = to_form(params, as: :soal_selidik)
     {:noreply, assign(socket, form: form)}
@@ -105,355 +215,4 @@ defmodule SppaWeb.SoalSelidikLive do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_event("add_section", _params, socket) do
-    section_id = "section_#{System.unique_integer([:positive])}"
-
-    new_section = %{
-      id: section_id,
-      category: "",
-      title: ""
-    }
-
-    # add new section to list and stream
-    sections = socket.assigns.sections ++ [new_section]
-
-    socket =
-      socket
-      |> assign(:sections, sections)
-      |> stream(:sections, [new_section])
-      |> stream(String.to_atom("#{section_id}_rows"), [
-        %{id: "#{section_id}_row_1", no: 1, soalan: "", maklumbalas: "", catatan: ""}
-      ])
-
-    total_pages = total_pages_for_categories(sections)
-
-    socket =
-      socket
-      |> assign(:current_page, total_pages)
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("update_section_category", %{"section_id" => section_id, "category" => category}, socket) do
-    sections = socket.assigns.sections || []
-
-    updated_sections =
-      Enum.map(sections, fn section ->
-        if section.id == section_id do
-          Map.put(section, :category, category)
-        else
-          section
-        end
-      end)
-
-    socket =
-      socket
-      |> assign(:sections, updated_sections)
-      |> stream(:sections, updated_sections, reset: true)
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("remove_section", %{"id" => section_id}, socket) do
-    stream_name = String.to_atom("#{section_id}_rows")
-
-    # Remove the section from list
-    sections =
-      socket.assigns.sections
-      |> Enum.reject(&(&1.id == section_id))
-
-    socket =
-      socket
-      |> assign(:sections, sections)
-
-    # Reset the sections stream with the updated list
-    socket = stream(socket, :sections, sections, reset: true)
-
-    # Clear the rows stream if it exists
-    socket =
-      if Map.has_key?(socket.assigns.streams, stream_name) do
-        stream(socket, stream_name, [], reset: true)
-      else
-        socket
-      end
-
-    # Ensure current_page is still within bounds after removal
-    total_pages = total_pages_for_categories(sections)
-
-    current_page =
-      if socket.assigns.current_page > total_pages do
-        total_pages
-      else
-        socket.assigns.current_page
-      end
-
-    {:noreply, socket |> assign(:current_page, current_page)}
-  end
-
-  @impl true
-  def handle_event("remove_last_section", _params, socket) do
-    sections = socket.assigns.sections || []
-
-    # Jika tiada sebarang bahagian, tidak buat apa-apa
-    if sections == [] do
-      {:noreply, socket}
-    else
-      current_category = current_category(sections, socket.assigns.current_page)
-
-      sections_in_category =
-        sections
-        |> sections_for_category(current_category)
-
-      case List.last(sections_in_category) do
-        nil ->
-          {:noreply, socket}
-
-        %{id: section_id} ->
-          stream_name = String.to_atom("#{section_id}_rows")
-
-          # Buang bahagian daripada senarai
-          sections =
-            sections
-            |> Enum.reject(&(&1.id == section_id))
-
-          socket =
-            socket
-            |> assign(:sections, sections)
-
-          # Reset the sections stream with the updated list
-          socket = stream(socket, :sections, sections, reset: true)
-
-          # Kosongkan stream barisnya
-          socket =
-            if Map.has_key?(socket.assigns.streams, stream_name) do
-              stream(socket, stream_name, [], reset: true)
-            else
-              socket
-            end
-
-          # Pastikan current_page masih dalam julat selepas buang bahagian
-          total_pages = total_pages_for_categories(sections)
-
-          current_page =
-            if socket.assigns.current_page > total_pages do
-              total_pages
-            else
-              socket.assigns.current_page
-            end
-
-          {:noreply, socket |> assign(:current_page, current_page)}
-      end
-    end
-  end
-
-  @impl true
-  def handle_event("add_row", %{"section_id" => section_id}, socket) do
-    # Validate section_id
-    if is_nil(section_id) or section_id == "" do
-      socket =
-        socket
-        |> Phoenix.LiveView.put_flash(:error, "Ralat: ID bahagian tidak sah.")
-
-      {:noreply, socket}
-    else
-      stream_name = get_stream_name(section_id)
-
-      # Calculate next row number based on current stream
-      next_no = get_next_row_number(stream_name, socket)
-
-      # Create new blank row
-      row_id = "#{section_id}_row_#{System.unique_integer([:positive])}"
-
-      new_row = %{
-        id: row_id,
-        no: next_no,
-        soalan: "",
-        maklumbalas: "",
-        catatan: ""
-      }
-
-      # Add the new blank row to the stream
-      {:noreply, stream(socket, stream_name, [new_row])}
-    end
-  end
-
-  @impl true
-  def handle_event("remove_row", %{"section_id" => section_id, "id" => row_id}, socket) do
-    stream_name = get_stream_name(section_id)
-    streams = socket.assigns.streams || %{}
-
-    case Map.get(streams, stream_name) do
-      %Phoenix.LiveView.LiveStream{} ->
-        socket = stream_delete(socket, stream_name, row_id)
-        {:noreply, renumber_stream(stream_name, socket)}
-
-      _other ->
-        {:noreply, socket}
-    end
-  end
-
-  @impl true
-  def handle_event("remove_last_row", %{"section_id" => section_id}, socket) do
-    stream_name = get_stream_name(section_id)
-    streams = socket.assigns.streams || %{}
-
-    case Map.get(streams, stream_name) do
-      %Phoenix.LiveView.LiveStream{} = stream ->
-        last_entry = stream |> Enum.to_list() |> List.last()
-
-        case last_entry do
-          {dom_id, _row} ->
-            socket = stream_delete(socket, stream_name, dom_id)
-            {:noreply, renumber_stream(stream_name, socket)}
-
-          nil ->
-            {:noreply, socket}
-        end
-
-      _other ->
-        {:noreply, socket}
-    end
-  end
-
-  @impl true
-  def handle_event(
-        "update_row",
-        %{
-          "section_id" => section_id,
-          "row_id" => row_id,
-          "field" => field,
-          "value" => value
-        },
-        socket
-      ) do
-    stream_name = get_stream_name(section_id)
-    streams = socket.assigns.streams || %{}
-
-    case Map.get(streams, stream_name) do
-      %Phoenix.LiveView.LiveStream{} = stream ->
-        field_atom =
-          case field do
-            "soalan" -> :soalan
-            "maklumbalas" -> :maklumbalas
-            "catatan" -> :catatan
-            _ -> nil
-          end
-
-        updated_rows =
-          stream
-          |> Enum.map(fn {dom_id, row} ->
-            if dom_id == row_id and field_atom do
-              Map.put(row, field_atom, value)
-            else
-              row
-            end
-          end)
-
-        {:noreply, stream(socket, stream_name, updated_rows, reset: true)}
-
-      _other ->
-        {:noreply, socket}
-    end
-  end
-
-  @impl true
-  def handle_event("next_page", _params, socket) do
-    total_pages = total_pages_for_categories(socket.assigns.sections)
-
-    new_page =
-      if socket.assigns.current_page < total_pages do
-        socket.assigns.current_page + 1
-      else
-        socket.assigns.current_page
-      end
-
-    {:noreply, assign(socket, :current_page, new_page)}
-  end
-
-  @impl true
-  def handle_event("prev_page", _params, socket) do
-    new_page =
-      if socket.assigns.current_page > 1 do
-        socket.assigns.current_page - 1
-      else
-        socket.assigns.current_page
-      end
-
-    {:noreply, assign(socket, :current_page, new_page)}
-  end
-
-  defp get_stream_name(section_id) when is_binary(section_id) do
-    # Safe to use String.to_atom here since we control section_id values
-    String.to_atom("#{section_id}_rows")
-  end
-
-  def get_section_rows(streams, section_id) when is_binary(section_id) do
-    try do
-      stream_name = String.to_atom("#{section_id}_rows")
-      Map.get(streams, stream_name, %{})
-    rescue
-      ArgumentError -> %{}
-    end
-  end
-
-  def get_section_rows(_streams, _section_id), do: %{}
-
-  def categories_from_sections(sections) do
-    sections
-    |> Enum.map(& &1.category)
-    |> Enum.uniq()
-  end
-
-  def current_category(sections, current_page) do
-    sections
-    |> categories_from_sections()
-    |> Enum.at(current_page - 1)
-  end
-
-  def sections_for_category(sections, nil), do: sections
-
-  def sections_for_category(sections, category) do
-    Enum.filter(sections, &(&1.category == category))
-  end
-
-  def total_pages_for_categories(sections) do
-    sections
-    |> categories_from_sections()
-    |> length()
-  end
-  defp get_next_row_number(stream_name, socket) do
-    streams = socket.assigns.streams || %{}
-    stream = Map.get(streams, stream_name, %{})
-
-    if map_size(stream) == 0 do
-      1
-    else
-      max_no =
-        stream
-        |> Enum.map(fn {_id, row} -> row.no || 0 end)
-        |> Enum.max(0)
-
-      max_no + 1
-    end
-  end
-
-  defp renumber_stream(stream_name, socket) do
-    streams = socket.assigns.streams || %{}
-    stream = Map.get(streams, stream_name, %{})
-
-    renumbered_rows =
-      stream
-      |> Enum.to_list()
-      |> Enum.with_index(1)
-      |> Enum.map(fn {{id, row}, new_no} ->
-        updated_row = Map.put(row, :no, new_no)
-        {id, updated_row}
-      end)
-
-    socket
-    |> stream(stream_name, renumbered_rows, reset: true)
-  end
 end
