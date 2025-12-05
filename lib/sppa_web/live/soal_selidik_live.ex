@@ -38,7 +38,7 @@ defmodule SppaWeb.SoalSelidikLive do
         |> assign(:current_page, 1)
         |> assign(:form, to_form(%{}, as: :soal_selidik))
 
-      # Initialize rows for each section
+      # Initialize sections as a stream and rows for each section
       socket =
         sections
         |> Enum.reduce(socket, fn section, acc ->
@@ -48,7 +48,9 @@ defmodule SppaWeb.SoalSelidikLive do
             %{id: "#{section.id}_row_1", no: 1, soalan: "", maklumbalas: "", catatan: ""}
           ]
 
-          stream(acc, stream_name, initial_rows)
+          acc
+          |> stream(:sections, [section])
+          |> stream(stream_name, initial_rows)
         end)
 
       {:ok, socket}
@@ -113,12 +115,13 @@ defmodule SppaWeb.SoalSelidikLive do
       title: ""
     }
 
-    # add new section to list
+    # add new section to list and stream
     sections = socket.assigns.sections ++ [new_section]
 
     socket =
       socket
       |> assign(:sections, sections)
+      |> stream(:sections, [new_section])
       |> stream(String.to_atom("#{section_id}_rows"), [
         %{id: "#{section_id}_row_1", no: 1, soalan: "", maklumbalas: "", catatan: ""}
       ])
@@ -145,17 +148,29 @@ defmodule SppaWeb.SoalSelidikLive do
         end
       end)
 
-    {:noreply, assign(socket, :sections, updated_sections)}
+    socket =
+      socket
+      |> assign(:sections, updated_sections)
+      |> stream(:sections, updated_sections, reset: true)
+
+    {:noreply, socket}
   end
 
   @impl true
   def handle_event("remove_section", %{"id" => section_id}, socket) do
     stream_name = String.to_atom("#{section_id}_rows")
 
-    # Remove the section from list and clear its rows stream
+    # Remove the section from list
     sections =
       socket.assigns.sections
       |> Enum.reject(&(&1.id == section_id))
+
+    socket =
+      socket
+      |> assign(:sections, sections)
+
+    # Reset the sections stream with the updated list
+    socket = stream(socket, :sections, sections, reset: true)
 
     # Clear the rows stream if it exists
     socket =
@@ -175,7 +190,7 @@ defmodule SppaWeb.SoalSelidikLive do
         socket.assigns.current_page
       end
 
-    {:noreply, socket |> assign(:sections, sections) |> assign(:current_page, current_page)}
+    {:noreply, socket |> assign(:current_page, current_page)}
   end
 
   @impl true
@@ -199,11 +214,19 @@ defmodule SppaWeb.SoalSelidikLive do
         %{id: section_id} ->
           stream_name = String.to_atom("#{section_id}_rows")
 
-          # Buang bahagian daripada senarai dan kosongkan stream barisnya
+          # Buang bahagian daripada senarai
           sections =
             sections
             |> Enum.reject(&(&1.id == section_id))
 
+          socket =
+            socket
+            |> assign(:sections, sections)
+
+          # Reset the sections stream with the updated list
+          socket = stream(socket, :sections, sections, reset: true)
+
+          # Kosongkan stream barisnya
           socket =
             if Map.has_key?(socket.assigns.streams, stream_name) do
               stream(socket, stream_name, [], reset: true)
@@ -221,7 +244,7 @@ defmodule SppaWeb.SoalSelidikLive do
               socket.assigns.current_page
             end
 
-          {:noreply, socket |> assign(:sections, sections) |> assign(:current_page, current_page)}
+          {:noreply, socket |> assign(:current_page, current_page)}
       end
     end
   end
@@ -254,6 +277,21 @@ defmodule SppaWeb.SoalSelidikLive do
 
       # Add the new blank row to the stream
       {:noreply, stream(socket, stream_name, [new_row])}
+    end
+  end
+
+  @impl true
+  def handle_event("remove_row", %{"section_id" => section_id, "id" => row_id}, socket) do
+    stream_name = get_stream_name(section_id)
+    streams = socket.assigns.streams || %{}
+
+    case Map.get(streams, stream_name) do
+      %Phoenix.LiveView.LiveStream{} ->
+        socket = stream_delete(socket, stream_name, row_id)
+        {:noreply, renumber_stream(stream_name, socket)}
+
+      _other ->
+        {:noreply, socket}
     end
   end
 
