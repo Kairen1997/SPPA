@@ -51,7 +51,8 @@ defmodule SppaWeb.Router do
       live "/projek", ProjekLive, :index
       live "/projek/:id", ProjekLive, :show
       live "/soal-selidik", SoalSelidikLive, :index
-      live "/analisis-dan-rekabentuk", AnalisisDanRekabentukLive, :index
+      live "/senarai-projek", PengurusProjekLive, :index
+      live "/projek/:project_id/modul", ModulProjekLive, :index
     end
 
     live_session :require_authenticated_user,
