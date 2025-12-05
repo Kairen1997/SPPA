@@ -1,0 +1,514 @@
+<Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+  <style>
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      
+      * {
+        box-sizing: border-box;
+      }
+      
+      body {
+        margin: 0;
+        padding: 0;
+        width: 210mm;
+      }
+      
+      .avoid-break {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      
+      .a4-page {
+        page-break-after: always;
+        break-after: page;
+        width: 210mm;
+        height: 297mm;
+        padding: 15mm 20mm;
+        margin: 0;
+        overflow: hidden;
+      }
+      
+      .a4-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+      
+      .a4-content {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      
+      .print\:hidden {
+        display: none !important;
+      }
+    }
+
+    @media screen {
+      .a4-page {
+        width: 210mm;
+        min-height: 297mm;
+        max-height: 297mm;
+        padding: 15mm 20mm;
+        margin: 0 auto 20mm auto;
+        background: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        font-family: Arial, sans-serif;
+        font-size: 11pt;
+        overflow: hidden;
+      }
+      
+      .a4-content {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        font-family: Arial, sans-serif;
+        font-size: 11pt;
+        max-height: calc(297mm - 30mm);
+      }
+      
+      #pages-container {
+        width: 210mm;
+        max-width: 210mm;
+        margin: 0 auto;
+      }
+    }
+    
+    .a4-page,
+    .a4-page *,
+    .a4-content,
+    .a4-content * {
+      font-family: Arial, sans-serif !important;
+      font-size: 11pt !important;
+    }
+    
+    .a4-page input,
+    .a4-page button,
+    .a4-page span,
+    .a4-page p,
+    .a4-page td,
+    .a4-page th,
+    .a4-page h1,
+    .a4-page h2,
+    .a4-page h3,
+    .a4-page strong {
+      font-family: Arial, sans-serif !important;
+      font-size: 11pt !important;
+    }
+    
+    .a4-page table {
+      width: 100%;
+      table-layout: fixed;
+    }
+  </style>
+  
+  <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
+    <%!-- Overlay --%>
+    <div
+      class={[
+        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+      ]}
+      phx-click="close_sidebar"
+    >
+    </div>
+     <%!-- Sidebar --%>
+    <.dashboard_sidebar
+      sidebar_open={@sidebar_open}
+      dashboard_path={~p"/dashboard"}
+      logo_src={~p"/images/logojpkn.png"}
+      current_scope={@current_scope}
+    /> <%!-- Main Content --%>
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <%!-- Header --%>
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md">
+        <div class="flex items-center gap-4">
+          <button
+            phx-click="toggle_sidebar"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-bars-3" class="w-6 h-6" />
+          </button>
+          <div class="flex items-center gap-3">
+            <img
+              src={~p"/images/Jata-Sabah.png"}
+              alt="Jata Wilayah Sabah"
+              class="h-9 w-auto object-contain"
+            />
+            <img
+              src={~p"/images/logojpkn.png"}
+              alt="Logo JPKN"
+              class="h-9 w-auto object-contain"
+            />
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <.link
+            navigate={~p"/users/settings"}
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-user-circle" class="w-6 h-6" />
+          </.link>
+          <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
+            <button
+              type="submit"
+              class="text-white hover:text-red-100 hover:bg-red-500/30 p-2 rounded-lg transition-all duration-200"
+            >
+              <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5" />
+            </button>
+          </.form>
+        </div>
+      </header>
+       <%!-- Form Content --%>
+      <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6" id="main-content">
+        <div class="mx-auto" id="pages-container">
+          <%!-- A4 Paper Container (Portrait) --%>
+          <div
+            class="a4-page bg-white shadow-lg"
+            style="font-family: Arial, sans-serif; font-size: 11pt;"
+            id="page-1"
+          >
+            <div class="a4-content">
+              <%!-- Document Header --%>
+              <div class="mb-6 avoid-break">
+                <div class="flex justify-between items-start mb-3">
+                  <div class="flex-1"></div>
+                  <div class="flex-1 flex justify-center">
+                    <img
+                      src={~p"/images/logojpkn.png"}
+                      alt="Logo JPKN"
+                      class="h-16 w-auto object-contain"
+                    />
+                  </div>
+                  <div class="flex-1 flex justify-end">
+                    <div class="text-gray-700 font-bold" style="font-family: Arial, sans-serif; font-size: 11pt;">
+                      {@document_id}
+                    </div>
+                  </div>
+                </div>
+                
+                <h1
+                  class="text-center font-bold text-gray-900 mb-6 uppercase tracking-wide leading-tight"
+                  style="font-family: Arial, sans-serif; font-size: 11pt;"
+                >
+                  BORANG VERIFIKASI SPESIFIKASI APLIKASI
+                </h1>
+              </div>
+
+              <%!-- Form --%>
+              <.form
+                for={@form}
+                phx-change="validate"
+                phx-submit="save"
+                id="analisis-dan-rekabentuk-form"
+                class="space-y-6"
+              >
+                <%!-- Project Information Section --%>
+                <div class="mb-6 avoid-break">
+                  <table class="w-full border-collapse border border-gray-800" style="border: 1px solid #000; font-family: Arial, sans-serif; font-size: 11pt;">
+                    <tbody>
+                      <tr class="border-b border-gray-800">
+                        <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800" style="width: 30%; border: 1px solid #000; font-family: Arial, sans-serif; font-size: 11pt;">
+                          Nama Projek
+                        </td>
+                        <td class="px-2 py-1.5 border border-gray-800">
+                          <.input
+                            field={@form[:nama_projek]}
+                            type="text"
+                            class="w-full px-1.5 py-0.5 border-0 focus:ring-0 focus:outline-none"
+                            style="font-family: Arial, sans-serif; font-size: 11pt;"
+                            placeholder=""
+                          />
+                        </td>
+                      </tr>
+                      <tr class="border-b border-gray-800">
+                        <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800" style="border: 1px solid #000; font-family: Arial, sans-serif; font-size: 11pt;">
+                          Nama Agensi
+                        </td>
+                        <td class="px-2 py-1.5 border border-gray-800">
+                          <.input
+                            field={@form[:nama_agensi]}
+                            type="text"
+                            class="w-full px-1.5 py-0.5 border-0 focus:ring-0 focus:outline-none"
+                            style="font-family: Arial, sans-serif; font-size: 11pt;"
+                            placeholder=""
+                          />
+                        </td>
+                      </tr>
+                      <tr class="border-b border-gray-800">
+                        <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800" style="border: 1px solid #000; font-family: Arial, sans-serif; font-size: 11pt;">
+                          Versi
+                        </td>
+                        <td class="px-2 py-1.5 border border-gray-800">
+                          <.input
+                            field={@form[:versi]}
+                            type="text"
+                            class="w-full px-1.5 py-0.5 border-0 focus:ring-0 focus:outline-none"
+                            style="font-family: Arial, sans-serif; font-size: 11pt;"
+                            placeholder=""
+                          />
+                        </td>
+                      </tr>
+                      <tr class="border-b border-gray-800">
+                        <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800" style="border: 1px solid #000; font-family: Arial, sans-serif; font-size: 11pt;">
+                          Tarikh Semakan (jika ada)
+                        </td>
+                        <td class="px-2 py-1.5 border border-gray-800">
+                          <.input
+                            field={@form[:tarikh_semakan]}
+                            type="date"
+                            class="w-full px-1.5 py-0.5 border-0 focus:ring-0 focus:outline-none"
+                            style="font-family: Arial, sans-serif; font-size: 11pt;"
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800" style="border: 1px solid #000; font-family: Arial, sans-serif; font-size: 11pt;">
+                          Rujukan Perubahan (jika ada)
+                        </td>
+                        <td class="px-2 py-1.5 border border-gray-800">
+                          <.input
+                            field={@form[:rujukan_perubahan]}
+                            type="text"
+                            class="w-full px-1.5 py-0.5 border-0 focus:ring-0 focus:outline-none"
+                            style="font-family: Arial, sans-serif; font-size: 11pt;"
+                            placeholder="Nyatakan nama mesyuarat /perbincangan / tajuk kertas kerja dan Tarikh"
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <%!-- Application Specification Section --%>
+                <div class="mb-6 avoid-break">
+                  <h2 class="font-bold text-gray-900 mb-2 uppercase" style="font-family: Arial, sans-serif; font-size: 11pt;">
+                    SPESIFIKASI APLIKASI YANG AKAN DIBANGUNKAN
+                  </h2>
+                  <p class="text-gray-700 mb-2" style="font-family: Arial, sans-serif; font-size: 11pt;">
+                    Nyatakan secara terperinci spesifikasi aplikasi yang akan dibangunkan seperti bilangan modul (nyatakan modul-modul terlibat), fungsi dan sebagainya.
+                  </p>
+                  <p class="text-gray-600 mb-3 italic" style="font-family: Arial, sans-serif; font-size: 11pt;">
+                    *** Sila gunakan lampiran jika ruangan ini tidak mencukupi
+                  </p>
+                  <p class="text-gray-700 mb-3 font-semibold" style="font-family: Arial, sans-serif; font-size: 11pt;">
+                    Contoh :
+                  </p>
+
+                  <div id="modules" phx-update="stream" class="space-y-4">
+                    <div
+                      :for={{module_id, module} <- @streams.modules}
+                      id={module_id}
+                      class="avoid-break group/module"
+                    >
+                      <div class="mb-2 flex items-center gap-2">
+                        <strong class="text-gray-900 font-bold" style="font-family: Arial, sans-serif; font-size: 11pt;">
+                          {module.number}. 
+                        </strong>
+                        <input
+                          type="text"
+                          name="module_name"
+                          value={module.name}
+                          phx-change="update_module_name"
+                          phx-value-module_id={module.id}
+                          class="flex-1 px-1 py-0.5 font-bold text-gray-900 border-0 border-b-2 border-gray-300 focus:ring-0 focus:outline-none focus:border-blue-600 bg-transparent hover:border-gray-400 transition-colors"
+                          style="font-family: Arial, sans-serif; font-size: 11pt;"
+                          placeholder="Nama Modul"
+                        />
+                        <button
+                          type="button"
+                          phx-click="remove_module"
+                          phx-value-id={module.id}
+                          class="opacity-0 group-hover/module:opacity-100 px-1.5 py-0.5 text-red-600 hover:bg-red-50 rounded transition-all duration-200 print:hidden"
+                          style="font-family: Arial, sans-serif; font-size: 11pt;"
+                          title="Buang Modul"
+                        >
+                          <.icon name="hero-trash" class="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div class="ml-6 space-y-2">
+                        <div
+                          :for={{func, index} <- Enum.with_index(module.functions)}
+                          class="group/function"
+                        >
+                          <div class="mb-1 flex items-center gap-2">
+                            <span class="text-gray-700 font-medium min-w-[20px]" style="font-family: Arial, sans-serif; font-size: 11pt;">
+                              {Enum.at(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], index)}. 
+                            </span>
+                            <input
+                              type="text"
+                              name="function_name"
+                              value={func.name}
+                              phx-change="update_function_name"
+                              phx-value-module_id={module.id}
+                              phx-value-func_id={func.id}
+                              class="flex-1 px-1 py-0.5 text-gray-700 border-0 border-b border-gray-300 focus:ring-0 focus:outline-none focus:border-blue-500 bg-transparent hover:border-gray-400 transition-colors"
+                              style="font-family: Arial, sans-serif; font-size: 11pt;"
+                              placeholder="Nama Fungsi"
+                            />
+                            <button
+                              type="button"
+                              phx-click="remove_function"
+                              phx-value-module_id={module.id}
+                              phx-value-func_id={func.id}
+                              class="opacity-0 group-hover/function:opacity-100 px-1 py-0.5 text-red-500 hover:bg-red-50 rounded transition-all duration-200 print:hidden"
+                              style="font-family: Arial, sans-serif; font-size: 11pt;"
+                              title="Buang Fungsi"
+                            >
+                              <.icon name="hero-x-mark" class="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <div
+                            :for={sub_func <- func.sub_functions}
+                            class="ml-4 mb-1 group/subfunc"
+                          >
+                            <div class="flex items-center gap-2">
+                              <span class="text-gray-600 min-w-[12px]" style="font-family: Arial, sans-serif; font-size: 11pt;">•</span>
+                              <input
+                                type="text"
+                                name="sub_function_name"
+                                value={sub_func.name}
+                                phx-change="update_sub_function_name"
+                                phx-value-module_id={module.id}
+                                phx-value-func_id={func.id}
+                                phx-value-sub_func_id={sub_func.id}
+                                class="flex-1 px-1 py-0.5 text-gray-600 border-0 border-b border-gray-200 focus:ring-0 focus:outline-none focus:border-blue-400 bg-transparent hover:border-gray-300 transition-colors"
+                                style="font-family: Arial, sans-serif; font-size: 11pt;"
+                                placeholder="Sub-fungsi"
+                              />
+                              <button
+                                type="button"
+                                phx-click="remove_sub_function"
+                                phx-value-module_id={module.id}
+                                phx-value-func_id={func.id}
+                                phx-value-sub_func_id={sub_func.id}
+                                class="opacity-0 group-hover/subfunc:opacity-100 px-1 py-0.5 text-red-400 hover:bg-red-50 rounded transition-all duration-200 print:hidden"
+                                style="font-family: Arial, sans-serif; font-size: 11pt;"
+                                title="Buang Sub-fungsi"
+                              >
+                                <.icon name="hero-x-mark" class="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            phx-click="add_sub_function"
+                            phx-value-module_id={module.id}
+                            phx-value-func_id={func.id}
+                            class="ml-4 mt-1 px-2 py-0.5 text-green-600 hover:bg-green-50 rounded transition-colors duration-200 flex items-center gap-1 opacity-0 group-hover/function:opacity-100 print:hidden"
+                            style="font-family: Arial, sans-serif; font-size: 11pt;"
+                          >
+                            <.icon name="hero-plus" class="w-3 h-3" />
+                            <span>Tambah Sub-fungsi</span>
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          phx-click="add_function"
+                          phx-value-module_id={module.id}
+                          class="ml-6 mt-2 px-2 py-1 text-green-600 hover:bg-green-50 rounded transition-colors duration-200 flex items-center gap-1 opacity-0 group-hover/module:opacity-100 print:hidden"
+                          style="font-family: Arial, sans-serif; font-size: 11pt;"
+                        >
+                          <.icon name="hero-plus" class="w-3.5 h-3.5" />
+                          <span>Tambah Fungsi</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 print:hidden">
+                    <button
+                      type="button"
+                      phx-click="add_module"
+                      class="px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200 flex items-center gap-2 border border-blue-200"
+                      style="font-family: Arial, sans-serif; font-size: 11pt;"
+                    >
+                      <.icon name="hero-plus" class="w-4 h-4" />
+                      <span>Tambah Modul</span>
+                    </button>
+                  </div>
+
+                  <p class="text-gray-600 mt-4 italic" style="font-family: Arial, sans-serif; font-size: 11pt;">
+                    **spesifikasi aplikasi adalah mengikut kajian yang telah dibuat
+                  </p>
+                </div>
+
+                <%!-- Approval Section --%>
+                <div class="mt-8 avoid-break">
+                  <div class="grid grid-cols-2 gap-6">
+                    <%!-- Approved By --%>
+                    <div>
+                      <h3 class="font-bold text-gray-900 mb-2" style="font-family: Arial, sans-serif; font-size: 11pt;">Dipersetujui Oleh:</h3>
+                      <p class="text-gray-700 mb-3 font-semibold" style="font-family: Arial, sans-serif; font-size: 11pt;">Pemohon</p>
+                      <div class="space-y-3">
+                        <div>
+                          <p class="text-gray-600 mb-1" style="font-family: Arial, sans-serif; font-size: 11pt;">Tandatangan</p>
+                          <div class="border-b border-gray-800 h-10"></div>
+                        </div>
+                        <div>
+                          <p class="text-gray-600 mb-1" style="font-family: Arial, sans-serif; font-size: 11pt;">(Nama)</p>
+                          <div class="border-b border-gray-800 h-8"></div>
+                        </div>
+                        <div>
+                          <p class="text-gray-600 mb-1" style="font-family: Arial, sans-serif; font-size: 11pt;">Jawatan:</p>
+                          <div class="border-b border-gray-800 h-8"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <%!-- Prepared By --%>
+                    <div>
+                      <h3 class="font-bold text-gray-900 mb-2" style="font-family: Arial, sans-serif; font-size: 11pt;">Disediakan Oleh:</h3>
+                      <p class="text-gray-700 mb-3 font-semibold" style="font-family: Arial, sans-serif; font-size: 11pt;">Pengurus Projek / Pembangun</p>
+                      <div class="space-y-3">
+                        <div>
+                          <p class="text-gray-600 mb-1" style="font-family: Arial, sans-serif; font-size: 11pt;">Tandatangan</p>
+                          <div class="border-b border-gray-800 h-10"></div>
+                        </div>
+                        <div>
+                          <p class="text-gray-600 mb-1" style="font-family: Arial, sans-serif; font-size: 11pt;">(Nama)</p>
+                          <div class="border-b border-gray-800 h-8"></div>
+                        </div>
+                        <div>
+                          <p class="text-gray-600 mb-1" style="font-family: Arial, sans-serif; font-size: 11pt;">Jawatan:</p>
+                          <div class="border-b border-gray-800 h-8"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <%!-- Submit Button --%>
+                <div class="flex justify-end gap-3 pt-4 avoid-break print:hidden">
+                  <button
+                    type="button"
+                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200"
+                    style="font-family: Arial, sans-serif; font-size: 11pt;"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200"
+                    style="font-family: Arial, sans-serif; font-size: 11pt;"
+                  >
+                    Simpan Borang
+                  </button>
+                </div>
+              </.form>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</Layouts.app>
+
