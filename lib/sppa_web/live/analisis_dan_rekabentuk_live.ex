@@ -148,40 +148,6 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
      |> assign(:pdf_data, nil)}
   end
 
-  defp generate_dummy_data(socket) do
-    modules = get_modules_from_stream(socket)
-    form_data = socket.assigns.form.params || %{}
-
-    # Get current date in DD/MM/YYYY format
-    today =
-      Date.utc_today()
-      |> Date.to_string()
-      |> String.split("-")
-      |> Enum.reverse()
-      |> Enum.join("/")
-
-    %{
-      document_id: socket.assigns.document_id || "JPKN-BPA-01/B2",
-      nama_projek: Map.get(form_data, "nama_projek") || "Sistem Pengurusan Permohonan Aplikasi (SPPA)",
-      nama_agensi: Map.get(form_data, "nama_agensi") || "Jabatan Pendaftaran Negara Sabah (JPKN)",
-      versi: Map.get(form_data, "versi") || "1.0.0",
-      tarikh_semakan: Map.get(form_data, "tarikh_semakan") || today,
-      rujukan_perubahan: Map.get(form_data, "rujukan_perubahan") || "Mesyuarat Jawatankuasa Teknologi Maklumat - 15 Disember 2024",
-      modules: modules,
-      total_modules: length(modules),
-      total_functions:
-        modules
-        |> Enum.map(fn module -> length(module.functions) end)
-        |> Enum.sum(),
-      prepared_by_name: Map.get(form_data, "prepared_by_name") || "Ahmad bin Abdullah",
-      prepared_by_position: Map.get(form_data, "prepared_by_position") || "Pengurus Projek",
-      prepared_by_date: Map.get(form_data, "prepared_by_date") || today,
-      approved_by_name: Map.get(form_data, "approved_by_name") || "Dr. Siti binti Hassan",
-      approved_by_position: Map.get(form_data, "approved_by_position") || "Ketua Penolong Pengarah",
-      approved_by_date: Map.get(form_data, "approved_by_date") || today
-    }
-  end
-
   @impl true
   def handle_event("prev_step", _params, socket) do
     current_step = socket.assigns.current_step || 1
@@ -543,6 +509,40 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
       |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()}
+  end
+
+  defp generate_dummy_data(socket) do
+    modules = get_modules_from_stream(socket)
+    form_data = socket.assigns.form.params || %{}
+
+    # Get current date in DD/MM/YYYY format
+    today =
+      Date.utc_today()
+      |> Date.to_string()
+      |> String.split("-")
+      |> Enum.reverse()
+      |> Enum.join("/")
+
+    %{
+      document_id: socket.assigns.document_id || "JPKN-BPA-01/B2",
+      nama_projek: Map.get(form_data, "nama_projek") || "Sistem Pengurusan Permohonan Aplikasi (SPPA)",
+      nama_agensi: Map.get(form_data, "nama_agensi") || "Jabatan Pendaftaran Negara Sabah (JPKN)",
+      versi: Map.get(form_data, "versi") || "1.0.0",
+      tarikh_semakan: Map.get(form_data, "tarikh_semakan") || today,
+      rujukan_perubahan: Map.get(form_data, "rujukan_perubahan") || "Mesyuarat Jawatankuasa Teknologi Maklumat - 15 Disember 2024",
+      modules: modules,
+      total_modules: length(modules),
+      total_functions:
+        modules
+        |> Enum.map(fn module -> length(module.functions) end)
+        |> Enum.sum(),
+      prepared_by_name: Map.get(form_data, "prepared_by_name") || "Ahmad bin Abdullah",
+      prepared_by_position: Map.get(form_data, "prepared_by_position") || "Pengurus Projek",
+      prepared_by_date: Map.get(form_data, "prepared_by_date") || today,
+      approved_by_name: Map.get(form_data, "approved_by_name") || "Dr. Siti binti Hassan",
+      approved_by_position: Map.get(form_data, "approved_by_position") || "Ketua Penolong Pengarah",
+      approved_by_date: Map.get(form_data, "approved_by_date") || today
+    }
   end
 
   defp get_modules_from_stream(socket) do
