@@ -307,17 +307,6 @@ defmodule SppaWeb.SoalSelidikLive do
     {:noreply, assign(socket, :new_tab_form, form)}
   end
 
-  defp generate_tab_id(label) do
-    label
-    |> String.downcase()
-    |> String.replace(~r/[^a-z0-9\s]/, "")
-    |> String.replace(~r/\s+/, "_")
-    |> then(fn id ->
-      # Ensure it's not empty and add prefix if needed
-      if id == "", do: "custom_tab_#{System.unique_integer([:positive])}", else: id
-    end)
-  end
-
   @impl true
   def handle_event("validate", %{"soal_selidik" => params}, socket) do
     form = to_form(params, as: :soal_selidik)
@@ -352,6 +341,17 @@ defmodule SppaWeb.SoalSelidikLive do
       socket
      |> assign(:show_pdf_modal, false)
      |> assign(:pdf_data, nil)}
+  end
+
+  defp generate_tab_id(label) do
+    label
+    |> String.downcase()
+    |> String.replace(~r/[^a-z0-9\s]/, "")
+    |> String.replace(~r/\s+/, "_")
+    |> then(fn id ->
+      # Ensure it's not empty and add prefix if needed
+      if id == "", do: "custom_tab_#{System.unique_integer([:positive])}", else: id
+    end)
   end
 
   defp generate_dummy_data_for_pdf do
