@@ -155,7 +155,7 @@ defmodule SppaWeb.ModulProjekLive do
   end
 
   @impl true
-  def handle_event("save_task", %{"task" => task_params}, socket) do
+  def handle_event("save_task", %{"task" => _task_params}, socket) do
     # For now, just close the modal since we're not saving to database
     # In the future, task_params will include project_id from the form
     {:noreply,
