@@ -124,6 +124,26 @@ defmodule SppaWeb.Components.Sidebar do
                 }
               /> <span>Soal Selidik</span>
             </.link>
+            <.link
+              navigate={~p"/jadual-projek"}
+              class={[
+                "flex items-center gap-3 px-7 py-3 font-medium transition",
+                if(@current_path == "/jadual-projek",
+                  do: "border-l-4 border-yellow-300 bg-[#0C304B] shadow-inner",
+                  else: "text-gray-200 hover:bg-[#0C304B]"
+                )
+              ]}
+            >
+              <.icon
+                name="hero-calendar-days"
+                class={
+                  if(@current_path == "/jadual-projek",
+                    do: "h-5 w-5 text-yellow-300",
+                    else: "h-5 w-5 text-gray-300"
+                  )
+                }
+              /> <span>Jadual Projek</span>
+            </.link>
           </nav>
         </aside>
         {render_slot(@inner_block)}
