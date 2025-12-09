@@ -24,6 +24,7 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/sppa"
 import topbar from "../vendor/topbar"
+import html2pdf from "html2pdf.js"
 
 // Print Document Hook
 const PrintDocument = {
@@ -44,6 +45,200 @@ const PrintDocument = {
           document.body.classList.remove("printing")
         }, 100)
       }
+    })
+  }
+}
+
+// Generate PDF Hook
+const GeneratePDF = {
+  mounted() {
+    this.el.addEventListener("click", (e) => {
+      e.preventDefault()
+      const targetId = this.el.dataset.target || "pdf-content"
+      const element = document.getElementById(targetId)
+      
+      if (!element) {
+        console.error("PDF target element not found:", targetId)
+        return
+      }
+      
+      // Show loading state
+      const originalText = this.el.innerHTML
+      this.el.disabled = true
+      this.el.innerHTML = '<span class="flex items-center gap-2"><svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Menjana PDF...</span>'
+      
+      // Clone the element to avoid affecting the original
+      const clonedElement = element.cloneNode(true)
+      
+      // Open all details elements first
+      const details = clonedElement.querySelectorAll("details")
+      details.forEach(detail => {
+        detail.setAttribute("open", "")
+      })
+      
+      // Get all form data from the original element (not clone) to access both tabs
+      const originalElement = document.getElementById(targetId)
+      const formData = new FormData(originalElement.querySelector("form") || originalElement)
+      
+      // Process all form inputs and replace with their values
+      const processInputs = (container) => {
+        // Process text inputs
+        container.querySelectorAll("input[type='text']").forEach(input => {
+          const value = input.value || ""
+          const wrapper = document.createElement("div")
+          wrapper.className = "pdf-value"
+          wrapper.style.cssText = "padding: 4px 8px; min-height: 20px; font-size: 11pt; color: #111827;"
+          wrapper.textContent = value || "-"
+          if (input.parentNode) {
+            input.parentNode.replaceChild(wrapper, input)
+          }
+        })
+        
+        // Process textareas
+        container.querySelectorAll("textarea").forEach(textarea => {
+          const value = textarea.value || ""
+          const wrapper = document.createElement("div")
+          wrapper.className = "pdf-value"
+          wrapper.style.cssText = "padding: 4px 8px; min-height: 40px; font-size: 11pt; color: #111827; white-space: pre-wrap;"
+          wrapper.textContent = value || "-"
+          if (textarea.parentNode) {
+            textarea.parentNode.replaceChild(wrapper, textarea)
+          }
+        })
+        
+        // Process select dropdowns
+        container.querySelectorAll("select").forEach(select => {
+          const selectedOption = select.options[select.selectedIndex]
+          const value = selectedOption ? selectedOption.text : ""
+          const wrapper = document.createElement("div")
+          wrapper.className = "pdf-value"
+          wrapper.style.cssText = "padding: 4px 8px; min-height: 20px; font-size: 11pt; color: #111827;"
+          wrapper.textContent = value || "-"
+          if (select.parentNode) {
+            select.parentNode.replaceChild(wrapper, select)
+          }
+        })
+        
+        // Process checkboxes - show all checked values
+        container.querySelectorAll("input[type='checkbox']").forEach((checkbox, index, checkboxes) => {
+          // Group checkboxes by their name
+          const name = checkbox.name
+          const sameNameCheckboxes = Array.from(checkboxes).filter(cb => cb.name === name)
+          
+          if (sameNameCheckboxes.indexOf(checkbox) === 0) {
+            // Only process the first checkbox in each group
+            const checkedValues = sameNameCheckboxes
+              .filter(cb => cb.checked)
+              .map(cb => cb.value || cb.nextElementSibling?.textContent?.trim() || "")
+              .filter(v => v)
+            
+            const wrapper = document.createElement("div")
+            wrapper.className = "pdf-value"
+            wrapper.style.cssText = "padding: 4px 8px; min-height: 20px; font-size: 11pt; color: #111827;"
+            wrapper.textContent = checkedValues.length > 0 ? checkedValues.join(", ") : "-"
+            
+            // Replace the checkbox group container
+            const parent = checkbox.closest("div.flex.flex-col")
+            if (parent) {
+              parent.innerHTML = ""
+              parent.appendChild(wrapper)
+            } else if (checkbox.parentNode) {
+              checkbox.parentNode.replaceChild(wrapper, checkbox)
+            }
+          }
+        })
+        
+        // Hide all buttons
+        container.querySelectorAll("button").forEach(button => {
+          button.style.display = "none"
+        })
+        
+        // Hide tab navigation and buttons
+        container.querySelectorAll("nav[aria-label='Tabs'], .border-b.border-gray-300, button[phx-click='switch_tab']").forEach(el => {
+          el.style.display = "none"
+        })
+        
+        // Show all tab content sections (remove hidden class)
+        container.querySelectorAll("div.space-y-4.hidden, div.space-y-4").forEach(section => {
+          section.classList.remove("hidden")
+          section.style.display = "block"
+        })
+        
+        // Add section headers for better PDF organization
+        const allSections = Array.from(container.querySelectorAll("div.space-y-4"))
+        if (allSections.length > 0) {
+          // Add FR header before first section
+          const frHeader = document.createElement("div")
+          frHeader.className = "mb-4 mt-6"
+          frHeader.style.cssText = "border-bottom: 2px solid #3b82f6; padding-bottom: 8px; margin-bottom: 16px;"
+          frHeader.innerHTML = "<h2 style='font-size: 14pt; font-weight: bold; color: #1e40af; text-transform: uppercase;'>FUNCTIONAL REQUIREMENT</h2>"
+          allSections[0].parentNode.insertBefore(frHeader, allSections[0])
+        }
+        
+        if (allSections.length > 1) {
+          // Add NFR header before second section
+          const nfrHeader = document.createElement("div")
+          nfrHeader.className = "mb-4 mt-6"
+          nfrHeader.style.cssText = "border-bottom: 2px solid #3b82f6; padding-bottom: 8px; margin-bottom: 16px; page-break-before: always;"
+          nfrHeader.innerHTML = "<h2 style='font-size: 14pt; font-weight: bold; color: #1e40af; text-transform: uppercase;'>NON-FUNCTIONAL REQUIREMENT</h2>"
+          allSections[1].parentNode.insertBefore(nfrHeader, allSections[1])
+        }
+      }
+      
+      processInputs(clonedElement)
+      
+      // Create a temporary container for PDF generation
+      const tempContainer = document.createElement("div")
+      tempContainer.style.cssText = "position: absolute; left: -9999px; width: 297mm; background: white;"
+      tempContainer.appendChild(clonedElement)
+      document.body.appendChild(tempContainer)
+      
+      // Get system name for filename
+      const systemNameInput = element.querySelector("input[name='soal_selidik[nama_sistem]']")
+      const systemName = systemNameInput ? systemNameInput.value.trim() : ""
+      const filename = systemName 
+        ? `Soal_Selidik_${systemName.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`
+        : "Soal_Selidik_Keperluan_Pembangunan_Aplikasi.pdf"
+      
+      // Configure PDF options for A4 landscape
+      const opt = {
+        margin: [5, 5, 5, 5],
+        filename: filename,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          letterRendering: true,
+          backgroundColor: "#ffffff"
+        },
+        jsPDF: { 
+          unit: "mm", 
+          format: "a4", 
+          orientation: "landscape",
+          compress: true
+        },
+        pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+      }
+      
+      // Generate PDF
+      html2pdf()
+        .set(opt)
+        .from(clonedElement)
+        .save()
+        .then(() => {
+          // Clean up
+          document.body.removeChild(tempContainer)
+          this.el.disabled = false
+          this.el.innerHTML = originalText
+        })
+        .catch((error) => {
+          console.error("PDF generation error:", error)
+          document.body.removeChild(tempContainer)
+          this.el.disabled = false
+          this.el.innerHTML = originalText
+          alert("Ralat semasa menjana PDF. Sila cuba lagi.")
+        })
     })
   }
 }
@@ -118,7 +313,8 @@ const liveSocket = new LiveSocket("/live", Socket, {
   hooks: {
     ...colocatedHooks,
     PrintDocument,
-    UpdateSectionCategory
+    UpdateSectionCategory,
+    GeneratePDF
   },
 })
 
