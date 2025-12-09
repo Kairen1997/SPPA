@@ -24,7 +24,7 @@ defmodule SppaWeb.JadualProjekLive do
         gantt_data = prepare_gantt_data(projects)
 
         month_labels =
-          if gantt_data && map_size(gantt_data) > 0 && length(gantt_data.projects) > 0 do
+          if length(gantt_data.projects) > 0 do
             generate_month_labels(gantt_data.min_date, gantt_data.max_date)
           else
             []
@@ -445,7 +445,7 @@ defmodule SppaWeb.JadualProjekLive do
       gantt_data = prepare_gantt_data(updated_projects)
 
       month_labels =
-        if gantt_data && map_size(gantt_data) > 0 && length(gantt_data.projects) > 0 do
+        if length(gantt_data.projects) > 0 do
           generate_month_labels(gantt_data.min_date, gantt_data.max_date)
         else
           []
@@ -495,7 +495,7 @@ defmodule SppaWeb.JadualProjekLive do
       gantt_data = prepare_gantt_data(updated_projects)
 
       month_labels =
-        if gantt_data && map_size(gantt_data) > 0 && length(gantt_data.projects) > 0 do
+        if length(gantt_data.projects) > 0 do
           generate_month_labels(gantt_data.min_date, gantt_data.max_date)
         else
           []
@@ -524,7 +524,7 @@ defmodule SppaWeb.JadualProjekLive do
       gantt_data = prepare_gantt_data(updated_projects)
 
       month_labels =
-        if gantt_data && map_size(gantt_data) > 0 && length(gantt_data.projects) > 0 do
+        if length(gantt_data.projects) > 0 do
           generate_month_labels(gantt_data.min_date, gantt_data.max_date)
         else
           []
