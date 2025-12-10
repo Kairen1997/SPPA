@@ -1,0 +1,81 @@
+<Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+  <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
+    <%!-- Overlay --%>
+    <div
+      class={[
+        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+      ]}
+      phx-click="close_sidebar"
+    >
+    </div>
+    <%!-- Sidebar --%>
+    <.dashboard_sidebar
+      sidebar_open={@sidebar_open}
+      dashboard_path={~p"/dashboard"}
+      logo_src={~p"/images/logojpkn.png"}
+      current_scope={@current_scope}
+      current_path="/pembangunan"
+    />
+    <%!-- Main Content --%>
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <%!-- Header --%>
+      <header class="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 border-b border-blue-800/50 px-6 py-4 flex items-center justify-between shadow-xl">
+        <div class="flex items-center gap-4">
+          <button
+            phx-click="toggle_sidebar"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-bars-3" class="w-6 h-6" />
+          </button>
+          <div class="flex items-center gap-3">
+            <img
+              src={~p"/images/Jata-Sabah.png"}
+              alt="Jata Wilayah Sabah"
+              class="h-9 w-auto object-contain"
+            />
+            <img
+              src={~p"/images/logojpkn.png"}
+              alt="Logo JPKN"
+              class="h-9 w-auto object-contain"
+            />
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <.link
+            navigate={~p"/users/settings"}
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-user-circle" class="w-6 h-6" />
+          </.link>
+        </div>
+      </header>
+
+      <%!-- Main Content Area --%>
+      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+          <%!-- Page Header --%>
+          <div class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Pembangunan</h1>
+            <p class="text-gray-600">Halaman pengurusan pembangunan sistem</p>
+          </div>
+
+          <%!-- Content Card --%>
+          <div class="bg-white rounded-xl shadow-lg p-8">
+            <div class="text-center py-12">
+              <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-4">
+                <.icon name="hero-code-bracket" class="w-10 h-10 text-blue-600" />
+              </div>
+              <h2 class="text-2xl font-semibold text-gray-900 mb-2">Halaman Pembangunan</h2>
+              <p class="text-gray-600 max-w-md mx-auto">
+                Halaman ini akan mengandungi maklumat dan fungsi berkaitan dengan pembangunan sistem.
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</Layouts.app>
+
