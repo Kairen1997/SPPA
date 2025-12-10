@@ -55,6 +55,7 @@ defmodule SppaWeb.Router do
       live "/projek/:project_id/modul", ModulProjekLive, :index
       live "/analisis-dan-rekabentuk", AnalisisDanRekabentukLive, :index
       live "/pembangunan", PembangunanLive, :index
+      live "/pengurusan-perubahan", PengurusanPerubahanLive, :index
       live "/jadual-projek", JadualProjekLive, :index
     end
 
