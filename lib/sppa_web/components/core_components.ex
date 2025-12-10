@@ -610,19 +610,13 @@ defmodule SppaWeb.CoreComponents do
             >
               <.icon name="hero-calendar-days" class="w-5 h-5" /> <span>Jadual Projek</span>
             </.link>
-            <.link
-              navigate={~p"/pembangunan"}
+            <a
+              href="#"
               phx-click="close_sidebar"
-              class={[
-                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-                if(@current_path == "/pembangunan",
-                  do: "bg-gray-700 text-white",
-                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
-                )
-              ]}
+              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
             >
               <.icon name="hero-code-bracket" class="w-5 h-5" /> <span>Pembangunan</span>
-            </.link>
+            </a>
             <a
               href="#"
               phx-click="close_sidebar"
