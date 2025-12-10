@@ -58,24 +58,786 @@
           <%!-- Page Header --%>
           <div class="mb-8">
             <h1 class="text-4xl font-bold text-gray-900 mb-2">Pembangunan</h1>
-            <p class="text-gray-600">Halaman pengurusan pembangunan sistem</p>
+            <p class="text-gray-600">Senarai modul yang telah didaftarkan dalam Analisis dan Rekabentuk</p>
           </div>
 
-          <%!-- Content Card --%>
-          <div class="bg-white rounded-xl shadow-lg p-8">
-            <div class="text-center py-12">
-              <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-4">
-                <.icon name="hero-code-bracket" class="w-10 h-10 text-blue-600" />
-              </div>
-              <h2 class="text-2xl font-semibold text-gray-900 mb-2">Halaman Pembangunan</h2>
-              <p class="text-gray-600 max-w-md mx-auto">
-                Halaman ini akan mengandungi maklumat dan fungsi berkaitan dengan pembangunan sistem.
-              </p>
+          <%!-- View Switcher and Module Count --%>
+          <div class="mb-6 flex items-center justify-between">
+            <div class="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-gray-200">
+              <button
+                phx-click="change_view"
+                phx-value-view="table"
+                class={[
+                  "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                  if(@view_mode == "table",
+                    do: "bg-blue-600 text-white shadow-sm",
+                    else: "text-gray-600 hover:bg-gray-100"
+                  )
+                ]}
+              >
+                <.icon name="hero-table-cells" class="w-4 h-4" />
+                <span>Jadual</span>
+              </button>
+              <button
+                phx-click="change_view"
+                phx-value-view="board"
+                class={[
+                  "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                  if(@view_mode == "board",
+                    do: "bg-blue-600 text-white shadow-sm",
+                    else: "text-gray-600 hover:bg-gray-100"
+                  )
+                ]}
+              >
+                <.icon name="hero-squares-2x2" class="w-4 h-4" />
+                <span>Papan</span>
+              </button>
             </div>
+            <div class="flex items-center gap-2 text-gray-600">
+              <.icon name="hero-code-bracket" class="w-5 h-5" />
+              <span class="text-sm font-medium">
+                {length(@modules)} Modul
+              </span>
+            </div>
+          </div>
+
+          <%!-- Modules Container --%>
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
+              <h2 class="text-xl font-semibold text-white">Senarai Modul</h2>
+            </div>
+
+            <%= if length(@modules) == 0 do %>
+              <div class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center justify-center text-gray-400">
+                  <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
+                  <p class="text-sm font-medium">Tiada modul didaftarkan</p>
+                  <p class="text-xs mt-1">Sila daftarkan modul di halaman Analisis dan Rekabentuk</p>
+                </div>
+              </div>
+            <% else %>
+              <%= cond do %>
+                <% @view_mode == "table" -> %>
+                  <%!-- Table View --%>
+                  <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Bil.
+                      </th>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Nama Modul
+                      </th>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Versi
+                      </th>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Keutamaan
+                      </th>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Tarikh Mula
+                      </th>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Tarikh Jangka Siap
+                      </th>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Fungsi Modul
+                      </th>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Catatan
+                      </th>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Tindakan
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <tr
+                      :for={module <- @modules}
+                      class="hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <td class="px-3 py-2 whitespace-nowrap">
+                        <div class="flex items-center">
+                          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-semibold text-xs">
+                            {module.number}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="px-3 py-2">
+                        <div>
+                          <div class="text-xs font-semibold text-gray-900">
+                            {module.name}
+                          </div>
+                          <div class="text-xs text-gray-500">
+                            {module.id}
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-3 py-2 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 text-xs font-mono font-medium">
+                          {module.version}
+                        </span>
+                      </td>
+                      <td class="px-3 py-2 whitespace-nowrap">
+                        <span class={[
+                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                          case module.priority do
+                            "Sangat Tinggi" -> "bg-red-100 text-red-800 border-red-200"
+                            "Tinggi" -> "bg-orange-100 text-orange-800 border-orange-200"
+                            "Sederhana" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                            "Rendah" -> "bg-blue-100 text-blue-800 border-blue-200"
+                            _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                          end
+                        ]}>
+                          <.icon
+                            name={case module.priority do
+                              "Sangat Tinggi" -> "hero-exclamation-triangle"
+                              "Tinggi" -> "hero-arrow-up"
+                              "Sederhana" -> "hero-minus"
+                              "Rendah" -> "hero-arrow-down"
+                              _ -> "hero-information-circle"
+                            end}
+                            class="w-3 h-3 mr-1"
+                          />
+                          {module.priority}
+                        </span>
+                      </td>
+                      <td class="px-3 py-2 whitespace-nowrap">
+                        <span class={[
+                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                          case module.status do
+                            "Belum Mula" -> "bg-gray-100 text-gray-700 border-gray-200"
+                            "Sedang Dibangunkan" -> "bg-blue-100 text-blue-800 border-blue-200"
+                            "Selesai" -> "bg-green-100 text-green-800 border-green-200"
+                            "Dalam Ujian" -> "bg-purple-100 text-purple-800 border-purple-200"
+                            _ -> "bg-gray-100 text-gray-700 border-gray-200"
+                          end
+                        ]}>
+                          <.icon
+                            name={case module.status do
+                              "Belum Mula" -> "hero-clock"
+                              "Sedang Dibangunkan" -> "hero-arrow-path"
+                              "Selesai" -> "hero-check-circle"
+                              "Dalam Ujian" -> "hero-beaker"
+                              _ -> "hero-information-circle"
+                            end}
+                            class="w-3 h-3 mr-1"
+                          />
+                          {module.status}
+                        </span>
+                      </td>
+                      <td class="px-3 py-2 whitespace-nowrap">
+                        <%= if module.tarikh_mula do %>
+                          <div class="flex items-center gap-1.5">
+                            <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400" />
+                            <span class="text-xs text-gray-700">
+                              {Calendar.strftime(module.tarikh_mula, "%d/%m/%Y")}
+                            </span>
+                          </div>
+                        <% else %>
+                          <span class="text-xs text-gray-400 italic">-</span>
+                        <% end %>
+                      </td>
+                      <td class="px-3 py-2 whitespace-nowrap">
+                        <div class="flex items-center gap-1.5">
+                          <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400" />
+                          <span class="text-xs text-gray-700">
+                            {Calendar.strftime(module.tarikh_jangka_siap, "%d/%m/%Y")}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="px-3 py-2">
+                        <%= if length(module.functions) > 0 do %>
+                          <div class="space-y-1 max-h-32 overflow-y-auto">
+                            <div
+                              :for={func <- module.functions}
+                              class="flex items-start gap-1.5 text-xs"
+                            >
+                              <span class="text-blue-500 mt-0.5">
+                                <.icon name="hero-arrow-right" class="w-3 h-3" />
+                              </span>
+                              <div class="flex-1">
+                                <span class="text-gray-900 font-medium">{func.name}</span>
+                                <%= if length(func.sub_functions) > 0 do %>
+                                  <div class="ml-3 mt-0.5 space-y-0.5">
+                                    <div
+                                      :for={sub_func <- func.sub_functions}
+                                      class="flex items-center gap-1 text-xs text-gray-600"
+                                    >
+                                      <span class="text-gray-400">•</span>
+                                      <span>{sub_func.name}</span>
+                                    </div>
+                                  </div>
+                                <% end %>
+                              </div>
+                            </div>
+                          </div>
+                        <% else %>
+                          <span class="text-xs text-gray-400 italic">-</span>
+                        <% end %>
+                      </td>
+                      <td class="px-3 py-2">
+                        <%= if module.catatan do %>
+                          <div class="max-w-xs">
+                            <p class="text-xs text-gray-700 line-clamp-2">
+                              {module.catatan}
+                            </p>
+                          </div>
+                        <% else %>
+                          <span class="text-xs text-gray-400 italic">-</span>
+                        <% end %>
+                      </td>
+                      <td class="px-3 py-2 whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-1.5">
+                          <button
+                            phx-click="open_view_modal"
+                            phx-value-module_id={module.id}
+                            class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                            title="Lihat"
+                          >
+                            <.icon name="hero-eye" class="w-4 h-4" />
+                          </button>
+                          <button
+                            phx-click="open_edit_modal"
+                            phx-value-module_id={module.id}
+                            class="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200"
+                            title="Edit"
+                          >
+                            <.icon name="hero-pencil" class="w-4 h-4" />
+                          </button>
+                          <button
+                            class="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors duration-200"
+                            title="Padam"
+                          >
+                            <.icon name="hero-trash" class="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+                <% @view_mode == "board" -> %>
+                  <%!-- Board View (Kanban Style by Status) --%>
+                  <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <%= for status <- ["Belum Mula", "Sedang Dibangunkan", "Dalam Ujian", "Selesai"] do %>
+                        <% modules_in_status = Enum.filter(@modules, fn m -> m.status == status end) %>
+                        <div class="bg-gray-50 rounded-lg p-4 min-h-[200px]">
+                          <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                              {status}
+                            </h3>
+                            <span class={[
+                              "inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold",
+                              case status do
+                                "Belum Mula" -> "bg-gray-200 text-gray-700"
+                                "Sedang Dibangunkan" -> "bg-blue-200 text-blue-700"
+                                "Dalam Ujian" -> "bg-purple-200 text-purple-700"
+                                "Selesai" -> "bg-green-200 text-green-700"
+                                _ -> "bg-gray-200 text-gray-700"
+                              end
+                            ]}>
+                              {length(modules_in_status)}
+                            </span>
+                          </div>
+                          <div class="space-y-3">
+                            <%= for module <- modules_in_status do %>
+                              <div class="bg-white rounded-lg p-3 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+                                <div class="flex items-start justify-between mb-2">
+                                  <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                      <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-semibold text-xs">
+                                        {module.number}
+                                      </span>
+                                      <h4 class="text-sm font-semibold text-gray-900 line-clamp-1">
+                                        {module.name}
+                                      </h4>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mb-2">{module.id}</p>
+                                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                      <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 text-xs font-mono">
+                                        {module.version}
+                                      </span>
+                                      <span class={[
+                                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                        case module.priority do
+                                          "Sangat Tinggi" -> "bg-red-100 text-red-800 border-red-200"
+                                          "Tinggi" -> "bg-orange-100 text-orange-800 border-orange-200"
+                                          "Sederhana" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                          "Rendah" -> "bg-blue-100 text-blue-800 border-blue-200"
+                                          _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                                        end
+                                      ]}>
+                                        {module.priority}
+                                      </span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                                      <%= if module.tarikh_mula do %>
+                                        <span>{Calendar.strftime(module.tarikh_mula, "%d/%m/%Y")}</span>
+                                      <% else %>
+                                        <span class="text-gray-400">-</span>
+                                      <% end %>
+                                      <span>→</span>
+                                      <span>{Calendar.strftime(module.tarikh_jangka_siap, "%d/%m/%Y")}</span>
+                                    </div>
+                                    <%= if module.catatan do %>
+                                      <p class="text-xs text-gray-600 line-clamp-2 mb-2">
+                                        {module.catatan}
+                                      </p>
+                                    <% end %>
+                                    <div class="flex items-center gap-1.5 mt-2">
+                                      <button
+                                        phx-click="open_view_modal"
+                                        phx-value-module_id={module.id}
+                                        class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                        title="Lihat"
+                                      >
+                                        <.icon name="hero-eye" class="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        phx-click="open_edit_modal"
+                                        phx-value-module_id={module.id}
+                                        class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                                        title="Edit"
+                                      >
+                                        <.icon name="hero-pencil" class="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                        title="Padam"
+                                      >
+                                        <.icon name="hero-trash" class="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            <% end %>
+                            <%= if length(modules_in_status) == 0 do %>
+                              <div class="text-center py-8 text-gray-400 text-sm">
+                                Tiada modul
+                              </div>
+                            <% end %>
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+              <% end %>
+            <% end %>
           </div>
         </div>
       </main>
     </div>
   </div>
+
+  <%!-- View Modal --%>
+  <%= if @show_view_modal && @selected_module do %>
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto"
+      phx-click="close_view_modal"
+      phx-click-away="close_view_modal"
+      role="dialog"
+      aria-modal="true"
+    >
+      <%!-- Backdrop --%>
+      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <%!-- Modal container --%>
+      <div class="flex min-h-full items-center justify-center p-4">
+        <div
+          class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+          phx-click-away="close_view_modal"
+        >
+          <%!-- Modal header --%>
+          <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-white">Butiran Modul</h2>
+                <p class="mt-1 text-sm text-blue-100">
+                  Maklumat lengkap modul
+                </p>
+              </div>
+              <button
+                type="button"
+                phx-click="close_view_modal"
+                class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                aria-label="Tutup"
+              >
+                <.icon name="hero-x-mark" class="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+          <%!-- Modal body --%>
+          <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+            <div class="space-y-6">
+              <%!-- Basic Information --%>
+              <div class="space-y-4">
+                <div class="border-b border-gray-200 pb-2">
+                  <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Bilangan</label>
+                    <div class="flex items-center gap-2">
+                      <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
+                        {@selected_module.number}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">ID Modul</label>
+                    <p class="text-sm text-gray-900 font-mono">{@selected_module.id}</p>
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Nama Modul</label>
+                    <p class="text-sm text-gray-900 font-semibold">{@selected_module.name}</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Versi</label>
+                    <span class="inline-flex items-center px-3 py-1 rounded-md bg-gray-100 text-gray-700 text-sm font-mono">
+                      {@selected_module.version}
+                    </span>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Keutamaan</label>
+                    <span class={[
+                      "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border",
+                      case @selected_module.priority do
+                        "Sangat Tinggi" -> "bg-red-100 text-red-800 border-red-200"
+                        "Tinggi" -> "bg-orange-100 text-orange-800 border-orange-200"
+                        "Sederhana" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                        "Rendah" -> "bg-blue-100 text-blue-800 border-blue-200"
+                        _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                      end
+                    ]}>
+                      <.icon
+                        name={case @selected_module.priority do
+                          "Sangat Tinggi" -> "hero-exclamation-triangle"
+                          "Tinggi" -> "hero-arrow-up"
+                          "Sederhana" -> "hero-minus"
+                          "Rendah" -> "hero-arrow-down"
+                          _ -> "hero-information-circle"
+                        end}
+                        class="w-4 h-4 mr-1"
+                      />
+                      {@selected_module.priority}
+                    </span>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Status</label>
+                    <span class={[
+                      "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border",
+                      case @selected_module.status do
+                        "Belum Mula" -> "bg-gray-100 text-gray-700 border-gray-200"
+                        "Sedang Dibangunkan" -> "bg-blue-100 text-blue-800 border-blue-200"
+                        "Selesai" -> "bg-green-100 text-green-800 border-green-200"
+                        "Dalam Ujian" -> "bg-purple-100 text-purple-800 border-purple-200"
+                        _ -> "bg-gray-100 text-gray-700 border-gray-200"
+                      end
+                    ]}>
+                      <.icon
+                        name={case @selected_module.status do
+                          "Belum Mula" -> "hero-clock"
+                          "Sedang Dibangunkan" -> "hero-arrow-path"
+                          "Selesai" -> "hero-check-circle"
+                          "Dalam Ujian" -> "hero-beaker"
+                          _ -> "hero-information-circle"
+                        end}
+                        class="w-4 h-4 mr-1"
+                      />
+                      {@selected_module.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <%!-- Timeline --%>
+              <div class="space-y-4">
+                <div class="border-b border-gray-200 pb-2">
+                  <h3 class="text-lg font-semibold text-gray-900">Jadual</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Tarikh Mula</label>
+                    <%= if @selected_module.tarikh_mula do %>
+                      <div class="flex items-center gap-2">
+                        <.icon name="hero-calendar-days" class="w-4 h-4 text-gray-400" />
+                        <span class="text-sm text-gray-900">
+                          {Calendar.strftime(@selected_module.tarikh_mula, "%d/%m/%Y")}
+                        </span>
+                      </div>
+                    <% else %>
+                      <span class="text-sm text-gray-400 italic">Belum ditetapkan</span>
+                    <% end %>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Tarikh Jangka Siap</label>
+                    <div class="flex items-center gap-2">
+                      <.icon name="hero-calendar-days" class="w-4 h-4 text-gray-400" />
+                      <span class="text-sm text-gray-900">
+                        {Calendar.strftime(@selected_module.tarikh_jangka_siap, "%d/%m/%Y")}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <%!-- Functions --%>
+              <%= if length(@selected_module.functions) > 0 do %>
+                <div class="space-y-4">
+                  <div class="border-b border-gray-200 pb-2">
+                    <h3 class="text-lg font-semibold text-gray-900">Fungsi Modul</h3>
+                  </div>
+                  <div class="space-y-3">
+                    <%= for func <- @selected_module.functions do %>
+                      <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div class="flex items-start gap-2">
+                          <.icon name="hero-arrow-right" class="w-5 h-5 text-blue-500 mt-0.5" />
+                          <div class="flex-1">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-2">{func.name}</h4>
+                            <%= if length(func.sub_functions) > 0 do %>
+                              <div class="ml-4 space-y-1.5">
+                                <%= for sub_func <- func.sub_functions do %>
+                                  <div class="flex items-center gap-2 text-sm text-gray-600">
+                                    <span class="text-gray-400">•</span>
+                                    <span>{sub_func.name}</span>
+                                  </div>
+                                <% end %>
+                              </div>
+                            <% end %>
+                          </div>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <%!-- Notes --%>
+              <%= if @selected_module.catatan do %>
+                <div class="space-y-4">
+                  <div class="border-b border-gray-200 pb-2">
+                    <h3 class="text-lg font-semibold text-gray-900">Catatan</h3>
+                  </div>
+                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <p class="text-sm text-gray-700 whitespace-pre-wrap">{@selected_module.catatan}</p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+          <%!-- Modal footer --%>
+          <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
+            <button
+              type="button"
+              phx-click="close_view_modal"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
+            >
+              Tutup
+            </button>
+            <button
+              type="button"
+              phx-click="open_edit_modal"
+              phx-value-module_id={@selected_module.id}
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+            >
+              Edit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%!-- Edit Modal --%>
+  <%= if @show_edit_modal && @selected_module do %>
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto"
+      phx-click="close_edit_modal"
+      phx-click-away="close_edit_modal"
+      role="dialog"
+      aria-modal="true"
+    >
+      <%!-- Backdrop --%>
+      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <%!-- Modal container --%>
+      <div class="flex min-h-full items-center justify-center p-4">
+        <div
+          class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+          phx-click-away="close_edit_modal"
+        >
+          <%!-- Modal header --%>
+          <div class="border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-white">Kemaskini Modul</h2>
+                <p class="mt-1 text-sm text-green-100">
+                  Edit maklumat modul
+                </p>
+              </div>
+              <button
+                type="button"
+                phx-click="close_edit_modal"
+                class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                aria-label="Tutup"
+              >
+                <.icon name="hero-x-mark" class="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+          <%!-- Modal body --%>
+          <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+            <.form
+              for={@form}
+              phx-change="validate_module"
+              phx-submit="update_module"
+              id="edit-module-form"
+              class="space-y-6"
+            >
+              <%!-- Basic Information --%>
+              <div class="space-y-5">
+                <div class="border-b border-gray-200 pb-2">
+                  <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Bilangan</label>
+                    <div class="flex items-center gap-2">
+                      <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
+                        {@selected_module.number}
+                      </span>
+                      <span class="text-xs text-gray-500">(Tidak boleh diubah)</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">ID Modul</label>
+                    <p class="text-sm text-gray-900 font-mono">{@selected_module.id}</p>
+                    <span class="text-xs text-gray-500">(Tidak boleh diubah)</span>
+                  </div>
+                  <div class="md:col-span-2">
+                    <.input
+                      field={@form[:name]}
+                      type="text"
+                      label="Nama Modul"
+                      required
+                      placeholder="Masukkan nama modul"
+                      class="w-full"
+                    />
+                  </div>
+                  <div>
+                    <.input
+                      field={@form[:version]}
+                      type="text"
+                      label="Versi"
+                      required
+                      placeholder="Contoh: 1.0.0"
+                      class="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Keutamaan
+                    </label>
+                    <select
+                      name="module[priority]"
+                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                    >
+                      <option value="Sangat Tinggi" selected={@form[:priority].value == "Sangat Tinggi"}>Sangat Tinggi</option>
+                      <option value="Tinggi" selected={@form[:priority].value == "Tinggi"}>Tinggi</option>
+                      <option value="Sederhana" selected={@form[:priority].value == "Sederhana"}>Sederhana</option>
+                      <option value="Rendah" selected={@form[:priority].value == "Rendah"}>Rendah</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      name="module[status]"
+                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                    >
+                      <option value="Belum Mula" selected={@form[:status].value == "Belum Mula"}>Belum Mula</option>
+                      <option value="Sedang Dibangunkan" selected={@form[:status].value == "Sedang Dibangunkan"}>Sedang Dibangunkan</option>
+                      <option value="Dalam Ujian" selected={@form[:status].value == "Dalam Ujian"}>Dalam Ujian</option>
+                      <option value="Selesai" selected={@form[:status].value == "Selesai"}>Selesai</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <%!-- Timeline --%>
+              <div class="space-y-5">
+                <div class="border-b border-gray-200 pb-2">
+                  <h3 class="text-lg font-semibold text-gray-900">Jadual</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <.input
+                      field={@form[:tarikh_mula]}
+                      type="date"
+                      label="Tarikh Mula"
+                      placeholder="Pilih tarikh mula"
+                      class="w-full"
+                    />
+                  </div>
+                  <div>
+                    <.input
+                      field={@form[:tarikh_jangka_siap]}
+                      type="date"
+                      label="Tarikh Jangka Siap"
+                      required
+                      placeholder="Pilih tarikh jangka siap"
+                      class="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <%!-- Notes --%>
+              <div class="space-y-5">
+                <div class="border-b border-gray-200 pb-2">
+                  <h3 class="text-lg font-semibold text-gray-900">Catatan</h3>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Catatan
+                  </label>
+                  <textarea
+                    name="module[catatan]"
+                    rows="4"
+                    placeholder="Masukkan catatan..."
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                  ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
+                </div>
+              </div>
+            </.form>
+          </div>
+          <%!-- Modal footer --%>
+          <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
+            <button
+              type="button"
+              phx-click="close_edit_modal"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              form="edit-module-form"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+            >
+              Simpan Perubahan
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </Layouts.app>
 
