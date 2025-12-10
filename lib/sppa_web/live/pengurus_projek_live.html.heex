@@ -339,17 +339,20 @@
   <div
     :if={@show_new_project_modal}
     class="fixed inset-0 z-50 overflow-y-auto"
-    phx-click="close_new_project_modal"
-    phx-click-away="close_new_project_modal"
     role="dialog"
     aria-modal="true"
   >
     <%!-- Backdrop --%>
-    <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+    <div 
+      class="fixed inset-0 bg-black/60 transition-opacity" 
+      aria-hidden="true"
+      phx-click="close_new_project_modal"
+    ></div>
      <%!-- Modal container --%>
     <div class="flex min-h-full items-center justify-center p-4">
       <div
         class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+        onclick="event.stopPropagation()"
         phx-click-away="close_new_project_modal"
       >
         <%!-- Modal header --%>
