@@ -98,15 +98,24 @@
                 </div>
               </div>
               
-              <%!-- Action Button --%>
-            <button
-              phx-click="open_new_task_modal"
-                class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-            >
-              <.icon name="hero-plus-circle" class="w-5 h-5" />
-              <span>Tugasan Baru</span>
-            </button>
-          </div>
+              <%!-- Action Buttons --%>
+              <div class="flex items-center gap-3">
+                <.link
+                  navigate={~p"/projek/#{@project_id}/pelan-modul"}
+                  class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  <.icon name="hero-chart-bar" class="w-5 h-5" />
+                  <span>Pelan Modul</span>
+                </.link>
+                <button
+                  phx-click="open_new_task_modal"
+                  class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  <.icon name="hero-plus-circle" class="w-5 h-5" />
+                  <span>Modul Baru</span>
+                </button>
+              </div>
+            </div>
           
             <%!-- Statistics Cards --%>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
@@ -194,7 +203,7 @@
                         <div class="flex flex-col items-center justify-center space-y-3">
                           <.icon name="hero-clipboard-document" class="w-12 h-12 text-gray-300" />
                           <p class="text-sm font-medium text-gray-500">Tiada tugasan pada masa ini</p>
-                          <p class="text-xs text-gray-400">Klik butang "Tugasan Baru" untuk menambah tugasan pertama</p>
+                          <p class="text-xs text-gray-400">Klik butang "Modul Baru" untuk menambah modul pertama</p>
                   </div>
                       </td>
                     </tr>
@@ -331,10 +340,10 @@
         <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-2xl font-bold text-white">Tugasan Baru</h2>
+              <h2 class="text-2xl font-bold text-white">Modul Baru</h2>
               
               <p class="mt-1 text-sm text-blue-100">
-                Cipta tugasan baharu dan tetapkan kepada pembangun sistem
+                Cipta modul baharu dan tetapkan kepada pembangun sistem
               </p>
             </div>
             
@@ -484,7 +493,7 @@
                 type="submit"
                 class="rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
               >
-                Simpan Tugasan
+                Simpan Modul
               </button>
             </div>
           </.form>
@@ -517,7 +526,7 @@
         <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-2xl font-bold text-white">Kemaskini Tugasan</h2>
+              <h2 class="text-2xl font-bold text-white">Kemaskini Modul</h2>
               
               <p class="mt-1 text-sm text-blue-100">
                 Kemaskini maklumat tugasan
@@ -670,7 +679,7 @@
                 type="submit"
                 class="rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
               >
-                Kemaskini Tugasan
+                Kemaskini Modul
               </button>
             </div>
           </.form>

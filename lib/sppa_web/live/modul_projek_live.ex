@@ -219,7 +219,7 @@ defmodule SppaWeb.ModulProjekLive do
      |> assign(:tasks, updated_tasks)
      |> assign(:show_new_task_modal, false)
      |> assign(:form, to_form(%{}, as: :task))
-     |> put_flash(:info, "Tugasan baru telah ditambah")}
+     |> put_flash(:info, "Modul baru telah ditambah")}
   end
 
   @impl true
@@ -395,6 +395,36 @@ defmodule SppaWeb.ModulProjekLive do
         versi: "1",
         due_date: ~D[2024-07-25],
         created_at: ~D[2024-06-10],
+        project_id: 1,
+        project_name: "Sistem Pengurusan Projek A"
+      },
+      %{
+        id: 7,
+        title: "Peningkatan Pengesahan Pengguna",
+        description: "Menambah peningkatan pada sistem pengesahan pengguna termasuk 2FA dan pengesahan email",
+        developer_id: 1,
+        developer_name: "Ali bin Hassan",
+        priority: "high",
+        status: "in_progress",
+        fasa: "1",
+        versi: "2",
+        due_date: ~D[2024-08-15],
+        created_at: ~D[2024-07-16],
+        project_id: 1,
+        project_name: "Sistem Pengurusan Projek A"
+      },
+      %{
+        id: 8,
+        title: "Penambahan Fitur Keselamatan",
+        description: "Menambah lapisan keselamatan tambahan termasuk rate limiting dan audit logging",
+        developer_id: 2,
+        developer_name: "Ahmad bin Ismail",
+        priority: "high",
+        status: "in_progress",
+        fasa: "1",
+        versi: "3",
+        due_date: ~D[2024-09-10],
+        created_at: ~D[2024-08-16],
         project_id: 1,
         project_name: "Sistem Pengurusan Projek A"
       }

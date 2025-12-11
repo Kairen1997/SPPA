@@ -548,20 +548,6 @@ defmodule SppaWeb.CoreComponents do
               <p class="pl-10 pr-4 py-1.5 text-xs text-gray-400 italic">
                 Akses modul melalui Senarai Projek
               </p>
-              <a
-                href="#"
-                phx-click="close_sidebar"
-                class={[
-                  "mt-1 flex items-center gap-2 pl-10 pr-4 py-1.5 text-sm rounded-lg transition-all duration-200",
-                  if(String.contains?(@current_path, "/modul"),
-                    do: "bg-gray-700/70 text-white",
-                    else: "text-gray-200 hover:text-white hover:bg-gray-700/60"
-                  )
-                ]}
-              >
-                <.icon name="hero-arrow-long-right" class="w-4 h-4 text-emerald-400" />
-                <span>Pelan Modul</span>
-              </a>
             </div>
           <% else %>
             <.link
