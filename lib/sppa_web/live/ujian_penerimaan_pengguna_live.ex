@@ -360,7 +360,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
       {:noreply,
        socket
        |> assign(:show_edit_modal, true)
-       |> assign(:selected_ujian, ujian)
+       |> assign(:editing_ujian, ujian)
        |> assign(:form, form)}
     else
       {:noreply, socket}
@@ -372,7 +372,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
     {:noreply,
      socket
      |> assign(:show_edit_modal, false)
-     |> assign(:selected_ujian, nil)
+     |> assign(:editing_ujian, nil)
      |> assign(:form, to_form(%{}, as: :ujian))}
   end
 
@@ -431,54 +431,71 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
   @impl true
   def handle_event("update_ujian", %{"ujian" => ujian_params}, socket) do
     # TODO: In the future, this should update the database
-    ujian_id = socket.assigns.selected_ujian.id
+    editing_ujian = socket.assigns[:editing_ujian] || socket.assigns[:selected_ujian]
 
-    tarikh_ujian =
-      if ujian_params["tarikh_ujian"] && ujian_params["tarikh_ujian"] != "" do
-        case Date.from_iso8601(ujian_params["tarikh_ujian"]) do
-          {:ok, date} -> date
-          _ -> socket.assigns.selected_ujian.tarikh_ujian
+    if editing_ujian do
+      ujian_id = editing_ujian.id
+
+      tarikh_ujian =
+        if ujian_params["tarikh_ujian"] && ujian_params["tarikh_ujian"] != "" do
+          case Date.from_iso8601(ujian_params["tarikh_ujian"]) do
+            {:ok, date} -> date
+            _ -> editing_ujian.tarikh_ujian
+          end
+        else
+          editing_ujian.tarikh_ujian
         end
-      else
-        socket.assigns.selected_ujian.tarikh_ujian
-      end
 
-    tarikh_dijangka_siap =
-      case Date.from_iso8601(ujian_params["tarikh_dijangka_siap"]) do
-        {:ok, date} -> date
-        _ -> socket.assigns.selected_ujian.tarikh_dijangka_siap
-      end
+      tarikh_dijangka_siap =
+        case Date.from_iso8601(ujian_params["tarikh_dijangka_siap"]) do
+          {:ok, date} -> date
+          _ -> editing_ujian.tarikh_dijangka_siap
+        end
 
-    updated_ujian_data = %{
-      socket.assigns.selected_ujian
-      | tajuk: ujian_params["tajuk"],
-        modul: ujian_params["modul"],
-        tarikh_ujian: tarikh_ujian,
-        tarikh_dijangka_siap: tarikh_dijangka_siap,
-        status: ujian_params["status"],
-        penguji: ujian_params["penguji"] || "",
-        hasil: ujian_params["hasil"] || socket.assigns.selected_ujian.hasil,
-        catatan:
-          if(ujian_params["catatan"] == "", do: nil, else: ujian_params["catatan"])
-    }
+      updated_ujian_data = %{
+        editing_ujian
+        | tajuk: ujian_params["tajuk"] || editing_ujian.tajuk,
+          modul: ujian_params["modul"],
+          tarikh_ujian: tarikh_ujian,
+          tarikh_dijangka_siap: tarikh_dijangka_siap,
+          status: ujian_params["status"],
+          penguji: ujian_params["penguji"] || "",
+          hasil: ujian_params["hasil"] || editing_ujian.hasil,
+          catatan:
+            if(ujian_params["catatan"] == "", do: nil, else: ujian_params["catatan"])
+      }
 
-    # Update in list if we're on index page
-    updated_ujian_list =
-      if socket.assigns[:ujian] && length(socket.assigns.ujian) > 0 do
-        Enum.map(socket.assigns.ujian, fn ujian ->
-          if ujian.id == ujian_id, do: updated_ujian_data, else: ujian
-        end)
-      else
-        []
-      end
+      # Update in list if we're on index page
+      updated_ujian_list =
+        if socket.assigns[:ujian] && length(socket.assigns.ujian) > 0 do
+          Enum.map(socket.assigns.ujian, fn ujian ->
+            if ujian.id == ujian_id, do: updated_ujian_data, else: ujian
+          end)
+        else
+          []
+        end
 
-    {:noreply,
-     socket
-     |> assign(:ujian, updated_ujian_list)
-     |> assign(:selected_ujian, updated_ujian_data)
-     |> assign(:show_edit_modal, false)
-     |> assign(:form, to_form(%{}, as: :ujian))
-     |> put_flash(:info, "Ujian penerimaan pengguna berjaya dikemaskini")}
+      # Update selected_ujian if we're on detail page
+      updated_socket =
+        socket
+        |> assign(:ujian, updated_ujian_list)
+        |> assign(:show_edit_modal, false)
+        |> assign(:editing_ujian, nil)
+        |> assign(:form, to_form(%{}, as: :ujian))
+        |> put_flash(:info, "Ujian penerimaan pengguna berjaya dikemaskini")
+
+      # Only update selected_ujian if we're on detail page
+      final_socket =
+        if socket.assigns[:selected_ujian] && socket.assigns.selected_ujian.id == ujian_id do
+          assign(updated_socket, :selected_ujian, updated_ujian_data)
+        else
+          updated_socket
+        end
+
+      {:noreply, final_socket}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true
