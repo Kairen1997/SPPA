@@ -474,6 +474,7 @@ defmodule SppaWeb.ProjekLive do
         tindakan: "Sambung semula selepas kelulusan"
       }
     ]
+    |> Enum.map(&normalize_project_status/1)
 
     # Filter based on user role
     # Temporarily showing all projects for pagination testing
@@ -672,6 +673,7 @@ defmodule SppaWeb.ProjekLive do
           "Portal untuk pentadbiran dalaman dengan akses terhad kepada kakitangan yang berkenaan."
       }
     ]
+    |> Enum.map(&normalize_project_status/1)
 
     # Find project by ID
     project = Enum.find(all_projects, fn p -> p.id == project_id end)
@@ -698,6 +700,18 @@ defmodule SppaWeb.ProjekLive do
 
     # For now, allow all authenticated users to view all projects (for testing)
     project
+  end
+
+  defp normalize_project_status(project) do
+    Map.update!(project, :status, &normalize_status/1)
+  end
+
+  defp normalize_status(status) do
+    case status do
+      "Selesai" -> "Selesai"
+      "Dalam Pembangunan" -> "Dalam Pembangunan"
+      _ -> "Dalam Pembangunan"
+    end
   end
 
   # Filter projects based on search term, status, and fasa
