@@ -62,6 +62,8 @@ defmodule SppaWeb.Router do
       live "/ujian-keselamatan/:id", UjianKeselamatanLive, :show
       live "/penempatan", PenempatanLive, :index
       live "/penempatan/:id", PenempatanLive, :show
+      live "/penyerahan", PenyerahanLive, :index
+      live "/penyerahan/:id", PenyerahanLive, :show
       live "/jadual-projek", JadualProjekLive, :index
     end
 
