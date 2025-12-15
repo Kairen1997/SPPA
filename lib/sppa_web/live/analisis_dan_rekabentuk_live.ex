@@ -74,6 +74,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         |> assign(:page_title, "Analisis dan Rekabentuk")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/analisis-dan-rekabentuk")
         |> assign(:document_id, "JPKN-BPA-01/B2")
         |> assign(:form, to_form(%{}, as: :analisis_dan_rekabentuk))
@@ -136,12 +137,28 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
   @impl true
   def handle_event("toggle_notifications", _params, socket) do
-    {:noreply, update(socket, :notifications_open, &(!&1))}
+    {:noreply,
+     socket
+     |> update(:notifications_open, &(!&1))
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
   def handle_event("close_notifications", _params, socket) do
     {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_profile_menu", _params, socket) do
+    {:noreply,
+     socket
+     |> update(:profile_menu_open, &(!&1))
+     |> assign(:notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("close_profile_menu", _params, socket) do
+    {:noreply, assign(socket, :profile_menu_open, false)}
   end
 
   @impl true

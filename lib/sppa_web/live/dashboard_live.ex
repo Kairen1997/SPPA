@@ -20,6 +20,7 @@ defmodule SppaWeb.DashboardLive do
         |> assign(:page_title, "Papan Pemuka")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
 
       if connected?(socket) do
         new_stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
@@ -98,11 +99,27 @@ defmodule SppaWeb.DashboardLive do
 
   @impl true
   def handle_event("toggle_notifications", _params, socket) do
-    {:noreply, update(socket, :notifications_open, &(!&1))}
+    {:noreply,
+     socket
+     |> update(:notifications_open, &(!&1))
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
   def handle_event("close_notifications", _params, socket) do
     {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_profile_menu", _params, socket) do
+    {:noreply,
+     socket
+     |> update(:profile_menu_open, &(!&1))
+     |> assign(:notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("close_profile_menu", _params, socket) do
+    {:noreply, assign(socket, :profile_menu_open, false)}
   end
 end

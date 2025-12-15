@@ -13,6 +13,8 @@ defmodule SppaWeb.Components.HeaderActions do
   attr :notifications_open, :boolean, default: false, doc: "Whether notifications dropdown is open"
   attr :notifications_count, :integer, default: 0, doc: "Number of notifications"
   attr :activities, :list, default: [], doc: "List of activities for notifications"
+  attr :profile_menu_open, :boolean, default: false, doc: "Whether profile dropdown menu is open"
+  attr :current_scope, :any, default: nil, doc: "The current user scope"
 
   def header_actions(assigns) do
     ~H"""
@@ -101,24 +103,71 @@ defmodule SppaWeb.Components.HeaderActions do
           </div>
       </div>
 
-      <%!-- User Settings Link --%>
+      <%!-- Profile Menu Dropdown --%>
+      <div class="relative" id="profile-menu-container">
+        <button
+          id="profile-menu-toggle-btn"
+          type="button"
+          phx-click="toggle_profile_menu"
+          class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600 focus-visible:ring-white"
+          aria-label="Menu Profil"
+          aria-expanded={@profile_menu_open}
+        >
+          <.icon name="hero-user-circle" class="w-6 h-6" />
+        </button>
+        <div
+          id="profile-menu-dropdown"
+          class={[
+            "absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-blue-100 overflow-hidden z-50 origin-top-right transition-all duration-200",
+            if(@profile_menu_open, do: "opacity-100 scale-100 pointer-events-auto", else: "opacity-0 scale-95 pointer-events-none")
+          ]}
+          phx-click-away="close_profile_menu"
+        >
+          <%!-- User Info Header --%>
+          <div class="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-500">
+            <p class="text-sm font-semibold text-white">
+              <%= if @current_scope && @current_scope.user do %>
+                {@current_scope.user.no_kp || "Pengguna"}
+              <% else %>
+                Pengguna
+              <% end %>
+            </p>
+            <%= if @current_scope && @current_scope.user && @current_scope.user.role do %>
+              <p class="text-xs text-blue-100 mt-0.5">
+                {@current_scope.user.role}
+              </p>
+            <% end %>
+          </div>
+
+          <%!-- Menu Items --%>
+          <div class="py-1 bg-white">
+            <%!-- Settings Link --%>
       <.link
         navigate={~p"/users/settings"}
-        class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+              class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-150"
+              phx-click="close_profile_menu"
       >
-        <.icon name="hero-user-circle" class="w-6 h-6" />
+              <.icon name="hero-cog-6-tooth" class="w-4 h-4 text-gray-500" />
+              <span>Tetapan</span>
       </.link>
 
+            <%!-- Divider --%>
+            <div class="my-1 border-t border-gray-100"></div>
+
       <%!-- Logout Button --%>
-      <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
+            <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline w-full">
         <button
           type="submit"
-          class="text-white hover:text-red-100 hover:bg-red-500/30 p-2 rounded-lg transition-all duration-200"
+                class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
           aria-label="Log keluar"
         >
-          <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5" />
+                <.icon name="hero-arrow-right-on-rectangle" class="w-4 h-4" />
+                <span>Log Keluar</span>
         </button>
       </.form>
+          </div>
+        </div>
+      </div>
     </div>
     """
   end

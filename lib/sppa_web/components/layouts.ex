@@ -38,6 +38,7 @@ defmodule SppaWeb.Layouts do
   attr :notifications_open, :boolean, default: false
   attr :notifications_count, :integer, default: 0
   attr :activities, :list, default: []
+  attr :profile_menu_open, :boolean, default: false
 
   def app(assigns) do
     ~H"""
@@ -48,6 +49,8 @@ defmodule SppaWeb.Layouts do
           notifications_open={@notifications_open}
           notifications_count={@notifications_count}
           activities={@activities}
+          profile_menu_open={@profile_menu_open}
+          current_scope={@current_scope}
         />
       </header>
     <% end %>

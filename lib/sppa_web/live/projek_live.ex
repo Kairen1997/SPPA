@@ -44,6 +44,7 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:page_title, "Senarai Projek")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
         |> assign(:page, 1)
         |> assign(:per_page, 10)
         |> assign(:search_term, "")
@@ -115,6 +116,7 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:page_title, "Butiran Projek")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
 
       if connected?(socket) do
         # Get project details - will be replaced with database query later
@@ -217,12 +219,28 @@ defmodule SppaWeb.ProjekLive do
 
   @impl true
   def handle_event("toggle_notifications", _params, socket) do
-    {:noreply, update(socket, :notifications_open, &(!&1))}
+    {:noreply,
+     socket
+     |> update(:notifications_open, &(!&1))
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
   def handle_event("close_notifications", _params, socket) do
     {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_profile_menu", _params, socket) do
+    {:noreply,
+     socket
+     |> update(:profile_menu_open, &(!&1))
+     |> assign(:notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("close_profile_menu", _params, socket) do
+    {:noreply, assign(socket, :profile_menu_open, false)}
   end
 
   @impl true
