@@ -35,12 +35,30 @@ defmodule SppaWeb.Layouts do
 
   attr :full_width, :boolean, default: false
 
+  attr :notifications_open, :boolean, default: false
+  attr :notifications_count, :integer, default: 0
+  attr :activities, :list, default: []
+
   def app(assigns) do
     ~H"""
+    <%= if @current_scope && @current_scope.user && !@full_width do %>
+      <%!-- Global Header Bar for non-full-width pages --%>
+      <header class="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-4 sm:px-6 py-3 flex items-center justify-end shadow-md z-50">
+        <.header_actions
+          notifications_open={@notifications_open}
+          notifications_count={@notifications_count}
+          activities={@activities}
+        />
+      </header>
+    <% end %>
+
     <%= if @full_width do %>
       {render_slot(@inner_block)}
     <% else %>
-      <main class="px-4 py-20 sm:px-6 lg:px-8">
+      <main class={[
+        "px-4 sm:px-6 lg:px-8",
+        if(@current_scope && @current_scope.user, do: "pt-20", else: "py-20")
+      ]}>
         <div class="mx-auto max-w-2xl space-y-4">{render_slot(@inner_block)}</div>
       </main>
     <% end %>
@@ -73,7 +91,7 @@ defmodule SppaWeb.Layouts do
         {gettext("Attempting to reconnect")}
         <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
-      
+
       <.flash
         id="server-error"
         kind={:error}

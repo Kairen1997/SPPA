@@ -1,6 +1,8 @@
 defmodule SppaWeb.AnalisisDanRekabentukLive do
   use SppaWeb, :live_view
 
+  alias Sppa.Projects
+
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
 
@@ -95,7 +97,20 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         |> assign(:modules_list, initial_modules)
         |> update_summary()
 
-      {:ok, socket}
+      if connected?(socket) do
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
+
+        {:ok,
+         socket
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
+      else
+        {:ok,
+         socket
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
+      end
     else
       socket =
         socket

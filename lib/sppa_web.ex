@@ -88,6 +88,7 @@ defmodule SppaWeb do
       import SppaWeb.CoreComponents
       import SppaWeb.Components.Topbar
       import SppaWeb.Components.Sidebar
+      import SppaWeb.Components.HeaderActions
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS

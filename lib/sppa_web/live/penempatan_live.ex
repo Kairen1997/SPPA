@@ -1,6 +1,8 @@
 defmodule SppaWeb.PenempatanLive do
   use SppaWeb, :live_view
 
+  alias Sppa.Projects
+
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @impl true
@@ -37,7 +39,20 @@ defmodule SppaWeb.PenempatanLive do
         |> assign(:selected_penempatan, nil)
         |> assign(:form, to_form(%{}, as: :penempatan))
 
-      {:ok, socket}
+      if connected?(socket) do
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
+
+        {:ok,
+         socket
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
+      else
+        {:ok,
+         socket
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
+      end
     else
       socket =
         socket
@@ -68,6 +83,8 @@ defmodule SppaWeb.PenempatanLive do
 
       if connected?(socket) do
         penempatan = get_penempatan_by_id(penempatan_id)
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
 
         if penempatan do
           {:ok,
@@ -76,7 +93,9 @@ defmodule SppaWeb.PenempatanLive do
            |> assign(:penempatan, [])
            |> assign(:show_edit_modal, false)
            |> assign(:show_create_modal, false)
-           |> assign(:form, to_form(%{}, as: :penempatan))}
+           |> assign(:form, to_form(%{}, as: :penempatan))
+           |> assign(:activities, activities)
+           |> assign(:notifications_count, notifications_count)}
         else
           socket =
             socket
@@ -85,6 +104,8 @@ defmodule SppaWeb.PenempatanLive do
               "Penempatan tidak dijumpai."
             )
             |> Phoenix.LiveView.redirect(to: ~p"/penempatan")
+            |> assign(:activities, [])
+            |> assign(:notifications_count, 0)
 
           {:ok, socket}
         end
@@ -95,7 +116,9 @@ defmodule SppaWeb.PenempatanLive do
          |> assign(:penempatan, [])
          |> assign(:show_edit_modal, false)
          |> assign(:show_create_modal, false)
-         |> assign(:form, to_form(%{}, as: :penempatan))}
+         |> assign(:form, to_form(%{}, as: :penempatan))
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
       end
     else
       socket =

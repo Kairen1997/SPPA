@@ -1,6 +1,8 @@
 defmodule SppaWeb.ProjekLive do
   use SppaWeb, :live_view
 
+  alias Sppa.Projects
+
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @impl true
@@ -64,13 +66,18 @@ defmodule SppaWeb.ProjekLive do
         {paginated_projects, total_pages} =
           paginate_projects(filtered_projects, socket.assigns.page, socket.assigns.per_page)
 
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
+
         {:ok,
          socket
          |> assign(:projects, paginated_projects)
          |> assign(:all_projects, all_projects)
          |> assign(:filtered_projects, filtered_projects)
          |> assign(:total_pages, total_pages)
-         |> assign(:total_count, length(filtered_projects))}
+         |> assign(:total_count, length(filtered_projects))
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
       else
         {:ok,
          socket
@@ -78,7 +85,9 @@ defmodule SppaWeb.ProjekLive do
          |> assign(:all_projects, [])
          |> assign(:filtered_projects, [])
          |> assign(:total_pages, 0)
-         |> assign(:total_count, 0)}
+         |> assign(:total_count, 0)
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
       end
     else
       socket =
@@ -115,6 +124,9 @@ defmodule SppaWeb.ProjekLive do
           # Get overview data for the project
           overview_data = get_project_overview(project_id, project)
 
+          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+          notifications_count = length(activities)
+
           {:ok,
            socket
            |> assign(:project, project)
@@ -137,8 +149,13 @@ defmodule SppaWeb.ProjekLive do
            |> assign(:total_count, 0)
            |> assign(:search_term, "")
            |> assign(:status_filter, "")
-           |> assign(:fasa_filter, "")}
+           |> assign(:fasa_filter, "")
+           |> assign(:activities, activities)
+           |> assign(:notifications_count, notifications_count)}
         else
+          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+          notifications_count = length(activities)
+
           socket =
             socket
             |> assign(:project, nil)
@@ -150,6 +167,8 @@ defmodule SppaWeb.ProjekLive do
             |> assign(:search_term, "")
             |> assign(:status_filter, "")
             |> assign(:fasa_filter, "")
+            |> assign(:activities, activities)
+            |> assign(:notifications_count, notifications_count)
             |> Phoenix.LiveView.put_flash(
               :error,
               "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk melihat projek ini."
@@ -163,6 +182,8 @@ defmodule SppaWeb.ProjekLive do
          socket
          |> assign(:project, nil)
          |> assign(:projects, [])
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)
          |> assign(:page, 1)
          |> assign(:per_page, 10)
          |> assign(:total_pages, 0)
