@@ -609,10 +609,6 @@
                         Pengurus
                       </th>
                       
-                      <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[150px]">
-                        Isu
-                      </th>
-                      
                       <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[100px]">
                         Tindakan
                       </th>
@@ -622,7 +618,7 @@
                   <tbody class="bg-white divide-y divide-gray-200">
                     <%= if Enum.empty?(@projects) do %>
                       <tr>
-                        <td colspan="8" class="px-6 py-12 text-center">
+                        <td colspan="7" class="px-6 py-12 text-center">
                           <div class="flex flex-col items-center justify-center">
                             <.icon name="hero-inbox" class="w-12 h-12 text-gray-400 mb-3" />
                             <p class="text-gray-500 font-medium">Tiada projek ditemui</p>
@@ -710,22 +706,6 @@
                               >
                                 {project.pengurus_projek}
                               </span>
-                            </div>
-                          </td>
-                          
-                          <td class="px-3 py-3">
-                            <div class="text-sm text-gray-600">
-                              <%= if project.isu == "Tiada" do %>
-                                <span class="text-gray-400">Tiada</span>
-                              <% else %>
-                                <span
-                                  class="text-orange-600 font-medium truncate block"
-                                  title={project.isu}
-                                  style="max-width: 130px;"
-                                >
-                                  {project.isu}
-                                </span>
-                              <% end %>
                             </div>
                           </td>
                           
