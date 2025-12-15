@@ -523,7 +523,7 @@ defmodule SppaWeb.CoreComponents do
                 ]}
               >
                 <.icon name="hero-squares-2x2" class="w-5 h-5" />
-                <span class="font-medium">Papan Pemuka</span>
+                <span class="font-medium">Dashboard</span>
               </.link>
               <.link
                 navigate={~p"/senarai-projek"}
@@ -573,7 +573,7 @@ defmodule SppaWeb.CoreComponents do
               ]}
             >
               <.icon name="hero-squares-2x2" class="w-5 h-5" />
-              <span class="font-medium">Papan Pemuka</span>
+              <span class="font-medium">Dashboard</span>
             </.link>
             <.link
               navigate={~p"/projek"}

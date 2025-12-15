@@ -55,7 +55,7 @@
             <p class="text-gray-600">Gambaran keseluruhan projek dan aktiviti terkini</p>
           </div>
            <%!-- Summary Cards --%>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             <%!-- Total Projects --%>
             <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div class="flex items-center justify-between mb-4">
@@ -87,38 +87,6 @@
               <div class="text-4xl font-bold text-white mb-1">{@stats[:completed] || 0}</div>
               
               <div class="text-sm font-medium text-green-50">Projek Selesai</div>
-            </div>
-             <%!-- On Hold --%>
-            <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div class="flex items-center justify-between mb-4">
-                <.icon name="hero-pause-circle" class="w-8 h-8 text-white opacity-90" />
-              </div>
-              
-              <div class="text-4xl font-bold text-white mb-1">{@stats[:on_hold] || 0}</div>
-              
-              <div class="text-sm font-medium text-red-50">Projek Ditangguhkan</div>
-            </div>
-             <%!-- UAT --%>
-            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div class="flex items-center justify-between mb-4">
-                <.icon name="hero-clipboard-document-check" class="w-8 h-8 text-white opacity-90" />
-              </div>
-              
-              <div class="text-4xl font-bold text-white mb-1">{@stats[:uat] || 0}</div>
-              
-              <div class="text-sm font-medium text-purple-50">UAT</div>
-            </div>
-             <%!-- Change Management --%>
-            <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div class="flex items-center justify-between mb-4">
-                <.icon name="hero-arrow-path" class="w-8 h-8 text-white opacity-90" />
-              </div>
-              
-              <div class="text-4xl font-bold text-white mb-1">
-                {@stats[:change_management] || 0}
-              </div>
-              
-              <div class="text-sm font-medium text-orange-50">Pengurusan Perubahan</div>
             </div>
           </div>
            <%!-- Latest Activities --%>
