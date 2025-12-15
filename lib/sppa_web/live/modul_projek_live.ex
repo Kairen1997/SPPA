@@ -34,13 +34,14 @@ defmodule SppaWeb.ModulProjekLive do
           users = Accounts.list_users()
           developers = Enum.filter(users, fn user -> user.role == "pembangun sistem" end)
 
-          # Get mock tasks filtered by project_id
+          # Get mock tasks filtered by project_id and sort by phase and version
           tasks = list_tasks(socket.assigns.current_scope, project_id)
+          sorted_tasks = sort_tasks_by_phase_and_version(tasks)
 
           {:ok,
            socket
            |> assign(:project, project)
-           |> assign(:tasks, tasks)
+           |> assign(:tasks, sorted_tasks)
            |> assign(:users, users)
            |> assign(:developers, developers)}
         else
@@ -211,12 +212,13 @@ defmodule SppaWeb.ModulProjekLive do
       project_name: socket.assigns.project.nama
     }
 
-    # Add new task to the tasks list
+    # Add new task to the tasks list and sort by phase and version
     updated_tasks = [new_task | socket.assigns.tasks]
+    sorted_tasks = sort_tasks_by_phase_and_version(updated_tasks)
 
     {:noreply,
      socket
-     |> assign(:tasks, updated_tasks)
+     |> assign(:tasks, sorted_tasks)
      |> assign(:show_new_task_modal, false)
      |> assign(:form, to_form(%{}, as: :task))
      |> put_flash(:info, "Modul baru telah ditambah")}
@@ -254,7 +256,7 @@ defmodule SppaWeb.ModulProjekLive do
         nil
       end
 
-    # Update the task in the list
+    # Update the task in the list and sort by phase and version
     updated_tasks =
       Enum.map(socket.assigns.tasks, fn task ->
         if task.id == task_id do
@@ -274,10 +276,11 @@ defmodule SppaWeb.ModulProjekLive do
           task
         end
       end)
+    sorted_tasks = sort_tasks_by_phase_and_version(updated_tasks)
 
     {:noreply,
      socket
-     |> assign(:tasks, updated_tasks)
+     |> assign(:tasks, sorted_tasks)
      |> assign(:show_edit_task_modal, false)
      |> assign(:selected_task, nil)
      |> assign(:form, to_form(%{}, as: :task))
@@ -288,10 +291,12 @@ defmodule SppaWeb.ModulProjekLive do
   def handle_event("delete_task", %{"task_id" => task_id}, socket) do
     task_id = String.to_integer(task_id)
     updated_tasks = Enum.reject(socket.assigns.tasks, fn t -> t.id == task_id end)
+    # Tasks remain sorted after deletion since we're just removing one item
+    sorted_tasks = sort_tasks_by_phase_and_version(updated_tasks)
 
     {:noreply,
      socket
-     |> assign(:tasks, updated_tasks)
+     |> assign(:tasks, sorted_tasks)
      |> put_flash(:info, "Tugasan telah dipadam")}
   end
 
@@ -309,10 +314,12 @@ defmodule SppaWeb.ModulProjekLive do
           task
         end
       end)
+    # Tasks remain sorted after status update since we're not changing phase/version
+    sorted_tasks = sort_tasks_by_phase_and_version(updated_tasks)
 
     {:noreply,
      socket
-     |> assign(:tasks, updated_tasks)
+     |> assign(:tasks, sorted_tasks)
      |> put_flash(:info, "Status tugasan telah dikemaskini")}
   end
 
@@ -348,6 +355,28 @@ defmodule SppaWeb.ModulProjekLive do
 
     Enum.find(all_projects, fn p -> p.id == project_id end)
   end
+
+  # Sort tasks by phase first, then by version within each phase
+  # Ensures sequential ordering: Phase 1 (v1, v2, v3...) -> Phase 2 (v1, v2...) -> Phase 3...
+  defp sort_tasks_by_phase_and_version(tasks) do
+    Enum.sort_by(tasks, fn task ->
+      # Handle cases where fasa/versi might not be numeric strings
+      phase_num = parse_numeric(task.fasa)
+      version_num = parse_numeric(task.versi)
+      {phase_num, version_num}
+    end)
+  end
+
+  # Safely parse numeric string to integer, defaulting to 0 if not numeric
+  defp parse_numeric(value) when is_binary(value) do
+    case Integer.parse(value) do
+      {num, _} -> num
+      :error -> 0
+    end
+  end
+
+  defp parse_numeric(value) when is_integer(value), do: value
+  defp parse_numeric(_), do: 0
 
   # Mock data function - will be replaced with database queries later
   # Filters tasks by project_id to ensure each project has its own modules
