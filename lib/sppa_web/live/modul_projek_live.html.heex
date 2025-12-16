@@ -59,467 +59,256 @@
         </div>
       </header>
        <%!-- Content --%>
-      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
-        <div class="max-w-[1600px] mx-auto">
+      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10">
+        <div class="max-w-[1800px] mx-auto space-y-6">
           <%!-- Back Button --%>
-          <div class="mb-4">
+          <div class="mb-2">
             <.link
               navigate={~p"/senarai-projek"}
-              class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+              class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 group"
             >
-              <.icon name="hero-arrow-left" class="w-4 h-4" />
+              <.icon name="hero-arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span>Kembali ke Senarai Projek</span>
             </.link>
           </div>
           
-          <%!-- Page Header --%>
-          <div class="mb-8 flex items-center justify-between">
+          <%!-- Page Header Section --%>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div class="space-y-2">
+                <div class="flex items-center gap-3">
+                  <div class="p-2 bg-blue-100 rounded-lg">
+                    <.icon name="hero-folder" class="w-6 h-6 text-blue-600" />
+                  </div>
             <div>
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                Modul Projek: {@project.nama}
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
+                      Modul Projek
               </h1>
+                    <p class="text-sm text-gray-500 mt-1">Pengurusan Tugasan dan Modul</p>
+                  </div>
+                </div>
+                <div class="ml-12 space-y-1">
+                  <h2 class="text-lg font-semibold text-gray-800">{@project.nama}</h2>
+                  <%= if @project.jabatan do %>
+                    <p class="text-sm text-gray-600 flex items-center gap-2">
+                      <.icon name="hero-building-office" class="w-4 h-4" />
+                      {@project.jabatan}
+                    </p>
+                  <% end %>
+                </div>
+              </div>
               
-              <p class="text-gray-600">Urus dan tetapkan tugasan kepada pembangun sistem</p>
+              <%!-- Action Buttons --%>
+              <div class="flex items-center gap-3">
+                <.link
+                  navigate={~p"/projek/#{@project_id}/pelan-modul"}
+                  class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  <.icon name="hero-chart-bar" class="w-5 h-5" />
+                  <span>Pelan Modul</span>
+                </.link>
+                <button
+                  phx-click="open_new_task_modal"
+                  class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  <.icon name="hero-plus-circle" class="w-5 h-5" />
+                  <span>Modul Baru</span>
+                </button>
+              </div>
             </div>
-            
-            <%!-- New Task Button --%>
-            <button
-              phx-click="open_new_task_modal"
-              class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <.icon name="hero-plus-circle" class="w-5 h-5" />
-              <span>Tugasan Baru</span>
-            </button>
-          </div>
           
-          <%!-- Kanban Board --%>
-          <div class="flex gap-6 overflow-x-auto pb-4">
-            <%!-- Todo Column --%>
-            <div class="flex-shrink-0 w-80">
-              <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+            <%!-- Statistics Cards --%>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+              <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
                   <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <div class="w-3 h-3 rounded-full bg-gray-400"></div>
-                      <h3 class="text-sm font-semibold text-gray-700">Belum Bermula</h3>
+                  <div>
+                    <p class="text-xs font-medium text-blue-700 uppercase tracking-wide">Jumlah Tugasan</p>
+                    <p class="text-2xl font-bold text-blue-900 mt-1">{length(@tasks)}</p>
                     </div>
-                    <span class="text-xs font-medium text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                      {length(Enum.filter(@tasks, fn t -> t.status == "todo" end))}
-                    </span>
+                  <div class="p-3 bg-blue-200 rounded-lg">
+                    <.icon name="hero-clipboard-document-list" class="w-6 h-6 text-blue-700" />
                   </div>
                 </div>
-                <div class="p-3 space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
-                  <%= for task <- Enum.filter(@tasks, fn t -> t.status == "todo" end) do %>
-                    <div
-                      class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                      phx-click="open_edit_task_modal"
-                      phx-value-task_id={task.id}
-                    >
-                      <div class="flex items-start justify-between mb-2">
-                        <h4 class="text-sm font-semibold text-gray-900 flex-1 pr-2">
-                          {task.title}
-                        </h4>
-                        <button
-                          phx-click="delete_task"
-                          phx-value-task_id={task.id}
-                          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
-                          onclick="event.stopPropagation();"
-                        >
-                          <.icon name="hero-trash" class="w-4 h-4" />
-                        </button>
                       </div>
                       
-                      <%= if task.description do %>
-                        <p class="text-xs text-gray-600 mb-3 line-clamp-2">
-                          {task.description}
-                        </p>
-                      <% end %>
-                      
-                      <div class="flex items-center gap-2 mb-3">
-                        <span class={[
-                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
-                          case task.priority do
-                            "high" -> "bg-red-100 text-red-800 border-red-200"
-                            "medium" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
-                            "low" -> "bg-green-100 text-green-800 border-green-200"
-                            _ -> "bg-gray-100 text-gray-800 border-gray-200"
-                          end
-                        ]}>
-                          {case task.priority do
-                            "high" -> "Tinggi"
-                            "medium" -> "Sederhana"
-                            "low" -> "Rendah"
-                            _ -> "Sederhana"
-                          end}
-                        </span>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                          <%= if task.developer_name do %>
-                            <div class="flex items-center gap-1.5">
-                              <.icon name="hero-user" class="w-3.5 h-3.5 text-gray-400" />
-                              <span class="text-xs text-gray-600">{task.developer_name}</span>
-                            </div>
-                          <% else %>
-                            <span class="text-xs text-gray-400">Tiada pembangun</span>
-                          <% end %>
-                        </div>
-                        <%= if task.due_date do %>
-                          <div class="flex items-center gap-1">
-                            <.icon name="hero-calendar" class="w-3.5 h-3.5 text-gray-400" />
-                            <span class="text-xs text-gray-500">
-                              {Calendar.strftime(task.due_date, "%d/%m/%Y")}
-                            </span>
-                          </div>
-                        <% end %>
-                      </div>
-                      
-                      <div class="mt-3 pt-3 border-t border-gray-100">
-                        <select
-                          phx-change="update_task_status"
-                          phx-value-task_id={task.id}
-                          name="status"
-                          class="w-full text-xs border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          onclick="event.stopPropagation();"
-                        >
-                          <option value="todo" selected={task.status == "todo"}>Belum Bermula</option>
-                          <option value="in_progress" selected={task.status == "in_progress"}>Sedang Dijalankan</option>
-                          <option value="review" selected={task.status == "review"}>Semakan</option>
-                          <option value="done" selected={task.status == "done"}>Selesai</option>
-                        </select>
-                      </div>
-                    </div>
-                  <% end %>
-                  
-                  <%= if Enum.empty?(Enum.filter(@tasks, fn t -> t.status == "todo" end)) do %>
-                    <div class="text-center py-8 text-gray-400">
-                      <p class="text-sm">Tiada tugasan</p>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-            
-            <%!-- In Progress Column --%>
-            <div class="flex-shrink-0 w-80">
-              <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="px-4 py-3 bg-blue-50 border-b border-gray-200">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-                      <h3 class="text-sm font-semibold text-gray-700">Sedang Dijalankan</h3>
-                    </div>
-                    <span class="text-xs font-medium text-gray-500 bg-blue-200 px-2 py-0.5 rounded-full">
-                      {length(Enum.filter(@tasks, fn t -> t.status == "in_progress" end))}
-                    </span>
-                  </div>
-                </div>
-                <div class="p-3 space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
-                  <%= for task <- Enum.filter(@tasks, fn t -> t.status == "in_progress" end) do %>
-                    <div
-                      class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                      phx-click="open_edit_task_modal"
-                      phx-value-task_id={task.id}
-                    >
-                      <div class="flex items-start justify-between mb-2">
-                        <h4 class="text-sm font-semibold text-gray-900 flex-1 pr-2">
-                          {task.title}
-                        </h4>
-                        <button
-                          phx-click="delete_task"
-                          phx-value-task_id={task.id}
-                          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
-                          onclick="event.stopPropagation();"
-                        >
-                          <.icon name="hero-trash" class="w-4 h-4" />
-                        </button>
-                      </div>
-                      
-                      <%= if task.description do %>
-                        <p class="text-xs text-gray-600 mb-3 line-clamp-2">
-                          {task.description}
-                        </p>
-                      <% end %>
-                      
-                      <div class="flex items-center gap-2 mb-3">
-                        <span class={[
-                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
-                          case task.priority do
-                            "high" -> "bg-red-100 text-red-800 border-red-200"
-                            "medium" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
-                            "low" -> "bg-green-100 text-green-800 border-green-200"
-                            _ -> "bg-gray-100 text-gray-800 border-gray-200"
-                          end
-                        ]}>
-                          {case task.priority do
-                            "high" -> "Tinggi"
-                            "medium" -> "Sederhana"
-                            "low" -> "Rendah"
-                            _ -> "Sederhana"
-                          end}
-                        </span>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                          <%= if task.developer_name do %>
-                            <div class="flex items-center gap-1.5">
-                              <.icon name="hero-user" class="w-3.5 h-3.5 text-gray-400" />
-                              <span class="text-xs text-gray-600">{task.developer_name}</span>
-                            </div>
-                          <% else %>
-                            <span class="text-xs text-gray-400">Tiada pembangun</span>
-                          <% end %>
-                        </div>
-                        <%= if task.due_date do %>
-                          <div class="flex items-center gap-1">
-                            <.icon name="hero-calendar" class="w-3.5 h-3.5 text-gray-400" />
-                            <span class="text-xs text-gray-500">
-                              {Calendar.strftime(task.due_date, "%d/%m/%Y")}
-                            </span>
-                          </div>
-                        <% end %>
-                      </div>
-                      
-                      <div class="mt-3 pt-3 border-t border-gray-100">
-                        <select
-                          phx-change="update_task_status"
-                          phx-value-task_id={task.id}
-                          name="status"
-                          class="w-full text-xs border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          onclick="event.stopPropagation();"
-                        >
-                          <option value="todo" selected={task.status == "todo"}>Belum Bermula</option>
-                          <option value="in_progress" selected={task.status == "in_progress"}>Sedang Dijalankan</option>
-                          <option value="review" selected={task.status == "review"}>Semakan</option>
-                          <option value="done" selected={task.status == "done"}>Selesai</option>
-                        </select>
-                      </div>
-                    </div>
-                  <% end %>
-                  
-                  <%= if Enum.empty?(Enum.filter(@tasks, fn t -> t.status == "in_progress" end)) do %>
-                    <div class="text-center py-8 text-gray-400">
-                      <p class="text-sm">Tiada tugasan</p>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-            
-            <%!-- Review Column --%>
-            <div class="flex-shrink-0 w-80">
-              <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="px-4 py-3 bg-purple-50 border-b border-gray-200">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <div class="w-3 h-3 rounded-full bg-purple-500"></div>
-                      <h3 class="text-sm font-semibold text-gray-700">Semakan</h3>
-                    </div>
-                    <span class="text-xs font-medium text-gray-500 bg-purple-200 px-2 py-0.5 rounded-full">
-                      {length(Enum.filter(@tasks, fn t -> t.status == "review" end))}
-                    </span>
-                  </div>
-                </div>
-                <div class="p-3 space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
-                  <%= for task <- Enum.filter(@tasks, fn t -> t.status == "review" end) do %>
-                    <div
-                      class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                      phx-click="open_edit_task_modal"
-                      phx-value-task_id={task.id}
-                    >
-                      <div class="flex items-start justify-between mb-2">
-                        <h4 class="text-sm font-semibold text-gray-900 flex-1 pr-2">
-                          {task.title}
-                        </h4>
-                        <button
-                          phx-click="delete_task"
-                          phx-value-task_id={task.id}
-                          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
-                          onclick="event.stopPropagation();"
-                        >
-                          <.icon name="hero-trash" class="w-4 h-4" />
-                        </button>
-                      </div>
-                      
-                      <%= if task.description do %>
-                        <p class="text-xs text-gray-600 mb-3 line-clamp-2">
-                          {task.description}
-                        </p>
-                      <% end %>
-                      
-                      <div class="flex items-center gap-2 mb-3">
-                        <span class={[
-                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
-                          case task.priority do
-                            "high" -> "bg-red-100 text-red-800 border-red-200"
-                            "medium" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
-                            "low" -> "bg-green-100 text-green-800 border-green-200"
-                            _ -> "bg-gray-100 text-gray-800 border-gray-200"
-                          end
-                        ]}>
-                          {case task.priority do
-                            "high" -> "Tinggi"
-                            "medium" -> "Sederhana"
-                            "low" -> "Rendah"
-                            _ -> "Sederhana"
-                          end}
-                        </span>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                          <%= if task.developer_name do %>
-                            <div class="flex items-center gap-1.5">
-                              <.icon name="hero-user" class="w-3.5 h-3.5 text-gray-400" />
-                              <span class="text-xs text-gray-600">{task.developer_name}</span>
-                            </div>
-                          <% else %>
-                            <span class="text-xs text-gray-400">Tiada pembangun</span>
-                          <% end %>
-                        </div>
-                        <%= if task.due_date do %>
-                          <div class="flex items-center gap-1">
-                            <.icon name="hero-calendar" class="w-3.5 h-3.5 text-gray-400" />
-                            <span class="text-xs text-gray-500">
-                              {Calendar.strftime(task.due_date, "%d/%m/%Y")}
-                            </span>
-                          </div>
-                        <% end %>
-                      </div>
-                      
-                      <div class="mt-3 pt-3 border-t border-gray-100">
-                        <select
-                          phx-change="update_task_status"
-                          phx-value-task_id={task.id}
-                          name="status"
-                          class="w-full text-xs border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          onclick="event.stopPropagation();"
-                        >
-                          <option value="todo" selected={task.status == "todo"}>Belum Bermula</option>
-                          <option value="in_progress" selected={task.status == "in_progress"}>Sedang Dijalankan</option>
-                          <option value="review" selected={task.status == "review"}>Semakan</option>
-                          <option value="done" selected={task.status == "done"}>Selesai</option>
-                        </select>
-                      </div>
-                    </div>
-                  <% end %>
-                  
-                  <%= if Enum.empty?(Enum.filter(@tasks, fn t -> t.status == "review" end)) do %>
-                    <div class="text-center py-8 text-gray-400">
-                      <p class="text-sm">Tiada tugasan</p>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-            
-            <%!-- Done Column --%>
-            <div class="flex-shrink-0 w-80">
-              <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="px-4 py-3 bg-green-50 border-b border-gray-200">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                      <h3 class="text-sm font-semibold text-gray-700">Selesai</h3>
-                    </div>
-                    <span class="text-xs font-medium text-gray-500 bg-green-200 px-2 py-0.5 rounded-full">
+              <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-xs font-medium text-green-700 uppercase tracking-wide">Selesai</p>
+                    <p class="text-2xl font-bold text-green-900 mt-1">
                       {length(Enum.filter(@tasks, fn t -> t.status == "done" end))}
-                    </span>
+                    </p>
+                      </div>
+                  <div class="p-3 bg-green-200 rounded-lg">
+                    <.icon name="hero-check-circle" class="w-6 h-6 text-green-700" />
+                </div>
+              </div>
+            </div>
+            
+              <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-4 border border-amber-200">
+                  <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-xs font-medium text-amber-700 uppercase tracking-wide">Dalam Proses</p>
+                    <p class="text-2xl font-bold text-amber-900 mt-1">
+                      {length(Enum.filter(@tasks, fn t -> t.status == "in_progress" end))}
+                    </p>
+                  </div>
+                  <div class="p-3 bg-amber-200 rounded-lg">
+                    <.icon name="hero-arrow-path" class="w-6 h-6 text-amber-700" />
                   </div>
                 </div>
-                <div class="p-3 space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
-                  <%= for task <- Enum.filter(@tasks, fn t -> t.status == "done" end) do %>
-                    <div
-                      class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer group opacity-75"
+                </div>
+              </div>
+            </div>
+            
+          <%!-- Tasks Table Section --%>
+              <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <.icon name="hero-table-cells" class="w-5 h-5 text-gray-600" />
+                Senarai Tugasan
+              </h2>
+                    </div>
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse">
+                <thead>
+                  <tr class="bg-gray-50 border-b-2 border-gray-300">
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                      Tugasan
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-20">
+                      Fasa
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-20">
+                      Versi
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-32">
+                      Status
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-32">
+                      Keutamaan
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                      Ditugaskan kepada
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Sasaran
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <%= if Enum.empty?(@tasks) do %>
+                    <tr>
+                      <td colspan="7" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center justify-center space-y-3">
+                          <.icon name="hero-clipboard-document" class="w-12 h-12 text-gray-300" />
+                          <p class="text-sm font-medium text-gray-500">Tiada tugasan pada masa ini</p>
+                          <p class="text-xs text-gray-400">Klik butang "Modul Baru" untuk menambah modul pertama</p>
+                  </div>
+                      </td>
+                    </tr>
+                  <% else %>
+                    <%= for task <- @tasks do %>
+                      <tr class="hover:bg-blue-50/50 transition-colors duration-150 cursor-pointer group border-b border-gray-200"
                       phx-click="open_edit_task_modal"
-                      phx-value-task_id={task.id}
-                    >
-                      <div class="flex items-start justify-between mb-2">
-                        <h4 class="text-sm font-semibold text-gray-900 flex-1 pr-2 line-through">
-                          {task.title}
-                        </h4>
+                          phx-value-task_id={task.id}>
+                        <td class="px-6 py-4 border-r border-gray-200">
+                          <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-900">{task.title || ""}</span>
                         <button
                           phx-click="delete_task"
                           phx-value-task_id={task.id}
-                          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                              class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all duration-200 ml-3 p-1 rounded hover:bg-red-50"
                           onclick="event.stopPropagation();"
+                              title="Padam tugasan"
                         >
                           <.icon name="hero-trash" class="w-4 h-4" />
                         </button>
                       </div>
-                      
-                      <%= if task.description do %>
-                        <p class="text-xs text-gray-600 mb-3 line-clamp-2">
-                          {task.description}
-                        </p>
-                      <% end %>
-                      
-                      <div class="flex items-center gap-2 mb-3">
+                        </td>
+                        <td class="px-6 py-4 border-r border-gray-200 text-center">
+                          <span class="inline-flex items-center justify-center w-8 h-8 text-sm font-semibold text-gray-700 bg-gray-100 rounded-md">
+                            {task.fasa || "-"}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 border-r border-gray-200 text-center">
+                          <span class="inline-flex items-center justify-center w-8 h-8 text-sm font-semibold text-gray-700 bg-gray-100 rounded-md">
+                            {task.versi || "-"}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 border-r border-gray-200 text-center">
+                          <%= if task.status do %>
                         <span class={[
-                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
-                          case task.priority do
-                            "high" -> "bg-red-100 text-red-800 border-red-200"
-                            "medium" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
-                            "low" -> "bg-green-100 text-green-800 border-green-200"
-                            _ -> "bg-gray-100 text-gray-800 border-gray-200"
-                          end
-                        ]}>
-                          {case task.priority do
-                            "high" -> "Tinggi"
-                            "medium" -> "Sederhana"
-                            "low" -> "Rendah"
-                            _ -> "Sederhana"
-                          end}
+                              "inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold shadow-sm",
+                              status_color(task.status)
+                            ]}>
+                              {status_label(task.status)}
                         </span>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                          <%= if task.developer_name do %>
-                            <div class="flex items-center gap-1.5">
-                              <.icon name="hero-user" class="w-3.5 h-3.5 text-gray-400" />
-                              <span class="text-xs text-gray-600">{task.developer_name}</span>
-                            </div>
                           <% else %>
-                            <span class="text-xs text-gray-400">Tiada pembangun</span>
+                            <span class="text-xs text-gray-400">-</span>
                           <% end %>
-                        </div>
+                        </td>
+                        <td class="px-6 py-4 border-r border-gray-200 text-center">
+                          <%= if task.priority do %>
+                            <span class={[
+                              "inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold border shadow-sm",
+                              priority_color(task.priority)
+                            ]}>
+                              {priority_label(task.priority)}
+                            </span>
+                          <% else %>
+                            <span class="text-xs text-gray-400">-</span>
+                        <% end %>
+                        </td>
+                        <td class="px-6 py-4 border-r border-gray-200">
+                          <div class="flex items-center gap-2">
+                            <%= if task.developer_name do %>
+                              <div class="flex items-center gap-2 flex-1">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                  <.icon name="hero-user" class="w-4 h-4 text-blue-600" />
+                      </div>
+                                <span class="text-sm font-medium text-gray-700">{task.developer_name}</span>
+                      </div>
+                            <% else %>
+                              <span class="text-sm text-gray-400 italic">Tiada pembangun</span>
+                  <% end %>
+                        <button
+                              type="button"
+                              class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
+                          onclick="event.stopPropagation();"
+                              title="Tukar pembangun"
+                        >
+                              <.icon name="hero-chevron-down" class="w-4 h-4" />
+                        </button>
+                      </div>
+                        </td>
+                        <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
                         <%= if task.due_date do %>
-                          <div class="flex items-center gap-1">
-                            <.icon name="hero-calendar" class="w-3.5 h-3.5 text-gray-400" />
-                            <span class="text-xs text-gray-500">
+                              <div class="flex items-center gap-2">
+                                <.icon name="hero-calendar" class="w-4 h-4 text-gray-400" />
+                                <span class="text-sm font-medium text-gray-700">
                               {Calendar.strftime(task.due_date, "%d/%m/%Y")}
                             </span>
                           </div>
+                            <% else %>
+                              <span class="text-sm text-gray-400 italic">Tiada tarikh</span>
                         <% end %>
-                      </div>
-                      
-                      <div class="mt-3 pt-3 border-t border-gray-100">
-                        <select
-                          phx-change="update_task_status"
-                          phx-value-task_id={task.id}
-                          name="status"
-                          class="w-full text-xs border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            <button
+                              type="button"
+                              class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100 ml-auto"
                           onclick="event.stopPropagation();"
-                        >
-                          <option value="todo" selected={task.status == "todo"}>Belum Bermula</option>
-                          <option value="in_progress" selected={task.status == "in_progress"}>Sedang Dijalankan</option>
-                          <option value="review" selected={task.status == "review"}>Semakan</option>
-                          <option value="done" selected={task.status == "done"}>Selesai</option>
-                        </select>
+                              title="Pilih tarikh sasaran"
+                            >
+                              <.icon name="hero-calendar-days" class="w-4 h-4" />
+                            </button>
                       </div>
-                    </div>
+                        </td>
+                      </tr>
                   <% end %>
-                  
-                  <%= if Enum.empty?(Enum.filter(@tasks, fn t -> t.status == "done" end)) do %>
-                    <div class="text-center py-8 text-gray-400">
-                      <p class="text-sm">Tiada tugasan</p>
-                    </div>
                   <% end %>
-                </div>
-              </div>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -531,27 +320,30 @@
   <div
     :if={@show_new_task_modal}
     class="fixed inset-0 z-50 overflow-y-auto"
-    phx-click="close_new_task_modal"
-    phx-click-away="close_new_task_modal"
     role="dialog"
     aria-modal="true"
   >
     <%!-- Backdrop --%>
-    <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+    <div 
+      class="fixed inset-0 bg-black/60 transition-opacity" 
+      aria-hidden="true"
+      phx-click="close_new_task_modal"
+    ></div>
      <%!-- Modal container --%>
     <div class="flex min-h-full items-center justify-center p-4">
       <div
         class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+        onclick="event.stopPropagation()"
         phx-click-away="close_new_task_modal"
       >
         <%!-- Modal header --%>
         <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-2xl font-bold text-white">Tugasan Baru</h2>
+              <h2 class="text-2xl font-bold text-white">Modul Baru</h2>
               
               <p class="mt-1 text-sm text-blue-100">
-                Cipta tugasan baharu dan tetapkan kepada pembangun sistem
+                Cipta modul baharu dan tetapkan kepada pembangun sistem
               </p>
             </div>
             
@@ -600,6 +392,31 @@
                 placeholder="Masukkan penerangan tugasan..."
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
               ><%= if @form[:description] && @form[:description].value, do: @form[:description].value, else: "" %></textarea>
+            </div>
+            
+            <%!-- Fasa and Versi --%>
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <%!-- Fasa --%>
+              <div>
+                <.input
+                  field={@form[:fasa]}
+                  type="text"
+                  label="Fasa"
+                  placeholder="Masukkan fasa"
+                  class="w-full"
+                />
+              </div>
+              
+              <%!-- Versi --%>
+              <div>
+                <.input
+                  field={@form[:versi]}
+                  type="text"
+                  label="Versi"
+                  placeholder="Masukkan versi"
+                  class="w-full"
+                />
+              </div>
             </div>
             
             <%!-- Task Assignment and Priority --%>
@@ -655,9 +472,7 @@
                   type="select"
                   label="Status"
                   options={[
-                    {"Belum Bermula", "todo"},
-                    {"Sedang Dijalankan", "in_progress"},
-                    {"Semakan", "review"},
+                    {"Dalam Proses", "in_progress"},
                     {"Selesai", "done"}
                   ]}
                   class="w-full"
@@ -678,7 +493,7 @@
                 type="submit"
                 class="rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
               >
-                Simpan Tugasan
+                Simpan Modul
               </button>
             </div>
           </.form>
@@ -691,24 +506,27 @@
   <div
     :if={@show_edit_task_modal && @selected_task}
     class="fixed inset-0 z-50 overflow-y-auto"
-    phx-click="close_edit_task_modal"
-    phx-click-away="close_edit_task_modal"
     role="dialog"
     aria-modal="true"
   >
     <%!-- Backdrop --%>
-    <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+    <div 
+      class="fixed inset-0 bg-black/60 transition-opacity" 
+      aria-hidden="true"
+      phx-click="close_edit_task_modal"
+    ></div>
      <%!-- Modal container --%>
     <div class="flex min-h-full items-center justify-center p-4">
       <div
         class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+        onclick="event.stopPropagation()"
         phx-click-away="close_edit_task_modal"
       >
         <%!-- Modal header --%>
         <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-2xl font-bold text-white">Kemaskini Tugasan</h2>
+              <h2 class="text-2xl font-bold text-white">Kemaskini Modul</h2>
               
               <p class="mt-1 text-sm text-blue-100">
                 Kemaskini maklumat tugasan
@@ -762,6 +580,31 @@
               ><%= if @form[:description] && @form[:description].value, do: @form[:description].value, else: "" %></textarea>
             </div>
             
+            <%!-- Fasa and Versi --%>
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <%!-- Fasa --%>
+              <div>
+                <.input
+                  field={@form[:fasa]}
+                  type="text"
+                  label="Fasa"
+                  placeholder="Masukkan fasa"
+                  class="w-full"
+                />
+              </div>
+              
+              <%!-- Versi --%>
+              <div>
+                <.input
+                  field={@form[:versi]}
+                  type="text"
+                  label="Versi"
+                  placeholder="Masukkan versi"
+                  class="w-full"
+                />
+              </div>
+            </div>
+            
             <%!-- Task Assignment and Priority --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
               <%!-- Assign to Developer --%>
@@ -815,9 +658,7 @@
                   type="select"
                   label="Status"
                   options={[
-                    {"Belum Bermula", "todo"},
-                    {"Sedang Dijalankan", "in_progress"},
-                    {"Semakan", "review"},
+                    {"Dalam Proses", "in_progress"},
                     {"Selesai", "done"}
                   ]}
                   class="w-full"
@@ -838,7 +679,7 @@
                 type="submit"
                 class="rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
               >
-                Kemaskini Tugasan
+                Kemaskini Modul
               </button>
             </div>
           </.form>

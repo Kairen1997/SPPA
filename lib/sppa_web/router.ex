@@ -53,18 +53,8 @@ defmodule SppaWeb.Router do
       live "/soal-selidik", SoalSelidikLive, :index
       live "/senarai-projek", PengurusProjekLive, :index
       live "/projek/:project_id/modul", ModulProjekLive, :index
+      live "/projek/:project_id/pelan-modul", PelanModulLive, :index
       live "/analisis-dan-rekabentuk", AnalisisDanRekabentukLive, :index
-      live "/pembangunan", PembangunanLive, :index
-      live "/pengurusan-perubahan", PengurusanPerubahanLive, :index
-      live "/ujian-penerimaan-pengguna", UjianPenerimaanPenggunaLive, :index
-      live "/ujian-penerimaan-pengguna/:id", UjianPenerimaanPenggunaLive, :show
-      live "/ujian-keselamatan", UjianKeselamatanLive, :index
-      live "/ujian-keselamatan/:id", UjianKeselamatanLive, :show
-      live "/penempatan", PenempatanLive, :index
-      live "/penempatan/:id", PenempatanLive, :show
-      live "/penyerahan", PenyerahanLive, :index
-      live "/penyerahan/:id", PenyerahanLive, :show
-      live "/jadual-projek", JadualProjekLive, :index
     end
 
     live_session :require_authenticated_user,
