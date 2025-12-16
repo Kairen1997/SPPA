@@ -26,23 +26,10 @@
         break-inside: avoid;
       }
       
-      .section-container + .section-container {
-        page-break-before: auto;
-        break-before: auto;
-      }
-      
-      .a4-page {
-        page-break-after: always;
-        break-after: page;
-        width: 297mm;
-        min-height: 210mm;
-        padding: 15mm 20mm;
-        margin: 0;
-      }
-      
-      .a4-page:last-child {
-        page-break-after: auto;
-        break-after: auto;
+      .pdf-value {
+        border: 1px solid #d1d5db !important;
+        padding: 4px 8px !important;
+        min-height: 20px !important;
       }
     }
 
@@ -65,10 +52,6 @@
         overflow-y: auto;
         overflow-x: hidden;
       }
-      
-      .section-container {
-        min-height: fit-content;
-      }
     }
   </style>
   
@@ -82,13 +65,16 @@
       phx-click="close_sidebar"
     >
     </div>
-     <%!-- Sidebar --%>
+    
+    <%!-- Sidebar --%>
     <.dashboard_sidebar
       sidebar_open={@sidebar_open}
       dashboard_path={~p"/dashboard"}
       logo_src={~p"/images/logojpkn.png"}
       current_scope={@current_scope}
-    /> <%!-- Main Content --%>
+    />
+    
+    <%!-- Main Content --%>
     <div class="flex-1 flex flex-col overflow-hidden">
       <%!-- Header --%>
       <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md">
@@ -130,14 +116,15 @@
           </.form>
         </div>
       </header>
-       <%!-- Form Content --%>
+      
+      <%!-- Form Content --%>
       <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6" id="main-content">
-        <div class="mx-auto" style="width: 297mm; max-width: 297mm;" id="pages-container">
+        <div class="mx-auto max-w-7xl">
           <%!-- A4 Paper Container (Landscape) --%>
           <div
+            id="pdf-content"
             class="a4-page bg-white shadow-lg"
             style="font-family: Arial, sans-serif; font-size: 11pt;"
-            id="page-1"
           >
             <div class="a4-content">
               <%!-- Document Header --%>
@@ -166,223 +153,246 @@
                   <input
                     type="text"
                     name="soal_selidik[nama_sistem]"
-                    value={Phoenix.HTML.Form.input_value(@form, :nama_sistem)}
+                    value={Phoenix.HTML.Form.input_value(@form, :nama_sistem) || @system_name}
                     class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Masukkan Nama Sistem"
                   />
                 </div>
               </div>
-               <%!-- Form --%>
+              
+              <%!-- Tabs --%>
+              <div class="mb-6">
+                <div class="border-b border-gray-300">
+                  <div class="flex items-center justify-between mb-2">
+                    <nav class="-mb-px flex space-x-8 flex-1" aria-label="Tabs">
+                      <button
+                        :for={tab <- @tabs}
+                        phx-click="switch_tab"
+                        phx-value-tab={tab.id}
+                        class={[
+                          "group relative whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center gap-2",
+                          @active_tab == tab.id &&
+                            "border-blue-500 text-blue-600",
+                          @active_tab != tab.id &&
+                            "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        ]}
+                      >
+                        <span>{tab.label}</span>
+                        <button
+                          :if={tab.removable}
+                          phx-click="remove_tab"
+                          phx-value-tab_id={tab.id}
+                          class="opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-red-500 hover:text-red-700"
+                          title="Buang tab"
+                          onclick="event.stopPropagation(); return false;"
+                        >
+                          <.icon name="hero-x-mark" class="w-4 h-4" />
+                        </button>
+                      </button>
+                    </nav>
+                    <button
+                      phx-click="show_add_tab_modal"
+                      class="ml-4 px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                      title="Tambah tab baru"
+                    >
+                      <.icon name="hero-plus" class="w-4 h-4" />
+                      <span>Tambah Tab</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <%!-- Form --%>
               <.form
                 for={@form}
                 phx-change="validate"
                 phx-submit="save"
                 id="soal-selidik-form"
-                class="space-y-4"
+                class="space-y-6"
               >
-                <div id="sections" phx-update="stream">
-                  <div
-                    :for={{section_id, section} <- @streams.sections}
-                    id={section_id}
-                    class="section-container border border-gray-300 overflow-hidden mb-4 avoid-break"
+                <%!-- Functional Requirements Tab --%>
+                <div class={["space-y-4", if(@active_tab != "fr", do: "hidden")]}>
+                  <details
+                    :for={category <- @fr_categories}
+                    class="group border border-gray-300 rounded-lg overflow-hidden"
                   >
-                    <%!-- Section Header --%>
-                    <div class="bg-blue-100 px-3 py-2 border-b border-gray-400">
-                      <input
-                        type="text"
-                        name={"soal_selidik[sections][#{section_id}][category]"}
-                        value={section.category}
-                        readonly
-                        class="w-full px-2 py-1 text-xs font-bold text-gray-900 uppercase tracking-wide border border-gray-300 rounded bg-gray-100 cursor-not-allowed text-center"
-                        placeholder="Kategori (cth: FUNCTIONAL REQUIREMENT)"
+                    <summary class="bg-blue-100 px-4 py-3 cursor-pointer hover:bg-blue-200 transition-colors duration-200 font-semibold text-gray-900 uppercase tracking-wide text-sm">
+                      {category.title}
+                    </summary>
+                    
+                    <div class="p-4 bg-white">
+                      <.requirement_table
+                        id={category.key}
+                        title={category.title}
+                        questions={category.questions}
+                        form={@form}
+                        tab_type="fr"
+                        category_key={category.key}
                       />
+                    </div>
+                  </details>
+                </div>
+                
+                <%!-- Non-Functional Requirements Tab --%>
+                <div class={["space-y-4", if(@active_tab != "nfr", do: "hidden")]}>
+                  <details
+                    :for={category <- @nfr_categories}
+                    class="group border border-gray-300 rounded-lg overflow-hidden"
+                  >
+                    <summary class="bg-blue-100 px-4 py-3 cursor-pointer hover:bg-blue-200 transition-colors duration-200 font-semibold text-gray-900 uppercase tracking-wide text-sm">
+                      {category.title}
+                    </summary>
+                    
+                    <div class="p-4 bg-white">
+                      <.requirement_table
+                        id={category.key}
+                        title={category.title}
+                        questions={category.questions}
+                        form={@form}
+                        tab_type="nfr"
+                        category_key={category.key}
+                      />
+                    </div>
+                  </details>
+                </div>
+                
+                <%!-- Disediakan Oleh Tab --%>
+                <div class={["space-y-4", if(@active_tab != "disediakan_oleh", do: "hidden")]}>
+                  <div class="border border-gray-300 rounded-lg overflow-hidden p-6 bg-white">
+                    <h2 class="text-lg font-bold text-gray-900 mb-6">
+                      Disediakan Oleh :
+                    </h2>
+                    
+                    <p class="text-sm text-gray-600 mb-8 italic">
+                      (Diisi oleh Pengurus Projek/Pembangun Sistem)
+                    </p>
+                    
+                    <div class="mb-12 border-2 border-dashed border-gray-300 rounded-lg p-8 flex items-center justify-center" style="min-height: 120px;">
+                      <p class="text-gray-400 text-sm">Ruang untuk tandatangan</p>
                     </div>
                     
-                    <div class="bg-blue-50 px-3 py-2 border-b border-gray-400">
-                      <input
-                        type="text"
-                        name={"soal_selidik[sections][#{section_id}][title]"}
-                        value={section.title}
-                        class="w-full px-2 py-1 text-xs font-bold text-gray-900 uppercase tracking-wide border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Tajuk Bahagian..."
-                      />
-                    </div>
-                     <%!-- Section Rows --%>
-                    <div class="p-2">
-                      <table class="w-full border-collapse text-xs">
-                        <thead>
-                          <tr class="bg-gray-100 border border-gray-400">
-                            <th
-                              class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400"
-                              style="width: 6%;"
-                            >
-                              No
-                            </th>
-                            
-                            <th
-                              class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400"
-                              style="width: 40%;"
-                            >
-                              Soalan
-                            </th>
-                            
-                            <th
-                              class="px-2 py-1.5 text-left font-semibold text-gray-700 border-r border-gray-400"
-                              style="width: 27%;"
-                            >
-                              Maklumbalas
-                            </th>
-                            
-                            <th
-                              class="px-2 py-1.5 text-left font-semibold text-gray-700"
-                              style="width: 27%;"
-                            >
-                              Catatan
-                            </th>
-                          </tr>
-                        </thead>
-                        
-                        <tbody
-                          id={"#{section_id}_rows"}
-                          phx-update="stream"
-                          class="divide-y divide-gray-300"
-                        >
-                          <tr
-                            :for={
-                              {id, row} <-
-                                SppaWeb.SoalSelidikLive.get_section_rows(@streams, section_id)
-                            }
-                            id={id}
-                          >
-                            <td class="px-2 py-2 border-r border-gray-400 align-top">
-                              <div class="px-1.5 py-1 text-xs font-medium text-gray-900">
-                                {row.no}
-                              </div>
-                              
-                              <input
-                                type="hidden"
-                                name={"soal_selidik[sections][#{section_id}][rows][#{id}][no]"}
-                                value={row.no}
-                              />
-                            </td>
-                            
-                            <td class="px-2 py-2 border-r border-gray-400 align-top">
-                              <textarea
-                                name={"soal_selidik[sections][#{section_id}][rows][#{id}][soalan]"}
-                                rows="3"
-                                class="w-full px-1.5 py-1 text-xs border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                                placeholder="Soalan..."
-                              >{row.soalan}</textarea>
-                            </td>
-                            
-                            <td class="px-2 py-2 border-r border-gray-400 align-top">
-                              <textarea
-                                name={"soal_selidik[sections][#{section_id}][rows][#{id}][maklumbalas]"}
-                                rows="3"
-                                class="w-full px-1.5 py-1 text-xs border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                                placeholder="Maklumbalas..."
-                              >{row.maklumbalas}</textarea>
-                            </td>
-                            
-                            <td class="px-2 py-2 align-top">
-                              <textarea
-                                name={"soal_selidik[sections][#{section_id}][rows][#{id}][catatan]"}
-                                rows="3"
-                                class="w-full px-1.5 py-1 text-xs border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                                placeholder="Catatan..."
-                              >{row.catatan}</textarea>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                    <div class="space-y-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama:</label>
+                        <input
+                          type="text"
+                          name="soal_selidik[disediakan_oleh][nama]"
+                          value={Phoenix.HTML.Form.input_value(@form, "disediakan_oleh.nama") || ""}
+                          class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Masukkan nama"
+                        />
+                      </div>
                       
-                      <div class="mt-2">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Jawatan:</label>
+                        <input
+                          type="text"
+                          name="soal_selidik[disediakan_oleh][jawatan]"
+                          value={Phoenix.HTML.Form.input_value(@form, "disediakan_oleh.jawatan") || ""}
+                          class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Masukkan jawatan"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tarikh:</label>
+                        <input
+                          type="date"
+                          name="soal_selidik[disediakan_oleh][tarikh]"
+                          value={Phoenix.HTML.Form.input_value(@form, "disediakan_oleh.tarikh") || ""}
+                          class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                    
+                    <%!-- Action Buttons for Disediakan Oleh Tab --%>
+                    <div class="flex justify-between items-center gap-3 pt-6 mt-6 border-t border-gray-300">
+                      <button
+                        id="generate-pdf-btn"
+                        type="button"
+                        phx-click="generate_pdf"
+                        class="px-4 py-2 bg-green-600 text-white rounded font-medium hover:bg-green-700 shadow transition-all duration-200 text-sm flex items-center gap-2"
+                      >
+                        <.icon name="hero-document-arrow-down" class="w-5 h-5" />
+                        <span>Jana PDF</span>
+                      </button>
+                      
+                      <div class="flex gap-3">
                         <button
                           type="button"
-                          phx-click="add_row"
-                          phx-value-section_id={section_id}
-                          class="px-3 py-1.5 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors duration-200 flex items-center gap-1"
+                          class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
                         >
-                          <.icon name="hero-plus" class="w-4 h-4" /> <span>Tambah Baris</span>
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
+                        >
+                          Simpan Soal Selidik
                         </button>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                <%!-- Pagination controls for sections --%>
-                <div class="flex items-center justify-between mt-2 text-xs text-gray-700">
-                  <div>
-                    Halaman {@current_page} daripada
-                    {SppaWeb.SoalSelidikLive.total_pages_for_categories(@sections)}
-                  </div>
-                  <div class="flex gap-2">
-                    <button
-                      type="button"
-                      phx-click="prev_page"
-                      class={[
-                        "px-3 py-1.5 rounded border text-xs font-medium transition-colors duration-200",
-                        @current_page == 1 &&
-                          "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed",
-                        @current_page > 1 &&
-                          "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      ]}
-                      disabled={@current_page == 1}
-                    >
-                      Sebelum
-                    </button>
-                    <button
-                      type="button"
-                      phx-click="next_page"
-                      class={[
-                        "px-3 py-1.5 rounded border text-xs font-medium transition-colors duration-200",
-                        @current_page ==
-                            SppaWeb.SoalSelidikLive.total_pages_for_categories(@sections) &&
-                          "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed",
-                        @current_page <
-                            SppaWeb.SoalSelidikLive.total_pages_for_categories(@sections) &&
-                          "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      ]}
-                      disabled={
-                        @current_page ==
-                          SppaWeb.SoalSelidikLive.total_pages_for_categories(@sections)
-                      }
-                    >
-                      Seterusnya
-                    </button>
+                
+                <%!-- Custom Tabs Content --%>
+                <div
+                  :for={tab <- @tabs}
+                  class={["space-y-4", if(@active_tab != tab.id or tab.type != :custom, do: "hidden")]}
+                >
+                  <div class="border border-gray-300 rounded-lg overflow-hidden p-6 bg-white">
+                    <h2 class="text-lg font-bold text-gray-900 mb-6">
+                      {tab.label}
+                    </h2>
+                    
+                    <div class="space-y-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Kandungan:</label>
+                        <textarea
+                          name={"soal_selidik[custom_tabs][#{tab.id}][content]"}
+                          rows="10"
+                          class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Masukkan kandungan untuk tab ini..."
+                        ></textarea>
+                      </div>
+                    </div>
+                    
+                    <%!-- Action Buttons for Custom Tabs --%>
+                    <div class="flex justify-end items-center gap-3 pt-6 mt-6 border-t border-gray-300">
+                      <div class="flex gap-3">
+                        <button
+                          type="button"
+                          class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
+                        >
+                          Simpan Soal Selidik
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                 <%!-- Add/Remove Section Buttons --%>
-                <div class="mb-4 flex items-center gap-2">
-                  <button
-                    type="button"
-                    phx-click="add_section"
-                    class="px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2"
-                  >
-                    <.icon name="hero-plus" class="w-5 h-5" /> <span>Tambah Bahagian</span>
-                  </button>
-                  <button
-                    type="button"
-                    phx-click="remove_last_section"
-                    class="px-4 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors duration-200 flex items-center gap-2"
-                  >
-                    <.icon name="hero-trash" class="w-5 h-5" /> <span>Buang Bahagian</span>
-                  </button>
-                </div>
-                 <%!-- Submit Button --%>
-                <div class="flex justify-end gap-3 pt-4 avoid-break">
-                  <button
-                    type="button"
-                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
-                  >
-                    Simpan Soal Selidik
-                  </button>
+                
+                <%!-- Action Buttons for other tabs --%>
+                <div :if={@active_tab != "disediakan_oleh"} class="flex justify-end items-center gap-3 pt-4 avoid-break border-t border-gray-300 mt-6">
+                  <div class="flex gap-3">
+                    <button
+                      type="button"
+                      class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
+                    >
+                      Simpan Soal Selidik
+                    </button>
+                  </div>
                 </div>
               </.form>
             </div>
@@ -391,49 +401,340 @@
       </main>
     </div>
   </div>
-  
-  <script>
-    (function() {
-      function checkPageOverflow() {
-        const page = document.querySelector('.a4-page');
-        const content = page?.querySelector('.a4-content');
-        if (!page || !content) return;
-        
-        // A4 landscape: 210mm height, minus padding (30mm total)
-        const maxHeight = 210 * 3.779527559 - 30 * 3.779527559; // Convert mm to px
-        const currentHeight = content.scrollHeight;
-        
-        if (currentHeight > maxHeight) {
-          content.style.maxHeight = maxHeight + 'px';
-          content.style.overflowY = 'auto';
-        } else {
-          content.style.maxHeight = 'none';
-          content.style.overflowY = 'visible';
-        }
-      }
-      
-      // Run on load
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', checkPageOverflow);
-      } else {
-        checkPageOverflow();
-      }
-      
-      // Re-check after LiveView updates
-      document.addEventListener('phx:update', checkPageOverflow);
-      
-      // Watch for content changes
-      const observer = new MutationObserver(() => {
-        setTimeout(checkPageOverflow, 100);
-      });
-      
-      const pagesContainer = document.getElementById('pages-container');
-      if (pagesContainer) {
-        observer.observe(pagesContainer, {
-          childList: true,
-          subtree: true
-        });
-      }
-    })();
-  </script>
+
+  <%!-- PDF Modal --%>
+  <%= if @show_pdf_modal && @pdf_data do %>
+    <div
+      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
+      phx-click="close_pdf_modal"
+      phx-key="escape"
+      phx-window-keydown="close_pdf_modal"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col"
+        phx-click-away="close_pdf_modal"
+      >
+        <%!-- Modal Header --%>
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+          <h2 class="text-xl font-bold text-gray-900">Pratonton PDF - Soal Selidik Kajian Keperluan Pembangunan Aplikasi</h2>
+          <button
+            phx-click="close_pdf_modal"
+            class="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <.icon name="hero-x-mark" class="w-6 h-6" />
+          </button>
+        </div>
+
+        <%!-- PDF Content --%>
+        <div class="flex-1 overflow-y-auto p-6" id="pdf-preview-content" style="font-family: Arial, sans-serif; font-size: 11pt;">
+          <div class="mx-auto" style="width: 297mm; max-width: 297mm;">
+            <%!-- Document Header --%>
+            <div class="mb-6 text-center">
+              <div class="flex justify-end mb-3">
+                <span class="text-xs text-gray-600 font-bold"><%= @pdf_data.document_id %></span>
+              </div>
+              
+              <div class="flex justify-center mb-4">
+                <img
+                  src={~p"/images/logojpkn.png"}
+                  alt="Logo JPKN"
+                  class="h-16 w-auto object-contain"
+                />
+              </div>
+              
+              <h1 class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight">
+                Template Soal Selidik Kajian Keperluan Pembangunan Aplikasi
+              </h1>
+              
+              <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
+                <span>Nama Sistem :</span>
+                <span class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded bg-gray-50">
+                  <%= @pdf_data.nama_sistem %>
+                </span>
+              </div>
+            </div>
+
+            <%!-- Functional Requirements Section --%>
+            <div class="mb-6">
+              <h2 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
+                FUNCTIONAL REQUIREMENT
+              </h2>
+              
+              <div class="space-y-4">
+                <%= for category <- @pdf_data.fr_categories do %>
+                  <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+                    <div class="bg-blue-100 px-4 py-2 border-b border-gray-400">
+                      <h3 class="font-semibold text-gray-900 uppercase tracking-wide text-sm">
+                        <%= category.title %>
+                      </h3>
+                    </div>
+                    
+                    <div class="p-2">
+                      <table class="w-full border-collapse text-xs">
+                        <thead>
+                          <tr class="bg-gray-100 border border-gray-400">
+                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">
+                              No
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 40%;">
+                              Soalan
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 27%;">
+                              Maklumbalas
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 27%;">
+                              Catatan
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-300">
+                          <%= for question <- category.questions do %>
+                            <tr>
+                              <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                <div class="px-2 py-1 text-sm font-medium text-gray-900">
+                                  <%= question.no %>
+                                </div>
+                              </td>
+                              <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                <div class="px-2 py-1 text-sm text-gray-800">
+                                  <%= question.soalan %>
+                                </div>
+                              </td>
+                              <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                <div class="px-2 py-1 text-sm text-gray-700">
+                                  <%= case Map.get(@pdf_data.fr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) do
+                                    %{maklumbalas: value} when is_list(value) ->
+                                      Enum.join(value, ", ")
+                                    %{maklumbalas: value} ->
+                                      value
+                                    _ ->
+                                      "-"
+                                  end %>
+                                </div>
+                              </td>
+                              <td class="px-3 py-2 align-top">
+                                <div class="px-2 py-1 text-sm text-gray-700">
+                                  <%= Map.get(@pdf_data.fr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) |> Map.get(:catatan, "-") %>
+                                </div>
+                              </td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+            <%!-- Non-Functional Requirements Section --%>
+            <div class="mb-6" style="page-break-before: always;">
+              <h2 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
+                NON-FUNCTIONAL REQUIREMENT
+              </h2>
+              
+              <div class="space-y-4">
+                <%= for category <- @pdf_data.nfr_categories do %>
+                  <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+                    <div class="bg-blue-100 px-4 py-2 border-b border-gray-400">
+                      <h3 class="font-semibold text-gray-900 uppercase tracking-wide text-sm">
+                        <%= category.title %>
+                      </h3>
+                    </div>
+                    
+                    <div class="p-2">
+                      <table class="w-full border-collapse text-xs">
+                        <thead>
+                          <tr class="bg-gray-100 border border-gray-400">
+                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">
+                              No
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 40%;">
+                              Soalan
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 27%;">
+                              Maklumbalas
+                            </th>
+                            <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 27%;">
+                              Catatan
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-300">
+                          <%= for question <- category.questions do %>
+                            <tr>
+                              <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                <div class="px-2 py-1 text-sm font-medium text-gray-900">
+                                  <%= question.no %>
+                                </div>
+                              </td>
+                              <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                <div class="px-2 py-1 text-sm text-gray-800">
+                                  <%= question.soalan %>
+                                </div>
+                              </td>
+                              <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                <div class="px-2 py-1 text-sm text-gray-700">
+                                  <%= case Map.get(@pdf_data.nfr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) do
+                                    %{maklumbalas: value} when is_list(value) ->
+                                      Enum.join(value, ", ")
+                                    %{maklumbalas: value} ->
+                                      value
+                                    _ ->
+                                      "-"
+                                  end %>
+                                </div>
+                              </td>
+                              <td class="px-3 py-2 align-top">
+                                <div class="px-2 py-1 text-sm text-gray-700">
+                                  <%= Map.get(@pdf_data.nfr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) |> Map.get(:catatan, "-") %>
+                                </div>
+                              </td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+            <%!-- Disediakan Oleh Section --%>
+            <div class="mb-6" style="page-break-before: always;">
+              <h2 class="text-lg font-bold text-gray-900 mb-6">
+                Disediakan Oleh :
+              </h2>
+              
+              <p class="text-sm text-gray-600 mb-8 italic">
+                (Diisi oleh Pengurus Projek/Pembangun Sistem)
+              </p>
+              
+              <div class="mb-12 border-2 border-dashed border-gray-300 rounded-lg p-8 flex items-center justify-center" style="min-height: 120px;">
+                <p class="text-gray-400 text-sm">Ruang untuk tandatangan</p>
+              </div>
+              
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Nama:</label>
+                  <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
+                    <%= @pdf_data.disediakan_oleh.nama %>
+                  </div>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Jawatan:</label>
+                  <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
+                    <%= @pdf_data.disediakan_oleh.jawatan %>
+                  </div>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Tarikh:</label>
+                  <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
+                    <%= @pdf_data.disediakan_oleh.tarikh %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <%!-- Modal Footer --%>
+        <div class="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+          <button
+            phx-click="close_pdf_modal"
+            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
+          >
+            Tutup
+          </button>
+          <button
+            onclick="window.print()"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+          >
+            Cetak / Simpan sebagai PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%!-- Add Tab Modal --%>
+  <%= if @show_add_tab_modal do %>
+    <div
+      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
+      phx-click="close_add_tab_modal"
+      phx-key="escape"
+      phx-window-keydown="close_add_tab_modal"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+        phx-click-away="close_add_tab_modal"
+      >
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-gray-900">Tambah Tab Baru</h2>
+          <button
+            phx-click="close_add_tab_modal"
+            class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
+            title="Tutup"
+          >
+            <.icon name="hero-x-mark" class="w-6 h-6" />
+          </button>
+        </div>
+
+        <.form
+          for={@new_tab_form}
+          phx-change="validate_new_tab"
+          phx-submit="add_tab"
+          id="add-tab-form"
+          class="space-y-5"
+        >
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Label Tab <span class="text-red-500">*</span>
+            </label>
+            <.input
+              field={@new_tab_form[:label]}
+              type="text"
+              placeholder="Contoh: Tab Baru"
+              required
+            />
+            <p :if={@new_tab_form[:label].errors != []} class="mt-1 text-xs text-red-600">
+              <%= Enum.at(@new_tab_form[:label].errors, 0) %>
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              ID Tab (Opsional)
+            </label>
+            <.input
+              field={@new_tab_form[:id]}
+              type="text"
+              placeholder="Akan dijana secara automatik jika kosong"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              ID akan digunakan untuk mengenal pasti tab. Jika kosong, ID akan dijana dari label.
+            </p>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              phx-click="close_add_tab_modal"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow transition-all duration-200"
+            >
+              Tambah Tab
+            </button>
+          </div>
+        </.form>
+      </div>
+    </div>
+  <% end %>
 </Layouts.app>

@@ -583,13 +583,19 @@ defmodule SppaWeb.CoreComponents do
               <.icon name="hero-document-magnifying-glass" class="w-5 h-5" />
               <span>Analisis dan Rekabentuk</span>
             </.link>
-            <a
-              href="#"
+            <.link
+              navigate={~p"/jadual-projek"}
               phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+              class={[
+                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
+                if(@current_path == "/jadual-projek",
+                  do: "bg-gray-700 text-white",
+                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
+                )
+              ]}
             >
               <.icon name="hero-calendar-days" class="w-5 h-5" /> <span>Jadual Projek</span>
-            </a>
+            </.link>
             <a
               href="#"
               phx-click="close_sidebar"
@@ -597,41 +603,71 @@ defmodule SppaWeb.CoreComponents do
             >
               <.icon name="hero-code-bracket" class="w-5 h-5" /> <span>Pembangunan</span>
             </a>
-            <a
-              href="#"
+            <.link
+              navigate={~p"/pengurusan-perubahan"}
               phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+              class={[
+                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
+                if(@current_path == "/pengurusan-perubahan",
+                  do: "bg-gray-700 text-white",
+                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
+                )
+              ]}
             >
               <.icon name="hero-arrow-path" class="w-5 h-5" /> <span>Pengurusan Perubahan</span>
-            </a>
-            <a
-              href="#"
+            </.link>
+            <.link
+              navigate={~p"/ujian-penerimaan-pengguna"}
               phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+              class={[
+                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
+                if(@current_path == "/ujian-penerimaan-pengguna",
+                  do: "bg-gray-700 text-white",
+                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
+                )
+              ]}
             >
               <.icon name="hero-check-circle" class="w-5 h-5" /> <span>Ujian Penerimaan Pengguna</span>
-            </a>
-            <a
-              href="#"
+            </.link>
+            <.link
+              navigate={~p"/ujian-keselamatan"}
               phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+              class={[
+                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
+                if(@current_path == "/ujian-keselamatan",
+                  do: "bg-gray-700 text-white",
+                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
+                )
+              ]}
             >
               <.icon name="hero-shield-check" class="w-5 h-5" /> <span>Ujian Keselamatan</span>
-            </a>
-            <a
-              href="#"
+            </.link>
+            <.link
+              navigate={~p"/penempatan"}
               phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+              class={[
+                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
+                if(@current_path == "/penempatan",
+                  do: "bg-gray-700 text-white",
+                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
+                )
+              ]}
             >
               <.icon name="hero-server" class="w-5 h-5" /> <span>Penempatan</span>
-            </a>
-            <a
-              href="#"
+            </.link>
+            <.link
+              navigate={~p"/penyerahan"}
               phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+              class={[
+                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
+                if(@current_path == "/penyerahan",
+                  do: "bg-gray-700 text-white",
+                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
+                )
+              ]}
             >
               <.icon name="hero-paper-airplane" class="w-5 h-5" /> <span>Penyerahan</span>
-            </a>
+            </.link>
             <a
               href="#"
               phx-click="close_sidebar"
@@ -643,6 +679,138 @@ defmodule SppaWeb.CoreComponents do
         </nav>
       </div>
     </aside>
+    """
+  end
+
+  @doc """
+  Renders a requirement table for the soal selidik form.
+
+  ## Examples
+
+      <.requirement_table
+        id="pendaftaran-login"
+        title="Pendaftaran & Login"
+        questions={@questions}
+        form={@form}
+        tab_type="fr"
+        category_key="pendaftaran_login"
+      />
+  """
+  attr :id, :string, required: true, doc: "unique id for the table"
+  attr :title, :string, required: true, doc: "category title"
+  attr :questions, :list, required: true, doc: "list of question maps"
+  attr :form, :any, required: true, doc: "the form struct"
+  attr :tab_type, :string, required: true, doc: "either 'fr' or 'nfr'"
+  attr :category_key, :string, required: true, doc: "category key for form params"
+
+  def requirement_table(assigns) do
+    ~H"""
+    <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+      <table class="w-full border-collapse text-sm">
+        <thead>
+          <tr class="bg-gray-100 border-b border-gray-400">
+            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">
+              No
+            </th>
+            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 40%;">
+              Soalan
+            </th>
+            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 27%;">
+              Maklumbalas
+            </th>
+            <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 27%;">
+              Catatan
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-300">
+          <tr :for={question <- @questions} class="hover:bg-gray-50">
+            <td class="px-3 py-2 border-r border-gray-400 align-top">
+              <div class="px-2 py-1 text-sm font-medium text-gray-900">
+                {question.no}
+              </div>
+            </td>
+            <td class="px-3 py-2 border-r border-gray-400 align-top">
+              <div class="px-2 py-1 text-sm text-gray-800">
+                {question.soalan}
+              </div>
+            </td>
+            <td class="px-3 py-2 border-r border-gray-400 align-top">
+              <%= cond do %>
+                <% question.type == :text -> %>
+                  <input
+                    type="text"
+                    name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
+                    value={Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Masukkan maklumbalas..."
+                  />
+                <% question.type == :textarea -> %>
+                  <textarea
+                    name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
+                    rows="3"
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    placeholder="Masukkan maklumbalas..."
+                  >{Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}</textarea>
+                <% question.type == :select -> %>
+                  <select
+                    name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">-- Pilih --</option>
+                    <option
+                      :for={option <- question.options || []}
+                      value={option}
+                      selected={
+                        Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") == option
+                      }
+                    >
+                      {option}
+                    </option>
+                  </select>
+                <% question.type == :checkbox -> %>
+                  <div class="flex flex-col gap-2">
+                    <%= for option <- question.options || [] do %>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas][]"}
+                          value={option}
+                          checked={
+                            case Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") do
+                              values when is_list(values) -> option in values
+                              value when is_binary(value) -> value == option
+                              _ -> false
+                            end
+                          }
+                          class="rounded border-gray-400 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <span class="text-sm text-gray-700">{option}</span>
+                      </label>
+                    <% end %>
+                  </div>
+                <% true -> %>
+                  <input
+                    type="text"
+                    name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
+                    value={Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Masukkan maklumbalas..."
+                  />
+              <% end %>
+            </td>
+            <td class="px-3 py-2 align-top">
+              <textarea
+                name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][catatan]"}
+                rows="3"
+                class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                placeholder="Catatan..."
+              >{Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.catatan") || ""}</textarea>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     """
   end
 end

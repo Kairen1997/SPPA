@@ -1,0 +1,826 @@
+<Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+  <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
+    <%!-- Overlay --%>
+    <div
+      class={[
+        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+      ]}
+      phx-click="close_sidebar"
+    >
+    </div>
+    <%!-- Sidebar --%>
+    <.dashboard_sidebar
+      sidebar_open={@sidebar_open}
+      dashboard_path={~p"/dashboard"}
+      logo_src={~p"/images/logojpkn.png"}
+      current_scope={@current_scope}
+      current_path="/penempatan"
+    />
+    <%!-- Main Content --%>
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <%!-- Header --%>
+      <header class="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 border-b border-blue-800/50 px-6 py-4 flex items-center justify-between shadow-xl">
+        <div class="flex items-center gap-4">
+          <button
+            phx-click="toggle_sidebar"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-bars-3" class="w-6 h-6" />
+          </button>
+          <div class="flex items-center gap-3">
+            <img
+              src={~p"/images/Jata-Sabah.png"}
+              alt="Jata Wilayah Sabah"
+              class="h-9 w-auto object-contain"
+            />
+            <img
+              src={~p"/images/logojpkn.png"}
+              alt="Logo JPKN"
+              class="h-9 w-auto object-contain"
+            />
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <.link
+            navigate={~p"/users/settings"}
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+          >
+            <.icon name="hero-user-circle" class="w-6 h-6" />
+          </.link>
+        </div>
+      </header>
+
+      <%!-- Main Content Area --%>
+      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+          <%= if assigns[:selected_penempatan] do %>
+            <%!-- Show Page - Detail Penempatan --%>
+            <div class="mb-6">
+              <div class="flex items-center gap-4 mb-4">
+                <.link
+                  navigate={~p"/penempatan"}
+                  class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                >
+                  <.icon name="hero-arrow-left" class="w-4 h-4" />
+                  <span>Kembali ke Senarai Penempatan</span>
+                </.link>
+              </div>
+              
+              <h1 class="text-3xl font-bold text-gray-900 mb-2">{@selected_penempatan.nama_sistem}</h1>
+              <p class="text-gray-600">Butiran lengkap penempatan sistem</p>
+            </div>
+
+            <%!-- Maklumat Penempatan Card --%>
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+              <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
+                <h2 class="text-xl font-semibold text-white">Maklumat Penempatan</h2>
+              </div>
+              <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Nama Sistem</label>
+                    <p class="text-base text-gray-900 font-semibold">{@selected_penempatan.nama_sistem}</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Versi</label>
+                    <p class="text-base text-gray-900">{@selected_penempatan.versi}</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Lokasi</label>
+                    <p class="text-base text-gray-900">{@selected_penempatan.lokasi}</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Jenis</label>
+                    <span class={[
+                      "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border",
+                      case @selected_penempatan.jenis do
+                        "Produksi" -> "bg-green-100 text-green-800 border-green-200"
+                        "Staging" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                        "Development" -> "bg-blue-100 text-blue-800 border-blue-200"
+                        _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                      end
+                    ]}>
+                      {@selected_penempatan.jenis}
+                    </span>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Persekitaran</label>
+                    <p class="text-base text-gray-900">{@selected_penempatan.persekitaran}</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Status</label>
+                    <span class={[
+                      "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border",
+                      case @selected_penempatan.status do
+                        "Menunggu" -> "bg-gray-100 text-gray-800 border-gray-200"
+                        "Dalam Proses" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                        "Selesai" -> "bg-green-100 text-green-800 border-green-200"
+                        "Dibatalkan" -> "bg-red-100 text-red-800 border-red-200"
+                        _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                      end
+                    ]}>
+                      <.icon
+                        name={case @selected_penempatan.status do
+                          "Menunggu" -> "hero-clock"
+                          "Dalam Proses" -> "hero-arrow-path"
+                          "Selesai" -> "hero-check-circle"
+                          "Dibatalkan" -> "hero-x-circle"
+                          _ -> "hero-information-circle"
+                        end}
+                        class="w-4 h-4 mr-1"
+                      />
+                      {@selected_penempatan.status}
+                    </span>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">URL</label>
+                    <%= if @selected_penempatan.url && @selected_penempatan.url != "" do %>
+                      <a
+                        href={@selected_penempatan.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                      >
+                        <span>{@selected_penempatan.url}</span>
+                        <.icon name="hero-arrow-top-right-on-square" class="w-4 h-4" />
+                      </a>
+                    <% else %>
+                      <p class="text-base text-gray-400">-</p>
+                    <% end %>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Tarikh Dijangka</label>
+                    <div class="flex items-center gap-1.5">
+                      <.icon name="hero-calendar-days" class="w-4 h-4 text-gray-400" />
+                      <p class="text-base text-gray-900">{Calendar.strftime(@selected_penempatan.tarikh_dijangka, "%d/%m/%Y")}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Tarikh Penempatan</label>
+                    <div class="flex items-center gap-1.5">
+                      <.icon name="hero-calendar-days" class="w-4 h-4 text-gray-400" />
+                      <p class="text-base text-gray-900">{Calendar.strftime(@selected_penempatan.tarikh_penempatan, "%d/%m/%Y")}</p>
+                    </div>
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Catatan</label>
+                    <p class="text-base text-gray-900 whitespace-pre-wrap">{if @selected_penempatan.catatan, do: @selected_penempatan.catatan, else: "-"}</p>
+                  </div>
+                </div>
+
+                <%!-- Maklumat Kelulusan --%>
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-4">Maklumat Kelulusan</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-500 mb-1">Dibina Oleh</label>
+                      <p class="text-base text-gray-900">{if @selected_penempatan.dibina_oleh, do: @selected_penempatan.dibina_oleh, else: "-"}</p>
+                      <%= if @selected_penempatan.tarikh_dibina do %>
+                        <p class="text-xs text-gray-500 mt-1">
+                          {Calendar.strftime(@selected_penempatan.tarikh_dibina, "%d/%m/%Y")}
+                        </p>
+                      <% end %>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-500 mb-1">Disemak Oleh</label>
+                      <p class="text-base text-gray-900">{if Map.get(@selected_penempatan, :disemak_oleh), do: @selected_penempatan.disemak_oleh, else: "-"}</p>
+                      <%= if Map.get(@selected_penempatan, :tarikh_disemak) do %>
+                        <p class="text-xs text-gray-500 mt-1">
+                          {Calendar.strftime(@selected_penempatan.tarikh_disemak, "%d/%m/%Y")}
+                        </p>
+                      <% end %>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-500 mb-1">Diluluskan Oleh</label>
+                      <p class="text-base text-gray-900">{if Map.get(@selected_penempatan, :diluluskan_oleh), do: @selected_penempatan.diluluskan_oleh, else: "-"}</p>
+                      <%= if Map.get(@selected_penempatan, :tarikh_diluluskan) do %>
+                        <p class="text-xs text-gray-500 mt-1">
+                          {Calendar.strftime(@selected_penempatan.tarikh_diluluskan, "%d/%m/%Y")}
+                        </p>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% else %>
+            <%!-- Index Page - List Penempatan --%>
+            <div class="mb-8 flex items-center justify-between">
+              <div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Penempatan</h1>
+                <p class="text-gray-600">Urus dan pantau penempatan sistem ke pelbagai persekitaran</p>
+              </div>
+              <button
+                phx-click="open_create_modal"
+                class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+              >
+                <.icon name="hero-plus-circle" class="w-5 h-5" />
+                <span>Daftar Penempatan</span>
+              </button>
+            </div>
+
+            <%!-- Count --%>
+            <div class="mb-6 flex items-center justify-end">
+              <div class="flex items-center gap-2 text-gray-600">
+                <.icon name="hero-server" class="w-5 h-5" />
+                <span class="text-sm font-medium">
+                  {length(@penempatan)} Penempatan
+                </span>
+              </div>
+            </div>
+
+            <%!-- Penempatan Container --%>
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
+                <h2 class="text-xl font-semibold text-white">Senarai Penempatan</h2>
+              </div>
+
+              <%= if length(@penempatan) == 0 do %>
+                <div class="px-6 py-12 text-center">
+                  <div class="flex flex-col items-center justify-center text-gray-400">
+                    <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
+                    <p class="text-sm font-medium">Tiada penempatan</p>
+                    <p class="text-xs mt-1">Klik butang "Daftar Penempatan" untuk menambah penempatan baharu</p>
+                  </div>
+                </div>
+              <% else %>
+                <%!-- Table View --%>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Nama Sistem
+                        </th>
+                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Versi
+                        </th>
+                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Lokasi
+                        </th>
+                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Jenis
+                        </th>
+                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Tarikh Penempatan
+                        </th>
+                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Tindakan
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <tr
+                        :for={penempatan <- @penempatan}
+                        class="hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        <td class="px-3 py-2 text-left">
+                          <span class="text-xs text-gray-900 font-semibold">
+                            {penempatan.nama_sistem}
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-center">
+                          <span class="text-xs text-gray-700">
+                            {penempatan.versi}
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-left">
+                          <span class="text-xs text-gray-700">
+                            {penempatan.lokasi}
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-center">
+                          <span class={[
+                            "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                            case penempatan.jenis do
+                              "Produksi" -> "bg-green-100 text-green-800 border-green-200"
+                              "Staging" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                              "Development" -> "bg-blue-100 text-blue-800 border-blue-200"
+                              _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                            end
+                          ]}>
+                            {penempatan.jenis}
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-center">
+                          <span class={[
+                            "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                            case penempatan.status do
+                              "Menunggu" -> "bg-gray-100 text-gray-800 border-gray-200"
+                              "Dalam Proses" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                              "Selesai" -> "bg-green-100 text-green-800 border-green-200"
+                              "Dibatalkan" -> "bg-red-100 text-red-800 border-red-200"
+                              _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                            end
+                          ]}>
+                            <.icon
+                              name={case penempatan.status do
+                                "Menunggu" -> "hero-clock"
+                                "Dalam Proses" -> "hero-arrow-path"
+                                "Selesai" -> "hero-check-circle"
+                                "Dibatalkan" -> "hero-x-circle"
+                                _ -> "hero-information-circle"
+                              end}
+                              class="w-3 h-3 mr-1"
+                            />
+                            {penempatan.status}
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-center">
+                          <div class="flex items-center justify-center gap-1.5">
+                            <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400" />
+                            <span class="text-xs text-gray-700">
+                              {Calendar.strftime(penempatan.tarikh_penempatan, "%d/%m/%Y")}
+                            </span>
+                          </div>
+                        </td>
+                        <td class="px-3 py-2 text-center">
+                          <div class="flex items-center justify-center gap-1.5">
+                            <.link
+                              navigate={~p"/penempatan/#{penempatan.id}"}
+                              class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                              title="Lihat"
+                            >
+                              <.icon name="hero-eye" class="w-4 h-4" />
+                            </.link>
+                            <button
+                              type="button"
+                              phx-click="open_edit_modal"
+                              phx-value-penempatan_id={penempatan.id}
+                              class="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200"
+                              title="Edit"
+                            >
+                              <.icon name="hero-pencil" class="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <%!-- Create Modal --%>
+  <%= if @show_create_modal do %>
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto"
+      phx-click="close_create_modal"
+      phx-click-away="close_create_modal"
+      role="dialog"
+      aria-modal="true"
+    >
+      <%!-- Backdrop --%>
+      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <%!-- Modal container --%>
+      <div class="flex min-h-full items-center justify-center p-4">
+        <div
+          class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+          phx-click-away="close_create_modal"
+        >
+          <%!-- Modal header --%>
+          <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-white">Daftar Penempatan</h2>
+                <p class="mt-1 text-sm text-blue-100">
+                  Isi maklumat penempatan baharu
+                </p>
+              </div>
+              <button
+                type="button"
+                phx-click="close_create_modal"
+                class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                aria-label="Tutup"
+              >
+                <.icon name="hero-x-mark" class="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+          <%!-- Modal body --%>
+          <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+            <.form
+              for={@form}
+              phx-change="validate_penempatan"
+              phx-submit="create_penempatan"
+              id="create-penempatan-form"
+              class="space-y-6"
+            >
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <.input
+                    field={@form[:nama_sistem]}
+                    type="text"
+                    label="Nama Sistem"
+                    required
+                    placeholder="Masukkan nama sistem"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:versi]}
+                    type="text"
+                    label="Versi"
+                    placeholder="Contoh: 1.0.0"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:lokasi]}
+                    type="text"
+                    label="Lokasi"
+                    required
+                    placeholder="Masukkan lokasi server"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Jenis
+                  </label>
+                  <select
+                    name="penempatan[jenis]"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  >
+                    <option value="" selected={@form[:jenis].value == ""}>Pilih Jenis</option>
+                    <option value="Produksi" selected={@form[:jenis].value == "Produksi"}>Produksi</option>
+                    <option value="Staging" selected={@form[:jenis].value == "Staging"}>Staging</option>
+                    <option value="Development" selected={@form[:jenis].value == "Development"}>Development</option>
+                  </select>
+                </div>
+                <div>
+                  <.input
+                    field={@form[:persekitaran]}
+                    type="text"
+                    label="Persekitaran"
+                    placeholder="Masukkan persekitaran"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    name="penempatan[status]"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  >
+                    <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>Menunggu</option>
+                    <option value="Dalam Proses" selected={@form[:status].value == "Dalam Proses"}>Dalam Proses</option>
+                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>Selesai</option>
+                    <option value="Dibatalkan" selected={@form[:status].value == "Dibatalkan"}>Dibatalkan</option>
+                  </select>
+                </div>
+                <div>
+                  <.input
+                    field={@form[:url]}
+                    type="url"
+                    label="URL"
+                    placeholder="https://example.com"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:tarikh_dijangka]}
+                    type="date"
+                    label="Tarikh Dijangka"
+                    required
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:tarikh_penempatan]}
+                    type="date"
+                    label="Tarikh Penempatan"
+                    required
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:dibina_oleh]}
+                    type="text"
+                    label="Dibina Oleh"
+                    placeholder="Masukkan nama"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:tarikh_dibina]}
+                    type="date"
+                    label="Tarikh Dibina"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:disemak_oleh]}
+                    type="text"
+                    label="Disemak Oleh"
+                    placeholder="Masukkan nama"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:tarikh_disemak]}
+                    type="date"
+                    label="Tarikh Disemak"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:diluluskan_oleh]}
+                    type="text"
+                    label="Diluluskan Oleh"
+                    placeholder="Masukkan nama"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:tarikh_diluluskan]}
+                    type="date"
+                    label="Tarikh Diluluskan"
+                    class="w-full"
+                  />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Catatan
+                  </label>
+                  <textarea
+                    name="penempatan[catatan]"
+                    rows="3"
+                    placeholder="Masukkan catatan..."
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                  ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
+                </div>
+              </div>
+            </.form>
+          </div>
+          <%!-- Modal footer --%>
+          <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
+            <button
+              type="button"
+              phx-click="close_create_modal"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              form="create-penempatan-form"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+            >
+              Daftar Penempatan
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%!-- Edit Penempatan Modal --%>
+  <%= if assigns[:show_edit_modal] && assigns[:editing_penempatan] do %>
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto"
+      phx-click="close_edit_modal"
+      phx-click-away="close_edit_modal"
+      role="dialog"
+      aria-modal="true"
+    >
+      <%!-- Backdrop --%>
+      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <%!-- Modal container --%>
+      <div class="flex min-h-full items-center justify-center p-4">
+        <div
+          class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+          phx-click-away="close_edit_modal"
+        >
+          <%!-- Modal header --%>
+          <div class="border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-white">Kemaskini Penempatan</h2>
+                <p class="mt-1 text-sm text-green-100">
+                  Edit maklumat penempatan
+                </p>
+              </div>
+              <button
+                type="button"
+                phx-click="close_edit_modal"
+                class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                aria-label="Tutup"
+              >
+                <.icon name="hero-x-mark" class="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+          <%!-- Modal body --%>
+          <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+            <.form
+              for={@form}
+              phx-change="validate_penempatan"
+              phx-submit="update_penempatan"
+              id="edit-penempatan-form"
+              class="space-y-6"
+            >
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <.input
+                    field={@form[:nama_sistem]}
+                    type="text"
+                    label="Nama Sistem"
+                    required
+                    placeholder="Masukkan nama sistem"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:versi]}
+                    type="text"
+                    label="Versi"
+                    placeholder="Contoh: 1.0.0"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:lokasi]}
+                    type="text"
+                    label="Lokasi"
+                    required
+                    placeholder="Masukkan lokasi server"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Jenis
+                  </label>
+                  <select
+                    name="penempatan[jenis]"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                  >
+                    <option value="" selected={@form[:jenis].value == ""}>Pilih Jenis</option>
+                    <option value="Produksi" selected={@form[:jenis].value == "Produksi"}>Produksi</option>
+                    <option value="Staging" selected={@form[:jenis].value == "Staging"}>Staging</option>
+                    <option value="Development" selected={@form[:jenis].value == "Development"}>Development</option>
+                  </select>
+                </div>
+                <div>
+                  <.input
+                    field={@form[:persekitaran]}
+                    type="text"
+                    label="Persekitaran"
+                    placeholder="Masukkan persekitaran"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    name="penempatan[status]"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                  >
+                    <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>Menunggu</option>
+                    <option value="Dalam Proses" selected={@form[:status].value == "Dalam Proses"}>Dalam Proses</option>
+                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>Selesai</option>
+                    <option value="Dibatalkan" selected={@form[:status].value == "Dibatalkan"}>Dibatalkan</option>
+                  </select>
+                </div>
+                <div>
+                  <.input
+                    field={@form[:url]}
+                    type="url"
+                    label="URL"
+                    placeholder="https://example.com"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:tarikh_dijangka]}
+                    type="date"
+                    label="Tarikh Dijangka"
+                    required
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:tarikh_penempatan]}
+                    type="date"
+                    label="Tarikh Penempatan"
+                    required
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:dibina_oleh]}
+                    type="text"
+                    label="Dibina Oleh"
+                    placeholder="Masukkan nama"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:tarikh_dibina]}
+                    type="date"
+                    label="Tarikh Dibina"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:disemak_oleh]}
+                    type="text"
+                    label="Disemak Oleh"
+                    placeholder="Masukkan nama"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:tarikh_disemak]}
+                    type="date"
+                    label="Tarikh Disemak"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:diluluskan_oleh]}
+                    type="text"
+                    label="Diluluskan Oleh"
+                    placeholder="Masukkan nama"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <.input
+                    field={@form[:tarikh_diluluskan]}
+                    type="date"
+                    label="Tarikh Diluluskan"
+                    class="w-full"
+                  />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Catatan
+                  </label>
+                  <textarea
+                    name="penempatan[catatan]"
+                    rows="3"
+                    placeholder="Masukkan catatan..."
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                  ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
+                </div>
+              </div>
+            </.form>
+          </div>
+          <%!-- Modal footer --%>
+          <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
+            <button
+              type="button"
+              phx-click="close_edit_modal"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              form="edit-penempatan-form"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+            >
+              Simpan Perubahan
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</Layouts.app>
+
