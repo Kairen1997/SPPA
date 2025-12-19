@@ -321,12 +321,12 @@ defmodule SppaWeb.ProjectListLive do
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm">
-                        <button
-                          type="button"
+                        <.link
+                          navigate={~p"/projek/#{project.id}"}
                           class="font-medium text-[#2F80ED] transition hover:text-[#2563EB]"
                         >
                           [Lihat]
-                        </button>
+                        </.link>
                       </td>
                     </tr>
 

@@ -50,6 +50,7 @@ defmodule SppaWeb.Router do
       live "/dashboard", DashboardLive, :index
       live "/projek", ProjekLive, :index
       live "/projek/:id", ProjekLive, :show
+      live "/projek/:id/details", ProjectDetailsLive, :show
       live "/soal-selidik", SoalSelidikLive, :index
       live "/senarai-projek", PengurusProjekLive, :index
       live "/projek/:project_id/modul", ModulProjekLive, :index

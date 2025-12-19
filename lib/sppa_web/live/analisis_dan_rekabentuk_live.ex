@@ -15,58 +15,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     if user_role && user_role in @allowed_roles do
       # Initialize modules
-      initial_modules = [
-        %{
-          id: "module_1",
-          number: 1,
-          name: "Modul Pengurusan Pengguna",
-          functions: [
-            %{id: "func_1_1", name: "Pendaftaran Pengguna", sub_functions: [%{id: "sub_1_1_1", name: "Pengesahan Pendaftaran"}]},
-            %{id: "func_1_2", name: "Laman Log Masuk", sub_functions: []},
-            %{id: "func_1_3", name: "Penyelenggaraan Profail", sub_functions: [%{id: "sub_1_3_1", name: "Pengemaskinian Profil"}]}
-          ]
-        },
-        %{
-          id: "module_2",
-          number: 2,
-          name: "Penyelenggaraan Kata Laluan",
-          functions: []
-        },
-        %{
-          id: "module_3",
-          number: 3,
-          name: "Modul Permohonan",
-          functions: [
-            %{id: "func_3_1", name: "Pendaftaran Permohonan", sub_functions: []},
-            %{id: "func_3_2", name: "Kemaskini Permohonan", sub_functions: []},
-            %{id: "func_3_3", name: "Semakan Status Permohonan", sub_functions: []}
-          ]
-        },
-        %{
-          id: "module_4",
-          number: 4,
-          name: "Modul Pengurusan Permohonan",
-          functions: [
-            %{id: "func_4_1", name: "Verifikasi Permohonan", sub_functions: []},
-            %{id: "func_4_2", name: "Kelulusan Permohonan", sub_functions: []}
-          ]
-        },
-        %{
-          id: "module_5",
-          number: 5,
-          name: "Modul Laporan",
-          functions: [
-            %{id: "func_5_1", name: "Laporan mengikut tahun", sub_functions: []},
-            %{id: "func_5_2", name: "Laporan mengikut lokasi/daerah", sub_functions: []}
-          ]
-        },
-        %{
-          id: "module_6",
-          number: 6,
-          name: "Modul Dashboard",
-          functions: []
-        }
-      ]
+      initial_modules = Sppa.AnalisisDanRekabentuk.initial_modules()
 
       socket =
         socket
@@ -163,8 +112,26 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
   @impl true
   def handle_event("generate_pdf", _params, socket) do
-    # Generate dummy data
-    dummy_data = generate_dummy_data(socket)
+    # Generate preview data
+    modules = get_modules_from_stream(socket)
+    form_data = socket.assigns.form.params || %{}
+
+    dummy_data =
+      Sppa.AnalisisDanRekabentuk.pdf_data(
+        document_id: socket.assigns.document_id || "JPKN-BPA-01/B2",
+        nama_projek: Map.get(form_data, "nama_projek"),
+        nama_agensi: Map.get(form_data, "nama_agensi"),
+        versi: Map.get(form_data, "versi"),
+        tarikh_semakan: Map.get(form_data, "tarikh_semakan"),
+        rujukan_perubahan: Map.get(form_data, "rujukan_perubahan"),
+        prepared_by_name: Map.get(form_data, "prepared_by_name"),
+        prepared_by_position: Map.get(form_data, "prepared_by_position"),
+        prepared_by_date: Map.get(form_data, "prepared_by_date"),
+        approved_by_name: Map.get(form_data, "approved_by_name"),
+        approved_by_position: Map.get(form_data, "approved_by_position"),
+        approved_by_date: Map.get(form_data, "approved_by_date"),
+        modules: modules
+      )
 
     {:noreply,
      socket
@@ -543,39 +510,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
       |> update_summary()}
   end
 
-  defp generate_dummy_data(socket) do
-    modules = get_modules_from_stream(socket)
-    form_data = socket.assigns.form.params || %{}
-
-    # Get current date in DD/MM/YYYY format
-    today =
-      Date.utc_today()
-      |> Date.to_string()
-      |> String.split("-")
-      |> Enum.reverse()
-      |> Enum.join("/")
-
-    %{
-      document_id: socket.assigns.document_id || "JPKN-BPA-01/B2",
-      nama_projek: Map.get(form_data, "nama_projek") || "Sistem Pengurusan Permohonan Aplikasi (SPPA)",
-      nama_agensi: Map.get(form_data, "nama_agensi") || "Jabatan Pendaftaran Negara Sabah (JPKN)",
-      versi: Map.get(form_data, "versi") || "1.0.0",
-      tarikh_semakan: Map.get(form_data, "tarikh_semakan") || today,
-      rujukan_perubahan: Map.get(form_data, "rujukan_perubahan") || "Mesyuarat Jawatankuasa Teknologi Maklumat - 15 Disember 2024",
-      modules: modules,
-      total_modules: length(modules),
-      total_functions:
-        modules
-        |> Enum.map(fn module -> length(module.functions) end)
-        |> Enum.sum(),
-      prepared_by_name: Map.get(form_data, "prepared_by_name") || "Ahmad bin Abdullah",
-      prepared_by_position: Map.get(form_data, "prepared_by_position") || "Pengurus Projek",
-      prepared_by_date: Map.get(form_data, "prepared_by_date") || today,
-      approved_by_name: Map.get(form_data, "approved_by_name") || "Dr. Siti binti Hassan",
-      approved_by_position: Map.get(form_data, "approved_by_position") || "Ketua Penolong Pengarah",
-      approved_by_date: Map.get(form_data, "approved_by_date") || today
-    }
-  end
+  # `Sppa.AnalisisDanRekabentuk.pdf_data/1` now owns preview generation.
 
   defp get_modules_from_stream(socket) do
     # Use the modules_list assign for processing instead of converting stream

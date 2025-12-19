@@ -23,7 +23,9 @@ defmodule SppaWeb.ProjekLive do
   end
 
   defp normalize_tab("soal-selidik"), do: "Soal Selidik"
-  defp normalize_tab("spesifikasi-aplikasi"), do: "Spesifikasi Aplikasi"
+  # Backwards compatible: keep old slug working, but rename the tab display.
+  defp normalize_tab("spesifikasi-aplikasi"), do: "Analisis dan Rekabentuk"
+  defp normalize_tab("analisis-dan-rekabentuk"), do: "Analisis dan Rekabentuk"
   defp normalize_tab("jadual-projek"), do: "Jadual Projek"
   defp normalize_tab("pengaturcaraan"), do: "Pengaturcaraan"
   defp normalize_tab("pengurus-perubahan"), do: "Pengurus Perubahan"
@@ -123,6 +125,8 @@ defmodule SppaWeb.ProjekLive do
         project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
 
         if project do
+          project_name = Map.get(project, :nama) || Map.get(project, :name) || "Projek"
+
           # Get overview data for the project
           overview_data = get_project_overview(project_id, project)
 
@@ -135,6 +139,14 @@ defmodule SppaWeb.ProjekLive do
            |> assign(:projects, [])
            |> assign(:current_tab, "Overview")
            |> assign(:soal_selidik_document, get_soal_selidik_document(project.nama))
+           |> assign(:soal_selidik_pdf_data, Sppa.SoalSelidik.pdf_data(nama_sistem: project_name))
+           |> assign(
+             :analisis_pdf_data,
+             Sppa.AnalisisDanRekabentuk.pdf_data(
+               nama_projek: project_name,
+               modules: Sppa.AnalisisDanRekabentuk.initial_modules()
+             )
+           )
            |> assign(:progress, overview_data.progress)
            |> assign(:timeline, overview_data.timeline)
            |> assign(:current_tasks, overview_data.current_tasks)

@@ -18,7 +18,8 @@
     /> <%!-- Main Content --%>
     <div class="flex-1 flex flex-col overflow-hidden">
       <%!-- Header --%>
-      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md">
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
+        <.system_title />
         <div class="flex items-center gap-4">
           <button
             phx-click="toggle_sidebar"
@@ -26,18 +27,7 @@
           >
             <.icon name="hero-bars-3" class="w-6 h-6" />
           </button>
-          <div class="flex items-center gap-3">
-            <img
-              src={~p"/images/Jata-Sabah.png"}
-              alt="Jata Wilayah Sabah"
-              class="h-9 w-auto object-contain"
-            />
-            <img
-              src={~p"/images/logojpkn.png"}
-              alt="Logo JPKN"
-              class="h-9 w-auto object-contain"
-            />
-          </div>
+          <.header_logos />
         </div>
         
         <.header_actions
@@ -85,17 +75,17 @@
                     Soal Selidik
                   </.link>
                   <.link
-                    patch={~p"/projek/#{@project.id}?tab=spesifikasi-aplikasi"}
+                    patch={~p"/projek/#{@project.id}?tab=analisis-dan-rekabentuk"}
                     class={[
                       "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
-                      if(@current_tab == "Spesifikasi Aplikasi",
+                      if(@current_tab == "Analisis dan Rekabentuk",
                         do: "border-green-500 text-green-600",
                         else:
                           "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                       )
                     ]}
                   >
-                    Spesifikasi Aplikasi
+                    Analisis dan Rekabentuk
                   </.link>
                   <.link
                     patch={~p"/projek/#{@project.id}?tab=jadual-projek"}
@@ -204,12 +194,21 @@
                 </nav>
               </div>
             </div>
-             <%!-- Tab Content --%>
-            <%= if @current_tab == "Soal Selidik" do %>
+            <%!-- Tab Content --%>
+            <%= cond do %>
+              <% @current_tab == "Soal Selidik" -> %>
               <%!-- Soal Selidik Content --%>
               <div class="space-y-6">
                 <%!-- Print Button --%>
-                <div class="flex justify-end mb-4 print:hidden">
+                <div class="flex justify-end gap-3 mb-4 print:hidden">
+                  <.link
+                    id="edit-soal-selidik-form"
+                    navigate={~p"/soal-selidik"}
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
+                  >
+                    <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
+                    <span>Edit Borang</span>
+                  </.link>
                   <button
                     id="print-soal-selidik-btn"
                     phx-hook="PrintDocument"
@@ -224,112 +223,406 @@
                   id="soal-selidik-document"
                   class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 print:shadow-none print:border-0"
                 >
-                  <%!-- Document Header --%>
-                  <div class="mb-6">
-                    <%!-- Logo --%>
-                    <div class="flex justify-center mb-4">
-                      <img
-                        src={~p"/images/logojpkn.png"}
-                        alt="Logo JPKN"
-                        class="h-16 w-auto object-contain"
-                      />
-                    </div>
-                    
-                    <div class="flex justify-between items-start mb-4">
-                      <div class="flex-1">
-                        <h2 class="text-2xl font-bold text-gray-900 text-center mb-2">
-                          TEMPLATE SOAL SELIDIK KAJIAN KEPERLUAN PEMBANGUNAN APLIKASI
-                        </h2>
+                  <%= if assigns[:soal_selidik_pdf_data] do %>
+                    <%!-- Printable "PDF Preview" (same style/data as menu Soal Selidik) --%>
+                    <div class="mb-6 text-center">
+                      <div class="flex justify-end mb-3">
+                        <span class="text-xs text-gray-600 font-bold"><%= @soal_selidik_pdf_data.document_id %></span>
                       </div>
-                      
-                      <div class="text-sm text-gray-600 font-medium">
-                        {@soal_selidik_document.document_id}
+
+                      <div class="flex justify-center mb-4">
+                        <img
+                          src={~p"/images/logojpkn.png"}
+                          alt="Logo JPKN"
+                          class="h-16 w-auto object-contain"
+                        />
                       </div>
-                    </div>
-                    
-                    <div class="text-center mb-4">
-                      <div class="text-lg font-semibold text-gray-800">
-                        Nama Sistem : {@soal_selidik_document.system_name}
+
+                      <h2 class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight">
+                        Template Soal Selidik Kajian Keperluan Pembangunan Aplikasi
+                      </h2>
+
+                      <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
+                        <span>Nama Sistem :</span>
+                        <span class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded bg-gray-50">
+                          <%= @soal_selidik_pdf_data.nama_sistem %>
+                        </span>
                       </div>
                     </div>
-                  </div>
-                   <%!-- Questionnaire Table --%>
-                  <div class="overflow-x-auto">
-                    <table class="min-w-full border-collapse border border-gray-300">
-                      <thead>
-                        <tr class="bg-gray-100">
-                          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700 w-16">
-                            No
-                          </th>
-                          
-                          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                            Soalan
-                          </th>
-                          
-                          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700 w-64">
-                            Maklumbalas
-                          </th>
-                          
-                          <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700 w-64">
-                            Catatan
-                          </th>
-                        </tr>
-                      </thead>
-                      
-                      <tbody>
-                        <%= for section <- @soal_selidik_document.sections do %>
-                          <tr>
-                            <td colspan="4" class="border border-gray-300 px-4 py-2 bg-gray-50">
-                              <div class="font-semibold text-gray-900">{section.title}</div>
-                            </td>
-                          </tr>
-                          
-                          <%= for question <- section.questions do %>
-                            <tr class="hover:bg-gray-50">
-                              <td class="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                {question.number}
-                              </td>
-                              
-                              <td class="border border-gray-300 px-4 py-3 text-sm text-gray-700">
-                                <div class="mb-2">{question.question}</div>
-                                
-                                <%= if Map.has_key?(question, :options) && question.options do %>
-                                  <div class="mt-2 space-y-1">
-                                    <%= for option <- question.options do %>
-                                      <div class="text-sm text-gray-600">• {option}</div>
-                                    <% end %>
-                                  </div>
-                                <% end %>
-                              </td>
-                              
-                              <td class="border border-gray-300 px-4 py-3">
-                                <div class="w-full px-3 py-2 text-sm text-gray-400 min-h-[60px]">
-                                  <%= if question.response do %>
-                                    {question.response}
-                                  <% else %>
-                                    -
+
+                    <div class="mb-6">
+                      <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
+                        FUNCTIONAL REQUIREMENT
+                      </h3>
+
+                      <div class="space-y-4">
+                        <%= for category <- @soal_selidik_pdf_data.fr_categories do %>
+                          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+                            <div class="bg-blue-100 px-4 py-2 border-b border-gray-400">
+                              <h4 class="font-semibold text-gray-900 uppercase tracking-wide text-sm">
+                                <%= category.title %>
+                              </h4>
+                            </div>
+
+                            <div class="p-2 overflow-x-auto">
+                              <table class="w-full border-collapse text-xs">
+                                <thead>
+                                  <tr class="bg-gray-100 border border-gray-400">
+                                    <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">
+                                      No
+                                    </th>
+                                    <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 40%;">
+                                      Soalan
+                                    </th>
+                                    <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 27%;">
+                                      Maklumbalas
+                                    </th>
+                                    <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 27%;">
+                                      Catatan
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-300">
+                                  <%= for question <- category.questions do %>
+                                    <tr>
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm font-medium text-gray-900">
+                                          <%= question.no %>
+                                        </div>
+                                      </td>
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-800">
+                                          <%= question.soalan %>
+                                        </div>
+                                      </td>
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-700">
+                                          <%= case Map.get(@soal_selidik_pdf_data.fr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) do
+                                            %{maklumbalas: value} when is_list(value) -> Enum.join(value, ", ")
+                                            %{maklumbalas: value} -> value
+                                            _ -> "-"
+                                          end %>
+                                        </div>
+                                      </td>
+                                      <td class="px-3 py-2 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-700">
+                                          <%= Map.get(@soal_selidik_pdf_data.fr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) |> Map.get(:catatan, "-") %>
+                                        </div>
+                                      </td>
+                                    </tr>
                                   <% end %>
-                                </div>
-                              </td>
-                              
-                              <td class="border border-gray-300 px-4 py-3">
-                                <div class="w-full px-3 py-2 text-sm text-gray-400 min-h-[60px]">
-                                  <%= if question.notes do %>
-                                    {question.notes}
-                                  <% else %>
-                                    -
-                                  <% end %>
-                                </div>
-                              </td>
-                            </tr>
-                          <% end %>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
                         <% end %>
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+                    </div>
+
+                    <div class="mb-6">
+                      <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
+                        NON-FUNCTIONAL REQUIREMENT
+                      </h3>
+
+                      <div class="space-y-4">
+                        <%= for category <- @soal_selidik_pdf_data.nfr_categories do %>
+                          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+                            <div class="bg-blue-100 px-4 py-2 border-b border-gray-400">
+                              <h4 class="font-semibold text-gray-900 uppercase tracking-wide text-sm">
+                                <%= category.title %>
+                              </h4>
+                            </div>
+
+                            <div class="p-2 overflow-x-auto">
+                              <table class="w-full border-collapse text-xs">
+                                <thead>
+                                  <tr class="bg-gray-100 border border-gray-400">
+                                    <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">
+                                      No
+                                    </th>
+                                    <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 40%;">
+                                      Soalan
+                                    </th>
+                                    <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 27%;">
+                                      Maklumbalas
+                                    </th>
+                                    <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 27%;">
+                                      Catatan
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-300">
+                                  <%= for question <- category.questions do %>
+                                    <tr>
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm font-medium text-gray-900">
+                                          <%= question.no %>
+                                        </div>
+                                      </td>
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-800">
+                                          <%= question.soalan %>
+                                        </div>
+                                      </td>
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-700">
+                                          <%= case Map.get(@soal_selidik_pdf_data.nfr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) do
+                                            %{maklumbalas: value} when is_list(value) -> Enum.join(value, ", ")
+                                            %{maklumbalas: value} -> value
+                                            _ -> "-"
+                                          end %>
+                                        </div>
+                                      </td>
+                                      <td class="px-3 py-2 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-700">
+                                          <%= Map.get(@soal_selidik_pdf_data.nfr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) |> Map.get(:catatan, "-") %>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  <% end %>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+
+                    <div class="mb-2">
+                      <h3 class="text-lg font-bold text-gray-900 mb-4">
+                        Disediakan Oleh :
+                      </h3>
+
+                      <p class="text-sm text-gray-600 mb-6 italic">
+                        (Diisi oleh Pengurus Projek/Pembangun Sistem)
+                      </p>
+
+                      <div class="space-y-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-1">Nama:</label>
+                          <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
+                            <%= @soal_selidik_pdf_data.disediakan_oleh.nama %>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-1">Jawatan:</label>
+                          <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
+                            <%= @soal_selidik_pdf_data.disediakan_oleh.jawatan %>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-1">Tarikh:</label>
+                          <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
+                            <%= @soal_selidik_pdf_data.disediakan_oleh.tarikh %>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="text-sm text-gray-600">
+                      Tiada data Soal Selidik untuk dipaparkan.
+                    </div>
+                  <% end %>
                 </div>
               </div>
-            <% else %>
+              <% @current_tab == "Analisis dan Rekabentuk" -> %>
+              <%!-- Analisis dan Rekabentuk Content (printable preview) --%>
+              <div class="space-y-6">
+                <div class="flex justify-end gap-3 mb-4 print:hidden">
+                  <.link
+                    id="edit-analisis-form"
+                    navigate={~p"/analisis-dan-rekabentuk"}
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
+                  >
+                    <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
+                    <span>Edit Borang</span>
+                  </.link>
+                  <button
+                    id="print-analisis-btn"
+                    phx-hook="PrintDocument"
+                    data-target="analisis-document"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  >
+                    <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
+                  </button>
+                </div>
+
+                <div
+                  id="analisis-document"
+                  class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 print:shadow-none print:border-0"
+                  style="font-family: Arial, sans-serif; font-size: 11pt;"
+                >
+                  <%= if assigns[:analisis_pdf_data] do %>
+                    <div class="mb-6">
+                      <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1"></div>
+                        <div class="flex-1 flex justify-center">
+                          <img
+                            src={~p"/images/logojpkn.png"}
+                            alt="Logo JPKN"
+                            class="h-16 w-auto object-contain"
+                          />
+                        </div>
+                        <div class="flex-1 flex justify-end">
+                          <div class="text-gray-700 font-bold">
+                            {@analisis_pdf_data.document_id}
+                          </div>
+                        </div>
+                      </div>
+
+                      <h2 class="text-center font-bold text-gray-900 mb-6 uppercase tracking-wide leading-tight">
+                        BORANG VERIFIKASI SPESIFIKASI APLIKASI
+                      </h2>
+                    </div>
+
+                    <div class="mb-6">
+                      <table class="w-full border-collapse border border-gray-800">
+                        <tbody>
+                          <tr class="border-b border-gray-800">
+                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800" style="width: 30%;">
+                              Nama Projek
+                            </td>
+                            <td class="px-2 py-1.5 border border-gray-800">
+                              {@analisis_pdf_data.nama_projek}
+                            </td>
+                          </tr>
+                          <tr class="border-b border-gray-800">
+                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
+                              Nama Agensi
+                            </td>
+                            <td class="px-2 py-1.5 border border-gray-800">
+                              {@analisis_pdf_data.nama_agensi}
+                            </td>
+                          </tr>
+                          <tr class="border-b border-gray-800">
+                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
+                              Versi
+                            </td>
+                            <td class="px-2 py-1.5 border border-gray-800">
+                              {@analisis_pdf_data.versi}
+                            </td>
+                          </tr>
+                          <tr class="border-b border-gray-800">
+                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
+                              Tarikh Semakan (jika ada)
+                            </td>
+                            <td class="px-2 py-1.5 border border-gray-800">
+                              {@analisis_pdf_data.tarikh_semakan}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
+                              Rujukan Perubahan (jika ada)
+                            </td>
+                            <td class="px-2 py-1.5 border border-gray-800">
+                              {@analisis_pdf_data.rujukan_perubahan}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div class="mb-6">
+                      <h3 class="font-bold text-gray-900 mb-2 uppercase">
+                        SPESIFIKASI APLIKASI YANG AKAN DIBANGUNKAN
+                      </h3>
+                      <p class="text-gray-700 mb-2">
+                        Nyatakan secara terperinci spesifikasi aplikasi yang akan dibangunkan seperti bilangan modul (nyatakan modul-modul terlibat), fungsi dan sebagainya.
+                      </p>
+
+                      <div class="space-y-4 mt-4">
+                        <%= for module <- @analisis_pdf_data.modules do %>
+                          <div class="mb-4">
+                            <div class="mb-2">
+                              <strong class="text-gray-900 font-bold">
+                                {module.number}. {module.name}
+                              </strong>
+                            </div>
+
+                            <div class="ml-6 space-y-2">
+                              <%= for {func, index} <- Enum.with_index(module.functions) do %>
+                                <div class="mb-1">
+                                  <span class="text-gray-700 font-medium">
+                                    {Enum.at(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], index)}. {func.name}
+                                  </span>
+                                  <%= if length(func.sub_functions) > 0 do %>
+                                    <div class="ml-4 mt-1">
+                                      <%= for sub_func <- func.sub_functions do %>
+                                        <div class="text-gray-600">• {sub_func.name}</div>
+                                      <% end %>
+                                    </div>
+                                  <% end %>
+                                </div>
+                              <% end %>
+                            </div>
+                          </div>
+                        <% end %>
+                      </div>
+
+                      <p class="text-gray-600 mt-4 italic">
+                        **spesifikasi aplikasi adalah mengikut kajian yang telah dibuat
+                      </p>
+                    </div>
+
+                    <div class="mt-8">
+                      <div class="grid grid-cols-2 gap-6">
+                        <div>
+                          <h4 class="font-bold text-gray-900 mb-2">Dipersetujui Oleh:</h4>
+                          <p class="text-gray-700 mb-3 font-semibold">Pemohon</p>
+                          <div class="space-y-3">
+                            <div>
+                              <p class="text-gray-600 mb-1">Tandatangan</p>
+                              <div class="h-10"></div>
+                            </div>
+                            <div>
+                              <p class="text-gray-600 mb-1">(Nama)</p>
+                              <div class="h-8">{@analisis_pdf_data.approved_by_name}</div>
+                            </div>
+                            <div>
+                              <p class="text-gray-600 mb-1">Jawatan:</p>
+                              <div class="h-8">{@analisis_pdf_data.approved_by_position}</div>
+                            </div>
+                            <div>
+                              <p class="text-gray-600 mb-1">Tarikh:</p>
+                              <div class="h-8">{@analisis_pdf_data.approved_by_date}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 class="font-bold text-gray-900 mb-2">Disediakan Oleh:</h4>
+                          <p class="text-gray-700 mb-3 font-semibold">Pengurus Projek / Pembangun</p>
+                          <div class="space-y-3">
+                            <div>
+                              <p class="text-gray-600 mb-1">Tandatangan</p>
+                              <div class="h-10"></div>
+                            </div>
+                            <div>
+                              <p class="text-gray-600 mb-1">(Nama)</p>
+                              <div class="h-8">{@analisis_pdf_data.prepared_by_name}</div>
+                            </div>
+                            <div>
+                              <p class="text-gray-600 mb-1">Jawatan:</p>
+                              <div class="h-8">{@analisis_pdf_data.prepared_by_position}</div>
+                            </div>
+                            <div>
+                              <p class="text-gray-600 mb-1">Tarikh:</p>
+                              <div class="h-8">{@analisis_pdf_data.prepared_by_date}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="text-sm text-gray-600">
+                      Tiada data Analisis dan Rekabentuk untuk dipaparkan.
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+              <% true -> %>
               <%!-- Overview Content (existing) --%> <%!-- Project Information --%>
               <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-4">Informasi Projek</h2>
@@ -698,7 +991,12 @@
                           
                           <td class="px-3 py-3 whitespace-nowrap">
                             <.link
-                              navigate={~p"/projek/#{project.id}"}
+                              navigate={
+                                if(@current_scope.user.role == "pembangun sistem",
+                                  do: ~p"/projek/#{project.id}/details",
+                                  else: ~p"/projek/#{project.id}"
+                                )
+                              }
                               class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200"
                             >
                               <.icon name="hero-eye" class="w-4 h-4" />

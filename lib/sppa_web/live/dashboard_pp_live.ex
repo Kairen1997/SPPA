@@ -109,7 +109,8 @@ defmodule SppaWeb.DashboardPPLive do
         /> <%!-- Main Content --%>
         <div class="flex-1 flex flex-col overflow-hidden">
           <%!-- Header --%>
-          <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md">
+          <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
+            <.system_title />
             <div class="flex items-center gap-4">
               <button
                 phx-click="toggle_sidebar"
@@ -117,18 +118,7 @@ defmodule SppaWeb.DashboardPPLive do
               >
                 <.icon name="hero-bars-3" class="w-6 h-6" />
               </button>
-              <div class="flex items-center gap-4">
-                <img
-                  src={~p"/images/Jata-Sabah.png"}
-                  alt="Jata Wilayah Sabah"
-                  class="h-12 w-auto object-contain"
-                />
-                <img
-                  src={~p"/images/logojpkn.png"}
-                  alt="Logo JPKN"
-                  class="h-12 w-auto object-contain"
-                />
-              </div>
+              <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
 
             <.header_actions

@@ -471,6 +471,74 @@ defmodule SppaWeb.CoreComponents do
   end
 
   @doc """
+  Renders the system name used across the application.
+  """
+  attr :title, :string,
+    default: "Sistem Pengurusan Pembangunan Aplikasi",
+    doc: "Override the default system name if needed"
+
+  def system_name(assigns) do
+    ~H"""
+    {@title}
+    """
+  end
+
+  @doc """
+  Renders the centered system title for headers (expects the parent header to be `relative`).
+  """
+  attr :title, :string,
+    default: "SISTEM PENGURUSAN PEMBANGUNAN APLIKASI",
+    doc: "Override the default system title if needed"
+
+  attr :max_width_class, :string,
+    default: "max-w-[70vw] sm:max-w-[55vw]",
+    doc: "Controls truncation width across breakpoints"
+
+  attr :class, :string,
+    default: "text-sm font-semibold tracking-wide text-white/95 drop-shadow sm:text-base md:text-lg lg:text-xl",
+    doc: "Additional/override classes for the title text"
+
+  def system_title(assigns) do
+    ~H"""
+    <div class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-3 text-center">
+      <span class={["block truncate", @max_width_class, @class]}>
+        <.system_name title={@title} />
+      </span>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders the standard header logos (Jata Sabah + JPKN).
+
+  Used in the dashboard-style headers across many pages.
+  """
+  attr :height_class, :string,
+    default: "h-10 sm:h-12 md:h-14",
+    doc: "Responsive height classes for both logos"
+
+  attr :gap_class, :string,
+    default: "gap-3 sm:gap-4",
+    doc: "Gap between logos"
+
+  def header_logos(assigns) do
+    ~H"""
+    <div class={["flex items-center", @gap_class]}>
+      <img
+        src={~p"/images/Jata-Sabah.png"}
+        alt="Jata Wilayah Sabah"
+        class={[@height_class, "w-auto object-contain"]}
+      />
+      <img
+        src={~p"/images/logojpkn.png"}
+        alt="Logo JPKN"
+        class={[@height_class, "w-auto object-contain"]}
+      />
+    </div>
+    """
+  end
+
+  @doc """
   Renders the main application sidebar used on the dashboard.
 
   Accepts whether the sidebar is open plus the paths needed for links and logo.
@@ -610,13 +678,19 @@ defmodule SppaWeb.CoreComponents do
             >
               <.icon name="hero-calendar-days" class="w-5 h-5" /> <span>Jadual Projek</span>
             </.link>
-            <a
-              href="#"
+            <.link
+              navigate={~p"/pembangunan"}
               phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+              class={[
+                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
+                if(@current_path == "/pembangunan",
+                  do: "bg-gray-700 text-white",
+                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
+                )
+              ]}
             >
               <.icon name="hero-code-bracket" class="w-5 h-5" /> <span>Pembangunan</span>
-            </a>
+            </.link>
             <.link
               navigate={~p"/pengurusan-perubahan"}
               phx-click="close_sidebar"

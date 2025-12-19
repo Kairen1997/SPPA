@@ -44,7 +44,8 @@ defmodule SppaWeb.Layouts do
     ~H"""
     <%= if @current_scope && @current_scope.user && !@full_width do %>
       <%!-- Global Header Bar for non-full-width pages --%>
-      <header class="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-4 sm:px-6 py-3 flex items-center justify-end shadow-md z-50">
+      <header class="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-4 sm:px-6 py-3 flex items-center justify-end shadow-md z-50 relative">
+        <.system_title />
         <.header_actions
           notifications_open={@notifications_open}
           notifications_count={@notifications_count}
