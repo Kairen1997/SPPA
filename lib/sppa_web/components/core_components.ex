@@ -608,15 +608,6 @@ defmodule SppaWeb.CoreComponents do
                 <span class="font-medium">Senarai Projek</span>
               </.link>
             </div>
-            <div class="mt-4 border-t border-gray-700/70 pt-4">
-              <div class="mb-2 flex items-center gap-2 px-4 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-gray-400">
-                <.icon name="hero-squares-plus" class="w-4 h-4 text-amber-300" />
-                <span>Modul</span>
-              </div>
-              <p class="pl-10 pr-4 py-1.5 text-xs text-gray-400 italic">
-                Akses modul melalui Senarai Projek
-              </p>
-            </div>
           <% else %>
             <.link
               navigate={@dashboard_path}
