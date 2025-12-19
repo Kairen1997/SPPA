@@ -1,6 +1,8 @@
 defmodule SppaWeb.UjianPenerimaanPenggunaLive do
   use SppaWeb, :live_view
 
+  alias Sppa.Projects
+
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @impl true
@@ -30,6 +32,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
         |> assign(:page_title, "Ujian Penerimaan Pengguna")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/ujian-penerimaan-pengguna")
         |> assign(:ujian, ujian)
         |> assign(:show_edit_modal, false)
@@ -40,7 +43,20 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
         |> assign(:form, to_form(%{}, as: :ujian))
         |> assign(:kes_form, to_form(%{}, as: :kes))
 
-      {:ok, socket}
+      if connected?(socket) do
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
+
+        {:ok,
+         socket
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
+      else
+        {:ok,
+         socket
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
+      end
     else
       socket =
         socket
@@ -67,12 +83,16 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
         |> assign(:page_title, "Butiran Ujian Penerimaan Pengguna")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/ujian-penerimaan-pengguna")
 
       if connected?(socket) do
         ujian = get_ujian_by_id(ujian_id)
 
         if ujian do
+          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+          notifications_count = length(activities)
+
           {:ok,
            socket
            |> assign(:selected_ujian, ujian)
@@ -82,7 +102,9 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
            |> assign(:show_edit_kes_modal, false)
            |> assign(:selected_kes, nil)
            |> assign(:form, to_form(%{}, as: :ujian))
-           |> assign(:kes_form, to_form(%{}, as: :kes))}
+           |> assign(:kes_form, to_form(%{}, as: :kes))
+           |> assign(:activities, activities)
+           |> assign(:notifications_count, notifications_count)}
         else
           socket =
             socket
@@ -303,12 +325,28 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
 
   @impl true
   def handle_event("toggle_notifications", _params, socket) do
-    {:noreply, update(socket, :notifications_open, &(!&1))}
+    {:noreply,
+     socket
+     |> update(:notifications_open, &(!&1))
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
   def handle_event("close_notifications", _params, socket) do
     {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_profile_menu", _params, socket) do
+    {:noreply,
+     socket
+     |> update(:profile_menu_open, &(!&1))
+     |> assign(:notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("close_profile_menu", _params, socket) do
+    {:noreply, assign(socket, :profile_menu_open, false)}
   end
 
   @impl true

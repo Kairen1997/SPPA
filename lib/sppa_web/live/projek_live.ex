@@ -1,6 +1,8 @@
 defmodule SppaWeb.ProjekLive do
   use SppaWeb, :live_view
 
+  alias Sppa.Projects
+
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @impl true
@@ -21,7 +23,9 @@ defmodule SppaWeb.ProjekLive do
   end
 
   defp normalize_tab("soal-selidik"), do: "Soal Selidik"
-  defp normalize_tab("spesifikasi-aplikasi"), do: "Spesifikasi Aplikasi"
+  # Backwards compatible: keep old slug working, but rename the tab display.
+  defp normalize_tab("spesifikasi-aplikasi"), do: "Analisis dan Rekabentuk"
+  defp normalize_tab("analisis-dan-rekabentuk"), do: "Analisis dan Rekabentuk"
   defp normalize_tab("jadual-projek"), do: "Jadual Projek"
   defp normalize_tab("pengaturcaraan"), do: "Pengaturcaraan"
   defp normalize_tab("pengurus-perubahan"), do: "Pengurus Perubahan"
@@ -42,6 +46,7 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:page_title, "Senarai Projek")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
         |> assign(:page, 1)
         |> assign(:per_page, 10)
         |> assign(:search_term, "")
@@ -64,13 +69,18 @@ defmodule SppaWeb.ProjekLive do
         {paginated_projects, total_pages} =
           paginate_projects(filtered_projects, socket.assigns.page, socket.assigns.per_page)
 
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
+
         {:ok,
          socket
          |> assign(:projects, paginated_projects)
          |> assign(:all_projects, all_projects)
          |> assign(:filtered_projects, filtered_projects)
          |> assign(:total_pages, total_pages)
-         |> assign(:total_count, length(filtered_projects))}
+         |> assign(:total_count, length(filtered_projects))
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
       else
         {:ok,
          socket
@@ -78,7 +88,9 @@ defmodule SppaWeb.ProjekLive do
          |> assign(:all_projects, [])
          |> assign(:filtered_projects, [])
          |> assign(:total_pages, 0)
-         |> assign(:total_count, 0)}
+         |> assign(:total_count, 0)
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
       end
     else
       socket =
@@ -106,14 +118,20 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:page_title, "Butiran Projek")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
 
       if connected?(socket) do
         # Get project details - will be replaced with database query later
         project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
 
         if project do
+          project_name = Map.get(project, :nama) || Map.get(project, :name) || "Projek"
+
           # Get overview data for the project
           overview_data = get_project_overview(project_id, project)
+
+          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+          notifications_count = length(activities)
 
           {:ok,
            socket
@@ -121,6 +139,14 @@ defmodule SppaWeb.ProjekLive do
            |> assign(:projects, [])
            |> assign(:current_tab, "Overview")
            |> assign(:soal_selidik_document, get_soal_selidik_document(project.nama))
+           |> assign(:soal_selidik_pdf_data, Sppa.SoalSelidik.pdf_data(nama_sistem: project_name))
+           |> assign(
+             :analisis_pdf_data,
+             Sppa.AnalisisDanRekabentuk.pdf_data(
+               nama_projek: project_name,
+               modules: Sppa.AnalisisDanRekabentuk.initial_modules()
+             )
+           )
            |> assign(:progress, overview_data.progress)
            |> assign(:timeline, overview_data.timeline)
            |> assign(:current_tasks, overview_data.current_tasks)
@@ -137,8 +163,13 @@ defmodule SppaWeb.ProjekLive do
            |> assign(:total_count, 0)
            |> assign(:search_term, "")
            |> assign(:status_filter, "")
-           |> assign(:fasa_filter, "")}
+           |> assign(:fasa_filter, "")
+           |> assign(:activities, activities)
+           |> assign(:notifications_count, notifications_count)}
         else
+          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+          notifications_count = length(activities)
+
           socket =
             socket
             |> assign(:project, nil)
@@ -150,6 +181,8 @@ defmodule SppaWeb.ProjekLive do
             |> assign(:search_term, "")
             |> assign(:status_filter, "")
             |> assign(:fasa_filter, "")
+            |> assign(:activities, activities)
+            |> assign(:notifications_count, notifications_count)
             |> Phoenix.LiveView.put_flash(
               :error,
               "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk melihat projek ini."
@@ -163,6 +196,8 @@ defmodule SppaWeb.ProjekLive do
          socket
          |> assign(:project, nil)
          |> assign(:projects, [])
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)
          |> assign(:page, 1)
          |> assign(:per_page, 10)
          |> assign(:total_pages, 0)
@@ -196,12 +231,28 @@ defmodule SppaWeb.ProjekLive do
 
   @impl true
   def handle_event("toggle_notifications", _params, socket) do
-    {:noreply, update(socket, :notifications_open, &(!&1))}
+    {:noreply,
+     socket
+     |> update(:notifications_open, &(!&1))
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
   def handle_event("close_notifications", _params, socket) do
     {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_profile_menu", _params, socket) do
+    {:noreply,
+     socket
+     |> update(:profile_menu_open, &(!&1))
+     |> assign(:notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("close_profile_menu", _params, socket) do
+    {:noreply, assign(socket, :profile_menu_open, false)}
   end
 
   @impl true
@@ -435,6 +486,7 @@ defmodule SppaWeb.ProjekLive do
         tindakan: "Sambung semula selepas kelulusan"
       }
     ]
+    |> Enum.map(&normalize_project_status/1)
 
     # Filter based on user role
     # Temporarily showing all projects for pagination testing
@@ -633,6 +685,7 @@ defmodule SppaWeb.ProjekLive do
           "Portal untuk pentadbiran dalaman dengan akses terhad kepada kakitangan yang berkenaan."
       }
     ]
+    |> Enum.map(&normalize_project_status/1)
 
     # Find project by ID
     project = Enum.find(all_projects, fn p -> p.id == project_id end)
@@ -659,6 +712,18 @@ defmodule SppaWeb.ProjekLive do
 
     # For now, allow all authenticated users to view all projects (for testing)
     project
+  end
+
+  defp normalize_project_status(project) do
+    Map.update!(project, :status, &normalize_status/1)
+  end
+
+  defp normalize_status(status) do
+    case status do
+      "Selesai" -> "Selesai"
+      "Dalam Pembangunan" -> "Dalam Pembangunan"
+      _ -> "Dalam Pembangunan"
+    end
   end
 
   # Filter projects based on search term, status, and fasa

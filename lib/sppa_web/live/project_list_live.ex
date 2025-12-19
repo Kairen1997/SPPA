@@ -216,15 +216,9 @@ defmodule SppaWeb.ProjectListLive do
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     >
                       <option value="">Semua</option>
-                      
+
                       <option value="Dalam Pembangunan">Dalam Pembangunan</option>
-                      
-                      <option value="Ditangguhkan">Ditangguhkan</option>
-                      
-                      <option value="UAT">UAT</option>
-                      
-                      <option value="Pengurusan Perubahan">Pengurusan Perubahan</option>
-                      
+
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
@@ -236,13 +230,13 @@ defmodule SppaWeb.ProjectListLive do
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     >
                       <option value="">Semua</option>
-                      
+
                       <option value="Analisis dan Rekabentuk">Analisis dan Rekabentuk</option>
-                      
+
                       <option value="Pembangunan">Pembangunan</option>
-                      
+
                       <option value="UAT">UAT</option>
-                      
+
                       <option value="Penyerahan">Penyerahan</option>
                     </select>
                   </div>
@@ -276,35 +270,35 @@ defmodule SppaWeb.ProjectListLive do
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Nama Projek
                       </th>
-                      
+
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Status
                       </th>
-                      
+
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Fasa Semasa
                       </th>
-                      
+
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Progress
                       </th>
-                      
+
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Dokumen
                       </th>
-                      
+
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Tindakan
                       </th>
                     </tr>
                   </thead>
-                  
+
                   <tbody class="divide-y divide-gray-200 bg-white">
                     <tr :for={project <- @projects} class="hover:bg-gray-50">
                       <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                         {project.name}
                       </td>
-                      
+
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         <span class={[
                           "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
@@ -313,29 +307,29 @@ defmodule SppaWeb.ProjectListLive do
                           {project.status}
                         </span>
                       </td>
-                      
+
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {get_phase(project)}
                       </td>
-                      
+
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {get_progress(project)}%
                       </td>
-                      
+
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {get_documents(project)}
                       </td>
-                      
+
                       <td class="whitespace-nowrap px-6 py-4 text-sm">
-                        <button
-                          type="button"
+                        <.link
+                          navigate={~p"/projek/#{project.id}"}
                           class="font-medium text-[#2F80ED] transition hover:text-[#2563EB]"
                         >
                           [Lihat]
-                        </button>
+                        </.link>
                       </td>
                     </tr>
-                    
+
                     <tr :if={@projects == []}>
                       <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">
                         Tiada projek dijumpai
@@ -412,12 +406,12 @@ defmodule SppaWeb.ProjectListLive do
                 <div class="flex items-center justify-between">
                   <div>
                     <h2 class="text-2xl font-bold text-white">Projek Baru</h2>
-                    
+
                     <p class="mt-1 text-sm text-blue-100">
                       Lengkapkan maklumat di bawah untuk mencipta projek baharu
                     </p>
                   </div>
-                  
+
                   <button
                     type="button"
                     phx-click="close_modal"
@@ -442,7 +436,7 @@ defmodule SppaWeb.ProjectListLive do
                   <div class="space-y-5">
                     <div class="border-b border-gray-200 pb-2">
                       <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
-                      
+
                       <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
                     </div>
                      <%!-- Nama Projek --%>
@@ -471,12 +465,12 @@ defmodule SppaWeb.ProjectListLive do
                   <div class="space-y-5">
                     <div class="border-b border-gray-200 pb-2">
                       <h3 class="text-lg font-semibold text-gray-900">Penugasan Pasukan</h3>
-                      
+
                       <p class="mt-1 text-sm text-gray-500">
                         Tetapkan pengurus projek dan pembangun sistem
                       </p>
                     </div>
-                    
+
                     <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                       <%!-- Pengurus Projek --%>
                       <div>
@@ -514,10 +508,10 @@ defmodule SppaWeb.ProjectListLive do
                   <div class="space-y-5">
                     <div class="border-b border-gray-200 pb-2">
                       <h3 class="text-lg font-semibold text-gray-900">Jadual Projek</h3>
-                      
+
                       <p class="mt-1 text-sm text-gray-500">Tetapkan tarikh mula dan jangkaan siap</p>
                     </div>
-                    
+
                     <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                       <%!-- Tarikh Mula --%>
                       <div>
@@ -543,12 +537,12 @@ defmodule SppaWeb.ProjectListLive do
                   <div class="space-y-5">
                     <div class="border-b border-gray-200 pb-2">
                       <h3 class="text-lg font-semibold text-gray-900">Dokumen Sokongan</h3>
-                      
+
                       <p class="mt-1 text-sm text-gray-500">
                         Muat naik dokumen yang berkaitan dengan projek
                       </p>
                     </div>
-                    
+
                     <div>
                       <label class="mb-2 block text-sm font-medium text-gray-700">
                         Dokumen Sokongan
@@ -577,7 +571,7 @@ defmodule SppaWeb.ProjectListLive do
                             </label>
                             <p class="pl-1">atau seret dan lepaskan</p>
                           </div>
-                          
+
                           <p class="mt-2 text-xs leading-5 text-gray-600">
                             PDF, DOC, DOCX sehingga 10MB setiap fail
                           </p>
@@ -614,12 +608,9 @@ defmodule SppaWeb.ProjectListLive do
   # Helper functions for display
   defp status_badge_class(status) do
     case status do
-      "Dalam Pembangunan" -> "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
-      "Ditangguhkan" -> "bg-amber-100 text-amber-700 ring-1 ring-amber-200"
-      "Selesai" -> "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200"
-      "UAT" -> "bg-purple-100 text-purple-700 ring-1 ring-purple-200"
-      "Pengurusan Perubahan" -> "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200"
-      _ -> "bg-gray-100 text-gray-700 ring-1 ring-gray-200"
+      "Selesai" -> "bg-green-100 text-green-800"
+      "Dalam Pembangunan" -> "bg-blue-100 text-blue-800"
+      _ -> "bg-gray-100 text-gray-800"
     end
   end
 

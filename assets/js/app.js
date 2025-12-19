@@ -306,6 +306,74 @@ const UpdateSectionCategory = {
   }
 }
 
+// Notification Toggle Hook
+const NotificationToggle = {
+  mounted() {
+    const dropdown = document.getElementById("notification-dropdown")
+    const container = document.getElementById("notification-container")
+    
+    if (!dropdown || !container) return
+    
+    this.handleClick = (e) => {
+      // Toggle dropdown visibility
+      const isOpen = dropdown.classList.contains("opacity-100")
+      
+      if (isOpen) {
+        dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
+        dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
+        this.el.setAttribute("aria-expanded", "false")
+      } else {
+        dropdown.classList.remove("opacity-0", "scale-95", "pointer-events-none")
+        dropdown.classList.add("opacity-100", "scale-100", "pointer-events-auto")
+        this.el.setAttribute("aria-expanded", "true")
+      }
+      
+      // Try to push event to LiveView if available
+      if (this.pushEvent) {
+        this.pushEvent("toggle_notifications", {})
+      }
+    }
+    
+    this.handleClickAway = (e) => {
+      if (!container.contains(e.target)) {
+        dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
+        dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
+        this.el.setAttribute("aria-expanded", "false")
+        
+        if (this.pushEvent) {
+          this.pushEvent("close_notifications", {})
+        }
+      }
+    }
+    
+    this.el.addEventListener("click", this.handleClick)
+    document.addEventListener("click", this.handleClickAway)
+  },
+  
+  updated() {
+    // Re-sync with LiveView state if available
+    const dropdown = document.getElementById("notification-dropdown")
+    if (dropdown && this.el.dataset.notificationsOpen === "true") {
+      dropdown.classList.remove("opacity-0", "scale-95", "pointer-events-none")
+      dropdown.classList.add("opacity-100", "scale-100", "pointer-events-auto")
+      this.el.setAttribute("aria-expanded", "true")
+    } else if (dropdown) {
+      dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
+      dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
+      this.el.setAttribute("aria-expanded", "false")
+    }
+  },
+  
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick)
+    }
+    if (this.handleClickAway) {
+      document.removeEventListener("click", this.handleClickAway)
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
@@ -314,7 +382,8 @@ const liveSocket = new LiveSocket("/live", Socket, {
     ...colocatedHooks,
     PrintDocument,
     UpdateSectionCategory,
-    GeneratePDF
+    GeneratePDF,
+    NotificationToggle
   },
 })
 

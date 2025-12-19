@@ -19,7 +19,8 @@ defmodule SppaWeb.Components.Topbar do
 
     if user_role == "pengurus projek" do
       ~H"""
-      <header class="flex h-24 w-full items-center justify-between bg-[#0057D9] px-8 shadow-md">
+      <header class="flex h-24 w-full items-center justify-between bg-[#0057D9] px-8 shadow-md relative">
+        <.system_title />
         <div class="flex items-center gap-5">
           <img
             src={~p"/images/channels4_profile-1-48.png"}
