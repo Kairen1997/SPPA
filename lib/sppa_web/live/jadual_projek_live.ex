@@ -1,6 +1,8 @@
 defmodule SppaWeb.JadualProjekLive do
   use SppaWeb, :live_view
 
+  alias Sppa.Projects
+
   @allowed_roles ["pengurus projek", "pembangun sistem", "ketua penolong pengarah"]
 
   @impl true
@@ -17,11 +19,14 @@ defmodule SppaWeb.JadualProjekLive do
         |> assign(:page_title, "Jadual Projek")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/jadual-projek")
 
       if connected?(socket) do
         projects = list_projects(socket.assigns.current_scope, user_role)
         gantt_data = prepare_gantt_data(projects)
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
 
         month_labels =
           if length(gantt_data.projects) > 0 do
@@ -38,6 +43,8 @@ defmodule SppaWeb.JadualProjekLive do
          |> assign(:gantt_data, gantt_data)
          |> assign(:month_labels, month_labels)
          |> assign(:get_status_color, &get_status_color_value/1)
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)
          |> assign(:get_status_badge_class, &get_status_badge_class_value/1)
          |> assign(:is_developer, is_developer)
          |> assign(:show_new_project_modal, false)
@@ -53,6 +60,8 @@ defmodule SppaWeb.JadualProjekLive do
          |> assign(:get_status_color, &get_status_color_value/1)
          |> assign(:get_status_badge_class, &get_status_badge_class_value/1)
          |> assign(:is_developer, false)
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)
          |> assign(:show_new_project_modal, false)
          |> assign(:show_edit_project_modal, false)
          |> assign(:selected_project, nil)
@@ -339,12 +348,28 @@ defmodule SppaWeb.JadualProjekLive do
 
   @impl true
   def handle_event("toggle_notifications", _params, socket) do
-    {:noreply, update(socket, :notifications_open, &(!&1))}
+    {:noreply,
+     socket
+     |> update(:notifications_open, &(!&1))
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
   def handle_event("close_notifications", _params, socket) do
     {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_profile_menu", _params, socket) do
+    {:noreply,
+     socket
+     |> update(:profile_menu_open, &(!&1))
+     |> assign(:notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("close_profile_menu", _params, socket) do
+    {:noreply, assign(socket, :profile_menu_open, false)}
   end
 
   # Project CRUD Events

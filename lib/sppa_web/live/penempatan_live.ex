@@ -1,6 +1,8 @@
 defmodule SppaWeb.PenempatanLive do
   use SppaWeb, :live_view
 
+  alias Sppa.Projects
+
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @impl true
@@ -30,6 +32,7 @@ defmodule SppaWeb.PenempatanLive do
         |> assign(:page_title, "Penempatan")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/penempatan")
         |> assign(:penempatan, penempatan)
         |> assign(:show_edit_modal, false)
@@ -37,7 +40,20 @@ defmodule SppaWeb.PenempatanLive do
         |> assign(:selected_penempatan, nil)
         |> assign(:form, to_form(%{}, as: :penempatan))
 
-      {:ok, socket}
+      if connected?(socket) do
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
+
+        {:ok,
+         socket
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
+      else
+        {:ok,
+         socket
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
+      end
     else
       socket =
         socket
@@ -64,10 +80,13 @@ defmodule SppaWeb.PenempatanLive do
         |> assign(:page_title, "Butiran Penempatan")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/penempatan")
 
       if connected?(socket) do
         penempatan = get_penempatan_by_id(penempatan_id)
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
 
         if penempatan do
           {:ok,
@@ -76,7 +95,9 @@ defmodule SppaWeb.PenempatanLive do
            |> assign(:penempatan, [])
            |> assign(:show_edit_modal, false)
            |> assign(:show_create_modal, false)
-           |> assign(:form, to_form(%{}, as: :penempatan))}
+           |> assign(:form, to_form(%{}, as: :penempatan))
+           |> assign(:activities, activities)
+           |> assign(:notifications_count, notifications_count)}
         else
           socket =
             socket
@@ -85,6 +106,8 @@ defmodule SppaWeb.PenempatanLive do
               "Penempatan tidak dijumpai."
             )
             |> Phoenix.LiveView.redirect(to: ~p"/penempatan")
+            |> assign(:activities, [])
+            |> assign(:notifications_count, 0)
 
           {:ok, socket}
         end
@@ -95,7 +118,9 @@ defmodule SppaWeb.PenempatanLive do
          |> assign(:penempatan, [])
          |> assign(:show_edit_modal, false)
          |> assign(:show_create_modal, false)
-         |> assign(:form, to_form(%{}, as: :penempatan))}
+         |> assign(:form, to_form(%{}, as: :penempatan))
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
       end
     else
       socket =
@@ -195,12 +220,28 @@ defmodule SppaWeb.PenempatanLive do
 
   @impl true
   def handle_event("toggle_notifications", _params, socket) do
-    {:noreply, update(socket, :notifications_open, &(!&1))}
+    {:noreply,
+     socket
+     |> update(:notifications_open, &(!&1))
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
   def handle_event("close_notifications", _params, socket) do
     {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_profile_menu", _params, socket) do
+    {:noreply,
+     socket
+     |> update(:profile_menu_open, &(!&1))
+     |> assign(:notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("close_profile_menu", _params, socket) do
+    {:noreply, assign(socket, :profile_menu_open, false)}
   end
 
   @impl true

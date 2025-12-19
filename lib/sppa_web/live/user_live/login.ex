@@ -26,7 +26,7 @@ defmodule SppaWeb.UserLive.Login do
              <%!-- System Title --%>
             <div class="text-center mb-10">
               <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 leading-relaxed">
-                Sistem Pengurusan Pembangunan Aplikasi
+                <.system_name />
               </h2>
             </div>
              <%!-- Login Form --%>
