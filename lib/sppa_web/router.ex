@@ -30,7 +30,6 @@ defmodule SppaWeb.Router do
     # you can use Plug.BasicAuth to set up some basic authentication
     # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
-
     scope "/dev" do
       pipe_through :browser
 
@@ -68,6 +67,7 @@ defmodule SppaWeb.Router do
       live "/penempatan/:id", PenempatanLive, :show
       live "/penyerahan", PenyerahanLive, :index
       live "/penyerahan/:id", PenyerahanLive, :show
+      live "/pembangunan", PembangunanLive, :index
     end
 
     live_session :require_authenticated_user,
