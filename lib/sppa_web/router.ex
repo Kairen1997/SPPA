@@ -55,6 +55,18 @@ defmodule SppaWeb.Router do
       live "/projek/:project_id/modul", ModulProjekLive, :index
       live "/projek/:project_id/pelan-modul", PelanModulLive, :index
       live "/analisis-dan-rekabentuk", AnalisisDanRekabentukLive, :index
+
+      # Dashboard modules referenced by the sidebar (must exist for VerifiedRoutes ~p)
+      live "/jadual-projek", JadualProjekLive, :index
+      live "/pengurusan-perubahan", PengurusanPerubahanLive, :index
+      live "/ujian-penerimaan-pengguna", UjianPenerimaanPenggunaLive, :index
+      live "/ujian-penerimaan-pengguna/:id", UjianPenerimaanPenggunaLive, :show
+      live "/ujian-keselamatan", UjianKeselamatanLive, :index
+      live "/ujian-keselamatan/:id", UjianKeselamatanLive, :show
+      live "/penempatan", PenempatanLive, :index
+      live "/penempatan/:id", PenempatanLive, :show
+      live "/penyerahan", PenyerahanLive, :index
+      live "/penyerahan/:id", PenyerahanLive, :show
     end
 
     live_session :require_authenticated_user,
