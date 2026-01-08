@@ -436,18 +436,14 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Jenis
-                  </label>
-                  <select
-                    name="penempatan[jenis]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  >
-                    <option value="" selected={@form[:jenis].value == ""}>Pilih Jenis</option>
-                    <option value="Produksi" selected={@form[:jenis].value == "Produksi"}>Produksi</option>
-                    <option value="Staging" selected={@form[:jenis].value == "Staging"}>Staging</option>
-                    <option value="Development" selected={@form[:jenis].value == "Development"}>Development</option>
-                  </select>
+                  <.input
+                    field={@form[:jenis]}
+                    type="select"
+                    label="Jenis"
+                    prompt="Pilih Jenis"
+                    options={["Produksi", "Staging", "Development"]}
+                    class="w-full"
+                  />
                 </div>
                 <div>
                   <.input
@@ -459,18 +455,13 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="penempatan[status]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  >
-                    <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>Menunggu</option>
-                    <option value="Dalam Proses" selected={@form[:status].value == "Dalam Proses"}>Dalam Proses</option>
-                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>Selesai</option>
-                    <option value="Dibatalkan" selected={@form[:status].value == "Dibatalkan"}>Dibatalkan</option>
-                  </select>
+                  <.input
+                    field={@form[:status]}
+                    type="select"
+                    label="Status"
+                    options={["Menunggu", "Dalam Proses", "Selesai", "Dibatalkan"]}
+                    class="w-full"
+                  />
                 </div>
                 <div>
                   <.input
@@ -551,15 +542,14 @@
                   />
                 </div>
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Catatan
-                  </label>
-                  <textarea
-                    name="penempatan[catatan]"
+                  <.input
+                    field={@form[:catatan]}
+                    type="textarea"
+                    label="Catatan"
                     rows="3"
                     placeholder="Masukkan catatan..."
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
-                  ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
+                  />
                 </div>
               </div>
             </.form>
@@ -662,18 +652,14 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Jenis
-                  </label>
-                  <select
-                    name="penempatan[jenis]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                  >
-                    <option value="" selected={@form[:jenis].value == ""}>Pilih Jenis</option>
-                    <option value="Produksi" selected={@form[:jenis].value == "Produksi"}>Produksi</option>
-                    <option value="Staging" selected={@form[:jenis].value == "Staging"}>Staging</option>
-                    <option value="Development" selected={@form[:jenis].value == "Development"}>Development</option>
-                  </select>
+                  <.input
+                    field={@form[:jenis]}
+                    type="select"
+                    label="Jenis"
+                    prompt="Pilih Jenis"
+                    options={["Produksi", "Staging", "Development"]}
+                    class="w-full"
+                  />
                 </div>
                 <div>
                   <.input
@@ -685,18 +671,13 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="penempatan[status]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                  >
-                    <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>Menunggu</option>
-                    <option value="Dalam Proses" selected={@form[:status].value == "Dalam Proses"}>Dalam Proses</option>
-                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>Selesai</option>
-                    <option value="Dibatalkan" selected={@form[:status].value == "Dibatalkan"}>Dibatalkan</option>
-                  </select>
+                  <.input
+                    field={@form[:status]}
+                    type="select"
+                    label="Status"
+                    options={["Menunggu", "Dalam Proses", "Selesai", "Dibatalkan"]}
+                    class="w-full"
+                  />
                 </div>
                 <div>
                   <.input
@@ -777,15 +758,14 @@
                   />
                 </div>
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Catatan
-                  </label>
-                  <textarea
-                    name="penempatan[catatan]"
+                  <.input
+                    field={@form[:catatan]}
+                    type="textarea"
+                    label="Catatan"
                     rows="3"
                     placeholder="Masukkan catatan..."
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
-                  ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
+                  />
                 </div>
               </div>
             </.form>
