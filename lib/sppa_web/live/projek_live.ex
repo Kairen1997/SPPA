@@ -33,6 +33,38 @@ defmodule SppaWeb.ProjekLive do
   defp normalize_tab("maklumbalas-pelanggan"), do: "Maklumbalas Pelanggan"
   defp normalize_tab(_), do: "Soal Selidik"
 
+  # Convert phase name (fasa) to tab slug for navigation
+  def fasa_to_tab_slug(fasa) when is_binary(fasa) do
+    fasa_lower = String.downcase(fasa) |> String.trim()
+
+    case fasa_lower do
+      "soal selidik" -> "soal-selidik"
+      "analisis dan rekabentuk" -> "analisis-dan-rekabentuk"
+      "jadual projek" -> "jadual-projek"
+      "pengaturcaraan" -> "pengaturcaraan"
+      "pengurusan perubahan" -> "pengurus-perubahan"
+      "pengurus perubahan" -> "pengurus-perubahan"
+      "uat" -> "uat"
+      "ujian keselamatan" -> "ujian-keselamatan"
+      "penempatan" -> "penempatan"
+      "penyerahan" -> "penyerahan"
+      "maklumbalas pelanggan" -> "maklumbalas-pelanggan"
+      _ -> "soal-selidik" # Default to first tab if phase not found
+    end
+  end
+
+  def fasa_to_tab_slug(_), do: "soal-selidik"
+
+  # Helper function to build navigation path with tab parameter
+  def build_project_navigate_path(project, user_role) do
+    tab_slug = fasa_to_tab_slug(project.fasa)
+    base_path = if(user_role == "pembangun sistem",
+      do: "/projek/#{project.id}/details",
+      else: "/projek/#{project.id}"
+    )
+    "#{base_path}?tab=#{tab_slug}"
+  end
+
   defp mount_index(socket) do
     # Verify user has required role (defense in depth - router already checks this)
     user_role =
@@ -372,7 +404,7 @@ defmodule SppaWeb.ProjekLive do
         id: 5,
         nama: "Aplikasi Mobile E",
         status: "Dalam Pembangunan",
-        fasa: "Pengaturcaraan",
+        fasa: "Soal Selidik",
         tarikh_mula: ~D[2024-03-01],
         tarikh_siap: ~D[2024-09-30],
         pengurus_projek: "Lim Wei Ming",
@@ -385,7 +417,7 @@ defmodule SppaWeb.ProjekLive do
         id: 6,
         nama: "Sistem Pengurusan Inventori F",
         status: "Dalam Pembangunan",
-        fasa: "Pengaturcaraan",
+        fasa: "Jadual Projek",
         tarikh_mula: ~D[2024-04-15],
         tarikh_siap: ~D[2024-10-31],
         pengurus_projek: "Ahmad bin Abdullah",
@@ -398,7 +430,7 @@ defmodule SppaWeb.ProjekLive do
         id: 7,
         nama: "Portal Pelanggan G",
         status: "Ujian Penerimaan Pengguna",
-        fasa: "UAT",
+        fasa: "Ujian Keselamatan",
         tarikh_mula: ~D[2023-12-01],
         tarikh_siap: ~D[2024-07-15],
         pengurus_projek: "Siti Nurhaliza",
@@ -411,7 +443,7 @@ defmodule SppaWeb.ProjekLive do
         id: 8,
         nama: "Sistem Laporan Automatik H",
         status: "Selesai",
-        fasa: "Penyerahan",
+        fasa: "Maklumbalas Pelanggan",
         tarikh_mula: ~D[2023-08-01],
         tarikh_siap: ~D[2024-02-28],
         pengurus_projek: "Mohd Faizal",
@@ -424,7 +456,7 @@ defmodule SppaWeb.ProjekLive do
         id: 9,
         nama: "Aplikasi Web Responsif I",
         status: "Dalam Pembangunan",
-        fasa: "Pengaturcaraan",
+        fasa: "Pengurusan Perubahan",
         tarikh_mula: ~D[2024-05-01],
         tarikh_siap: ~D[2024-11-30],
         pengurus_projek: "Nurul Aina",
@@ -437,7 +469,7 @@ defmodule SppaWeb.ProjekLive do
         id: 10,
         nama: "Sistem Integrasi API J",
         status: "Ujian Penerimaan Pengguna",
-        fasa: "UAT",
+        fasa: "Penempatan",
         tarikh_mula: ~D[2024-01-10],
         tarikh_siap: ~D[2024-06-30],
         pengurus_projek: "Lim Wei Ming",
@@ -463,7 +495,7 @@ defmodule SppaWeb.ProjekLive do
         id: 12,
         nama: "Portal Pentadbiran L",
         status: "Dalam Pembangunan",
-        fasa: "Analisis dan Rekabentuk",
+        fasa: "Soal Selidik",
         tarikh_mula: ~D[2024-06-01],
         tarikh_siap: ~D[2024-12-31],
         pengurus_projek: "Siti Nurhaliza",
@@ -501,7 +533,7 @@ defmodule SppaWeb.ProjekLive do
         id: 1,
         nama: "Sistem Pengurusan Projek A",
         status: "Dalam Pembangunan",
-        fasa: "soal selidik",
+        fasa: "Soal Selidik",
         tarikh_mula: ~D[2024-01-15],
         tarikh_siap: ~D[2024-06-30],
         pengurus_projek: "Ahmad bin Abdullah",
@@ -516,7 +548,7 @@ defmodule SppaWeb.ProjekLive do
         id: 2,
         nama: "Sistem Analisis Data B",
         status: "Ujian Penerimaan Pengguna",
-        fasa: "analisis dan rekabentuk",
+        fasa: "Analisis dan Rekabentuk",
         tarikh_mula: ~D[2023-11-01],
         tarikh_siap: ~D[2024-05-15],
         pengurus_projek: "Siti Nurhaliza",
@@ -530,7 +562,7 @@ defmodule SppaWeb.ProjekLive do
         id: 3,
         nama: "Portal E-Services C",
         status: "Selesai",
-        fasa: "pengaturcaraan",
+        fasa: "Pengaturcaraan",
         tarikh_mula: ~D[2023-06-01],
         tarikh_siap: ~D[2024-01-31],
         pengurus_projek: "Mohd Faizal",
@@ -545,7 +577,7 @@ defmodule SppaWeb.ProjekLive do
         id: 4,
         nama: "Sistem Pengurusan Dokumen D",
         status: "Dalam Pembangunan",
-        fasa: "pengaturcaraan",
+        fasa: "Pengaturcaraan",
         tarikh_mula: ~D[2024-02-01],
         tarikh_siap: ~D[2024-08-31],
         pengurus_projek: "Nurul Aina",
@@ -559,7 +591,7 @@ defmodule SppaWeb.ProjekLive do
         id: 5,
         nama: "Aplikasi Mobile E",
         status: "Dalam Pembangunan",
-        fasa: "pengaturcaraan",
+        fasa: "Soal Selidik",
         tarikh_mula: ~D[2024-03-01],
         tarikh_siap: ~D[2024-09-30],
         pengurus_projek: "Lim Wei Ming",
@@ -574,7 +606,7 @@ defmodule SppaWeb.ProjekLive do
         id: 6,
         nama: "Sistem Pengurusan Inventori F",
         status: "Dalam Pembangunan",
-        fasa: "pengaturcaraan",
+        fasa: "Jadual Projek",
         tarikh_mula: ~D[2024-04-15],
         tarikh_siap: ~D[2024-10-31],
         pengurus_projek: "Ahmad bin Abdullah",
@@ -589,7 +621,7 @@ defmodule SppaWeb.ProjekLive do
         id: 7,
         nama: "Portal Pelanggan G",
         status: "Ujian Penerimaan Pengguna",
-        fasa: "pengaturcaraan",
+        fasa: "Ujian Keselamatan",
         tarikh_mula: ~D[2023-12-01],
         tarikh_siap: ~D[2024-07-15],
         pengurus_projek: "Siti Nurhaliza",
@@ -604,7 +636,7 @@ defmodule SppaWeb.ProjekLive do
         id: 8,
         nama: "Sistem Laporan Automatik H",
         status: "Selesai",
-        fasa: "penyerahan",
+        fasa: "Maklumbalas Pelanggan",
         tarikh_mula: ~D[2023-08-01],
         tarikh_siap: ~D[2024-02-28],
         pengurus_projek: "Mohd Faizal",
@@ -618,7 +650,7 @@ defmodule SppaWeb.ProjekLive do
         id: 9,
         nama: "Aplikasi Web Responsif I",
         status: "Dalam Pembangunan",
-        fasa: "pengaturcaraan",
+        fasa: "Pengurusan Perubahan",
         tarikh_mula: ~D[2024-05-01],
         tarikh_siap: ~D[2024-11-30],
         pengurus_projek: "Nurul Aina",
@@ -632,7 +664,7 @@ defmodule SppaWeb.ProjekLive do
         id: 10,
         nama: "Sistem Integrasi API J",
         status: "Ujian Penerimaan Pengguna",
-        fasa: "pengaturcaraan",
+        fasa: "Penempatan",
         tarikh_mula: ~D[2024-01-10],
         tarikh_siap: ~D[2024-06-30],
         pengurus_projek: "Lim Wei Ming",
@@ -646,7 +678,7 @@ defmodule SppaWeb.ProjekLive do
         id: 11,
         nama: "Sistem Backup dan Pemulihan K",
         status: "Selesai",
-        fasa: "penyerahan",
+        fasa: "Penyerahan",
         tarikh_mula: ~D[2023-09-15],
         tarikh_siap: ~D[2024-03-31],
         pengurus_projek: "Ahmad bin Abdullah",
@@ -660,7 +692,7 @@ defmodule SppaWeb.ProjekLive do
         id: 12,
         nama: "Portal Pentadbiran L",
         status: "Dalam Pembangunan",
-        fasa: "analisis dan rekabentuk",
+        fasa: "Soal Selidik",
         tarikh_mula: ~D[2024-06-01],
         tarikh_siap: ~D[2024-12-31],
         pengurus_projek: "Siti Nurhaliza",
@@ -755,30 +787,6 @@ defmodule SppaWeb.ProjekLive do
     paginated = Enum.slice(projects, start_index, per_page)
 
     {paginated, total_pages}
-  end
-
-  # Format date in Malay format (e.g., "10 Mac 2025")
-  defp format_date_malay(date) do
-    month_names = %{
-      1 => "Januari",
-      2 => "Februari",
-      3 => "Mac",
-      4 => "April",
-      5 => "Mei",
-      6 => "Jun",
-      7 => "Julai",
-      8 => "Ogos",
-      9 => "September",
-      10 => "Oktober",
-      11 => "November",
-      12 => "Disember"
-    }
-
-    day = date.day
-    month = month_names[date.month]
-    year = date.year
-
-    "#{day} #{month} #{year}"
   end
 
   # Get soal selidik document data - will be replaced with database query later
