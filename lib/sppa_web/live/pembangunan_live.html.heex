@@ -32,14 +32,13 @@
           <.header_logos />
         </div>
         
-        <div class="flex items-center gap-3">
-          <.link
-            navigate={~p"/users/settings"}
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
-          >
-            <.icon name="hero-user-circle" class="w-6 h-6" />
-          </.link>
-        </div>
+        <.header_actions
+          notifications_open={@notifications_open}
+          notifications_count={@notifications_count}
+          activities={@activities}
+          profile_menu_open={@profile_menu_open}
+          current_scope={@current_scope}
+        />
       </header>
 
       <%!-- Main Content Area --%>
