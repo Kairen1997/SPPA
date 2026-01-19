@@ -49,7 +49,7 @@
         </div>
       </header>
        <%!-- Content --%>
-      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10">
+      <main id="main-content" class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10">
         <div class="max-w-[1800px] mx-auto space-y-6">
           <%!-- Back Button --%>
           <div class="mb-2">
@@ -77,19 +77,33 @@
                     <p class="text-sm text-gray-500 mt-1">Pengurusan Tugasan dan Modul</p>
                   </div>
                 </div>
-                <div class="ml-12 space-y-1">
-                  <h2 class="text-lg font-semibold text-gray-800">{@project.nama}</h2>
-                  <%= if @project.jabatan do %>
-                    <p class="text-sm text-gray-600 flex items-center gap-2">
-                      <.icon name="hero-building-office" class="w-4 h-4" />
-                      {@project.jabatan}
-                    </p>
-                  <% end %>
-                </div>
+                <%= if @project do %>
+                  <div class="ml-12 space-y-1">
+                    <h2 class="text-lg font-semibold text-gray-800">{@project.nama}</h2>
+                    <%= if @project.jabatan do %>
+                      <p class="text-sm text-gray-600 flex items-center gap-2">
+                        <.icon name="hero-building-office" class="w-4 h-4" />
+                        {@project.jabatan}
+                      </p>
+                    <% end %>
+                  </div>
+                <% end %>
               </div>
               
               <%!-- Action Buttons --%>
               <div class="flex items-center gap-3">
+                <%!-- Print to PDF Button --%>
+                <button
+                  id="print-pdf-btn-modul"
+                  phx-hook="PrintToPDF"
+                  data-target="main-content"
+                  class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                  title="Cetak sebagai PDF"
+                >
+                  <.icon name="hero-printer" class="w-5 h-5" />
+                  <span class="hidden sm:inline">Cetak PDF</span>
+                </button>
+                
                 <.link
                   navigate={~p"/projek/#{@project_id}/pelan-modul"}
                   class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
