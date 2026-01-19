@@ -18,7 +18,7 @@ defmodule SppaWeb.ProjekLive do
 
   @impl true
   def handle_params(params, _uri, socket) do
-    tab = Map.get(params, "tab", "overview")
+    tab = Map.get(params, "tab", "soal-selidik")
     {:noreply, assign(socket, :current_tab, normalize_tab(tab))}
   end
 
@@ -31,7 +31,7 @@ defmodule SppaWeb.ProjekLive do
   defp normalize_tab("pengurus-perubahan"), do: "Pengurus Perubahan"
   defp normalize_tab("ujian-keselamatan"), do: "Ujian Keselamatan"
   defp normalize_tab("maklumbalas-pelanggan"), do: "Maklumbalas Pelanggan"
-  defp normalize_tab(_), do: "Overview"
+  defp normalize_tab(_), do: "Soal Selidik"
 
   defp mount_index(socket) do
     # Verify user has required role (defense in depth - router already checks this)
@@ -127,9 +127,6 @@ defmodule SppaWeb.ProjekLive do
         if project do
           project_name = Map.get(project, :nama) || Map.get(project, :name) || "Projek"
 
-          # Get overview data for the project
-          overview_data = get_project_overview(project_id, project)
-
           activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
           notifications_count = length(activities)
 
@@ -137,7 +134,7 @@ defmodule SppaWeb.ProjekLive do
            socket
            |> assign(:project, project)
            |> assign(:projects, [])
-           |> assign(:current_tab, "Overview")
+           |> assign(:current_tab, "Soal Selidik")
            |> assign(:soal_selidik_document, get_soal_selidik_document(project.nama))
            |> assign(:soal_selidik_pdf_data, Sppa.SoalSelidik.pdf_data(nama_sistem: project_name))
            |> assign(
@@ -147,16 +144,6 @@ defmodule SppaWeb.ProjekLive do
                modules: Sppa.AnalisisDanRekabentuk.initial_modules()
              )
            )
-           |> assign(:progress, overview_data.progress)
-           |> assign(:timeline, overview_data.timeline)
-           |> assign(:current_tasks, overview_data.current_tasks)
-           |> assign(:change_requests, overview_data.change_requests)
-           |> assign(:statuses, overview_data.statuses)
-           |> assign(:activity_log, overview_data.activity_log)
-           |> assign(:fasa_code, overview_data.fasa_code)
-           |> assign(:fasa_name, overview_data.fasa_name)
-           |> assign(:tarikh_mula_formatted, format_date_malay(project.tarikh_mula))
-           |> assign(:tarikh_siap_formatted, format_date_malay(project.tarikh_siap))
            |> assign(:page, 1)
            |> assign(:per_page, 10)
            |> assign(:total_pages, 0)
@@ -333,7 +320,7 @@ defmodule SppaWeb.ProjekLive do
         id: 1,
         nama: "Sistem Pengurusan Projek A",
         status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
+        fasa: "Pengaturcaraan",
         tarikh_mula: ~D[2024-01-15],
         tarikh_siap: ~D[2024-06-30],
         pengurus_projek: "Ahmad bin Abdullah",
@@ -371,7 +358,7 @@ defmodule SppaWeb.ProjekLive do
       %{
         id: 4,
         nama: "Sistem Pengurusan Dokumen D",
-        status: "Ditangguhkan",
+        status: "Dalam Pembangunan",
         fasa: "Analisis dan Rekabentuk",
         tarikh_mula: ~D[2024-02-01],
         tarikh_siap: ~D[2024-08-31],
@@ -385,7 +372,7 @@ defmodule SppaWeb.ProjekLive do
         id: 5,
         nama: "Aplikasi Mobile E",
         status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
+        fasa: "Pengaturcaraan",
         tarikh_mula: ~D[2024-03-01],
         tarikh_siap: ~D[2024-09-30],
         pengurus_projek: "Lim Wei Ming",
@@ -398,7 +385,7 @@ defmodule SppaWeb.ProjekLive do
         id: 6,
         nama: "Sistem Pengurusan Inventori F",
         status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
+        fasa: "Pengaturcaraan",
         tarikh_mula: ~D[2024-04-15],
         tarikh_siap: ~D[2024-10-31],
         pengurus_projek: "Ahmad bin Abdullah",
@@ -437,7 +424,7 @@ defmodule SppaWeb.ProjekLive do
         id: 9,
         nama: "Aplikasi Web Responsif I",
         status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
+        fasa: "Pengaturcaraan",
         tarikh_mula: ~D[2024-05-01],
         tarikh_siap: ~D[2024-11-30],
         pengurus_projek: "Nurul Aina",
@@ -475,7 +462,7 @@ defmodule SppaWeb.ProjekLive do
       %{
         id: 12,
         nama: "Portal Pentadbiran L",
-        status: "Ditangguhkan",
+        status: "Dalam Pembangunan",
         fasa: "Analisis dan Rekabentuk",
         tarikh_mula: ~D[2024-06-01],
         tarikh_siap: ~D[2024-12-31],
@@ -514,7 +501,7 @@ defmodule SppaWeb.ProjekLive do
         id: 1,
         nama: "Sistem Pengurusan Projek A",
         status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
+        fasa: "soal selidik",
         tarikh_mula: ~D[2024-01-15],
         tarikh_siap: ~D[2024-06-30],
         pengurus_projek: "Ahmad bin Abdullah",
@@ -529,7 +516,7 @@ defmodule SppaWeb.ProjekLive do
         id: 2,
         nama: "Sistem Analisis Data B",
         status: "Ujian Penerimaan Pengguna",
-        fasa: "UAT",
+        fasa: "analisis dan rekabentuk",
         tarikh_mula: ~D[2023-11-01],
         tarikh_siap: ~D[2024-05-15],
         pengurus_projek: "Siti Nurhaliza",
@@ -543,7 +530,7 @@ defmodule SppaWeb.ProjekLive do
         id: 3,
         nama: "Portal E-Services C",
         status: "Selesai",
-        fasa: "Penyerahan",
+        fasa: "pengaturcaraan",
         tarikh_mula: ~D[2023-06-01],
         tarikh_siap: ~D[2024-01-31],
         pengurus_projek: "Mohd Faizal",
@@ -557,8 +544,8 @@ defmodule SppaWeb.ProjekLive do
       %{
         id: 4,
         nama: "Sistem Pengurusan Dokumen D",
-        status: "Ditangguhkan",
-        fasa: "Analisis dan Rekabentuk",
+        status: "Dalam Pembangunan",
+        fasa: "pengaturcaraan",
         tarikh_mula: ~D[2024-02-01],
         tarikh_siap: ~D[2024-08-31],
         pengurus_projek: "Nurul Aina",
@@ -572,7 +559,7 @@ defmodule SppaWeb.ProjekLive do
         id: 5,
         nama: "Aplikasi Mobile E",
         status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
+        fasa: "pengaturcaraan",
         tarikh_mula: ~D[2024-03-01],
         tarikh_siap: ~D[2024-09-30],
         pengurus_projek: "Lim Wei Ming",
@@ -587,7 +574,7 @@ defmodule SppaWeb.ProjekLive do
         id: 6,
         nama: "Sistem Pengurusan Inventori F",
         status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
+        fasa: "pengaturcaraan",
         tarikh_mula: ~D[2024-04-15],
         tarikh_siap: ~D[2024-10-31],
         pengurus_projek: "Ahmad bin Abdullah",
@@ -602,7 +589,7 @@ defmodule SppaWeb.ProjekLive do
         id: 7,
         nama: "Portal Pelanggan G",
         status: "Ujian Penerimaan Pengguna",
-        fasa: "UAT",
+        fasa: "pengaturcaraan",
         tarikh_mula: ~D[2023-12-01],
         tarikh_siap: ~D[2024-07-15],
         pengurus_projek: "Siti Nurhaliza",
@@ -617,7 +604,7 @@ defmodule SppaWeb.ProjekLive do
         id: 8,
         nama: "Sistem Laporan Automatik H",
         status: "Selesai",
-        fasa: "Penyerahan",
+        fasa: "penyerahan",
         tarikh_mula: ~D[2023-08-01],
         tarikh_siap: ~D[2024-02-28],
         pengurus_projek: "Mohd Faizal",
@@ -631,7 +618,7 @@ defmodule SppaWeb.ProjekLive do
         id: 9,
         nama: "Aplikasi Web Responsif I",
         status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
+        fasa: "pengaturcaraan",
         tarikh_mula: ~D[2024-05-01],
         tarikh_siap: ~D[2024-11-30],
         pengurus_projek: "Nurul Aina",
@@ -645,7 +632,7 @@ defmodule SppaWeb.ProjekLive do
         id: 10,
         nama: "Sistem Integrasi API J",
         status: "Ujian Penerimaan Pengguna",
-        fasa: "UAT",
+        fasa: "pengaturcaraan",
         tarikh_mula: ~D[2024-01-10],
         tarikh_siap: ~D[2024-06-30],
         pengurus_projek: "Lim Wei Ming",
@@ -659,7 +646,7 @@ defmodule SppaWeb.ProjekLive do
         id: 11,
         nama: "Sistem Backup dan Pemulihan K",
         status: "Selesai",
-        fasa: "Penyerahan",
+        fasa: "penyerahan",
         tarikh_mula: ~D[2023-09-15],
         tarikh_siap: ~D[2024-03-31],
         pengurus_projek: "Ahmad bin Abdullah",
@@ -672,8 +659,8 @@ defmodule SppaWeb.ProjekLive do
       %{
         id: 12,
         nama: "Portal Pentadbiran L",
-        status: "Ditangguhkan",
-        fasa: "Analisis dan Rekabentuk",
+        status: "Dalam Pembangunan",
+        fasa: "analisis dan rekabentuk",
         tarikh_mula: ~D[2024-06-01],
         tarikh_siap: ~D[2024-12-31],
         pengurus_projek: "Siti Nurhaliza",
@@ -792,118 +779,6 @@ defmodule SppaWeb.ProjekLive do
     year = date.year
 
     "#{day} #{month} #{year}"
-  end
-
-  # Calculate project progress based on dates and phase
-  defp calculate_progress(tarikh_mula, tarikh_siap, fasa, status) do
-    today = Date.utc_today()
-
-    # If project is completed, return 100%
-    if status == "Selesai" do
-      100
-    else
-      # Phase-based progress (primary indicator)
-      # Timeline phases: B1 (0-20%), B2 (20-40%), B4 (40-60%), B5 (60-80%), Dep (80-100%)
-      phase_progress =
-        case fasa do
-          # B2 phase: 20-40% range, use 30% as midpoint
-          "Analisis dan Rekabentuk" -> 30
-          # B4 phase: 40-60% range, use 50% as midpoint
-          "Pembangunan" -> 50
-          # B5 phase: 60-80% range, use 70% as midpoint
-          "UAT" -> 70
-          # Dep phase: 80-100% range, use 90% as midpoint
-          "Penyerahan" -> 90
-          # Default/B1 phase: 0-20% range, use 10% as midpoint
-          _ -> 10
-        end
-
-      # Calculate date-based progress as a secondary check
-      total_days = Date.diff(tarikh_siap, tarikh_mula)
-      elapsed_days = Date.diff(today, tarikh_mula)
-
-      date_progress =
-        cond do
-          # Invalid date range, use phase progress
-          total_days <= 0 -> phase_progress
-          # Project hasn't started yet
-          elapsed_days < 0 -> 0
-          # Past due date, show 95% (not 100% until completed)
-          elapsed_days >= total_days -> 95
-          # Normal date-based calculation
-          true -> div(elapsed_days * 100, total_days)
-        end
-
-      # Use phase progress as primary, but adjust if dates suggest significantly different progress
-      # This ensures phase is respected but dates provide reality check
-      cond do
-        # Date suggests much more progress
-        date_progress > phase_progress + 20 -> min(date_progress, 95)
-        # Date suggests much less progress
-        date_progress < phase_progress - 20 -> max(date_progress, 0)
-        # Use phase progress if dates are reasonably aligned
-        true -> phase_progress
-      end
-    end
-  end
-
-  # Get project overview data - will be replaced with database queries later
-  defp get_project_overview(_project_id, project) do
-    # Map fasa to development phase code and name
-    {fasa_code, fasa_name} =
-      case project.fasa do
-        "Soal Selidik" -> {"B1", "Soal Selidik kajian keperluan pembangunan aplikasi"}
-        "Analisis dan Rekabentuk" -> {"B2", "Analisis dan Rekabentuk"}
-        "Pembangunan" -> {"B4", "Jadual Projek"}
-        "UAT" -> {"B5", "UAT"}
-        "Penyerahan" -> {"B6", "Penyerahan"}
-        _ -> {"B1", "Soal Selidik kajian keperluan pembangunan aplikasi"}
-      end
-
-    # Calculate progress based on dates and phase
-    # First, try date-based calculation (elapsed time vs total time)
-    progress =
-      calculate_progress(project.tarikh_mula, project.tarikh_siap, project.fasa, project.status)
-
-    # Timeline milestones
-    timeline = ["B1", "B2", "B4", "B5", "Dep"]
-
-    # Current tasks (mock data)
-    current_tasks = [
-      "Finalize UI design",
-      "Update BPA B2"
-    ]
-
-    # Change request summary (mock data)
-    change_requests = %{
-      new: 3,
-      approved: 12,
-      rejected: 2
-    }
-
-    # Status badges (mock data)
-    statuses = [
-      %{label: "UAT", status: "In Progress"},
-      %{label: "Deployment", status: "Ready"}
-    ]
-
-    # Activity log (mock data)
-    activity_log = [
-      %{time: "11:45 AM", type: "approved", message: "CR-04 Approved by Admin"},
-      %{time: "11:32 AM", type: "submitted", message: "B2 Submitted by Developer"},
-      %{time: "11:15 AM", type: "updated", message: "Milestone updated to Phase 3"}
-    ]
-
-    %{
-      progress: progress,
-      timeline: timeline,
-      current_tasks: current_tasks,
-      change_requests: change_requests,
-      statuses: statuses,
-      activity_log: activity_log,
-      fasa_code: fasa_code,
-      fasa_name: fasa_name
-    }
   end
 
   # Get soal selidik document data - will be replaced with database query later
