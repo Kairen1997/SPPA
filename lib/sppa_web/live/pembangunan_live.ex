@@ -1,6 +1,8 @@
 defmodule SppaWeb.PembangunanLive do
   use SppaWeb, :live_view
 
+  alias Sppa.Projects
+
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @impl true
@@ -17,7 +19,7 @@ defmodule SppaWeb.PembangunanLive do
       socket =
         socket
         |> assign(:hide_root_header, true)
-        |> assign(:page_title, "Pembangunan")
+        |> assign(:page_title, "Pengaturcaraan")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
@@ -28,8 +30,20 @@ defmodule SppaWeb.PembangunanLive do
         |> assign(:show_edit_modal, false)
         |> assign(:selected_module, nil)
         |> assign(:form, to_form(%{}, as: :module))
+        |> assign(:activities, [])
+        |> assign(:notifications_count, 0)
 
-      {:ok, socket}
+      if connected?(socket) do
+        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        notifications_count = length(activities)
+
+        {:ok,
+         socket
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
+      else
+        {:ok, socket}
+      end
     else
       socket =
         socket

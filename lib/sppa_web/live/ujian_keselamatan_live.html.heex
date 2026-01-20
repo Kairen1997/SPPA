@@ -477,42 +477,32 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="ujian[status]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  >
-                    <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>Menunggu</option>
-                    <option value="Dalam Proses" selected={@form[:status].value == "Dalam Proses"}>Dalam Proses</option>
-                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>Selesai</option>
-                    <option value="Dibatalkan" selected={@form[:status].value == "Dibatalkan"}>Dibatalkan</option>
-                  </select>
+                  <.input
+                    field={@form[:status]}
+                    type="select"
+                    label="Status"
+                    options={["Menunggu", "Dalam Proses", "Selesai", "Dibatalkan"]}
+                    class="w-full"
+                  />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Hasil
-                  </label>
-                  <select
-                    name="ujian[hasil]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  >
-                    <option value="Belum Selesai" selected={@form[:hasil].value == "Belum Selesai"}>Belum Selesai</option>
-                    <option value="Lulus" selected={@form[:hasil].value == "Lulus"}>Lulus</option>
-                    <option value="Gagal" selected={@form[:hasil].value == "Gagal"}>Gagal</option>
-                  </select>
+                  <.input
+                    field={@form[:hasil]}
+                    type="select"
+                    label="Hasil"
+                    options={["Belum Selesai", "Lulus", "Gagal"]}
+                    class="w-full"
+                  />
                 </div>
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Catatan
-                  </label>
-                  <textarea
-                    name="ujian[catatan]"
+                  <.input
+                    field={@form[:catatan]}
+                    type="textarea"
+                    label="Catatan"
                     rows="3"
                     placeholder="Masukkan catatan..."
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
-                  ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
+                  />
                 </div>
               </div>
             </.form>
@@ -623,42 +613,32 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="ujian[status]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                  >
-                    <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>Menunggu</option>
-                    <option value="Dalam Proses" selected={@form[:status].value == "Dalam Proses"}>Dalam Proses</option>
-                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>Selesai</option>
-                    <option value="Dibatalkan" selected={@form[:status].value == "Dibatalkan"}>Dibatalkan</option>
-                  </select>
+                  <.input
+                    field={@form[:status]}
+                    type="select"
+                    label="Status"
+                    options={["Menunggu", "Dalam Proses", "Selesai", "Dibatalkan"]}
+                    class="w-full"
+                  />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Hasil
-                  </label>
-                  <select
-                    name="ujian[hasil]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                  >
-                    <option value="Belum Selesai" selected={@form[:hasil].value == "Belum Selesai"}>Belum Selesai</option>
-                    <option value="Lulus" selected={@form[:hasil].value == "Lulus"}>Lulus</option>
-                    <option value="Gagal" selected={@form[:hasil].value == "Gagal"}>Gagal</option>
-                  </select>
+                  <.input
+                    field={@form[:hasil]}
+                    type="select"
+                    label="Hasil"
+                    options={["Belum Selesai", "Lulus", "Gagal"]}
+                    class="w-full"
+                  />
                 </div>
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Catatan
-                  </label>
-                  <textarea
-                    name="ujian[catatan]"
+                  <.input
+                    field={@form[:catatan]}
+                    type="textarea"
+                    label="Catatan"
                     rows="3"
                     placeholder="Masukkan catatan..."
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
-                  ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
+                  />
                 </div>
               </div>
             </.form>
@@ -747,50 +727,44 @@
                   />
                 </div>
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Langkah Ujian
-                  </label>
-                  <textarea
-                    name="kes[langkah]"
+                  <.input
+                    field={@kes_form[:langkah]}
+                    type="textarea"
+                    label="Langkah Ujian"
                     rows="4"
                     placeholder="Masukkan langkah ujian..."
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
-                  ><%= if @kes_form[:langkah] && @kes_form[:langkah].value, do: @kes_form[:langkah].value, else: "" %></textarea>
+                  />
                 </div>
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Keputusan Dijangka
-                  </label>
-                  <textarea
-                    name="kes[keputusan_dijangka]"
+                  <.input
+                    field={@kes_form[:keputusan_dijangka]}
+                    type="textarea"
+                    label="Keputusan Dijangka"
                     rows="3"
                     placeholder="Masukkan keputusan dijangka..."
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
-                  ><%= if @kes_form[:keputusan_dijangka] && @kes_form[:keputusan_dijangka].value, do: @kes_form[:keputusan_dijangka].value, else: "" %></textarea>
+                  />
                 </div>
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Keputusan Sebenar
-                  </label>
-                  <textarea
-                    name="kes[keputusan_sebenar]"
+                  <.input
+                    field={@kes_form[:keputusan_sebenar]}
+                    type="textarea"
+                    label="Keputusan Sebenar"
                     rows="3"
                     placeholder="Masukkan keputusan sebenar..."
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
-                  ><%= if @kes_form[:keputusan_sebenar] && @kes_form[:keputusan_sebenar].value, do: @kes_form[:keputusan_sebenar].value, else: "" %></textarea>
+                  />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Hasil
-                  </label>
-                  <select
-                    name="kes[hasil]"
+                  <.input
+                    field={@kes_form[:hasil]}
+                    type="select"
+                    label="Hasil"
+                    prompt="-"
+                    options={["Lulus", "Gagal"]}
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                  >
-                    <option value="" selected={!@kes_form[:hasil] || @kes_form[:hasil].value == ""}>-</option>
-                    <option value="Lulus" selected={@kes_form[:hasil] && @kes_form[:hasil].value == "Lulus"}>Lulus</option>
-                    <option value="Gagal" selected={@kes_form[:hasil] && @kes_form[:hasil].value == "Gagal"}>Gagal</option>
-                  </select>
+                  />
                 </div>
                 <div>
                   <.input
@@ -810,19 +784,11 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Disahkan
-                  </label>
-                  <div class="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="kes[disahkan]"
-                      value="true"
-                      checked={@kes_form[:disahkan] && @kes_form[:disahkan].value == "true"}
-                      class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                    />
-                    <label class="ml-2 text-sm text-gray-700">Ya</label>
-                  </div>
+                  <.input
+                    field={@kes_form[:disahkan]}
+                    type="checkbox"
+                    label="Disahkan"
+                  />
                 </div>
                 <div>
                   <.input

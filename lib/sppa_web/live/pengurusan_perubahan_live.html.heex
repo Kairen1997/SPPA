@@ -89,9 +89,6 @@
                 <table class="w-full text-sm">
                       <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
-                          <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            Bil.
-                          </th>
                           <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                             Tajuk Perubahan
                           </th>
@@ -126,13 +123,6 @@
                           :for={perubahan <- @perubahan}
                           class="hover:bg-gray-50 transition-colors duration-150"
                         >
-                          <td class="px-3 py-2 whitespace-nowrap">
-                            <div class="flex items-center justify-center">
-                              <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-semibold text-xs">
-                                {perubahan.number}
-                              </span>
-                            </div>
-                          </td>
                           <td class="px-3 py-2">
                             <div>
                               <div class="text-xs font-semibold text-gray-900">

@@ -4,45 +4,50 @@ defmodule SppaWeb.UserLive.Login do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="min-h-screen flex items-center justify-center relative overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 -my-20">
+    <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+      <div
+        class="min-h-screen flex items-center justify-center relative overflow-hidden bg-cover bg-center bg-no-repeat"
+        style={"background-image: url(" <> ~p"/images/Menara Kinabalu.jpg" <> ")"}
+      >
         <%!-- Login Form Container --%>
         <div
           class="relative z-10 mx-4"
           style="width: 600px; max-width: 90vw; min-width: 500px; flex-shrink: 0;"
         >
           <div
-            class="bg-white/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50"
+            class="bg-white/50 rounded-2xl shadow-2xl"
             style="box-sizing: border-box; padding: 40px; width: 100%;"
           >
             <%!-- Logo Section --%>
-            <div class="flex justify-center mb-8">
+            <div class="flex justify-center mb-6">
               <img
                 src={~p"/images/logojpkn.png"}
                 alt="JPKN Logo"
                 class="h-24 w-auto object-contain"
               />
             </div>
-             <%!-- System Title --%>
-            <div class="text-center mb-10">
-              <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 leading-relaxed">
-                <.system_name />
+
+            <%!-- System Title --%>
+            <div class="text-center mb-8">
+              <h2 class="text-lg font-semibold text-black leading-relaxed">
+                Sistem Pengurusan Pembangunan Aplikasi
               </h2>
             </div>
-             <%!-- Login Form --%>
+
+            <%!-- Login Form --%>
             <.form
               for={@form}
               id="login-form"
               action={~p"/users/log-in"}
               method="post"
               phx-change="validate"
-              class="space-y-6"
+              class="space-y-5"
             >
               <%!-- No K/P Field --%>
               <div class="flex items-center gap-4">
                 <label
                   for="user_no_kp"
-                  class="text-gray-700 dark:text-gray-300 font-medium w-28 text-sm"
+                  class="text-black font-medium w-28 text-sm"
                 >
                   No K/P
                 </label>
@@ -51,15 +56,16 @@ defmodule SppaWeb.UserLive.Login do
                     field={@form[:no_kp]}
                     type="text"
                     placeholder="Masukkan No K/P"
-                    class="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-900"
+                    class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                   />
                 </div>
               </div>
-               <%!-- Password Field --%>
+
+              <%!-- Password Field --%>
               <div class="flex items-center gap-4">
                 <label
                   for="user_password"
-                  class="text-gray-700 dark:text-gray-300 font-medium w-28 text-sm"
+                  class="text-black font-medium w-28 text-sm"
                 >
                   Kata Laluan
                 </label>
@@ -68,15 +74,16 @@ defmodule SppaWeb.UserLive.Login do
                     field={@form[:password]}
                     type="password"
                     placeholder="Masukkan Kata Laluan"
-                    class="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-900"
+                    class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                   />
                 </div>
               </div>
-               <%!-- Login Button --%>
-              <div class="pt-6">
+
+              <%!-- Login Button --%>
+              <div class="pt-4 flex justify-center">
                 <button
                   type="submit"
-                  class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3.5 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                  class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-2.5 px-8 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   Log Masuk
                 </button>
