@@ -19,12 +19,46 @@ defmodule SppaWeb.ProjekLive do
   @impl true
   def handle_params(params, _uri, socket) do
     tab = Map.get(params, "tab", "soal-selidik")
-    {:noreply, assign(socket, :current_tab, normalize_tab(tab))}
+    normalized_tab = normalize_tab(tab)
+
+    socket =
+      socket
+      |> assign(:current_tab, normalized_tab)
+      |> maybe_assign_modules(normalized_tab)
+      |> maybe_assign_change_requests(normalized_tab)
+
+    {:noreply, socket}
+  end
+
+  defp maybe_assign_modules(socket, "Pengaturcaraan") do
+    modules = get_modules_from_analisis_dan_rekabentuk()
+    assign(socket, :modules, modules)
+  end
+
+  defp maybe_assign_modules(socket, _) do
+    # Ensure modules is always assigned, even if empty
+    if Map.has_key?(socket.assigns, :modules) do
+      socket
+    else
+      assign(socket, :modules, [])
+    end
+  end
+
+  defp maybe_assign_change_requests(socket, "Pengurus Perubahan") do
+    change_requests = get_change_requests()
+    assign(socket, :change_requests, change_requests)
+  end
+
+  defp maybe_assign_change_requests(socket, _) do
+    # Ensure change_requests is always assigned, even if empty
+    if Map.has_key?(socket.assigns, :change_requests) do
+      socket
+    else
+      assign(socket, :change_requests, [])
+    end
   end
 
   defp normalize_tab("soal-selidik"), do: "Soal Selidik"
-  # Backwards compatible: keep old slug working, but rename the tab display.
-  defp normalize_tab("spesifikasi-aplikasi"), do: "Analisis dan Rekabentuk"
   defp normalize_tab("analisis-dan-rekabentuk"), do: "Analisis dan Rekabentuk"
   defp normalize_tab("jadual-projek"), do: "Jadual Projek"
   defp normalize_tab("pengaturcaraan"), do: "Pengaturcaraan"
@@ -49,7 +83,6 @@ defmodule SppaWeb.ProjekLive do
       "penempatan" -> "penempatan"
       "penyerahan" -> "penyerahan"
       "maklumbalas pelanggan" -> "maklumbalas-pelanggan"
-      _ -> "soal-selidik" # Default to first tab if phase not found
     end
   end
 
@@ -176,6 +209,8 @@ defmodule SppaWeb.ProjekLive do
                modules: Sppa.AnalisisDanRekabentuk.initial_modules()
              )
            )
+           |> assign(:modules, get_modules_from_analisis_dan_rekabentuk())
+           |> assign(:change_requests, get_change_requests())
            |> assign(:page, 1)
            |> assign(:per_page, 10)
            |> assign(:total_pages, 0)
@@ -787,6 +822,150 @@ defmodule SppaWeb.ProjekLive do
     paginated = Enum.slice(projects, start_index, per_page)
 
     {paginated, total_pages}
+  end
+
+  # Get modules that were registered in Analisis dan Rekabentuk page
+  # This uses the same initial modules structure as AnalisisDanRekabentukLive
+  # TODO: In the future, this should be retrieved from a database or context module
+  defp get_modules_from_analisis_dan_rekabentuk do
+    [
+      %{
+        id: "module_1",
+        number: 1,
+        name: "Modul Pengurusan Pengguna",
+        priority: "Tinggi",
+        version: "1.0.0",
+        status: "Sedang Dibangunkan",
+        tarikh_mula: ~D[2024-10-01],
+        tarikh_jangka_siap: ~D[2024-12-31],
+        catatan: "Pembangunan sedang dijalankan mengikut jadual",
+        functions: [
+          %{id: "func_1_1", name: "Pendaftaran Pengguna", sub_functions: [%{id: "sub_1_1_1", name: "Pengesahan Pendaftaran"}]},
+          %{id: "func_1_2", name: "Laman Log Masuk", sub_functions: []},
+          %{id: "func_1_3", name: "Penyelenggaraan Profail", sub_functions: [%{id: "sub_1_3_1", name: "Pengemaskinian Profil"}]}
+        ]
+      },
+      %{
+        id: "module_2",
+        number: 2,
+        name: "Penyelenggaraan Kata Laluan",
+        priority: "Tinggi",
+        version: "1.0.0",
+        status: "Belum Mula",
+        tarikh_mula: nil,
+        tarikh_jangka_siap: ~D[2025-01-15],
+        catatan: nil,
+        functions: []
+      },
+      %{
+        id: "module_3",
+        number: 3,
+        name: "Modul Permohonan",
+        priority: "Sangat Tinggi",
+        version: "2.1.0",
+        status: "Dalam Ujian",
+        tarikh_mula: ~D[2024-09-15],
+        tarikh_jangka_siap: ~D[2024-12-20],
+        catatan: "Sedang menjalani ujian QA, menunggu maklumbalas",
+        functions: [
+          %{id: "func_3_1", name: "Pendaftaran Permohonan", sub_functions: []},
+          %{id: "func_3_2", name: "Kemaskini Permohonan", sub_functions: []},
+          %{id: "func_3_3", name: "Semakan Status Permohonan", sub_functions: []}
+        ]
+      },
+      %{
+        id: "module_4",
+        number: 4,
+        name: "Modul Pengurusan Permohonan",
+        priority: "Sangat Tinggi",
+        version: "2.0.0",
+        status: "Selesai",
+        tarikh_mula: ~D[2024-08-01],
+        tarikh_jangka_siap: ~D[2024-11-30],
+        catatan: "Modul telah selesai dan diserahkan untuk deployment",
+        functions: [
+          %{id: "func_4_1", name: "Verifikasi Permohonan", sub_functions: []},
+          %{id: "func_4_2", name: "Kelulusan Permohonan", sub_functions: []}
+        ]
+      },
+      %{
+        id: "module_5",
+        number: 5,
+        name: "Modul Laporan",
+        priority: "Sederhana",
+        version: "1.5.0",
+        status: "Sedang Dibangunkan",
+        tarikh_mula: ~D[2024-12-01],
+        tarikh_jangka_siap: ~D[2025-02-28],
+        catatan: "Perlu integrasi dengan sistem sedia ada",
+        functions: [
+          %{id: "func_5_1", name: "Laporan mengikut tahun", sub_functions: []},
+          %{id: "func_5_2", name: "Laporan mengikut lokasi/daerah", sub_functions: []}
+        ]
+      },
+      %{
+        id: "module_6",
+        number: 6,
+        name: "Modul Dashboard",
+        priority: "Rendah",
+        version: "1.0.0",
+        status: "Belum Mula",
+        tarikh_mula: nil,
+        tarikh_jangka_siap: ~D[2025-03-15],
+        catatan: nil,
+        functions: []
+      }
+    ]
+  end
+
+  # Get change requests data - will be replaced with database query later
+  defp get_change_requests do
+    [
+      %{
+        id: "perubahan_1",
+        tajuk: "Perubahan Modul Pengurusan Pengguna",
+        jenis: "Perubahan Fungsian",
+        modul_terlibat: "Modul Pengurusan Pengguna",
+        status: "Dalam Semakan",
+        tarikh_dibuat: ~D[2024-11-15],
+        justifikasi: "Perlu menambah fungsi pengesahan dua faktor untuk meningkatkan keselamatan sistem",
+        kesan: "Akan meningkatkan keselamatan sistem tetapi memerlukan latihan tambahan untuk pengguna",
+        catatan: "Menunggu kelulusan dari ketua bahagian"
+      },
+      %{
+        id: "perubahan_2",
+        tajuk: "Pembaikan Bug dalam Modul Permohonan",
+        jenis: "Pembaikan Bug",
+        modul_terlibat: "Modul Permohonan",
+        status: "Diluluskan",
+        tarikh_dibuat: ~D[2024-11-20],
+        justifikasi: "Bug menyebabkan data permohonan tidak dapat disimpan dengan betul",
+        kesan: "Akan membetulkan masalah kritikal yang menghalang pengguna menyimpan permohonan",
+        catatan: "Perlu diselesaikan segera"
+      },
+      %{
+        id: "perubahan_3",
+        tajuk: "Penambahbaikan Antara Muka Pengguna",
+        jenis: "Penambahbaikan",
+        modul_terlibat: "Modul Dashboard",
+        status: "Ditolak",
+        tarikh_dibuat: ~D[2024-11-25],
+        justifikasi: "Meningkatkan pengalaman pengguna dengan reka bentuk yang lebih moden dan intuitif",
+        kesan: "Akan meningkatkan kepuasan pengguna tetapi memerlukan masa pembangunan tambahan",
+        catatan: "Ditangguhkan ke fasa seterusnya"
+      },
+      %{
+        id: "perubahan_4",
+        tajuk: "Integrasi dengan Sistem Luar",
+        jenis: "Perubahan Fungsian",
+        modul_terlibat: "Modul Laporan",
+        status: "Dalam Semakan",
+        tarikh_dibuat: ~D[2024-12-01],
+        justifikasi: "Perlu integrasi dengan sistem e-Sabah untuk pertukaran data automatik",
+        kesan: "Akan memudahkan pertukaran data tetapi memerlukan koordinasi dengan pihak luar",
+        catatan: "Menunggu maklumbalas dari pihak e-Sabah"
+      }
+    ]
   end
 
   # Get soal selidik document data - will be replaced with database query later
