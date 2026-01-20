@@ -1,11 +1,10 @@
 /* See the Tailwind configuration guide for advanced usage
    https://tailwindcss.com/docs/configuration */
+/* These @source, @plugin, and @custom-variant directives are valid Tailwind CSS v4 syntax */
 
 @import "tailwindcss";
-@source "../css";
 @source "../js";
 @source "../../lib/sppa_web";
-
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
    The heroicons installation itself is managed by your mix.exs */
 @plugin "../vendor/heroicons";

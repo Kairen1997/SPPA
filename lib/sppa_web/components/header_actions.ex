@@ -35,8 +35,6 @@ defmodule SppaWeb.Components.HeaderActions do
             <span class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 h-4 min-w-[1rem] rounded-full bg-red-500 text-[0.6rem] font-semibold leading-none text-white shadow-sm">
               {@notifications_count}
             </span>
-          <% else %>
-            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           <% end %>
         </button>
         <div
