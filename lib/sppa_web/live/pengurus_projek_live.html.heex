@@ -31,22 +31,13 @@
           <.header_logos height_class="h-12 sm:h-14 md:h-16" />
         </div>
 
-        <div class="flex items-center gap-3">
-          <.link
-            navigate={~p"/users/settings"}
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
-          >
-            <.icon name="hero-user-circle" class="w-6 h-6" />
-          </.link>
-          <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
-            <button
-              type="submit"
-              class="text-white hover:text-red-100 hover:bg-red-500/30 p-2 rounded-lg transition-all duration-200"
-            >
-              <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5" />
-            </button>
-          </.form>
-        </div>
+        <.header_actions
+          notifications_open={@notifications_open}
+          notifications_count={@notifications_count}
+          activities={@activities}
+          profile_menu_open={@profile_menu_open}
+          current_scope={@current_scope}
+        />
       </header>
        <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">

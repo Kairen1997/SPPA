@@ -18,6 +18,8 @@ defmodule SppaWeb.PengurusProjekLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:notifications_count, 0)
+        |> assign(:activities, [])
         |> assign(:page, 1)
         |> assign(:per_page, 10)
         |> assign(:search_term, "")
@@ -53,7 +55,9 @@ defmodule SppaWeb.PengurusProjekLive do
          |> assign(:filtered_projects, [])
          |> assign(:total_pages, 0)
          |> assign(:total_count, 0)
-         |> assign(:users, [])}
+         |> assign(:users, [])
+         |> assign(:notifications_count, 0)
+         |> assign(:activities, [])}
       end
     else
       socket =
