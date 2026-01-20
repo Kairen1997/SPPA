@@ -199,6 +199,17 @@ defmodule SppaWeb.ProjectListLive do
                   </span>
                   <span class="text-2xl font-semibold tracking-wide text-gray-800">Tapisan</span>
                 </div>
+                <%!-- Print Button --%>
+                <div class="print:hidden">
+                  <button
+                    id="print-senarai-projek-btn"
+                    phx-hook="PrintDocument"
+                    data-target="senarai-projek-document"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  >
+                    <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
+                  </button>
+                </div>
               </div>
                <%!-- Filter section --%>
               <div class="rounded-xl bg-white p-6 shadow-sm">
@@ -263,7 +274,7 @@ defmodule SppaWeb.ProjectListLive do
                 </.form>
               </div>
                <%!-- Projects table --%>
-              <div class="overflow-hidden rounded-xl bg-white shadow-sm">
+              <div id="senarai-projek-document" class="overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0">
                 <table class="w-full">
                   <thead class="bg-gray-50">
                     <tr>
