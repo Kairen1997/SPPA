@@ -1,11 +1,10 @@
 /* See the Tailwind configuration guide for advanced usage
    https://tailwindcss.com/docs/configuration */
+/* These @source, @plugin, and @custom-variant directives are valid Tailwind CSS v4 syntax */
 
-@import "tailwindcss" source(none);
-@source "../css";
+@import "tailwindcss";
 @source "../js";
 @source "../../lib/sppa_web";
-
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
    The heroicons installation itself is managed by your mix.exs */
 @plugin "../vendor/heroicons";
@@ -134,19 +133,31 @@
     margin: 1cm;
   }
 
+  /* Landscape orientation for specific documents */
+  /* Landscape page rule will be injected via JavaScript */
+
   /* Hide everything by default */
   body * {
     visibility: hidden;
   }
 
-  /* Show only the soal selidik document and all its contents */
+  /* Show only the target document and all its contents */
   #soal-selidik-document,
-  #soal-selidik-document * {
+  #soal-selidik-document *,
+  #senarai-projek-document,
+  #senarai-projek-document *,
+  #modul-projek-document,
+  #modul-projek-document *,
+  #pelan-modul-document,
+  #pelan-modul-document * {
     visibility: visible;
   }
 
   /* Position the document at the top-left of the page */
-  #soal-selidik-document {
+  #soal-selidik-document,
+  #senarai-projek-document,
+  #modul-projek-document,
+  #pelan-modul-document {
     position: absolute;
     left: 0;
     top: 0;
@@ -168,24 +179,40 @@
   }
 
   /* Prevent page breaks inside table rows */
-  #soal-selidik-document table tr {
+  #soal-selidik-document table tr,
+  #senarai-projek-document table tr,
+  #modul-projek-document table tr {
     page-break-inside: avoid;
   }
 
   /* Ensure table borders are visible when printing */
-  #soal-selidik-document table {
+  #soal-selidik-document table,
+  #senarai-projek-document table,
+  #modul-projek-document table {
     border-collapse: collapse;
     width: 100%;
   }
 
   #soal-selidik-document table th,
-  #soal-selidik-document table td {
+  #soal-selidik-document table td,
+  #senarai-projek-document table th,
+  #senarai-projek-document table td,
+  #modul-projek-document table th,
+  #modul-projek-document table td {
     border: 1px solid #000 !important;
   }
 
   /* Ensure text is black for printing */
-  #soal-selidik-document {
+  #soal-selidik-document,
+  #senarai-projek-document,
+  #modul-projek-document,
+  #pelan-modul-document {
     color: #000 !important;
+  }
+
+  /* Hide Tindakan column in senarai-projek-document when printing */
+  #senarai-projek-document .no-print-tindakan {
+    display: none !important;
   }
 
   /* Reset body and html for printing */

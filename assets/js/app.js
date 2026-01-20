@@ -37,12 +37,36 @@ const PrintDocument = {
         // Add a class to body to indicate printing mode
         document.body.classList.add("printing")
         
+        // Check if this is a landscape document (senarai-projek, modul-projek, or pelan-modul)
+        const landscapeDocuments = ["senarai-projek-document", "modul-projek-document", "pelan-modul-document"]
+        let landscapeStyle = null
+        
+        if (landscapeDocuments.includes(targetId)) {
+          document.body.classList.add("print-landscape")
+          
+          // Inject landscape @page rule via style tag
+          landscapeStyle = document.createElement("style")
+          landscapeStyle.id = "print-landscape-style"
+          landscapeStyle.textContent = `
+            @media print {
+              @page {
+                size: A4 landscape;
+                margin: 1cm;
+              }
+            }
+          `
+          document.head.appendChild(landscapeStyle)
+        }
+        
         // Trigger print dialog
         window.print()
         
-        // Remove printing class after print dialog closes
+        // Remove printing classes and style after print dialog closes
         setTimeout(() => {
-          document.body.classList.remove("printing")
+          document.body.classList.remove("printing", "print-landscape")
+          if (landscapeStyle && landscapeStyle.parentNode) {
+            landscapeStyle.parentNode.removeChild(landscapeStyle)
+          }
         }, 100)
       }
     })
