@@ -666,7 +666,7 @@ defmodule SppaWeb.CoreComponents do
                 )
               ]}
             >
-              <.icon name="hero-code-bracket" class="w-5 h-5" /> <span>Pembangunan</span>
+              <.icon name="hero-code-bracket" class="w-5 h-5" /> <span>Pengaturcaraan</span>
             </.link>
             <.link
               navigate={~p"/pengurusan-perubahan"}

@@ -19,7 +19,7 @@ defmodule SppaWeb.PembangunanLive do
       socket =
         socket
         |> assign(:hide_root_header, true)
-        |> assign(:page_title, "Pembangunan")
+        |> assign(:page_title, "Pengaturcaraan")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
