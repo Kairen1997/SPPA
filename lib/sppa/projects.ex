@@ -20,6 +20,48 @@ defmodule Sppa.Projects do
   end
 
   @doc """
+  Returns the list of projects for a pengurus projek (project manager).
+  Projects where the current user is assigned as project manager.
+  """
+  def list_projects_for_pengurus_projek(current_scope) do
+    Project
+    |> where([p], p.project_manager_id == ^current_scope.user.id)
+    |> preload([:developer, :project_manager])
+    |> order_by([p], desc: p.last_updated)
+    |> Repo.all()
+    |> Enum.map(&format_project_for_display/1)
+  end
+
+  # Format project data for display in senarai projek
+  defp format_project_for_display(project) do
+    %{
+      id: project.id,
+      nama: project.nama,
+      jabatan: project.jabatan,
+      status: project.status,
+      fasa: project.fasa,
+      tarikh_mula: project.tarikh_mula,
+      tarikh_siap: project.tarikh_siap,
+      pengurus_projek: get_user_display_name(project.project_manager),
+      pembangun_sistem: get_user_display_name(project.developer),
+      developer_id: project.developer_id,
+      project_manager_id: project.project_manager_id,
+      dokumen_sokongan: project.dokumen_sokongan || 0
+    }
+  end
+
+  defp get_user_display_name(nil), do: nil
+
+  defp get_user_display_name(user) do
+    # Try to get name from email or no_kp
+    cond do
+      user.email && user.email != "" -> user.email
+      user.no_kp && user.no_kp != "" -> user.no_kp
+      true -> "N/A"
+    end
+  end
+
+  @doc """
   Returns the list of recent activities (latest projects).
   Only includes projects with status "Dalam Pembangunan" or "Selesai".
   """

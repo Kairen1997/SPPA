@@ -2,6 +2,7 @@ defmodule SppaWeb.PengurusProjekLive do
   use SppaWeb, :live_view
 
   alias Sppa.Accounts
+  alias Sppa.Projects
 
   @impl true
   def mount(_params, _session, socket) do
@@ -31,7 +32,7 @@ defmodule SppaWeb.PengurusProjekLive do
         users = Accounts.list_users()
 
         # Filter projects based on user role - pengurus projek sees projects where they are assigned
-        all_projects = list_projects(socket.assigns.current_scope)
+        all_projects = Projects.list_projects_for_pengurus_projek(socket.assigns.current_scope)
 
         filtered_projects =
           filter_projects(all_projects, socket.assigns.search_term)
@@ -112,8 +113,12 @@ defmodule SppaWeb.PengurusProjekLive do
   def handle_event("change_page", %{"page" => page}, socket) do
     page = String.to_integer(page)
 
+    # Reload projects from database
+    all_projects =
+      Projects.list_projects_for_pengurus_projek(socket.assigns.current_scope)
+
     filtered_projects =
-      filter_projects(socket.assigns.all_projects, socket.assigns.search_term)
+      filter_projects(all_projects, socket.assigns.search_term)
 
     {paginated_projects, total_pages} =
       paginate_projects(filtered_projects, page, socket.assigns.per_page)
@@ -122,6 +127,7 @@ defmodule SppaWeb.PengurusProjekLive do
      socket
      |> assign(:page, page)
      |> assign(:projects, paginated_projects)
+     |> assign(:all_projects, all_projects)
      |> assign(:filtered_projects, filtered_projects)
      |> assign(:total_pages, total_pages)
      |> assign(:total_count, length(filtered_projects))}
@@ -131,7 +137,11 @@ defmodule SppaWeb.PengurusProjekLive do
   def handle_event("filter_projects", params, socket) do
     search_term = Map.get(params, "search_term", "") |> String.trim()
 
-    filtered_projects = filter_projects(socket.assigns.all_projects, search_term)
+    # Reload projects from database
+    all_projects =
+      Projects.list_projects_for_pengurus_projek(socket.assigns.current_scope)
+
+    filtered_projects = filter_projects(all_projects, search_term)
 
     {paginated_projects, total_pages} =
       paginate_projects(filtered_projects, 1, socket.assigns.per_page)
@@ -141,6 +151,7 @@ defmodule SppaWeb.PengurusProjekLive do
      |> assign(:search_term, search_term)
      |> assign(:page, 1)
      |> assign(:projects, paginated_projects)
+     |> assign(:all_projects, all_projects)
      |> assign(:filtered_projects, filtered_projects)
      |> assign(:total_pages, total_pages)
      |> assign(:total_count, length(filtered_projects))}
@@ -148,17 +159,22 @@ defmodule SppaWeb.PengurusProjekLive do
 
   @impl true
   def handle_event("clear_filters", _params, socket) do
+    # Reload projects from database
+    all_projects =
+      Projects.list_projects_for_pengurus_projek(socket.assigns.current_scope)
+
     {paginated_projects, total_pages} =
-      paginate_projects(socket.assigns.all_projects, 1, socket.assigns.per_page)
+      paginate_projects(all_projects, 1, socket.assigns.per_page)
 
     {:noreply,
      socket
      |> assign(:search_term, "")
      |> assign(:page, 1)
      |> assign(:projects, paginated_projects)
-     |> assign(:filtered_projects, socket.assigns.all_projects)
+     |> assign(:all_projects, all_projects)
+     |> assign(:filtered_projects, all_projects)
      |> assign(:total_pages, total_pages)
-     |> assign(:total_count, length(socket.assigns.all_projects))}
+     |> assign(:total_count, length(all_projects))}
   end
 
   @impl true
@@ -173,115 +189,53 @@ defmodule SppaWeb.PengurusProjekLive do
 
   @impl true
   def handle_event("validate_new_project", %{"project" => project_params}, socket) do
-    # For now, just keep the form as is since we're not saving to database
-    form = to_form(project_params, as: :project)
+    changeset =
+      %Sppa.Projects.Project{}
+      |> Sppa.Projects.Project.changeset(project_params)
+
+    form = to_form(changeset, as: :project)
     {:noreply, assign(socket, :form, form)}
   end
 
   @impl true
-  def handle_event("save_new_project", %{"project" => _project_params}, socket) do
-    # For now, just close the modal since we're not saving to database
-    {:noreply,
-     socket
-     |> assign(:show_new_project_modal, false)
-     |> assign(:form, to_form(%{}, as: :project))
-     |> put_flash(:info, "Projek akan disimpan selepas penambahan medan pangkalan data")}
+  def handle_event("save_new_project", %{"project" => project_params}, socket) do
+    # Set project_manager_id to current user for pengurus projek
+    project_params =
+      project_params
+      |> Map.put("project_manager_id", socket.assigns.current_scope.user.id)
+
+    case Projects.create_project(project_params, socket.assigns.current_scope) do
+      {:ok, _project} ->
+        # Reload projects
+        all_projects =
+          Projects.list_projects_for_pengurus_projek(socket.assigns.current_scope)
+
+        filtered_projects =
+          filter_projects(all_projects, socket.assigns.search_term)
+
+        {paginated_projects, total_pages} =
+          paginate_projects(filtered_projects, 1, socket.assigns.per_page)
+
+        {:noreply,
+         socket
+         |> assign(:show_new_project_modal, false)
+         |> assign(:form, to_form(%{}, as: :project))
+         |> assign(:projects, paginated_projects)
+         |> assign(:all_projects, all_projects)
+         |> assign(:filtered_projects, filtered_projects)
+         |> assign(:total_pages, total_pages)
+         |> assign(:total_count, length(filtered_projects))
+         |> assign(:page, 1)
+         |> put_flash(:info, "Projek berjaya dicipta")}
+
+      {:error, changeset} ->
+        {:noreply,
+         socket
+         |> assign(:form, to_form(changeset, as: :project))
+         |> put_flash(:error, "Terdapat ralat semasa mencipta projek")}
+    end
   end
 
-  # Mock data function - will be replaced with database queries later
-  # Pengurus projek sees projects where they are assigned as project manager
-  defp list_projects(current_scope) do
-    current_user_id = current_scope.user.id
-
-    all_projects = [
-      %{
-        id: 1,
-        nama: "Sistem Pengurusan Projek A",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah",
-        status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
-        tarikh_mula: ~D[2024-01-15],
-        tarikh_siap: ~D[2024-06-30],
-        pengurus_projek: "Ahmad bin Abdullah",
-        pembangun_sistem: "Ali bin Hassan",
-        developer_id: 1,
-        project_manager_id: current_user_id,
-        dokumen_sokongan: 3,
-        isu: "Tiada",
-        tindakan: "Teruskan pembangunan"
-      },
-      %{
-        id: 2,
-        nama: "Sistem Analisis Data B",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah",
-        status: "Ujian Penerimaan Pengguna",
-        fasa: "UAT",
-        tarikh_mula: ~D[2023-11-01],
-        tarikh_siap: ~D[2024-05-15],
-        pengurus_projek: "Siti Nurhaliza",
-        pembangun_sistem: "Ali bin Hassan",
-        developer_id: 1,
-        project_manager_id: current_user_id,
-        dokumen_sokongan: 2,
-        isu: "Perlu pembetulan pada modul laporan",
-        tindakan: "Selesaikan isu sebelum penyerahan"
-      },
-      %{
-        id: 3,
-        nama: "Portal E-Services C",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah",
-        status: "Selesai",
-        fasa: "Penyerahan",
-        tarikh_mula: ~D[2023-06-01],
-        tarikh_siap: ~D[2024-01-31],
-        pengurus_projek: "Mohd Faizal",
-        pembangun_sistem: "Ahmad bin Ismail",
-        developer_id: 2,
-        project_manager_id: current_user_id,
-        dokumen_sokongan: 5,
-        isu: "Tiada",
-        tindakan: "Projek telah diserahkan"
-      },
-      %{
-        id: 4,
-        nama: "Sistem Pengurusan Dokumen D",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah",
-        status: "Ditangguhkan",
-        fasa: "Analisis dan Rekabentuk",
-        tarikh_mula: ~D[2024-02-01],
-        tarikh_siap: ~D[2024-08-31],
-        pengurus_projek: "Nurul Aina",
-        pembangun_sistem: "Siti Fatimah",
-        developer_id: 3,
-        project_manager_id: current_user_id,
-        dokumen_sokongan: 1,
-        isu: "Menunggu kelulusan bajet tambahan",
-        tindakan: "Sambung semula selepas kelulusan"
-      },
-      %{
-        id: 5,
-        nama: "Aplikasi Mobile E",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah",
-        status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
-        tarikh_mula: ~D[2024-03-01],
-        tarikh_siap: ~D[2024-09-30],
-        pengurus_projek: "Lim Wei Ming",
-        pembangun_sistem: "Ali bin Hassan",
-        developer_id: 1,
-        project_manager_id: current_user_id,
-        dokumen_sokongan: 0,
-        isu: "Masalah integrasi dengan API",
-        tindakan: "Selesaikan integrasi API"
-      }
-    ]
-
-    # Filter projects where current user is the project manager
-    # For now, showing all projects for testing (since we're using mock data)
-    # TODO: Re-enable filtering when database is ready:
-    # Enum.filter(all_projects, fn p -> p.project_manager_id == current_user_id end)
-    all_projects
-  end
 
   # Filter projects based on search term
   defp filter_projects(projects, search_term) do

@@ -3,8 +3,13 @@ defmodule Sppa.Projects.Project do
   import Ecto.Changeset
 
   schema "projects" do
-    field :name, :string
+    field :nama, :string
+    field :jabatan, :string
     field :status, :string
+    field :fasa, :string
+    field :tarikh_mula, :date
+    field :tarikh_siap, :date
+    field :dokumen_sokongan, :integer, default: 0
     field :last_updated, :utc_datetime
     belongs_to :developer, Sppa.Accounts.User, foreign_key: :developer_id
     belongs_to :project_manager, Sppa.Accounts.User, foreign_key: :project_manager_id
@@ -16,8 +21,19 @@ defmodule Sppa.Projects.Project do
   @doc false
   def changeset(project, attrs) do
     project
-    |> cast(attrs, [:name, :status, :last_updated, :developer_id, :project_manager_id])
-    |> validate_required([:name, :status])
+    |> cast(attrs, [
+      :nama,
+      :jabatan,
+      :status,
+      :fasa,
+      :tarikh_mula,
+      :tarikh_siap,
+      :dokumen_sokongan,
+      :last_updated,
+      :developer_id,
+      :project_manager_id
+    ])
+    |> validate_required([:nama])
     |> put_change(:last_updated, DateTime.utc_now())
   end
 end

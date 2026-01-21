@@ -226,7 +226,7 @@ defmodule SppaWeb.DashboardPPLive do
                                   <.icon name="hero-folder" class="w-5 h-5 text-white" />
                                 </div>
 
-                                <div class="text-sm font-medium text-gray-900">{activity.name}</div>
+                                <div class="text-sm font-medium text-gray-900">{activity.nama}</div>
                               </div>
                             </td>
 

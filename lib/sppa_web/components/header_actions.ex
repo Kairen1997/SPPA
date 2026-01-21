@@ -77,7 +77,7 @@ defmodule SppaWeb.Components.HeaderActions do
 
                       <div class="flex-1 min-w-0">
                         <p class="text-xs font-semibold text-gray-900 truncate">
-                          {activity.name}
+                          {activity.nama}
                         </p>
 
                         <p class="mt-0.5 text-[0.70rem] text-gray-600 line-clamp-2">

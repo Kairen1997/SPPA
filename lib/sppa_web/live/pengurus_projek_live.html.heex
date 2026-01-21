@@ -225,7 +225,12 @@
                             <.icon
                               name="hero-calendar"
                               class="w-4 h-4 text-gray-400 mr-1.5 flex-shrink-0"
-                            /> <span>{Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}</span>
+                            />
+                            <%= if project.tarikh_mula do %>
+                              <span>{Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}</span>
+                            <% else %>
+                              <span class="text-gray-400">-</span>
+                            <% end %>
                           </div>
                         </td>
                         
@@ -234,7 +239,12 @@
                             <.icon
                               name="hero-calendar"
                               class="w-4 h-4 text-gray-400 mr-1.5 flex-shrink-0"
-                            /> <span>{Calendar.strftime(project.tarikh_siap, "%d/%m/%Y")}</span>
+                            />
+                            <%= if project.tarikh_siap do %>
+                              <span>{Calendar.strftime(project.tarikh_siap, "%d/%m/%Y")}</span>
+                            <% else %>
+                              <span class="text-gray-400">-</span>
+                            <% end %>
                           </div>
                         </td>
                         
