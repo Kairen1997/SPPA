@@ -135,7 +135,7 @@ defmodule SppaWeb.ProjectListLive do
     base_query =
       if socket.assigns.search_query != "" do
         search_term = "%#{socket.assigns.search_query}%"
-        where(base_query, [p], ilike(p.name, ^search_term))
+        where(base_query, [p], ilike(p.nama, ^search_term))
       else
         base_query
       end
@@ -168,7 +168,7 @@ defmodule SppaWeb.ProjectListLive do
     base_query =
       if socket.assigns.search_query != "" do
         search_term = "%#{socket.assigns.search_query}%"
-        where(base_query, [p], ilike(p.name, ^search_term))
+        where(base_query, [p], ilike(p.nama, ^search_term))
       else
         base_query
       end
@@ -307,7 +307,7 @@ defmodule SppaWeb.ProjectListLive do
                   <tbody class="divide-y divide-gray-200 bg-white">
                     <tr :for={project <- @projects} class="hover:bg-gray-50">
                       <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                        {project.name}
+                        {project.nama}
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
