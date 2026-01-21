@@ -21,10 +21,12 @@ defmodule Sppa.Projects do
 
   @doc """
   Returns the list of recent activities (latest projects).
+  Only includes projects with status "Dalam Pembangunan" or "Selesai".
   """
   def list_recent_activities(current_scope, limit \\ 10) do
     Project
     |> where([p], p.user_id == ^current_scope.user.id)
+    |> where([p], p.status == "Dalam Pembangunan" or p.status == "Selesai")
     |> preload([:developer, :project_manager])
     |> order_by([p], desc: p.last_updated)
     |> limit(^limit)

@@ -206,6 +206,7 @@ defmodule SppaWeb.PengurusProjekLive do
         pembangun_sistem: "Ali bin Hassan",
         developer_id: 1,
         project_manager_id: current_user_id,
+        dokumen_sokongan: 3,
         isu: "Tiada",
         tindakan: "Teruskan pembangunan"
       },
@@ -221,6 +222,7 @@ defmodule SppaWeb.PengurusProjekLive do
         pembangun_sistem: "Ali bin Hassan",
         developer_id: 1,
         project_manager_id: current_user_id,
+        dokumen_sokongan: 2,
         isu: "Perlu pembetulan pada modul laporan",
         tindakan: "Selesaikan isu sebelum penyerahan"
       },
@@ -236,6 +238,7 @@ defmodule SppaWeb.PengurusProjekLive do
         pembangun_sistem: "Ahmad bin Ismail",
         developer_id: 2,
         project_manager_id: current_user_id,
+        dokumen_sokongan: 5,
         isu: "Tiada",
         tindakan: "Projek telah diserahkan"
       },
@@ -251,6 +254,7 @@ defmodule SppaWeb.PengurusProjekLive do
         pembangun_sistem: "Siti Fatimah",
         developer_id: 3,
         project_manager_id: current_user_id,
+        dokumen_sokongan: 1,
         isu: "Menunggu kelulusan bajet tambahan",
         tindakan: "Sambung semula selepas kelulusan"
       },
@@ -266,6 +270,7 @@ defmodule SppaWeb.PengurusProjekLive do
         pembangun_sistem: "Ali bin Hassan",
         developer_id: 1,
         project_manager_id: current_user_id,
+        dokumen_sokongan: 0,
         isu: "Masalah integrasi dengan API",
         tindakan: "Selesaikan integrasi API"
       }
