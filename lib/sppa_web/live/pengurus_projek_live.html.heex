@@ -290,6 +290,15 @@
                               <span class="hidden lg:inline">Lihat</span>
                             </.link>
                             
+                            <button
+                              phx-click="open_edit_project_modal"
+                              phx-value-project_id={project.id}
+                              class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors duration-200"
+                            >
+                              <.icon name="hero-pencil" class="w-4 h-4" />
+                              <span class="hidden lg:inline">Edit</span>
+                            </button>
+                            
                             <.link
                               navigate={~p"/projek/#{project.id}/modul"}
                               class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200"
@@ -588,6 +597,178 @@
                 class="rounded-lg bg-gradient-to-r from-green-600 to-green-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2"
               >
                 Simpan Projek
+              </button>
+            </div>
+          </.form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <%!-- Edit Project Modal --%>
+  <div
+    :if={@show_edit_project_modal && @selected_project}
+    class="fixed inset-0 z-50 overflow-y-auto"
+    role="dialog"
+    aria-modal="true"
+  >
+    <%!-- Backdrop --%>
+    <div 
+      class="fixed inset-0 bg-black/60 transition-opacity" 
+      aria-hidden="true"
+      phx-click="close_edit_project_modal"
+    ></div>
+     <%!-- Modal container --%>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div
+        class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+      >
+        <%!-- Modal header --%>
+        <div class="border-b border-gray-200 bg-gradient-to-r from-yellow-600 to-yellow-700 px-6 py-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-white">Edit Projek</h2>
+              
+              <p class="mt-1 text-sm text-yellow-100">
+                Kemaskini maklumat projek
+              </p>
+            </div>
+            
+            <button
+              type="button"
+              phx-click="close_edit_project_modal"
+              class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+              aria-label="Tutup"
+            >
+              <.icon name="hero-x-mark" class="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+         <%!-- Modal body --%>
+        <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+          <.form
+            for={@form}
+            phx-change="validate_edit_project"
+            phx-submit="save_edit_project"
+            id="edit-project-form"
+            multipart={true}
+            class="space-y-6"
+          >
+            <%!-- Basic Information Section --%>
+            <div class="space-y-5">
+              <div class="border-b border-gray-200 pb-2">
+                <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
+                
+                <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
+              </div>
+               <%!-- Nama Projek --%>
+              <div>
+                <.input
+                  field={@form[:nama]}
+                  type="text"
+                  label="Nama Projek"
+                  required
+                  placeholder="Masukkan nama projek"
+                  class="w-full"
+                />
+              </div>
+               <%!-- Jabatan/Agensi --%>
+              <div>
+                <.input
+                  field={@form[:jabatan]}
+                  type="text"
+                  label="Jabatan/Agensi"
+                  placeholder="Masukkan nama jabatan atau agensi"
+                  class="w-full"
+                />
+              </div>
+            </div>
+             <%!-- Team Assignment Section --%>
+            <div class="space-y-5">
+              <div class="border-b border-gray-200 pb-2">
+                <h3 class="text-lg font-semibold text-gray-900">Penugasan Pasukan</h3>
+                
+                <p class="mt-1 text-sm text-gray-500">
+                  Tetapkan pengurus projek dan pembangun sistem
+                </p>
+              </div>
+              
+              <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <%!-- Pengurus Projek --%>
+                <div>
+                  <.input
+                    field={@form[:project_manager_id]}
+                    type="select"
+                    label="Pengurus Projek"
+                    prompt="Pilih Pengurus Projek"
+                    options={
+                      Enum.map(@users, fn user ->
+                        {"#{user.email || user.no_kp} - #{user.role || "N/A"}", user.id}
+                      end)
+                    }
+                    class="w-full"
+                  />
+                </div>
+                 <%!-- Pembangun Sistem --%>
+                <div>
+                  <.input
+                    field={@form[:developer_id]}
+                    type="select"
+                    label="Pembangun Sistem"
+                    prompt="Pilih Pembangun Sistem"
+                    options={
+                      Enum.map(@users, fn user ->
+                        {"#{user.email || user.no_kp} - #{user.role || "N/A"}", user.id}
+                      end)
+                    }
+                    class="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+             <%!-- Timeline Section --%>
+            <div class="space-y-5">
+              <div class="border-b border-gray-200 pb-2">
+                <h3 class="text-lg font-semibold text-gray-900">Jadual Projek</h3>
+                
+                <p class="mt-1 text-sm text-gray-500">Tetapkan tarikh mula dan jangkaan siap</p>
+              </div>
+              
+              <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <%!-- Tarikh Mula --%>
+                <div>
+                  <.input
+                    field={@form[:tarikh_mula]}
+                    type="date"
+                    label="Tarikh Mula"
+                    class="w-full"
+                  />
+                </div>
+                 <%!-- Tarikh Jangkaan Siap --%>
+                <div>
+                  <.input
+                    field={@form[:tarikh_siap]}
+                    type="date"
+                    label="Tarikh Jangkaan Siap"
+                    class="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+             <%!-- Form Actions --%>
+            <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
+              <button
+                type="button"
+                phx-click="close_edit_project_modal"
+                class="rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                class="rounded-lg bg-gradient-to-r from-yellow-600 to-yellow-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-yellow-700 hover:to-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:ring-offset-2"
+              >
+                Kemaskini Projek
               </button>
             </div>
           </.form>

@@ -1,8 +1,11 @@
 defmodule SppaWeb.PengurusProjekLive do
   use SppaWeb, :live_view
 
+  import Ecto.Query
   alias Sppa.Accounts
   alias Sppa.Projects
+  alias Sppa.Projects.Project
+  alias Sppa.Repo
 
   @impl true
   def mount(_params, _session, socket) do
@@ -25,6 +28,8 @@ defmodule SppaWeb.PengurusProjekLive do
         |> assign(:per_page, 10)
         |> assign(:search_term, "")
         |> assign(:show_new_project_modal, false)
+        |> assign(:show_edit_project_modal, false)
+        |> assign(:selected_project, nil)
         |> assign(:form, to_form(%{}, as: :project))
 
       if connected?(socket) do
@@ -75,7 +80,7 @@ defmodule SppaWeb.PengurusProjekLive do
 
   @impl true
   def handle_event("toggle_sidebar", _params, socket) do
-    {:noreply, update(socket, :sidebar_open, &(!&1))}
+    {:noreply, Phoenix.Component.update(socket, :sidebar_open, &(!&1))}
   end
 
   @impl true
@@ -87,7 +92,7 @@ defmodule SppaWeb.PengurusProjekLive do
   def handle_event("toggle_notifications", _params, socket) do
     {:noreply,
      socket
-     |> update(:notifications_open, &(!&1))
+     |> Phoenix.Component.update(:notifications_open, &(!&1))
      |> assign(:profile_menu_open, false)}
   end
 
@@ -100,7 +105,7 @@ defmodule SppaWeb.PengurusProjekLive do
   def handle_event("toggle_profile_menu", _params, socket) do
     {:noreply,
      socket
-     |> update(:profile_menu_open, &(!&1))
+     |> Phoenix.Component.update(:profile_menu_open, &(!&1))
      |> assign(:notifications_open, false)}
   end
 
@@ -233,6 +238,151 @@ defmodule SppaWeb.PengurusProjekLive do
          socket
          |> assign(:form, to_form(changeset, as: :project))
          |> put_flash(:error, "Terdapat ralat semasa mencipta projek")}
+    end
+  end
+
+  @impl true
+  def handle_event("open_edit_project_modal", %{"project_id" => project_id}, socket) do
+    project_id = String.to_integer(project_id)
+
+    # Get the actual project from database - filter by project_manager_id for pengurus projek
+    project =
+      Project
+      |> where([p], p.id == ^project_id and p.project_manager_id == ^socket.assigns.current_scope.user.id)
+      |> preload([:developer, :project_manager])
+      |> Repo.one()
+
+    if project do
+      form_data = %{
+        "nama" => project.nama || "",
+        "jabatan" => project.jabatan || "",
+        "project_manager_id" => if(project.project_manager_id, do: Integer.to_string(project.project_manager_id), else: ""),
+        "developer_id" => if(project.developer_id, do: Integer.to_string(project.developer_id), else: ""),
+        "tarikh_mula" => if(project.tarikh_mula, do: Date.to_iso8601(project.tarikh_mula), else: ""),
+        "tarikh_siap" => if(project.tarikh_siap, do: Date.to_iso8601(project.tarikh_siap), else: "")
+      }
+
+      form = to_form(form_data, as: :project)
+
+      {:noreply,
+       socket
+       |> assign(:show_edit_project_modal, true)
+       |> assign(:selected_project, project)
+       |> assign(:form, form)}
+    else
+      {:noreply,
+       socket
+       |> put_flash(:error, "Projek tidak ditemui")}
+    end
+  end
+
+  @impl true
+  def handle_event("close_edit_project_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_edit_project_modal, false)
+     |> assign(:selected_project, nil)
+     |> assign(:form, to_form(%{}, as: :project))}
+  end
+
+  @impl true
+  def handle_event("validate_edit_project", params, socket) do
+    # Extract project params - handle both nested and flat params
+    project_params =
+      case params do
+        %{"project" => p} -> p
+        p -> p
+      end
+
+    if socket.assigns.selected_project do
+      changeset =
+        socket.assigns.selected_project
+        |> Sppa.Projects.Project.changeset(project_params)
+
+      form = to_form(changeset, as: :project)
+      {:noreply, assign(socket, :form, form)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("save_edit_project", params, socket) do
+    # Extract project params - handle both nested and flat params
+    project_params =
+      case params do
+        %{"project" => p} -> p
+        p -> p
+      end
+
+    # Ensure selected_project exists
+    if socket.assigns.selected_project do
+      # Process project_params - convert empty strings to nil for IDs and dates
+      processed_params =
+        project_params
+        |> Map.update("project_manager_id", nil, fn
+          "" -> nil
+          id when is_binary(id) ->
+            case Integer.parse(id) do
+              {int_id, _} -> int_id
+              :error -> nil
+            end
+          id when is_integer(id) -> id
+          _ -> nil
+        end)
+        |> Map.update("developer_id", nil, fn
+          "" -> nil
+          id when is_binary(id) ->
+            case Integer.parse(id) do
+              {int_id, _} -> int_id
+              :error -> nil
+            end
+          id when is_integer(id) -> id
+          _ -> nil
+        end)
+        |> Map.update("tarikh_mula", nil, fn
+          "" -> nil
+          date -> date
+        end)
+        |> Map.update("tarikh_siap", nil, fn
+          "" -> nil
+          date -> date
+        end)
+
+      case Projects.update_project(socket.assigns.selected_project, processed_params) do
+        {:ok, _project} ->
+          # Reload projects
+          all_projects =
+            Projects.list_projects_for_pengurus_projek(socket.assigns.current_scope)
+
+          filtered_projects =
+            filter_projects(all_projects, socket.assigns.search_term)
+
+          {paginated_projects, total_pages} =
+            paginate_projects(filtered_projects, socket.assigns.page, socket.assigns.per_page)
+
+          {:noreply,
+           socket
+           |> assign(:show_edit_project_modal, false)
+           |> assign(:selected_project, nil)
+           |> assign(:form, to_form(%{}, as: :project))
+           |> assign(:projects, paginated_projects)
+           |> assign(:all_projects, all_projects)
+           |> assign(:filtered_projects, filtered_projects)
+           |> assign(:total_pages, total_pages)
+           |> assign(:total_count, length(filtered_projects))
+           |> put_flash(:info, "Projek berjaya dikemaskini")}
+
+        {:error, changeset} ->
+          {:noreply,
+           socket
+           |> assign(:form, to_form(changeset, as: :project))
+           |> put_flash(:error, "Terdapat ralat semasa mengemaskini projek. Sila semak maklumat yang dimasukkan.")}
+      end
+    else
+      {:noreply,
+       socket
+       |> put_flash(:error, "Projek tidak ditemui. Sila cuba lagi.")}
     end
   end
 
