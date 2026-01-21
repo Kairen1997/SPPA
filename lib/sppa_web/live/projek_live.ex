@@ -391,8 +391,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2024-01-15],
         tarikh_siap: ~D[2024-06-30],
         pengurus_projek: "Ahmad bin Abdullah",
+        pembangun_sistem: "Ali bin Hassan",
         developer_id: 1,
         project_manager_id: 2,
+        dokumen_sokongan: 3,
         isu: "Tiada",
         tindakan: "Teruskan pembangunan"
       },
@@ -404,8 +406,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2023-11-01],
         tarikh_siap: ~D[2024-05-15],
         pengurus_projek: "Siti Nurhaliza",
+        pembangun_sistem: "Ali bin Hassan",
         developer_id: 1,
         project_manager_id: 3,
+        dokumen_sokongan: 2,
         isu: "Perlu pembetulan pada modul laporan",
         tindakan: "Selesaikan isu sebelum penyerahan"
       },
@@ -417,8 +421,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2023-06-01],
         tarikh_siap: ~D[2024-01-31],
         pengurus_projek: "Mohd Faizal",
+        pembangun_sistem: "Ahmad bin Ismail",
         developer_id: 2,
         project_manager_id: 4,
+        dokumen_sokongan: 5,
         isu: "Tiada",
         tindakan: "Projek telah diserahkan"
       },
@@ -430,8 +436,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2024-02-01],
         tarikh_siap: ~D[2024-08-31],
         pengurus_projek: "Nurul Aina",
+        pembangun_sistem: "Siti Fatimah",
         developer_id: 3,
         project_manager_id: 5,
+        dokumen_sokongan: 1,
         isu: "Menunggu kelulusan bajet tambahan",
         tindakan: "Sambung semula selepas kelulusan"
       },
@@ -443,8 +451,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2024-03-01],
         tarikh_siap: ~D[2024-09-30],
         pengurus_projek: "Lim Wei Ming",
+        pembangun_sistem: "Ali bin Hassan",
         developer_id: 1,
         project_manager_id: 2,
+        dokumen_sokongan: 0,
         isu: "Masalah integrasi dengan API",
         tindakan: "Selesaikan integrasi API"
       },
@@ -456,8 +466,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2024-04-15],
         tarikh_siap: ~D[2024-10-31],
         pengurus_projek: "Ahmad bin Abdullah",
+        pembangun_sistem: "Ahmad bin Ismail",
         developer_id: 2,
         project_manager_id: 2,
+        dokumen_sokongan: 4,
         isu: "Tiada",
         tindakan: "Teruskan pembangunan modul inventori"
       },
@@ -469,8 +481,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2023-12-01],
         tarikh_siap: ~D[2024-07-15],
         pengurus_projek: "Siti Nurhaliza",
+        pembangun_sistem: "Ahmad bin Ismail",
         developer_id: 2,
         project_manager_id: 3,
+        dokumen_sokongan: 2,
         isu: "Isu keselamatan data perlu disemak",
         tindakan: "Lengkapkan audit keselamatan"
       },
@@ -482,8 +496,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2023-08-01],
         tarikh_siap: ~D[2024-02-28],
         pengurus_projek: "Mohd Faizal",
+        pembangun_sistem: "Siti Fatimah",
         developer_id: 3,
         project_manager_id: 4,
+        dokumen_sokongan: 6,
         isu: "Tiada",
         tindakan: "Projek telah diserahkan dan beroperasi"
       },
@@ -495,8 +511,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2024-05-01],
         tarikh_siap: ~D[2024-11-30],
         pengurus_projek: "Nurul Aina",
+        pembangun_sistem: "Ali bin Hassan",
         developer_id: 1,
         project_manager_id: 5,
+        dokumen_sokongan: 0,
         isu: "Perlu penambahbaikan pada reka bentuk UI",
         tindakan: "Kemaskini reka bentuk mengikut spesifikasi"
       },
@@ -508,8 +526,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2024-01-10],
         tarikh_siap: ~D[2024-06-30],
         pengurus_projek: "Lim Wei Ming",
+        pembangun_sistem: "Siti Fatimah",
         developer_id: 3,
         project_manager_id: 2,
+        dokumen_sokongan: 3,
         isu: "Masalah dengan endpoint tertentu",
         tindakan: "Betulkan endpoint yang bermasalah"
       },
@@ -521,8 +541,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2023-09-15],
         tarikh_siap: ~D[2024-03-31],
         pengurus_projek: "Ahmad bin Abdullah",
+        pembangun_sistem: "Ahmad bin Ismail",
         developer_id: 2,
         project_manager_id: 2,
+        dokumen_sokongan: 4,
         isu: "Tiada",
         tindakan: "Sistem telah diserahkan dan beroperasi"
       },
@@ -534,8 +556,10 @@ defmodule SppaWeb.ProjekLive do
         tarikh_mula: ~D[2024-06-01],
         tarikh_siap: ~D[2024-12-31],
         pengurus_projek: "Siti Nurhaliza",
+        pembangun_sistem: "Ali bin Hassan",
         developer_id: 1,
         project_manager_id: 3,
+        dokumen_sokongan: 1,
         isu: "Menunggu kelulusan dari pihak pengurusan",
         tindakan: "Sambung semula selepas kelulusan"
       }
@@ -796,6 +820,7 @@ defmodule SppaWeb.ProjekLive do
     Enum.filter(projects, fn project ->
       String.contains?(String.downcase(project.nama), search_lower) ||
         String.contains?(String.downcase(project.pengurus_projek || ""), search_lower) ||
+        String.contains?(String.downcase(project.pembangun_sistem || ""), search_lower) ||
         String.contains?(String.downcase(project.isu || ""), search_lower)
     end)
   end
