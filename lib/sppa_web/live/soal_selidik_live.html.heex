@@ -203,6 +203,19 @@
               >
                 <%!-- Functional Requirements Tab --%>
                 <div class={["space-y-4", if(@active_tab != "fr", do: "hidden")]}>
+                  <div class="flex justify-end mb-4">
+                    <button
+                      type="button"
+                      phx-click="show_add_category_modal"
+                      phx-value-category_type="fr"
+                      class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm flex items-center gap-2"
+                      title="Tambah kategori baru"
+                    >
+                      <.icon name="hero-plus" class="w-4 h-4" />
+                      <span>Tambah Kategori</span>
+                    </button>
+                  </div>
+                  
                   <details
                     :for={category <- @fr_categories}
                     class="group border border-gray-300 rounded-lg overflow-hidden"
@@ -226,6 +239,19 @@
                 
                 <%!-- Non-Functional Requirements Tab --%>
                 <div class={["space-y-4", if(@active_tab != "nfr", do: "hidden")]}>
+                  <div class="flex justify-end mb-4">
+                    <button
+                      type="button"
+                      phx-click="show_add_category_modal"
+                      phx-value-category_type="nfr"
+                      class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm flex items-center gap-2"
+                      title="Tambah kategori baru"
+                    >
+                      <.icon name="hero-plus" class="w-4 h-4" />
+                      <span>Tambah Kategori</span>
+                    </button>
+                  </div>
+                  
                   <details
                     :for={category <- @nfr_categories}
                     class="group border border-gray-300 rounded-lg overflow-hidden"
@@ -396,7 +422,7 @@
   <%!-- PDF Modal --%>
   <%= if @show_pdf_modal && @pdf_data do %>
     <div
-      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
+      class="fixed inset-0 bg-opacity-50 z-[60] flex items-center justify-center p-4"
       phx-click="close_pdf_modal"
       phx-key="escape"
       phx-window-keydown="close_pdf_modal"
@@ -653,7 +679,7 @@
   <%!-- Add Tab Modal --%>
   <%= if @show_add_tab_modal do %>
     <div
-      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
+      class="fixed inset-0  bg-opacity-50 z-[60] flex items-center justify-center p-4"
       phx-click="close_add_tab_modal"
       phx-key="escape"
       phx-window-keydown="close_add_tab_modal"
@@ -722,6 +748,85 @@
               class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow transition-all duration-200"
             >
               Tambah Tab
+            </button>
+          </div>
+        </.form>
+      </div>
+    </div>
+  <% end %>
+
+  <%!-- Add Category Modal --%>
+  <%= if @show_add_category_modal do %>
+    <div
+      class="fixed inset-0  bg-opacity-50 z-[60] flex items-center justify-center p-4"
+      phx-click="close_add_category_modal"
+      phx-key="escape"
+      phx-window-keydown="close_add_category_modal"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+        phx-click-away="close_add_category_modal"
+      >
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-gray-900">Tambah Kategori Baru</h2>
+          <button
+            phx-click="close_add_category_modal"
+            class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
+            title="Tutup"
+          >
+            <.icon name="hero-x-mark" class="w-6 h-6" />
+          </button>
+        </div>
+
+        <.form
+          for={@new_category_form}
+          phx-change="validate_new_category"
+          phx-submit="add_category"
+          id="add-category-form"
+          class="space-y-5"
+        >
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Tajuk Kategori <span class="text-red-500">*</span>
+            </label>
+            <.input
+              field={@new_category_form[:title]}
+              type="text"
+              placeholder="Contoh: Kategori Baru"
+              required
+            />
+            <p :if={@new_category_form[:title].errors != []} class="mt-1 text-xs text-red-600">
+              <%= Enum.at(@new_category_form[:title].errors, 0) %>
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Kunci Kategori (Opsional)
+            </label>
+            <.input
+              field={@new_category_form[:key]}
+              type="text"
+              placeholder="Akan dijana secara automatik jika kosong"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              Kunci akan digunakan untuk mengenal pasti kategori. Jika kosong, kunci akan dijana dari tajuk.
+            </p>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              phx-click="close_add_category_modal"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow transition-all duration-200"
+            >
+              Tambah Kategori
             </button>
           </div>
         </.form>
