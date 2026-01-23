@@ -771,6 +771,21 @@ defmodule SppaWeb.CoreComponents do
   def requirement_table(assigns) do
     ~H"""
     <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+      <%!-- Tambah Baris Button - Top Right --%>
+      <div class="p-2 bg-gray-50 border-b border-gray-300 flex justify-end">
+        <button
+          type="button"
+          phx-click="add_question"
+          phx-value-tab_type={@tab_type}
+          phx-value-category_key={@category_key}
+          class="px-3 py-1.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm flex items-center gap-2"
+          title="Tambah baris soalan baru"
+        >
+          <.icon name="hero-plus" class="w-4 h-4" />
+          <span>Tambah Baris</span>
+        </button>
+      </div>
+
       <table class="w-full border-collapse text-sm">
         <thead>
           <tr class="bg-gray-100 border-b border-gray-400">
@@ -780,11 +795,14 @@ defmodule SppaWeb.CoreComponents do
             <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 40%;">
               Soalan
             </th>
-            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 27%;">
+            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 25%;">
               Maklumbalas
             </th>
-            <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 27%;">
+            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 25%;">
               Catatan
+            </th>
+            <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 10%;">
+              Tindakan
             </th>
           </tr>
         </thead>
@@ -796,31 +814,49 @@ defmodule SppaWeb.CoreComponents do
               </div>
             </td>
             <td class="px-3 py-2 border-r border-gray-400 align-top">
-              <div class="px-2 py-1 text-sm text-gray-800">
-                {question.soalan}
-              </div>
+              <textarea
+                id={"soalan-#{@tab_type}-#{@category_key}-#{question.no}"}
+                name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][soalan]"}
+                rows="1"
+                class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
+                placeholder="Masukkan soalan..."
+                phx-change="update_question_text"
+                phx-debounce="300"
+                phx-value-tab_type={@tab_type}
+                phx-value-category_key={@category_key}
+                phx-value-question_no={question.no}
+                phx-hook="AutoResize"
+                style="min-height: 2.5rem; max-height: 20rem;"
+              >{question.soalan || ""}</textarea>
             </td>
             <td class="px-3 py-2 border-r border-gray-400 align-top">
               <%= cond do %>
                 <% question.type == :text -> %>
-                  <input
-                    type="text"
+                  <textarea
                     name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
-                    value={Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}
-                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    rows="1"
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                     placeholder="Masukkan maklumbalas..."
-                  />
+                    phx-change="validate"
+                    phx-debounce="500"
+                    style="min-height: 2.5rem; max-height: 20rem;"
+                  >{Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}</textarea>
                 <% question.type == :textarea -> %>
                   <textarea
                     name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
-                    rows="3"
-                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    rows="1"
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                     placeholder="Masukkan maklumbalas..."
+                    phx-change="validate"
+                    phx-debounce="500"
+                    style="min-height: 2.5rem; max-height: 20rem;"
                   >{Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}</textarea>
                 <% question.type == :select -> %>
                   <select
                     name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
                     class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    phx-change="validate"
+                    phx-debounce="500"
                   >
                     <option value="">-- Pilih --</option>
                     <option
@@ -855,22 +891,53 @@ defmodule SppaWeb.CoreComponents do
                     <% end %>
                   </div>
                 <% true -> %>
-                  <input
-                    type="text"
+                  <textarea
                     name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
-                    value={Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}
-                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    rows="1"
+                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                     placeholder="Masukkan maklumbalas..."
-                  />
+                    phx-change="validate"
+                    phx-debounce="500"
+                    style="min-height: 2.5rem; max-height: 20rem;"
+                  >{Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}</textarea>
               <% end %>
             </td>
-            <td class="px-3 py-2 align-top">
+            <td class="px-3 py-2 border-r border-gray-400 align-top">
               <textarea
                 name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][catatan]"}
-                rows="3"
-                class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                rows="1"
+                class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                 placeholder="Catatan..."
+                phx-change="validate"
+                phx-debounce="500"
+                style="min-height: 2.5rem; max-height: 20rem;"
               >{Phoenix.HTML.Form.input_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.catatan") || ""}</textarea>
+            </td>
+            <td class="px-3 py-2 align-top">
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  phx-click="edit_question"
+                  phx-value-tab_type={@tab_type}
+                  phx-value-category_key={@category_key}
+                  phx-value-question_no={question.no}
+                  class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors duration-200"
+                  title="Edit"
+                >
+                  <.icon name="hero-pencil" class="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  phx-click="delete_question"
+                  phx-value-tab_type={@tab_type}
+                  phx-value-category_key={@category_key}
+                  phx-value-question_no={question.no}
+                  class="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors duration-200"
+                  title="Padam"
+                >
+                  <.icon name="hero-trash" class="w-4 h-4" />
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
