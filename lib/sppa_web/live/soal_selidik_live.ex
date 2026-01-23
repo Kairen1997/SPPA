@@ -105,11 +105,6 @@ defmodule SppaWeb.SoalSelidikLive do
         |> assign(:form, to_form(ensure_map(initial_data.form_data), as: :soal_selidik))
         |> assign(:show_pdf_modal, false)
         |> assign(:pdf_data, nil)
-        |> assign(:show_add_tab_modal, false)
-        |> assign(:new_tab_form, to_form(%{}, as: :new_tab))
-        |> assign(:show_add_category_modal, false)
-        |> assign(:new_category_form, to_form(%{}, as: :new_category))
-        |> assign(:category_type, nil)
         |> assign(:show_edit_question_modal, false)
         |> assign(:selected_question, nil)
         |> assign(:edit_question_form, to_form(%{}, as: :edit_question))
@@ -183,67 +178,6 @@ defmodule SppaWeb.SoalSelidikLive do
   end
 
   @impl true
-  def handle_event("show_add_tab_modal", _params, socket) do
-    {:noreply, assign(socket, :show_add_tab_modal, true)}
-  end
-
-  @impl true
-  def handle_event("close_add_tab_modal", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_add_tab_modal, false)
-     |> assign(:new_tab_form, to_form(%{}, as: :new_tab))}
-  end
-
-  @impl true
-  def handle_event("add_tab", %{"new_tab" => new_tab_params}, socket) do
-    label = Map.get(new_tab_params, "label", "") |> String.trim()
-    id = Map.get(new_tab_params, "id", "") |> String.trim()
-
-    # Generate ID from label if not provided
-    tab_id = if id == "", do: generate_tab_id(label), else: id
-
-    # Validate that label is not empty
-    if label == "" do
-      form = to_form(new_tab_params, as: :new_tab)
-      {:noreply,
-       socket
-       |> Phoenix.LiveView.put_flash(:error, "Label tab tidak boleh kosong.")
-       |> assign(:show_add_tab_modal, true)
-       |> assign(:new_tab_form, form)}
-    else
-      # Validate that ID is unique
-      existing_ids = Enum.map(socket.assigns.tabs, & &1.id)
-
-      if tab_id in existing_ids do
-        form = to_form(new_tab_params, as: :new_tab)
-        {:noreply,
-         socket
-         |> Phoenix.LiveView.put_flash(:error, "ID tab sudah wujud. Sila gunakan ID lain.")
-         |> assign(:show_add_tab_modal, true)
-         |> assign(:new_tab_form, form)}
-      else
-        new_tab = %{
-          id: tab_id,
-          label: label,
-          type: :custom,
-          removable: true
-        }
-
-        updated_tabs = socket.assigns.tabs ++ [new_tab]
-
-        {:noreply,
-         socket
-         |> assign(:tabs, updated_tabs)
-         |> assign(:active_tab, tab_id)
-         |> assign(:show_add_tab_modal, false)
-         |> assign(:new_tab_form, to_form(%{}, as: :new_tab))
-         |> Phoenix.LiveView.put_flash(:info, "Tab baru telah ditambah.")}
-      end
-    end
-  end
-
-  @impl true
   def handle_event("remove_tab", %{"tab_id" => tab_id}, socket) do
     # Prevent removing default tabs
     tab = Enum.find(socket.assigns.tabs, &(&1.id == tab_id))
@@ -271,100 +205,6 @@ defmodule SppaWeb.SoalSelidikLive do
       {:noreply,
        socket
        |> Phoenix.LiveView.put_flash(:error, "Tab ini tidak boleh dibuang.")}
-    end
-  end
-
-  @impl true
-  def handle_event("validate_new_tab", %{"new_tab" => new_tab_params}, socket) do
-    form = to_form(new_tab_params, as: :new_tab)
-    {:noreply, assign(socket, :new_tab_form, form)}
-  end
-
-  @impl true
-  def handle_event("show_add_category_modal", %{"category_type" => category_type}, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_add_category_modal, true)
-     |> assign(:category_type, category_type)
-     |> assign(:new_category_form, to_form(%{}, as: :new_category))}
-  end
-
-  @impl true
-  def handle_event("close_add_category_modal", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_add_category_modal, false)
-     |> assign(:category_type, nil)
-     |> assign(:new_category_form, to_form(%{}, as: :new_category))}
-  end
-
-  @impl true
-  def handle_event("validate_new_category", %{"new_category" => new_category_params}, socket) do
-    form = to_form(new_category_params, as: :new_category)
-    {:noreply, assign(socket, :new_category_form, form)}
-  end
-
-  @impl true
-  def handle_event("add_category", %{"new_category" => new_category_params}, socket) do
-    title = Map.get(new_category_params, "title", "") |> String.trim()
-    key = Map.get(new_category_params, "key", "") |> String.trim()
-    category_type = socket.assigns.category_type
-
-    # Generate key from title if not provided
-    category_key = if key == "", do: generate_category_key(title), else: key
-
-    # Validate that title is not empty
-    if title == "" do
-      form = to_form(new_category_params, as: :new_category)
-      {:noreply,
-       socket
-       |> Phoenix.LiveView.put_flash(:error, "Tajuk kategori tidak boleh kosong.")
-       |> assign(:show_add_category_modal, true)
-       |> assign(:new_category_form, form)}
-    else
-      # Validate that key is unique
-      existing_keys =
-        case category_type do
-          "fr" -> Enum.map(socket.assigns.fr_categories, & &1.key)
-          "nfr" -> Enum.map(socket.assigns.nfr_categories, & &1.key)
-          _ -> []
-        end
-
-      if category_key in existing_keys do
-        form = to_form(new_category_params, as: :new_category)
-        {:noreply,
-         socket
-         |> Phoenix.LiveView.put_flash(:error, "Kunci kategori sudah wujud. Sila gunakan kunci lain.")
-         |> assign(:show_add_category_modal, true)
-         |> assign(:new_category_form, form)}
-      else
-        new_category = %{
-          key: category_key,
-          title: title,
-          questions: []
-        }
-
-        socket =
-          case category_type do
-            "fr" ->
-              updated_categories = socket.assigns.fr_categories ++ [new_category]
-              assign(socket, :fr_categories, updated_categories)
-
-            "nfr" ->
-              updated_categories = socket.assigns.nfr_categories ++ [new_category]
-              assign(socket, :nfr_categories, updated_categories)
-
-            _ ->
-              socket
-          end
-
-        {:noreply,
-         socket
-         |> assign(:show_add_category_modal, false)
-         |> assign(:category_type, nil)
-         |> assign(:new_category_form, to_form(%{}, as: :new_category))
-         |> Phoenix.LiveView.put_flash(:info, "Kategori baru telah ditambah.")}
-      end
     end
   end
 
@@ -885,28 +725,6 @@ defmodule SppaWeb.SoalSelidikLive do
     {:noreply,
      socket
      |> Phoenix.LiveView.put_flash(:info, "Soalan telah dipadam.")}
-  end
-
-  defp generate_tab_id(label) do
-    label
-    |> String.downcase()
-    |> String.replace(~r/[^a-z0-9\s]/, "")
-    |> String.replace(~r/\s+/, "_")
-    |> then(fn id ->
-      # Ensure it's not empty and add prefix if needed
-      if id == "", do: "custom_tab_#{System.unique_integer([:positive])}", else: id
-    end)
-  end
-
-  defp generate_category_key(title) do
-    title
-    |> String.downcase()
-    |> String.replace(~r/[^a-z0-9\s]/, "")
-    |> String.replace(~r/\s+/, "_")
-    |> then(fn key ->
-      # Ensure it's not empty and add prefix if needed
-      if key == "", do: "category_#{System.unique_integer([:positive])}", else: key
-    end)
   end
 
   # Ensure value is a map (for to_form compatibility)
