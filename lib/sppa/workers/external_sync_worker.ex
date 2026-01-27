@@ -168,5 +168,4 @@ defmodule Sppa.Workers.ExternalSyncWorker do
         nil
     end
   end
-  defp parse_date(_), do: nil
 end
