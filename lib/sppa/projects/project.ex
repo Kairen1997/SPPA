@@ -37,6 +37,6 @@ defmodule Sppa.Projects.Project do
       :approved_project_id
     ])
     |> validate_required([:nama])
-    |> put_change(:last_updated, DateTime.utc_now())
+    |> put_change(:last_updated, DateTime.utc_now() |> DateTime.truncate(:second))
   end
 end

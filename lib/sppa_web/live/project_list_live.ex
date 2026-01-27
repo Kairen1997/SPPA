@@ -95,11 +95,10 @@ defmodule SppaWeb.ProjectListLive do
   end
 
   @impl true
-  def handle_event("filter", %{"status" => status, "phase" => phase, "search" => search}, socket) do
+  def handle_event("filter", %{"status" => status, "search" => search}, socket) do
     socket =
       socket
       |> assign(:status_filter, status)
-      |> assign(:phase_filter, phase)
       |> assign(:search_query, search)
       |> assign(:page, 1)
 
@@ -228,14 +227,25 @@ defmodule SppaWeb.ProjectListLive do
   end
 
   defp list_projects(socket) do
+    # Base query with join to internal project (if exists)
     base_query =
-      Sppa.ApprovedProjects.ApprovedProject
+      from ap in Sppa.ApprovedProjects.ApprovedProject,
+        left_join: p in assoc(ap, :project),
+        preload: [project: p]
 
     # Apply search filter
     base_query =
       if socket.assigns.search_query != "" do
         search_term = "%#{socket.assigns.search_query}%"
-        where(base_query, [ap], ilike(ap.nama_projek, ^search_term))
+        where(base_query, [ap, _p], ilike(ap.nama_projek, ^search_term))
+      else
+        base_query
+      end
+
+    # Apply status filter (based on linked internal project status)
+    base_query =
+      if socket.assigns.status_filter != "" do
+        where(base_query, [_ap, p], p.status == ^socket.assigns.status_filter)
       else
         base_query
       end
@@ -244,8 +254,7 @@ defmodule SppaWeb.ProjectListLive do
     offset = (socket.assigns.page - 1) * socket.assigns.per_page
 
     base_query
-    |> preload(:project)
-    |> order_by([ap], desc: ap.inserted_at)
+    |> order_by([ap, _p], desc: ap.inserted_at)
     |> limit(^socket.assigns.per_page)
     |> offset(^offset)
     |> Repo.all()
@@ -253,13 +262,21 @@ defmodule SppaWeb.ProjectListLive do
 
   defp calculate_total_pages(socket) do
     base_query =
-      Sppa.ApprovedProjects.ApprovedProject
+      from ap in Sppa.ApprovedProjects.ApprovedProject,
+        left_join: p in assoc(ap, :project)
 
     # Apply search filter
     base_query =
       if socket.assigns.search_query != "" do
         search_term = "%#{socket.assigns.search_query}%"
-        where(base_query, [ap], ilike(ap.nama_projek, ^search_term))
+        where(base_query, [ap, _p], ilike(ap.nama_projek, ^search_term))
+      else
+        base_query
+      end
+
+    base_query =
+      if socket.assigns.status_filter != "" do
+        where(base_query, [_ap, p], p.status == ^socket.assigns.status_filter)
       else
         base_query
       end
@@ -341,7 +358,17 @@ defmodule SppaWeb.ProjectListLive do
                   id="filter-form"
                   class="flex flex-wrap items-end gap-4"
                 >
-                  <%!-- Status Projek dropdown --%>
+                  <%!-- Search input (moved first) --%>
+                  <div class="flex-1 min-w-[200px]">
+                    <label class="mb-2 block text-sm font-medium text-gray-700">Carian</label>
+                    <input
+                      type="text"
+                      name="search"
+                      placeholder="Carian projek..."
+                      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
+                    />
+                  </div>
+                   <%!-- Status Projek dropdown (now second) --%>
                   <div class="flex-1 min-w-[200px]">
                     <label class="mb-2 block text-sm font-medium text-gray-700">Status Projek</label>
                     <select
@@ -354,34 +381,6 @@ defmodule SppaWeb.ProjectListLive do
 
                       <option value="Selesai">Selesai</option>
                     </select>
-                  </div>
-                   <%!-- Fasa Semasa dropdown --%>
-                  <div class="flex-1 min-w-[200px]">
-                    <label class="mb-2 block text-sm font-medium text-gray-700">Fasa Semasa</label>
-                    <select
-                      name="phase"
-                      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
-                    >
-                      <option value="">Semua</option>
-
-                      <option value="Analisis dan Rekabentuk">Analisis dan Rekabentuk</option>
-
-                      <option value="Pembangunan">Pembangunan</option>
-
-                      <option value="UAT">UAT</option>
-
-                      <option value="Penyerahan">Penyerahan</option>
-                    </select>
-                  </div>
-                   <%!-- Search input --%>
-                  <div class="flex-1 min-w-[200px]">
-                    <label class="mb-2 block text-sm font-medium text-gray-700">Carian</label>
-                    <input
-                      type="text"
-                      name="search"
-                      placeholder="Carian projek..."
-                      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
-                    />
                   </div>
                    <%!-- Action buttons --%>
                   <div class="flex-shrink-0 flex gap-3">
@@ -403,9 +402,10 @@ defmodule SppaWeb.ProjectListLive do
                   </div>
                 </.form>
               </div>
-               <%!-- Projects table --%>
-              <div id="senarai-projek-document" class="overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0">
-                <table class="w-full">
+
+              <%!-- Projects table --%>
+              <div id="senarai-projek-document" class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0">
+                 <table class="w-full">
                   <thead class="bg-gray-50">
                     <tr>
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -418,10 +418,6 @@ defmodule SppaWeb.ProjectListLive do
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Kementerian/Jabatan
-                      </th>
-
-                      <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Nama Sistem
                       </th>
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -449,10 +445,6 @@ defmodule SppaWeb.ProjectListLive do
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                        {project.nama_projek}
-                      </td>
-
-                      <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         <%= if project.tarikh_mula do %>
                           {Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}
                         <% else %>
@@ -462,18 +454,20 @@ defmodule SppaWeb.ProjectListLive do
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm">
                         <%= if project.project do %>
-                          <div class="flex items-center gap-3">
+                          <div class="flex items-center gap-2">
                             <.link
                               navigate={~p"/projek/#{project.project.id}"}
-                              class="font-medium text-[#2F80ED] transition hover:text-[#2563EB]"
+                              class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200"
                             >
-                              Lihat
+                              <.icon name="hero-eye" class="w-4 h-4" />
+                              <span class="hidden lg:inline">Lihat</span>
                             </.link>
                             <.link
                               navigate={~p"/projek/#{project.project.id}/modul"}
-                              class="font-medium text-[#2F80ED] transition hover:text-[#2563EB]"
+                              class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200"
                             >
-                              Modul
+                              <.icon name="hero-cog-6-tooth" class="w-4 h-4" />
+                              <span class="hidden lg:inline">Modul</span>
                             </.link>
                           </div>
                         <% else %>
