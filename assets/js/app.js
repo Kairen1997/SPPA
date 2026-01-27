@@ -469,6 +469,91 @@ const NotificationToggle = {
   }
 }
 
+// Profile Menu Toggle Hook
+const ProfileMenuToggle = {
+  mounted() {
+    const dropdown = document.getElementById("profile-menu-dropdown")
+    const container = document.getElementById("profile-menu-container")
+    
+    if (!dropdown || !container) return
+    
+    this.handleClick = (e) => {
+      e.stopPropagation()
+      // Toggle dropdown visibility
+      const isOpen = dropdown.classList.contains("opacity-100")
+      
+      if (isOpen) {
+        dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
+        dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
+        this.el.setAttribute("aria-expanded", "false")
+      } else {
+        dropdown.classList.remove("opacity-0", "scale-95", "pointer-events-none")
+        dropdown.classList.add("opacity-100", "scale-100", "pointer-events-auto")
+        this.el.setAttribute("aria-expanded", "true")
+      }
+      
+      // Try to push event to LiveView if available
+      if (this.pushEvent) {
+        this.pushEvent("toggle_profile_menu", {})
+      }
+    }
+    
+    this.handleClickAway = (e) => {
+      if (!container.contains(e.target)) {
+        dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
+        dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
+        this.el.setAttribute("aria-expanded", "false")
+        
+        if (this.pushEvent) {
+          this.pushEvent("close_profile_menu", {})
+        }
+      }
+    }
+    
+    this.el.addEventListener("click", this.handleClick)
+    document.addEventListener("click", this.handleClickAway)
+  },
+  
+  updated() {
+    // Re-sync with LiveView state if available
+    const dropdown = document.getElementById("profile-menu-dropdown")
+    if (dropdown && this.el.dataset.profileMenuOpen === "true") {
+      dropdown.classList.remove("opacity-0", "scale-95", "pointer-events-none")
+      dropdown.classList.add("opacity-100", "scale-100", "pointer-events-auto")
+      this.el.setAttribute("aria-expanded", "true")
+    } else if (dropdown) {
+      dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
+      dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
+      this.el.setAttribute("aria-expanded", "false")
+    }
+  },
+  
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick)
+    }
+    if (this.handleClickAway) {
+      document.removeEventListener("click", this.handleClickAway)
+    }
+  }
+}
+
+// Set Input Value Hook - ensures input value is set after mount/update
+const SetInputValue = {
+  mounted() {
+    const initialValue = this.el.dataset.initialValue
+    if (initialValue && initialValue !== "") {
+      this.el.value = initialValue
+    }
+  },
+  updated() {
+    const initialValue = this.el.dataset.initialValue
+    if (initialValue && initialValue !== "") {
+      this.el.value = initialValue
+    }
+  }
+}
+
 // Preserve Form Data Hook - ensures all form data is sent on phx-change
 const PreserveFormData = {
   mounted() {
@@ -708,11 +793,13 @@ const liveSocket = new LiveSocket("/live", Socket, {
     UpdateSectionCategory,
     GeneratePDF,
     NotificationToggle,
+    ProfileMenuToggle,
     AutoResize,
     ToggleOptionsField,
     PreserveDetailsOpen,
     PreserveFormData,
-    SaveRowData
+    SaveRowData,
+    SetInputValue
   },
 })
 
@@ -765,4 +852,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-

@@ -18,25 +18,28 @@
     /> <%!-- Main Content --%>
     <div class="flex-1 flex flex-col overflow-hidden">
       <%!-- Header --%>
-      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
-        <.system_title />
-        <div class="flex items-center gap-4">
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-md relative gap-2 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0" style="max-width: min(30%, 200px);">
           <button
             phx-click="toggle_sidebar"
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
           >
-            <.icon name="hero-bars-3" class="w-6 h-6" />
+            <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           <.header_logos />
         </div>
-        
-        <.header_actions
-          notifications_open={@notifications_open}
-          notifications_count={@notifications_count}
-          activities={@activities}
-          profile_menu_open={@profile_menu_open}
-          current_scope={@current_scope}
-        />
+        <div class="flex-1 flex justify-center min-w-0">
+          <.system_title />
+        </div>
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <.header_actions
+            notifications_open={@notifications_open}
+            notifications_count={@notifications_count}
+            activities={@activities}
+            profile_menu_open={@profile_menu_open}
+            current_scope={@current_scope}
+          />
+        </div>
       </header>
        <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
@@ -203,7 +206,7 @@
                 <div class="flex justify-end gap-3 mb-4 print:hidden">
                   <.link
                     id="edit-soal-selidik-form"
-                    navigate={~p"/soal-selidik"}
+                    navigate={~p"/soal-selidik?project_id=#{@project.id}"}
                     class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
                   >
                     <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
@@ -744,12 +747,16 @@
                                 <% end %>
                               </td>
                               <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex items-center justify-center gap-1.5">
-                                  <.icon name="hero-calendar-days" class="w-4 h-4 text-gray-400" />
-                                  <span class="text-sm text-gray-700">
-                                    {Calendar.strftime(module.tarikh_jangka_siap, "%d/%m/%Y")}
-                                  </span>
-                                </div>
+                                <%= if module.tarikh_jangka_siap do %>
+                                  <div class="flex items-center justify-center gap-1.5">
+                                    <.icon name="hero-calendar-days" class="w-4 h-4 text-gray-400" />
+                                    <span class="text-sm text-gray-700">
+                                      {Calendar.strftime(module.tarikh_jangka_siap, "%d/%m/%Y")}
+                                    </span>
+                                  </div>
+                                <% else %>
+                                  <span class="text-sm text-gray-400 italic">-</span>
+                                <% end %>
                               </td>
                               <td class="px-3 py-3">
                                 <%= if length(module.functions) > 0 do %>
@@ -895,12 +902,16 @@
                                 </div>
                               </td>
                               <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex items-center justify-center gap-1.5">
-                                  <.icon name="hero-calendar-days" class="w-4 h-4 text-gray-400" />
-                                  <span class="text-sm text-gray-700">
-                                    {Calendar.strftime(change_request.tarikh_dibuat, "%d/%m/%Y")}
-                                  </span>
-                                </div>
+                                <%= if change_request.tarikh_dibuat do %>
+                                  <div class="flex items-center justify-center gap-1.5">
+                                    <.icon name="hero-calendar-days" class="w-4 h-4 text-gray-400" />
+                                    <span class="text-sm text-gray-700">
+                                      {Calendar.strftime(change_request.tarikh_dibuat, "%d/%m/%Y")}
+                                    </span>
+                                  </div>
+                                <% else %>
+                                  <span class="text-sm text-gray-400 italic">-</span>
+                                <% end %>
                               </td>
                               <td class="px-3 py-3">
                                 <div class="max-w-xs">
@@ -1005,7 +1016,7 @@
                   </div>
                    <%!-- Fasa Filter --%>
                   <div>
-                    <label for="fasa_filter" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="fasa_filter" class="block text-sm font-medium text-black-700 mb-2">
                       Fasa
                     </label>
                     <select
@@ -1064,42 +1075,42 @@
               </div>
               
               <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+                <table class="w-full divide-y divide-gray-200 table-fixed" style="table-layout: fixed;">
                   <thead class="bg-gray-50">
                     <tr>
-                      <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[180px]">
+                      <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider" style="width: 18%;">
                         Nama Projek
                       </th>
                       
-                      <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[140px]">
+                      <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider" style="width: 10%;">
                         Status
                       </th>
                       
-                      <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[100px]">
+                      <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider" style="width: 10%;">
                         Fasa
                       </th>
                       
-                      <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[110px]">
+                      <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider" style="width: 9%;">
                         Tarikh Mula
                       </th>
                       
-                      <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[110px]">
+                      <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider" style="width: 9%;">
                         Tarikh Jangka Siap
                       </th>
                       
-                      <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[130px]">
+                      <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider" style="width: 11%;">
                         Pengurus
                       </th>
                       
-                      <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[130px]">
+                      <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider" style="width: 11%;">
                         Pembangun Sistem
                       </th>
                       
-                      <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[130px]">
-                        Dokumen Sokongan
+                      <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider" style="width: 10%;">
+                        Dokumen
                       </th>
                       
-                      <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[100px]">
+                      <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider" style="width: 12%;">
                         Tindakan
                       </th>
                     </tr>
@@ -1118,26 +1129,25 @@
                     <% else %>
                       <%= for project <- @projects do %>
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
-                          <td class="px-3 py-3">
+                          <td class="px-2 py-2">
                             <div class="flex items-center min-w-0">
-                              <div class="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-2">
-                                <.icon name="hero-folder" class="w-4 h-4 text-white" />
+                              <div class="flex-shrink-0 h-6 w-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded flex items-center justify-center mr-1.5">
+                                <.icon name="hero-folder" class="w-3 h-3 text-white" />
                               </div>
                               
                               <div
-                                class="text-sm font-medium text-gray-900 truncate"
+                                class="text-xs font-medium text-gray-900 truncate"
                                 title={project.nama}
-                                style="max-width: 150px;"
                               >
                                 {project.nama}
                               </div>
                             </div>
                           </td>
                           
-                          <td class="px-3 py-3">
+                          <td class="px-2 py-2">
                             <span
                               class={[
-                                "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap",
+                                "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap",
                                 case project.status do
                                   "Selesai" ->
                                     "bg-green-100 text-green-800"
@@ -1155,89 +1165,94 @@
                             </span>
                           </td>
                           
-                          <td class="px-3 py-3">
+                          <td class="px-2 py-2">
                             <div
-                              class="text-sm text-gray-600 truncate"
+                              class="text-xs text-gray-600 truncate"
                               title={project.fasa}
-                              style="max-width: 90px;"
                             >
                               {project.fasa}
                             </div>
                           </td>
                           
-                          <td class="px-3 py-3 whitespace-nowrap">
-                            <div class="flex items-center text-sm text-gray-600">
-                              <.icon
-                                name="hero-calendar"
-                                class="w-4 h-4 text-gray-400 mr-1.5 flex-shrink-0"
-                              /> <span>{Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}</span>
-                            </div>
+                          <td class="px-2 py-2 whitespace-nowrap">
+                            <%= if project.tarikh_mula do %>
+                              <div class="flex items-center text-xs text-gray-600">
+                                <.icon
+                                  name="hero-calendar"
+                                  class="w-3 h-3 text-gray-400 mr-1 flex-shrink-0"
+                                /> <span>{Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}</span>
+                              </div>
+                            <% else %>
+                              <span class="text-xs text-gray-400 italic">-</span>
+                            <% end %>
                           </td>
                           
-                          <td class="px-3 py-3 whitespace-nowrap">
-                            <div class="flex items-center text-sm text-gray-600">
-                              <.icon
-                                name="hero-calendar"
-                                class="w-4 h-4 text-gray-400 mr-1.5 flex-shrink-0"
-                              /> <span>{Calendar.strftime(project.tarikh_siap, "%d/%m/%Y")}</span>
-                            </div>
+                          <td class="px-2 py-2 whitespace-nowrap">
+                            <%= if project.tarikh_siap do %>
+                              <div class="flex items-center text-xs text-gray-600">
+                                <.icon
+                                  name="hero-calendar"
+                                  class="w-3 h-3 text-gray-400 mr-1 flex-shrink-0"
+                                /> <span>{Calendar.strftime(project.tarikh_siap, "%d/%m/%Y")}</span>
+                              </div>
+                            <% else %>
+                              <span class="text-xs text-gray-400 italic">-</span>
+                            <% end %>
                           </td>
                           
-                          <td class="px-3 py-3">
-                            <div class="flex items-center text-sm text-gray-600 min-w-0">
+                          <td class="px-2 py-2">
+                            <div class="flex items-center text-xs text-gray-600 min-w-0">
                               <.icon
                                 name="hero-user"
-                                class="w-4 h-4 text-gray-400 mr-1.5 flex-shrink-0"
+                                class="w-3 h-3 text-gray-400 mr-1 flex-shrink-0"
                               />
                               <span
                                 class="truncate"
                                 title={project.pengurus_projek}
-                                style="max-width: 110px;"
                               >
                                 {project.pengurus_projek}
                               </span>
                             </div>
                           </td>
                           
-                          <td class="px-3 py-3">
-                            <div class="flex items-center text-sm text-gray-600 min-w-0">
+                          <td class="px-2 py-2">
+                            <div class="flex items-center text-xs text-gray-600 min-w-0">
                               <.icon
                                 name="hero-code-bracket"
-                                class="w-4 h-4 text-gray-400 mr-1.5 flex-shrink-0"
+                                class="w-3 h-3 text-gray-400 mr-1 flex-shrink-0"
                               />
                               <span
                                 class="truncate"
                                 title={project.pembangun_sistem || "Tiada pembangun"}
-                                style="max-width: 110px;"
                               >
                                 {project.pembangun_sistem || "Tiada pembangun"}
                               </span>
                             </div>
                           </td>
                           
-                          <td class="px-3 py-3">
-                            <div class="flex items-center text-sm text-gray-600 min-w-0">
+                          <td class="px-2 py-2">
+                            <div class="flex items-center text-xs text-gray-600 min-w-0">
                               <.icon
                                 name="hero-document"
-                                class="w-4 h-4 text-gray-400 mr-1.5 flex-shrink-0"
+                                class="w-3 h-3 text-gray-400 mr-1 flex-shrink-0"
                               />
-                              <span class="truncate" style="max-width: 110px;">
+                              <span class="truncate">
                                 <%= if project.dokumen_sokongan && project.dokumen_sokongan > 0 do %>
-                                  {project.dokumen_sokongan} dokumen
+                                  {project.dokumen_sokongan}
                                 <% else %>
-                                  <span class="text-gray-400 italic">Tiada dokumen</span>
+                                  <span class="text-gray-400 italic">-</span>
                                 <% end %>
                               </span>
                             </div>
                           </td>
                           
-                          <td class="px-3 py-3 whitespace-nowrap">
+                          <td class="px-2 py-2 whitespace-nowrap">
                             <.link
                               navigate={SppaWeb.ProjekLive.build_project_navigate_path(project, @current_scope.user.role)}
-                              class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200"
+                              class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded transition-colors duration-200"
                             >
-                              <.icon name="hero-eye" class="w-4 h-4" />
-                              <span class="hidden lg:inline">Lihat</span>
+                              <.icon name="hero-eye" class="w-3.5 h-3.5" />
+                              <span>Lihat</span>
                             </.link>
                           </td>
                         </tr>

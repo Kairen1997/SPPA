@@ -2,6 +2,8 @@ defmodule SppaWeb.SoalSelidikLive do
   use SppaWeb, :live_view
 
   alias Sppa.Projects
+  alias Sppa.Projects.Project
+  alias Sppa.Repo
   alias Sppa.SoalSelidiks
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
@@ -91,6 +93,52 @@ defmodule SppaWeb.SoalSelidikLive do
       project = load_project_info(params, socket, soal_selidik_id, initial_data)
       project_name = if project, do: project.nama, else: ""
 
+      # Check if project_id is in params (means accessed via Edit Borang button)
+      has_project_id_in_params = Map.has_key?(params, "project_id")
+
+      # If no existing soal selidik and project exists, populate nama_sistem from project name
+      # BUT only if project_id is in params (accessed via Edit Borang button)
+      nama_sistem =
+        cond do
+          # Priority 1: If there's an existing soal selidik with nama_sistem that is not empty, use it
+          soal_selidik_id != nil && initial_data.nama_sistem && initial_data.nama_sistem != "" ->
+            initial_data.nama_sistem
+          # Priority 2: If project_id is in params (accessed via Edit Borang) AND project exists with a name, use project name
+          has_project_id_in_params && project && project.nama && project.nama != "" ->
+            project.nama
+          # Priority 3: Otherwise, use whatever is in initial_data (could be empty)
+          true ->
+            initial_data.nama_sistem || ""
+        end
+
+      # Always update form_data with nama_sistem to ensure it's in the form
+      base_form_data = initial_data.form_data
+
+      updated_form_data = Map.put(base_form_data, "nama_sistem", nama_sistem)
+
+      # Update initial_data with nama_sistem
+      initial_data =
+        initial_data
+        |> Map.put(:nama_sistem, nama_sistem)
+        |> Map.put(:form_data, updated_form_data)
+
+      # Create form with updated form_data - ensure nama_sistem is in the map
+      form_data_for_form =
+        updated_form_data
+        |> ensure_map()
+        |> Map.put("nama_sistem", nama_sistem)
+
+      # Debug: Log values to understand what's happening
+      require Logger
+      Logger.info("=== NAMA SISTEM DEBUG ===")
+      Logger.info("project_id from params: #{inspect(Map.get(params, "project_id"))}")
+      Logger.info("project loaded: #{inspect(if project, do: "YES - #{project.nama}", else: "NO")}")
+      Logger.info("soal_selidik_id: #{inspect(soal_selidik_id)}")
+      Logger.info("initial_data.nama_sistem: #{inspect(initial_data.nama_sistem)}")
+      Logger.info("nama_sistem final: #{inspect(nama_sistem)}")
+      Logger.info("form_data_for_form nama_sistem: #{inspect(Map.get(form_data_for_form, "nama_sistem"))}")
+      Logger.info("=========================")
+
       socket =
         socket
         |> assign(:hide_root_header, true)
@@ -103,12 +151,13 @@ defmodule SppaWeb.SoalSelidikLive do
         |> assign(:project, project)
         |> assign(:project_name, project_name)
         |> assign(:document_id, initial_data.document_id)
-        |> assign(:system_name, initial_data.nama_sistem)
+        |> assign(:system_name, nama_sistem)
+        |> assign(:nama_sistem_value, nama_sistem)
         |> assign(:active_tab, "fr")
         |> assign(:tabs, initial_data.tabs || default_tabs)
         |> assign(:fr_categories, initial_data.fr_categories || @fr_categories)
         |> assign(:nfr_categories, initial_data.nfr_categories || @nfr_categories)
-        |> assign(:form, to_form(ensure_map(initial_data.form_data), as: :soal_selidik))
+        |> assign(:form, to_form(form_data_for_form, as: :soal_selidik))
         |> assign(:show_pdf_modal, false)
         |> assign(:pdf_data, nil)
         |> assign(:show_edit_question_modal, false)
@@ -792,14 +841,25 @@ defmodule SppaWeb.SoalSelidikLive do
     project_id_from_data = Map.get(initial_data, :project_id)
 
     cond do
-      # If project_id is in params, load project directly
+      # If project_id is in params, load project directly (accessed via Edit Borang button)
+      # Load without user_id filter to allow access from project page
       Map.has_key?(params, "project_id") ->
         case Integer.parse(params["project_id"]) do
           {project_id, _} ->
             try do
-              Projects.get_project!(project_id, socket.assigns.current_scope)
+              # Load project by ID only, without user_id filter
+              # This allows access when clicking Edit Borang from project page
+              project = Repo.get(Project, project_id)
+
+              if project do
+                # Preload associations if needed
+                Repo.preload(project, [:developer, :project_manager])
+              else
+                nil
+              end
             rescue
               Ecto.NoResultsError -> nil
+              _ -> nil
             end
           :error -> nil
         end

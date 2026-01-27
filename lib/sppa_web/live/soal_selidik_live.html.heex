@@ -38,8 +38,8 @@
     <%!-- Overlay --%>
     <div
       class={[
-        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
-        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+        "fixed inset-0 bg-blue-900/60 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100 z-40", else: "opacity-0 pointer-events-none z-0")
       ]}
       phx-click="close_sidebar"
     >
@@ -54,27 +54,30 @@
     />
     
     <%!-- Main Content --%>
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden relative z-50">
       <%!-- Header --%>
-      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
-        <.system_title />
-        <div class="flex items-center gap-4">
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-md relative z-50 gap-2 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0" style="max-width: min(30%, 200px);">
           <button
             phx-click="toggle_sidebar"
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 relative z-50 flex-shrink-0"
           >
-            <.icon name="hero-bars-3" class="w-6 h-6" />
+            <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           <.header_logos />
         </div>
-        
-        <.header_actions
-          notifications_open={@notifications_open}
-          notifications_count={@notifications_count}
-          activities={@activities}
-          profile_menu_open={@profile_menu_open}
-          current_scope={@current_scope}
-        />
+        <div class="flex-1 flex justify-center min-w-0">
+          <.system_title />
+        </div>
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <.header_actions
+            notifications_open={@notifications_open}
+            notifications_count={@notifications_count}
+            activities={@activities}
+            profile_menu_open={@profile_menu_open}
+            current_scope={@current_scope}
+          />
+        </div>
       </header>
       
       <%!-- TAJUK SOAL SELIDIK --%>
@@ -166,16 +169,36 @@
                 phx-hook="PreserveFormData"
                 class="space-y-6"
               >
-                <%!-- Nama Sistem Field - Must be inside form to be submitted --%>
-                <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
-                  <span>Nama Sistem :</span>
-                  <.input
-                    field={@form[:nama_sistem]}
-                    type="text"
-                    class="flex-1"
-                    placeholder="Masukkan Nama Sistem"
-                    phx-debounce="300"
-                  />
+                <%!-- Nama Sistem Field - Moved after title, before tabs, but inside form --%>
+                <div class="mb-6 -mt-6">
+                  <div class="text-sm text-gray-700 font-medium text-left flex items-center gap-2">
+                    <span>Nama Sistem :</span>
+                    <%= if @form[:nama_sistem] do %>
+                      <.input
+                        field={@form[:nama_sistem]}
+                        type="text"
+                        class="flex-1 px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Masukkan Nama Sistem"
+                        phx-debounce="300"
+                        phx-change="validate"
+                        phx-hook="SetInputValue"
+                        data-initial-value={@form[:nama_sistem].value || ""}
+                      />
+                    <% else %>
+                      <.input
+                        type="text"
+                        name="soal_selidik[nama_sistem]"
+                        id="soal_selidik_nama_sistem"
+                        value={@nama_sistem_value || @system_name || ""}
+                        class="flex-1 px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Masukkan Nama Sistem"
+                        phx-debounce="300"
+                        phx-change="validate"
+                        phx-hook="SetInputValue"
+                        data-initial-value={@nama_sistem_value || @system_name || ""}
+                      />
+                    <% end %>
+                  </div>
                 </div>
                 <%!-- Functional Requirements Tab --%>
                 <div class={["space-y-4", if(@active_tab != "fr", do: "hidden")]}>

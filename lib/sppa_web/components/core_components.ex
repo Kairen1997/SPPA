@@ -500,7 +500,7 @@ defmodule SppaWeb.CoreComponents do
 
   def system_title(assigns) do
     ~H"""
-    <div class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-3 text-center">
+    <div class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-3 text-center z-10 hidden sm:block">
       <span class={["block truncate", @max_width_class, @class]}>
         <.system_name title={@title} />
       </span>
@@ -527,12 +527,12 @@ defmodule SppaWeb.CoreComponents do
       <img
         src={~p"/images/Jata-Sabah.png"}
         alt="Jata Wilayah Sabah"
-        class={[@height_class, "w-auto object-contain"]}
+        class={[@height_class, "w-auto object-contain hidden sm:block"]}
       />
       <img
         src={~p"/images/logojpkn.png"}
         alt="Logo JPKN"
-        class={[@height_class, "w-auto object-contain"]}
+        class={[@height_class, "w-auto object-contain max-w-[60px] sm:max-w-none"]}
       />
     </div>
     """
@@ -555,7 +555,7 @@ defmodule SppaWeb.CoreComponents do
     <aside
       class={[
         "fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-gray-900/80 to-gray-800/80 backdrop-blur-xl text-white z-50 transform transition-transform duration-300 ease-in-out shadow-2xl border-r border-white/10",
-        if(@sidebar_open, do: "translate-x-0", else: "-translate-x-full")
+        if(@sidebar_open, do: "translate-x-0", else: "-translate-x-full pointer-events-none")
       ]}
       id="sidebar"
     >

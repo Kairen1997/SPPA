@@ -18,7 +18,7 @@ defmodule SppaWeb.Components.HeaderActions do
 
   def header_actions(assigns) do
     ~H"""
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 sm:gap-3">
       <%!-- Notification Icon --%>
       <div class="relative" id="notification-container">
         <button
@@ -26,11 +26,11 @@ defmodule SppaWeb.Components.HeaderActions do
           type="button"
           phx-click="toggle_notifications"
           phx-hook="NotificationToggle"
-          class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600 focus-visible:ring-white"
+          class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600 focus-visible:ring-white flex-shrink-0"
           aria-label="Notifikasi"
           aria-expanded={@notifications_open}
         >
-          <.icon name="hero-bell" class="w-5 h-5" />
+          <.icon name="hero-bell" class="w-4 h-4 sm:w-5 sm:h-5" />
           <%= if @notifications_count > 0 do %>
             <span class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 h-4 min-w-[1rem] rounded-full bg-red-500 text-[0.6rem] font-semibold leading-none text-white shadow-sm">
               {@notifications_count}
@@ -106,12 +106,14 @@ defmodule SppaWeb.Components.HeaderActions do
         <button
           id="profile-menu-toggle-btn"
           type="button"
+          phx-hook="ProfileMenuToggle"
           phx-click="toggle_profile_menu"
-          class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600 focus-visible:ring-white"
+          data-profile-menu-open={@profile_menu_open}
+          class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600 focus-visible:ring-white flex-shrink-0"
           aria-label="Menu Profil"
           aria-expanded={@profile_menu_open}
         >
-          <.icon name="hero-user-circle" class="w-6 h-6" />
+          <.icon name="hero-user-circle" class="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
         <div
           id="profile-menu-dropdown"
@@ -119,7 +121,6 @@ defmodule SppaWeb.Components.HeaderActions do
             "absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-blue-100 overflow-hidden z-50 origin-top-right transition-all duration-200",
             if(@profile_menu_open, do: "opacity-100 scale-100 pointer-events-auto", else: "opacity-0 scale-95 pointer-events-none")
           ]}
-          phx-click-away="close_profile_menu"
         >
           <%!-- User Info Header --%>
           <div class="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-500">
