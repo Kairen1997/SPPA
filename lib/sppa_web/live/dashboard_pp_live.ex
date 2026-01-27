@@ -109,25 +109,28 @@ defmodule SppaWeb.DashboardPPLive do
         /> <%!-- Main Content --%>
         <div class="flex-1 flex flex-col overflow-hidden">
           <%!-- Header --%>
-          <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
-            <.system_title />
-            <div class="flex items-center gap-4">
+          <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-md relative gap-2 sm:gap-4">
+            <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0" style="max-width: min(30%, 200px);">
               <button
                 phx-click="toggle_sidebar"
-                class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+                class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
               >
-                <.icon name="hero-bars-3" class="w-6 h-6" />
+                <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
               <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
-            <.header_actions
-              notifications_open={@notifications_open}
-              notifications_count={@notifications_count}
-              activities={@activities}
-              profile_menu_open={@profile_menu_open}
-              current_scope={@current_scope}
-            />
+            <div class="flex-1 flex justify-center min-w-0">
+              <.system_title />
+            </div>
+            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <.header_actions
+                notifications_open={@notifications_open}
+                notifications_count={@notifications_count}
+                activities={@activities}
+                profile_menu_open={@profile_menu_open}
+                current_scope={@current_scope}
+              />
+            </div>
           </header>
            <%!-- Dashboard Content --%>
           <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">

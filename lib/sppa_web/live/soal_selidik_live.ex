@@ -2,6 +2,9 @@ defmodule SppaWeb.SoalSelidikLive do
   use SppaWeb, :live_view
 
   alias Sppa.Projects
+  alias Sppa.Projects.Project
+  alias Sppa.Repo
+  alias Sppa.SoalSelidiks
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
@@ -10,91 +13,42 @@ defmodule SppaWeb.SoalSelidikLive do
     %{
       key: "pendaftaran_login",
       title: "Pendaftaran & Login",
-      questions: [
-        %{no: 1, soalan: "Adakah sistem memerlukan pendaftaran pengguna?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 2, soalan: "Apakah kaedah autentikasi yang diperlukan?", type: :checkbox, options: ["Kata laluan", "OTP", "Biometrik", "SSO"]},
-        %{no: 3, soalan: "Adakah sistem perlu menyokong pendaftaran sendiri (self-registration)?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 4, soalan: "Berapa lama tempoh sesi pengguna sebelum logout automatik?", type: :text},
-        %{no: 5, soalan: "Adakah sistem perlu menyokong reset kata laluan?", type: :select, options: ["Ya", "Tidak"]}
-      ]
+      questions: []
     },
     %{
       key: "pengurusan_data",
       title: "Pengurusan Data",
-      questions: [
-        %{no: 1, soalan: "Apakah jenis data utama yang perlu diuruskan?", type: :textarea},
-        %{no: 2, soalan: "Adakah sistem perlu menyokong import data pukal?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 3, soalan: "Apakah format fail yang perlu disokong untuk import?", type: :checkbox, options: ["Excel", "CSV", "JSON", "XML"]},
-        %{no: 4, soalan: "Adakah sistem perlu menyokong export data?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 5, soalan: "Berapa lama data perlu disimpan dalam sistem?", type: :text},
-        %{no: 6, soalan: "Adakah sistem perlu menyokong backup data automatik?", type: :select, options: ["Ya", "Tidak"]}
-      ]
+      questions: []
     },
     %{
       key: "proses_kerja",
       title: "Proses Kerja",
-      questions: [
-        %{no: 1, soalan: "Apakah alur kerja utama yang perlu dilaksanakan?", type: :textarea},
-        %{no: 2, soalan: "Adakah sistem perlu menyokong workflow approval?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 3, soalan: "Berapa peringkat approval yang diperlukan?", type: :text},
-        %{no: 4, soalan: "Adakah sistem perlu menyokong notifikasi untuk proses kerja?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 5, soalan: "Apakah kaedah notifikasi yang diperlukan?", type: :checkbox, options: ["Email", "SMS", "Push Notification", "Dalam Sistem"]}
-      ]
+      questions: []
     },
     %{
       key: "laporan",
       title: "Laporan",
-      questions: [
-        %{no: 1, soalan: "Apakah jenis laporan yang diperlukan?", type: :textarea},
-        %{no: 2, soalan: "Adakah laporan perlu boleh dieksport?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 3, soalan: "Apakah format eksport yang diperlukan?", type: :checkbox, options: ["PDF", "Excel", "CSV", "Word"]},
-        %{no: 4, soalan: "Adakah laporan perlu dijadualkan secara automatik?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 5, soalan: "Berapa kerap laporan perlu dijana?", type: :text}
-      ]
+      questions: []
     },
     %{
       key: "integrasi",
       title: "Integrasi",
-      questions: [
-        %{no: 1, soalan: "Adakah sistem perlu berintegrasi dengan sistem lain?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 2, soalan: "Sistem manakah yang perlu diintegrasikan?", type: :textarea},
-        %{no: 3, soalan: "Apakah protokol komunikasi yang diperlukan?", type: :checkbox, options: ["REST API", "SOAP", "FTP", "Database"]},
-        %{no: 4, soalan: "Adakah integrasi perlu real-time atau batch?", type: :select, options: ["Real-time", "Batch", "Kedua-dua"]},
-        %{no: 5, soalan: "Adakah sistem perlu menyokong API untuk sistem luaran?", type: :select, options: ["Ya", "Tidak"]}
-      ]
+      questions: []
     },
     %{
       key: "role_akses",
       title: "Role & Akses",
-      questions: [
-        %{no: 1, soalan: "Apakah peranan pengguna yang perlu disokong?", type: :textarea},
-        %{no: 2, soalan: "Adakah sistem perlu menyokong role-based access control (RBAC)?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 3, soalan: "Adakah sistem perlu menyokong permission granular?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 4, soalan: "Adakah sistem perlu menyokong audit log untuk akses?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 5, soalan: "Siapa yang perlu mempunyai akses admin?", type: :text}
-      ]
+      questions: []
     },
     %{
       key: "peraturan_polisi",
       title: "Peraturan / Polisi",
-      questions: [
-        %{no: 1, soalan: "Apakah peraturan atau polisi yang perlu dipatuhi?", type: :textarea},
-        %{no: 2, soalan: "Adakah sistem perlu mematuhi piawaian keselamatan tertentu?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 3, soalan: "Adakah sistem perlu mematuhi peraturan privasi data?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 4, soalan: "Apakah piawaian keselamatan yang perlu dipatuhi?", type: :checkbox, options: ["ISO 27001", "PDPA", "ISO 9001", "Lain-lain"]},
-        %{no: 5, soalan: "Adakah sistem perlu menyokong compliance reporting?", type: :select, options: ["Ya", "Tidak"]}
-      ]
+      questions: []
     },
     %{
       key: "lain_lain_ciri",
       title: "Lain-lain Ciri Fungsian",
-      questions: [
-        %{no: 1, soalan: "Adakah terdapat ciri fungsian tambahan yang diperlukan?", type: :textarea},
-        %{no: 2, soalan: "Adakah sistem perlu menyokong multi-bahasa?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 3, soalan: "Apakah bahasa yang perlu disokong?", type: :checkbox, options: ["Bahasa Melayu", "English", "Bahasa Cina", "Bahasa Tamil"]},
-        %{no: 4, soalan: "Adakah sistem perlu menyokong tema gelap/terang?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 5, soalan: "Adakah terdapat keperluan khas lain?", type: :textarea}
-      ]
+      questions: []
     }
   ]
 
@@ -103,43 +57,22 @@ defmodule SppaWeb.SoalSelidikLive do
     %{
       key: "keselamatan",
       title: "Keselamatan",
-      questions: [
-        %{no: 1, soalan: "Apakah tahap keselamatan data yang diperlukan?", type: :select, options: ["Rendah", "Sederhana", "Tinggi", "Sangat Tinggi"]},
-        %{no: 2, soalan: "Adakah data perlu dienkripsi?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 3, soalan: "Apakah jenis enkripsi yang diperlukan?", type: :checkbox, options: ["At Rest", "In Transit", "Kedua-dua"]},
-        %{no: 4, soalan: "Adakah sistem perlu menyokong two-factor authentication (2FA)?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 5, soalan: "Adakah sistem perlu menyokong audit trail?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 6, soalan: "Berapa lama audit trail perlu disimpan?", type: :text}
-      ]
+      questions: []
     },
     %{
       key: "akses_capaian",
       title: "Akses / Capaian",
-      questions: [
-        %{no: 1, soalan: "Berapa ramai pengguna serentak yang perlu disokong?", type: :text},
-        %{no: 2, soalan: "Adakah sistem perlu boleh diakses dari luar pejabat?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 3, soalan: "Apakah peranti yang perlu disokong?", type: :checkbox, options: ["Desktop", "Laptop", "Tablet", "Mobile"]},
-        %{no: 4, soalan: "Apakah pelayar web yang perlu disokong?", type: :checkbox, options: ["Chrome", "Firefox", "Safari", "Edge"]},
-        %{no: 5, soalan: "Adakah sistem perlu menyokong akses offline?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 6, soalan: "Apakah kelajuan sambungan internet minimum yang diperlukan?", type: :text}
-      ]
+      questions: []
     },
     %{
       key: "usability",
       title: "Usability",
-      questions: [
-        %{no: 1, soalan: "Apakah tahap kemudahan penggunaan yang diperlukan?", type: :select, options: ["Asas", "Sederhana", "Tinggi"]},
-        %{no: 2, soalan: "Adakah sistem perlu menyokong panduan pengguna dalam talian?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 3, soalan: "Adakah sistem perlu menyokong tooltip dan bantuan kontekstual?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 4, soalan: "Berapa lama masa latihan yang diperlukan untuk pengguna baru?", type: :text},
-        %{no: 5, soalan: "Adakah sistem perlu mematuhi piawaian aksesibiliti?", type: :select, options: ["Ya", "Tidak"]},
-        %{no: 6, soalan: "Apakah piawaian aksesibiliti yang perlu dipatuhi?", type: :checkbox, options: ["WCAG 2.1", "Section 508", "Lain-lain"]}
-      ]
+      questions: []
     }
   ]
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     # Verify user has required role (defense in depth - router already checks this)
     user_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
@@ -153,6 +86,59 @@ defmodule SppaWeb.SoalSelidikLive do
         %{id: "disediakan_oleh", label: "Disediakan Oleh", type: :default, removable: false}
       ]
 
+      # Try to load existing soal selidik if ID is provided
+      {soal_selidik_id, initial_data} = load_initial_data(params, socket)
+
+      # Load project information
+      project = load_project_info(params, socket, soal_selidik_id, initial_data)
+      project_name = if project, do: project.nama, else: ""
+
+      # Check if project_id is in params (means accessed via Edit Borang button)
+      has_project_id_in_params = Map.has_key?(params, "project_id")
+
+      # If no existing soal selidik and project exists, populate nama_sistem from project name
+      # BUT only if project_id is in params (accessed via Edit Borang button)
+      nama_sistem =
+        cond do
+          # Priority 1: If there's an existing soal selidik with nama_sistem that is not empty, use it
+          soal_selidik_id != nil && initial_data.nama_sistem && initial_data.nama_sistem != "" ->
+            initial_data.nama_sistem
+          # Priority 2: If project_id is in params (accessed via Edit Borang) AND project exists with a name, use project name
+          has_project_id_in_params && project && project.nama && project.nama != "" ->
+            project.nama
+          # Priority 3: Otherwise, use whatever is in initial_data (could be empty)
+          true ->
+            initial_data.nama_sistem || ""
+        end
+
+      # Always update form_data with nama_sistem to ensure it's in the form
+      base_form_data = initial_data.form_data
+
+      updated_form_data = Map.put(base_form_data, "nama_sistem", nama_sistem)
+
+      # Update initial_data with nama_sistem
+      initial_data =
+        initial_data
+        |> Map.put(:nama_sistem, nama_sistem)
+        |> Map.put(:form_data, updated_form_data)
+
+      # Create form with updated form_data - ensure nama_sistem is in the map
+      form_data_for_form =
+        updated_form_data
+        |> ensure_map()
+        |> Map.put("nama_sistem", nama_sistem)
+
+      # Debug: Log values to understand what's happening
+      require Logger
+      Logger.info("=== NAMA SISTEM DEBUG ===")
+      Logger.info("project_id from params: #{inspect(Map.get(params, "project_id"))}")
+      Logger.info("project loaded: #{inspect(if project, do: "YES - #{project.nama}", else: "NO")}")
+      Logger.info("soal_selidik_id: #{inspect(soal_selidik_id)}")
+      Logger.info("initial_data.nama_sistem: #{inspect(initial_data.nama_sistem)}")
+      Logger.info("nama_sistem final: #{inspect(nama_sistem)}")
+      Logger.info("form_data_for_form nama_sistem: #{inspect(Map.get(form_data_for_form, "nama_sistem"))}")
+      Logger.info("=========================")
+
       socket =
         socket
         |> assign(:hide_root_header, true)
@@ -161,17 +147,22 @@ defmodule SppaWeb.SoalSelidikLive do
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/soal-selidik")
-        |> assign(:document_id, "JPKN-BPA-01/B1")
-        |> assign(:system_name, "")
+        |> assign(:soal_selidik_id, soal_selidik_id)
+        |> assign(:project, project)
+        |> assign(:project_name, project_name)
+        |> assign(:document_id, initial_data.document_id)
+        |> assign(:system_name, nama_sistem)
+        |> assign(:nama_sistem_value, nama_sistem)
         |> assign(:active_tab, "fr")
-        |> assign(:tabs, default_tabs)
-        |> assign(:fr_categories, @fr_categories)
-        |> assign(:nfr_categories, @nfr_categories)
-        |> assign(:form, to_form(%{}, as: :soal_selidik))
+        |> assign(:tabs, initial_data.tabs || default_tabs)
+        |> assign(:fr_categories, initial_data.fr_categories || @fr_categories)
+        |> assign(:nfr_categories, initial_data.nfr_categories || @nfr_categories)
+        |> assign(:form, to_form(form_data_for_form, as: :soal_selidik))
         |> assign(:show_pdf_modal, false)
         |> assign(:pdf_data, nil)
-        |> assign(:show_add_tab_modal, false)
-        |> assign(:new_tab_form, to_form(%{}, as: :new_tab))
+        |> assign(:show_edit_question_modal, false)
+        |> assign(:selected_question, nil)
+        |> assign(:edit_question_form, to_form(%{}, as: :edit_question))
 
       if connected?(socket) do
         activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
@@ -242,134 +233,131 @@ defmodule SppaWeb.SoalSelidikLive do
   end
 
   @impl true
-  def handle_event("show_add_tab_modal", _params, socket) do
-    {:noreply, assign(socket, :show_add_tab_modal, true)}
+  def handle_event("validate", %{"soal_selidik" => params}, socket) do
+    try do
+      # Get existing form data to preserve user input
+      # Handle both map source and changeset source
+      existing_form_data =
+        case socket.assigns.form.source do
+          %{params: form_params} when is_map(form_params) ->
+            form_params
+          source when is_map(source) ->
+            source
+          _ ->
+            %{}
+        end
+
+      existing_soal_selidik = Map.get(existing_form_data, "soal_selidik", %{})
+
+      # Deep merge: preserve existing user input, then add new params
+      # This ensures user input is never lost
+      # Start with existing (to preserve all fields), then merge new params on top
+      merged_params = deep_merge_params(existing_soal_selidik, params)
+
+      # Merge soalan from categories (only if not already in params)
+      params_with_soalan = merge_soalan_from_categories(merged_params, socket.assigns.fr_categories, socket.assigns.nfr_categories)
+
+      # Ensure the params structure is complete (but preserve existing values)
+      final_params = ensure_complete_params(params_with_soalan, socket.assigns.fr_categories, socket.assigns.nfr_categories)
+
+      # Create form with the merged params - this will be used to render input values
+      form = to_form(final_params, as: :soal_selidik)
+      {:noreply, assign(socket, form: form)}
+    rescue
+      e ->
+        # Log error but don't crash - return current form state
+        require Logger
+        Logger.error("Error in validate: #{inspect(e)}")
+        {:noreply, socket}
+    end
   end
 
   @impl true
-  def handle_event("close_add_tab_modal", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_add_tab_modal, false)
-     |> assign(:new_tab_form, to_form(%{}, as: :new_tab))}
+  def handle_event("validate", _params, socket) do
+    # Fallback for validate events without soal_selidik params
+    {:noreply, socket}
   end
 
   @impl true
-  def handle_event("add_tab", %{"new_tab" => new_tab_params}, socket) do
-    label = Map.get(new_tab_params, "label", "") |> String.trim()
-    id = Map.get(new_tab_params, "id", "") |> String.trim()
+  def handle_event("save", %{"soal_selidik" => params}, socket) do
+    require Logger
 
-    # Generate ID from label if not provided
-    tab_id = if id == "", do: generate_tab_id(label), else: id
-
-    # Validate that label is not empty
-    if label == "" do
-      form = to_form(new_tab_params, as: :new_tab)
+    # Check if current_scope exists
+    unless socket.assigns.current_scope && socket.assigns.current_scope.user do
       {:noreply,
        socket
-       |> Phoenix.LiveView.put_flash(:error, "Label tab tidak boleh kosong.")
-       |> assign(:show_add_tab_modal, true)
-       |> assign(:new_tab_form, form)}
+       |> Phoenix.LiveView.put_flash(:error, "Sesi anda telah tamat. Sila log masuk semula.")}
     else
-      # Validate that ID is unique
-      existing_ids = Enum.map(socket.assigns.tabs, & &1.id)
+      # Log incoming params for debugging
+      Logger.info("Save event received with params: #{inspect(params, limit: :infinity)}")
 
-      if tab_id in existing_ids do
-        form = to_form(new_tab_params, as: :new_tab)
-        {:noreply,
-         socket
-         |> Phoenix.LiveView.put_flash(:error, "ID tab sudah wujud. Sila gunakan ID lain.")
-         |> assign(:show_add_tab_modal, true)
-         |> assign(:new_tab_form, form)}
-      else
-        new_tab = %{
-          id: tab_id,
-          label: label,
-          type: :custom,
-          removable: true
-        }
+      # Prepare data for saving
+      attrs = prepare_save_data(params, socket)
 
-        updated_tabs = socket.assigns.tabs ++ [new_tab]
+      # Add user_id to attrs for changeset validation
+      attrs = Map.put(attrs, :user_id, socket.assigns.current_scope.user.id)
 
-        {:noreply,
-         socket
-         |> assign(:tabs, updated_tabs)
-         |> assign(:active_tab, tab_id)
-         |> assign(:show_add_tab_modal, false)
-         |> assign(:new_tab_form, to_form(%{}, as: :new_tab))
-         |> Phoenix.LiveView.put_flash(:info, "Tab baru telah ditambah.")}
+      # Log the attrs for debugging
+      Logger.info("Attempting to save soal selidik with attrs: #{inspect(attrs, limit: :infinity)}")
+      Logger.info("nama_sistem in attrs: #{inspect(Map.get(attrs, :nama_sistem))}")
+      Logger.info("nama_sistem key exists: #{inspect(Map.has_key?(attrs, :nama_sistem))}")
+
+      result =
+        case socket.assigns.soal_selidik_id do
+          nil ->
+            # Create new
+            SoalSelidiks.create_soal_selidik(attrs, socket.assigns.current_scope)
+
+          id ->
+            # Update existing
+            soal_selidik = SoalSelidiks.get_soal_selidik!(id, socket.assigns.current_scope)
+            SoalSelidiks.update_soal_selidik(soal_selidik, attrs)
+        end
+
+      case result do
+        {:ok, soal_selidik} ->
+          socket =
+            socket
+            |> assign(:soal_selidik_id, soal_selidik.id)
+            |> assign(:form, to_form(params, as: :soal_selidik))
+            |> Phoenix.LiveView.put_flash(:info, "Soal selidik telah disimpan dengan jayanya.")
+
+          {:noreply, socket}
+
+        {:error, changeset} ->
+          # Log the actual errors
+          Logger.error("Failed to save soal selidik. Errors: #{inspect(changeset.errors)}")
+          Logger.error("Changeset changes: #{inspect(changeset.changes)}")
+          Logger.error("Changeset data: #{inspect(changeset.data)}")
+
+          # Build detailed error message
+          error_message =
+            if changeset.errors != [] do
+              errors =
+                Enum.map(changeset.errors, fn {field, {msg, _}} ->
+                  "#{field}: #{msg}"
+                end)
+              "Ralat: #{Enum.join(errors, ", ")}"
+            else
+              "Ralat semasa menyimpan soal selidik. Sila cuba lagi."
+            end
+
+          socket =
+            socket
+            |> assign(:form, to_form(params, as: :soal_selidik))
+            |> Phoenix.LiveView.put_flash(:error, error_message)
+
+          {:noreply, socket}
       end
     end
   end
 
   @impl true
-  def handle_event("remove_tab", %{"tab_id" => tab_id}, socket) do
-    # Prevent removing default tabs
-    tab = Enum.find(socket.assigns.tabs, &(&1.id == tab_id))
-
-    if tab && tab.removable do
-      updated_tabs = Enum.reject(socket.assigns.tabs, &(&1.id == tab_id))
-
-      # If we removed the active tab, switch to the first tab
-      new_active_tab =
-        if socket.assigns.active_tab == tab_id do
-          case List.first(updated_tabs) do
-            nil -> "fr"
-            first_tab -> first_tab.id
-          end
-        else
-          socket.assigns.active_tab
-        end
-
-      {:noreply,
-       socket
-       |> assign(:tabs, updated_tabs)
-       |> assign(:active_tab, new_active_tab)
-       |> Phoenix.LiveView.put_flash(:info, "Tab telah dibuang.")}
-    else
-      {:noreply,
-       socket
-       |> Phoenix.LiveView.put_flash(:error, "Tab ini tidak boleh dibuang.")}
-    end
-  end
-
-  @impl true
-  def handle_event("validate_new_tab", %{"new_tab" => new_tab_params}, socket) do
-    form = to_form(new_tab_params, as: :new_tab)
-    {:noreply, assign(socket, :new_tab_form, form)}
-  end
-
-  @impl true
-  def handle_event("validate", %{"soal_selidik" => params}, socket) do
-    form = to_form(params, as: :soal_selidik)
-    {:noreply, assign(socket, form: form)}
-  end
-
-  @impl true
-  def handle_event("save", %{"soal_selidik" => params}, socket) do
-    # For now, just show a success message
-    # Later, this will save to the database
-    socket =
-      socket
-      |> Phoenix.LiveView.put_flash(:info, "Soal selidik telah disimpan dengan jayanya.")
-      |> assign(:form, to_form(params, as: :soal_selidik))
-
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_event("generate_pdf", _params, socket) do
-    nama_sistem =
-      Phoenix.HTML.Form.input_value(socket.assigns.form, :nama_sistem) ||
-        socket.assigns.system_name ||
-        "Sistem Pengurusan Projek Aplikasi (SPPA)"
-
-    dummy_data = Sppa.SoalSelidik.pdf_data(nama_sistem: nama_sistem)
-
     {:noreply,
       socket
-     |> assign(:show_pdf_modal, true)
-     |> assign(:pdf_data, dummy_data)}
+     |> assign(:show_pdf_modal, false)
+     |> assign(:pdf_data, nil)}
   end
 
   @impl true
@@ -380,15 +368,908 @@ defmodule SppaWeb.SoalSelidikLive do
      |> assign(:pdf_data, nil)}
   end
 
-  defp generate_tab_id(label) do
-    label
-    |> String.downcase()
-    |> String.replace(~r/[^a-z0-9\s]/, "")
-    |> String.replace(~r/\s+/, "_")
-    |> then(fn id ->
-      # Ensure it's not empty and add prefix if needed
-      if id == "", do: "custom_tab_#{System.unique_integer([:positive])}", else: id
+  @impl true
+  def handle_event("add_question", %{"tab_type" => tab_type, "category_key" => category_key}, socket) do
+    # Find the category and add a new question
+    categories =
+      case tab_type do
+        "fr" -> socket.assigns.fr_categories
+        "nfr" -> socket.assigns.nfr_categories
+        _ -> []
+      end
+
+    updated_categories =
+      Enum.map(categories, fn category ->
+        if category.key == category_key do
+          # Determine next question number
+          next_no =
+            case category.questions do
+              [] -> 1
+              questions -> (Enum.max_by(questions, & &1.no).no || 0) + 1
+            end
+
+          # Create new question with default values
+          new_question = %{
+            no: next_no,
+            soalan: "",
+            type: :text
+          }
+
+          updated_questions = category.questions ++ [new_question]
+          Map.put(category, :questions, updated_questions)
+        else
+          category
+        end
+      end)
+
+    socket =
+      case tab_type do
+        "fr" ->
+          assign(socket, :fr_categories, updated_categories)
+        "nfr" ->
+          assign(socket, :nfr_categories, updated_categories)
+        _ ->
+          socket
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("update_question_text", %{"soal_selidik" => soal_selidik_params} = params, socket) do
+    # This handler is kept for backward compatibility
+    # But now soalan input uses phx-change="validate" which handles form updates
+    # So we just update the categories to keep them in sync
+    tab_type = Map.get(params, "tab_type")
+    category_key = Map.get(params, "category_key")
+    question_no = Map.get(params, "question_no")
+
+    # Get the value from the form params
+    soalan_value = get_in(soal_selidik_params, [tab_type, category_key, question_no, "soalan"]) || ""
+
+    categories =
+      case tab_type do
+        "fr" -> socket.assigns.fr_categories
+        "nfr" -> socket.assigns.nfr_categories
+        _ -> []
+      end
+
+    updated_categories =
+      Enum.map(categories, fn category ->
+        if category.key == category_key do
+          updated_questions =
+            Enum.map(category.questions, fn question ->
+              if to_string(question.no) == to_string(question_no) do
+                Map.put(question, :soalan, soalan_value)
+              else
+                question
+              end
+            end)
+          Map.put(category, :questions, updated_questions)
+        else
+          category
+        end
+      end)
+
+    # Get existing form data to preserve other fields
+    existing_form_data =
+      case socket.assigns.form.source do
+        %{params: form_params} when is_map(form_params) ->
+          form_params
+        source when is_map(source) ->
+          source
+        _ ->
+          %{}
+      end
+
+    existing_soal_selidik = Map.get(existing_form_data, "soal_selidik", %{})
+
+    # Merge new params with existing to preserve all data
+    merged_params = deep_merge_params(existing_soal_selidik, soal_selidik_params)
+
+    # Merge soalan from categories
+    params_with_soalan = merge_soalan_from_categories(merged_params, socket.assigns.fr_categories, socket.assigns.nfr_categories)
+
+    # Ensure complete structure
+    final_params = ensure_complete_params(params_with_soalan, socket.assigns.fr_categories, socket.assigns.nfr_categories)
+
+    # Update form
+    updated_form = to_form(final_params, as: :soal_selidik)
+
+    socket =
+      case tab_type do
+        "fr" ->
+          socket
+          |> assign(:fr_categories, updated_categories)
+          |> assign(:form, updated_form)
+        "nfr" ->
+          socket
+          |> assign(:nfr_categories, updated_categories)
+          |> assign(:form, updated_form)
+        _ ->
+          socket
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("update_question_text", _params, socket) do
+    # Fallback if params don't have the expected structure
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("edit_question", %{"tab_type" => tab_type, "category_key" => category_key, "question_no" => question_no}, socket) do
+    # Find the question to edit
+    categories =
+      case tab_type do
+        "fr" -> socket.assigns.fr_categories
+        "nfr" -> socket.assigns.nfr_categories
+        _ -> []
+      end
+
+    question =
+      categories
+      |> Enum.find(&(&1.key == category_key))
+      |> then(fn category ->
+        if category do
+          Enum.find(category.questions, fn q -> to_string(q.no) == to_string(question_no) end)
+        else
+          nil
+        end
+      end)
+
+    if question do
+      # Create form with question data
+      type_str =
+        case question.type do
+          :text -> "text"
+          :textarea -> "textarea"
+          :select -> "select"
+          :checkbox -> "checkbox"
+          _ -> "text"
+        end
+
+      options_str =
+        if question.options && length(question.options) > 0 do
+          Enum.join(question.options, "\n")
+        else
+          ""
+        end
+
+      form_data = %{
+        "soalan" => question.soalan || "",
+        "type" => type_str,
+        "options" => options_str
+      }
+
+      form = to_form(form_data, as: :edit_question)
+
+      {:noreply,
+       socket
+       |> assign(:show_edit_question_modal, true)
+       |> assign(:selected_question, %{
+         tab_type: tab_type,
+         category_key: category_key,
+         question_no: question_no,
+         question: question
+       })
+       |> assign(:edit_question_form, form)}
+    else
+      {:noreply,
+       socket
+       |> Phoenix.LiveView.put_flash(:error, "Soalan tidak ditemui.")}
+    end
+  end
+
+  @impl true
+  def handle_event("close_edit_question_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_edit_question_modal, false)
+     |> assign(:selected_question, nil)
+     |> assign(:edit_question_form, to_form(%{}, as: :edit_question))}
+  end
+
+  @impl true
+  def handle_event("validate_edit_question", %{"edit_question" => edit_question_params}, socket) do
+    form = to_form(edit_question_params, as: :edit_question)
+    {:noreply, assign(socket, :edit_question_form, form)}
+  end
+
+  @impl true
+  def handle_event("save_edit_question", %{"edit_question" => edit_question_params}, socket) do
+    selected = socket.assigns.selected_question
+
+    if selected do
+      tab_type = selected.tab_type
+      category_key = selected.category_key
+      question_no = selected.question_no
+
+      soalan = Map.get(edit_question_params, "soalan", "") |> String.trim()
+      type_str = Map.get(edit_question_params, "type", "text")
+
+      # Safely convert string to atom
+      type =
+        case type_str do
+          "text" -> :text
+          "textarea" -> :textarea
+          "select" -> :select
+          "checkbox" -> :checkbox
+          _ -> :text
+        end
+
+      options_str = Map.get(edit_question_params, "options", "") |> String.trim()
+
+      options =
+        if options_str != "" do
+          options_str
+          |> String.split("\n")
+          |> Enum.map(&String.trim/1)
+          |> Enum.reject(&(&1 == ""))
+        else
+          nil
+        end
+
+      categories =
+        case tab_type do
+          "fr" -> socket.assigns.fr_categories
+          "nfr" -> socket.assigns.nfr_categories
+          _ -> []
+        end
+
+      updated_categories =
+        Enum.map(categories, fn category ->
+          if category.key == category_key do
+            updated_questions =
+              Enum.map(category.questions, fn question ->
+                if to_string(question.no) == to_string(question_no) do
+                  question
+                  |> Map.put(:soalan, soalan)
+                  |> Map.put(:type, type)
+                  |> then(fn q ->
+                    if options do
+                      Map.put(q, :options, options)
+                    else
+                      Map.delete(q, :options)
+                    end
+                  end)
+                else
+                  question
+                end
+              end)
+            Map.put(category, :questions, updated_questions)
+          else
+            category
+          end
+        end)
+
+      socket =
+        case tab_type do
+          "fr" ->
+            assign(socket, :fr_categories, updated_categories)
+          "nfr" ->
+            assign(socket, :nfr_categories, updated_categories)
+          _ ->
+            socket
+        end
+
+      {:noreply,
+       socket
+       |> assign(:show_edit_question_modal, false)
+       |> assign(:selected_question, nil)
+       |> assign(:edit_question_form, to_form(%{}, as: :edit_question))
+       |> Phoenix.LiveView.put_flash(:info, "Soalan telah dikemaskini.")}
+    else
+      {:noreply,
+       socket
+       |> Phoenix.LiveView.put_flash(:error, "Ralat: Soalan tidak ditemui.")}
+    end
+  end
+
+  @impl true
+  def handle_event("save_row", params, socket) do
+    try do
+      # Get parameters from phx-value attributes
+      tab_type = Map.get(params, "tab_type")
+      category_key = Map.get(params, "category_key")
+      question_no = Map.get(params, "question_no")
+
+      if is_nil(tab_type) || is_nil(category_key) || is_nil(question_no) do
+        {:noreply,
+         socket
+         |> Phoenix.LiveView.put_flash(:error, "Data tidak lengkap. Sila cuba lagi.")}
+      else
+        # Get form data from socket assigns (form is already updated with user input)
+        form_data = socket.assigns.form.source.params || %{}
+        soal_selidik_params = Map.get(form_data, "soal_selidik", %{})
+
+        # Get data for this specific row
+        row_data = get_in(soal_selidik_params, [tab_type, category_key, question_no]) || %{}
+
+        # Update the question in categories with the form data
+        categories =
+          case tab_type do
+            "fr" -> socket.assigns.fr_categories || []
+            "nfr" -> socket.assigns.nfr_categories || []
+            _ -> []
+          end
+
+        updated_categories =
+          Enum.map(categories, fn category ->
+            if category.key == category_key do
+              updated_questions =
+                Enum.map(category.questions || [], fn question ->
+                  if to_string(question.no) == to_string(question_no) do
+                    question
+                    |> Map.put(:soalan, Map.get(row_data, "soalan", question.soalan || ""))
+                    |> Map.put(:maklumbalas, Map.get(row_data, "maklumbalas", ""))
+                    |> Map.put(:catatan, Map.get(row_data, "catatan", ""))
+                  else
+                    question
+                  end
+                end)
+              Map.put(category, :questions, updated_questions)
+            else
+              category
+            end
+          end)
+
+        socket =
+          case tab_type do
+            "fr" ->
+              assign(socket, :fr_categories, updated_categories)
+            "nfr" ->
+              assign(socket, :nfr_categories, updated_categories)
+            _ ->
+              socket
+          end
+
+        # Merge with existing form data
+        existing_form_data = socket.assigns.form.source.params || %{}
+        existing_soal_selidik = Map.get(existing_form_data, "soal_selidik", %{})
+
+        # Merge the new data with existing data
+        merged_soal_selidik =
+          existing_soal_selidik
+          |> Map.put(tab_type, Map.merge(Map.get(existing_soal_selidik, tab_type, %{}), Map.get(soal_selidik_params, tab_type, %{})))
+
+        # Update form with merged data
+        updated_form_data = Map.put(existing_form_data, "soal_selidik", merged_soal_selidik)
+
+        # Save to database
+        attrs = prepare_save_data(merged_soal_selidik, socket)
+
+        result =
+          case socket.assigns.soal_selidik_id do
+            nil ->
+              # Create new
+              SoalSelidiks.create_soal_selidik(attrs, socket.assigns.current_scope)
+
+            id ->
+              # Update existing
+              try do
+                soal_selidik = SoalSelidiks.get_soal_selidik!(id, socket.assigns.current_scope)
+                SoalSelidiks.update_soal_selidik(soal_selidik, attrs)
+              rescue
+                Ecto.NoResultsError ->
+                  # If not found, create new
+                  SoalSelidiks.create_soal_selidik(attrs, socket.assigns.current_scope)
+              end
+          end
+
+        case result do
+          {:ok, soal_selidik} ->
+            socket =
+              socket
+              |> assign(:soal_selidik_id, soal_selidik.id)
+              |> assign(:form, to_form(updated_form_data, as: :soal_selidik))
+              |> Phoenix.LiveView.put_flash(:info, "Baris #{question_no} telah disimpan dengan jayanya.")
+
+            {:noreply, socket}
+
+          {:error, changeset} ->
+            error_message =
+              if changeset.errors != [] do
+                errors = Enum.map(changeset.errors, fn {field, {msg, _}} -> "#{field}: #{msg}" end)
+                "Ralat: #{Enum.join(errors, ", ")}"
+              else
+                "Ralat semasa menyimpan baris #{question_no}. Sila cuba lagi."
+              end
+
+            {:noreply,
+             socket
+             |> Phoenix.LiveView.put_flash(:error, error_message)}
+        end
+      end
+    rescue
+      e ->
+        {:noreply,
+         socket
+         |> Phoenix.LiveView.put_flash(
+           :error,
+           "Ralat tidak dijangka: #{Exception.message(e)}"
+         )}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_question", %{"tab_type" => tab_type, "category_key" => category_key, "question_no" => question_no}, socket) do
+    # Find the category and remove the question
+    categories =
+      case tab_type do
+        "fr" -> socket.assigns.fr_categories
+        "nfr" -> socket.assigns.nfr_categories
+        _ -> []
+      end
+
+    updated_categories =
+      Enum.map(categories, fn category ->
+        if category.key == category_key do
+          # Compare as strings since question_no comes from phx-value as string
+          updated_questions =
+            Enum.reject(category.questions, fn question ->
+              to_string(question.no) == to_string(question_no)
+            end)
+          Map.put(category, :questions, updated_questions)
+        else
+          category
+        end
+      end)
+
+    socket =
+      case tab_type do
+        "fr" ->
+          assign(socket, :fr_categories, updated_categories)
+        "nfr" ->
+          assign(socket, :nfr_categories, updated_categories)
+        _ ->
+          socket
+      end
+
+    {:noreply,
+     socket
+     |> Phoenix.LiveView.put_flash(:info, "Soalan telah dipadam.")}
+  end
+
+  # Ensure value is a map (for to_form compatibility)
+  defp ensure_map(data) when is_map(data), do: data
+
+  defp load_project_info(params, socket, soal_selidik_id, initial_data) do
+    # Extract project_id from initial_data first
+    project_id_from_data = Map.get(initial_data, :project_id)
+
+    cond do
+      # If project_id is in params, load project directly (accessed via Edit Borang button)
+      # Load without user_id filter to allow access from project page
+      Map.has_key?(params, "project_id") ->
+        case Integer.parse(params["project_id"]) do
+          {project_id, _} ->
+            try do
+              # Load project by ID only, without user_id filter
+              # This allows access when clicking Edit Borang from project page
+              project = Repo.get(Project, project_id)
+
+              if project do
+                # Preload associations if needed
+                Repo.preload(project, [:developer, :project_manager])
+              else
+                nil
+              end
+            rescue
+              Ecto.NoResultsError -> nil
+              _ -> nil
+            end
+          :error -> nil
+        end
+
+      # If we have project_id in initial_data (from soal_selidik)
+      project_id_from_data != nil ->
+        try do
+          Projects.get_project!(project_id_from_data, socket.assigns.current_scope)
+        rescue
+          Ecto.NoResultsError -> nil
+        end
+
+      # If we have a soal_selidik_id, try to load project from it
+      soal_selidik_id != nil ->
+        try do
+          soal_selidik = SoalSelidiks.get_soal_selidik!(soal_selidik_id, socket.assigns.current_scope)
+          # Project should be preloaded
+          if Ecto.assoc_loaded?(soal_selidik.project) && soal_selidik.project do
+            soal_selidik.project
+          else
+            # If not preloaded, load it separately
+            if soal_selidik.project_id do
+              try do
+                Projects.get_project!(soal_selidik.project_id, socket.assigns.current_scope)
+              rescue
+                Ecto.NoResultsError -> nil
+              end
+            else
+              nil
+            end
+          end
+        rescue
+          Ecto.NoResultsError -> nil
+        end
+
+      # Default: no project
+      true -> nil
+    end
+  end
+  # Load initial data from database or use defaults
+  defp load_initial_data(params, socket) do
+    case Map.get(params, "id") do
+      nil ->
+        # No ID provided, use defaults
+        # Check if project_id is in params
+        project_id =
+          if Map.has_key?(params, "project_id") do
+            case Integer.parse(params["project_id"]) do
+              {id, _} -> id
+              :error -> nil
+            end
+          else
+            nil
+          end
+
+        {nil,
+         %{
+           document_id: "JPKN-BPA-01/B1",
+           nama_sistem: "",
+           tabs: nil,
+           fr_categories: nil,
+           nfr_categories: nil,
+           form_data: %{"nama_sistem" => ""},
+           project_id: project_id
+         }}
+
+      id ->
+        # Try to load from database
+        case Integer.parse(id) do
+          {id_int, _} ->
+            try do
+              soal_selidik = SoalSelidiks.get_soal_selidik!(id_int, socket.assigns.current_scope)
+              data = SoalSelidiks.to_liveview_format(soal_selidik)
+
+              # Prepare form data
+              form_data = %{
+                "nama_sistem" => data.nama_sistem,
+                "disediakan_oleh" => %{
+                  "nama" => Map.get(data.disediakan_oleh, :nama, Map.get(data.disediakan_oleh, "nama", "")),
+                  "jawatan" => Map.get(data.disediakan_oleh, :jawatan, Map.get(data.disediakan_oleh, "jawatan", "")),
+                  "tarikh" => Map.get(data.disediakan_oleh, :tarikh, Map.get(data.disediakan_oleh, "tarikh", ""))
+                }
+              }
+
+              # Merge fr_data and nfr_data into form_data
+              form_data =
+                form_data
+                |> Map.put("fr", data.fr_data)
+                |> Map.put("nfr", data.nfr_data)
+
+              # Get project_id from soal_selidik if available
+              project_id = if Ecto.assoc_loaded?(soal_selidik.project) && soal_selidik.project do
+                soal_selidik.project.id
+              else
+                soal_selidik.project_id
+              end
+
+              {id_int,
+               %{
+                 document_id: data.document_id,
+                 nama_sistem: data.nama_sistem,
+                 tabs: data.tabs,
+                 fr_categories: data.fr_categories,
+                 nfr_categories: data.nfr_categories,
+                 form_data: form_data,
+                 project_id: project_id
+               }}
+            rescue
+              Ecto.NoResultsError ->
+                # ID not found, use defaults
+                # Check if project_id is in params
+                project_id =
+                  if Map.has_key?(params, "project_id") do
+                    case Integer.parse(params["project_id"]) do
+                      {id, _} -> id
+                      :error -> nil
+                    end
+                  else
+                    nil
+                  end
+
+                {nil,
+                 %{
+                   document_id: "JPKN-BPA-01/B1",
+                   nama_sistem: "",
+                   tabs: nil,
+                   fr_categories: nil,
+                   nfr_categories: nil,
+                   form_data: %{},
+                   project_id: project_id
+                 }}
+            end
+
+          :error ->
+            # Invalid ID, use defaults
+            # Check if project_id is in params
+            project_id =
+              if Map.has_key?(params, "project_id") do
+                case Integer.parse(params["project_id"]) do
+                  {id, _} -> id
+                  :error -> nil
+                end
+              else
+                nil
+              end
+
+            {nil,
+             %{
+               document_id: "JPKN-BPA-01/B1",
+               nama_sistem: "",
+               tabs: nil,
+               fr_categories: nil,
+               nfr_categories: nil,
+               form_data: %{},
+               project_id: project_id
+             }}
+        end
+    end
+  end
+
+  # Prepare data for saving to database
+  defp prepare_save_data(params, socket) do
+    require Logger
+
+    # Log all params keys for debugging
+    Logger.info("prepare_save_data params keys: #{inspect(Map.keys(params))}")
+    Logger.info("prepare_save_data full params: #{inspect(params, limit: :infinity)}")
+
+    # Extract basic fields - trim whitespace
+    # Priority: params -> socket.assigns.system_name -> form data -> empty string (let validation catch it)
+    nama_sistem_raw = Map.get(params, "nama_sistem")
+    nama_sistem_from_assigns = socket.assigns[:system_name]
+
+    # Also check form data as fallback (in case params don't have it)
+    nama_sistem_from_form =
+      case socket.assigns.form do
+        %{source: %{params: form_params}} when is_map(form_params) ->
+          Map.get(form_params, "nama_sistem")
+        %{source: form_source} when is_map(form_source) ->
+          Map.get(form_source, "nama_sistem")
+        _ ->
+          nil
+      end
+
+    nama_sistem =
+      cond do
+        # If in params (even if empty string), use it after trimming
+        Map.has_key?(params, "nama_sistem") ->
+          (nama_sistem_raw || "") |> String.trim()
+        # Fallback to assigns if available
+        nama_sistem_from_assigns && nama_sistem_from_assigns != "" ->
+          nama_sistem_from_assigns |> String.trim()
+        # Fallback to form data
+        nama_sistem_from_form && nama_sistem_from_form != "" ->
+          nama_sistem_from_form |> String.trim()
+        # Otherwise empty string - validate_required will catch it
+        true ->
+          ""
+      end
+
+    # Log for debugging
+    Logger.info("nama_sistem from params: #{inspect(nama_sistem_raw)}")
+    Logger.info("nama_sistem from assigns: #{inspect(nama_sistem_from_assigns)}")
+    Logger.info("nama_sistem from form: #{inspect(nama_sistem_from_form)}")
+    Logger.info("nama_sistem final (after trim): #{inspect(nama_sistem)}")
+
+    document_id = socket.assigns.document_id || "JPKN-BPA-01/B1"
+
+    # Extract disediakan_oleh
+    disediakan_oleh = Map.get(params, "disediakan_oleh", %{})
+
+    # Extract fr_data and nfr_data
+    fr_data = Map.get(params, "fr", %{})
+    nfr_data = Map.get(params, "nfr", %{})
+
+    # Extract custom_tabs
+    custom_tabs = Map.get(params, "custom_tabs", %{})
+
+    # Get categories and tabs from assigns
+    # Convert lists to maps for database storage (database expects :map type)
+    fr_categories_list = socket.assigns.fr_categories || []
+    nfr_categories_list = socket.assigns.nfr_categories || []
+    tabs_list = socket.assigns.tabs || []
+
+    # Convert lists to maps: use category key as map key
+    fr_categories_map =
+      fr_categories_list
+      |> Enum.map(fn category -> {category.key, category} end)
+      |> Map.new()
+
+    nfr_categories_map =
+      nfr_categories_list
+      |> Enum.map(fn category -> {category.key, category} end)
+      |> Map.new()
+
+    # Convert tabs list to map: use tab id as map key
+    tabs_map =
+      tabs_list
+      |> Enum.map(fn tab -> {tab.id, tab} end)
+      |> Map.new()
+
+    %{
+      nama_sistem: nama_sistem,
+      document_id: document_id,
+      fr_categories: fr_categories_map,
+      nfr_categories: nfr_categories_map,
+      fr_data: fr_data,
+      nfr_data: nfr_data,
+      disediakan_oleh: disediakan_oleh,
+      custom_tabs: custom_tabs,
+      tabs: tabs_map
+    }
+  end
+
+  # Deep merge params to preserve existing user input
+  # This ensures that when new params come in, existing values are not lost
+  defp deep_merge_params(existing, new) do
+    # Start with existing, then merge new on top
+    # This way new values (user input) take precedence, but existing values are preserved
+    Map.merge(existing, new, fn
+      _key, existing_val, new_val when is_map(existing_val) and is_map(new_val) ->
+        # Recursively merge nested maps
+        deep_merge_params(existing_val, new_val)
+      _key, existing_val, _new_val when is_map(existing_val) ->
+        # Existing is map but new is not - keep existing
+        existing_val
+      _key, _existing_val, new_val when is_map(new_val) ->
+        # New is map but existing is not - use new
+        new_val
+      _key, existing_val, new_val ->
+        # Both are simple values - prefer new if not empty, otherwise keep existing
+        cond do
+          # If new value is not empty, use it (user just typed this)
+          new_val != "" && new_val != nil ->
+            new_val
+          # If existing value exists and new is empty, keep existing (preserve previous input)
+          existing_val != "" && existing_val != nil ->
+            existing_val
+          # Otherwise use new value
+          true ->
+            new_val
+        end
     end)
+  end
+
+  # Ensure params structure is complete with all required keys
+  # This prevents data loss when params come in incomplete
+  defp ensure_complete_params(params, fr_categories, nfr_categories) do
+    # Start with existing params
+    result = params
+
+    # Ensure FR structure exists
+    result = Map.put_new(result, "fr", %{})
+
+    # Ensure each FR category has complete structure
+    result =
+      Enum.reduce(fr_categories || [], result, fn category, acc ->
+        fr_params = Map.get(acc, "fr", %{})
+        category_key = category.key
+        category_params = Map.get(fr_params, category_key, %{})
+
+        # Ensure each question has a map entry (preserve existing if exists)
+        updated_category_params =
+          Enum.reduce(category.questions || [], category_params, fn question, cat_acc ->
+            question_no = to_string(question.no)
+            # Preserve existing values, only add empty map if doesn't exist
+            existing_question_params = Map.get(cat_acc, question_no, %{})
+            Map.put(cat_acc, question_no, existing_question_params)
+          end)
+
+        updated_fr_params = Map.put(fr_params, category_key, updated_category_params)
+        Map.put(acc, "fr", updated_fr_params)
+      end)
+
+    # Ensure NFR structure exists
+    result = Map.put_new(result, "nfr", %{})
+
+    # Ensure each NFR category has complete structure
+    result =
+      Enum.reduce(nfr_categories || [], result, fn category, acc ->
+        nfr_params = Map.get(acc, "nfr", %{})
+        category_key = category.key
+        category_params = Map.get(nfr_params, category_key, %{})
+
+        # Ensure each question has a map entry (preserve existing if exists)
+        updated_category_params =
+          Enum.reduce(category.questions || [], category_params, fn question, cat_acc ->
+            question_no = to_string(question.no)
+            # Preserve existing values, only add empty map if doesn't exist
+            existing_question_params = Map.get(cat_acc, question_no, %{})
+            Map.put(cat_acc, question_no, existing_question_params)
+          end)
+
+        updated_nfr_params = Map.put(nfr_params, category_key, updated_category_params)
+        Map.put(acc, "nfr", updated_nfr_params)
+      end)
+
+    result
+  end
+
+  # Merge soalan values from categories into form params
+  # Only adds soalan if it's not already in params (to preserve user input)
+  defp merge_soalan_from_categories(params, fr_categories, nfr_categories) do
+    # Extract soalan from FR categories
+    fr_with_soalan =
+      Enum.reduce(fr_categories || [], params, fn category, acc ->
+        category_key = category.key
+        category_params = Map.get(acc, "fr", %{}) |> Map.get(category_key, %{})
+
+        updated_category_params =
+          Enum.reduce(category.questions || [], category_params, fn question, cat_acc ->
+            question_no = to_string(question.no)
+            question_params = Map.get(cat_acc, question_no, %{})
+
+            # Only add soalan from category if it's not already in params (preserve user input)
+            updated_question_params =
+              if Map.has_key?(question_params, "soalan") do
+                # User input exists, keep it
+                question_params
+              else
+                # No user input, use value from category if it exists
+                if question.soalan && question.soalan != "" do
+                  Map.put(question_params, "soalan", question.soalan)
+                else
+                  question_params
+                end
+              end
+
+            Map.put(cat_acc, question_no, updated_question_params)
+          end)
+
+        fr_params = Map.get(acc, "fr", %{})
+        updated_fr_params = Map.put(fr_params, category_key, updated_category_params)
+        Map.put(acc, "fr", updated_fr_params)
+      end)
+
+    # Extract soalan from NFR categories
+    final_params =
+      Enum.reduce(nfr_categories || [], fr_with_soalan, fn category, acc ->
+        category_key = category.key
+        category_params = Map.get(acc, "nfr", %{}) |> Map.get(category_key, %{})
+
+        updated_category_params =
+          Enum.reduce(category.questions || [], category_params, fn question, cat_acc ->
+            question_no = to_string(question.no)
+            question_params = Map.get(cat_acc, question_no, %{})
+
+            # Only add soalan from category if it's not already in params (preserve user input)
+            updated_question_params =
+              if Map.has_key?(question_params, "soalan") do
+                # User input exists, keep it
+                question_params
+              else
+                # No user input, use value from category if it exists
+                if question.soalan && question.soalan != "" do
+                  Map.put(question_params, "soalan", question.soalan)
+                else
+                  question_params
+                end
+              end
+
+            Map.put(cat_acc, question_no, updated_question_params)
+          end)
+
+        nfr_params = Map.get(acc, "nfr", %{})
+        updated_nfr_params = Map.put(nfr_params, category_key, updated_category_params)
+        Map.put(acc, "nfr", updated_nfr_params)
+      end)
+
+    final_params
   end
 
 end

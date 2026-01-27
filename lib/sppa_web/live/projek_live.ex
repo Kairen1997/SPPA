@@ -21,13 +21,49 @@ defmodule SppaWeb.ProjekLive do
     tab = Map.get(params, "tab", "soal-selidik")
     normalized_tab = normalize_tab(tab)
 
+    # If we have a project_id but no project loaded yet, load it now
     socket =
       socket
+      |> maybe_load_project(params)
       |> assign(:current_tab, normalized_tab)
       |> maybe_assign_modules(normalized_tab)
       |> maybe_assign_change_requests(normalized_tab)
 
     {:noreply, socket}
+  end
+
+  # Load project if project_id exists in assigns but project is not yet loaded
+  defp maybe_load_project(socket, _params) do
+    project_id = socket.assigns[:project_id]
+
+    if project_id && !socket.assigns[:project] do
+      user_role =
+        socket.assigns.current_scope && socket.assigns.current_scope.user &&
+          socket.assigns.current_scope.user.role
+
+      project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+
+      if project do
+        project_name = Map.get(project, :nama) || Map.get(project, :name) || "Projek"
+
+        socket
+        |> assign(:project, project)
+        |> assign(:soal_selidik_document, get_soal_selidik_document(project.nama))
+        |> assign(
+          :analisis_pdf_data,
+          Sppa.AnalisisDanRekabentuk.pdf_data(
+            nama_projek: project_name,
+            modules: Sppa.AnalisisDanRekabentuk.initial_modules()
+          )
+        )
+        |> assign(:modules, get_modules_from_analisis_dan_rekabentuk())
+        |> assign(:change_requests, get_change_requests())
+      else
+        socket
+      end
+    else
+      socket
+    end
   end
 
   defp maybe_assign_modules(socket, "Pengaturcaraan") do
@@ -184,81 +220,77 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:project_id, project_id)
 
-      if connected?(socket) do
-        # Get project details - will be replaced with database query later
-        project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+      # Load project immediately, even if not connected yet, to avoid showing list view
+      project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
 
-        if project do
-          project_name = Map.get(project, :nama) || Map.get(project, :name) || "Projek"
+      if project do
+        project_name = Map.get(project, :nama) || Map.get(project, :name) || "Projek"
 
-          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-          notifications_count = length(activities)
+        activities =
+          if connected?(socket) do
+            Projects.list_recent_activities(socket.assigns.current_scope, 10)
+          else
+            []
+          end
 
-          {:ok,
-           socket
-           |> assign(:project, project)
-           |> assign(:projects, [])
-           |> assign(:current_tab, "Soal Selidik")
-           |> assign(:soal_selidik_document, get_soal_selidik_document(project.nama))
-           |> assign(:soal_selidik_pdf_data, Sppa.SoalSelidik.pdf_data(nama_sistem: project_name))
-           |> assign(
-             :analisis_pdf_data,
-             Sppa.AnalisisDanRekabentuk.pdf_data(
-               nama_projek: project_name,
-               modules: Sppa.AnalisisDanRekabentuk.initial_modules()
-             )
-           )
-           |> assign(:modules, get_modules_from_analisis_dan_rekabentuk())
-           |> assign(:change_requests, get_change_requests())
-           |> assign(:page, 1)
-           |> assign(:per_page, 10)
-           |> assign(:total_pages, 0)
-           |> assign(:total_count, 0)
-           |> assign(:search_term, "")
-           |> assign(:status_filter, "")
-           |> assign(:fasa_filter, "")
-           |> assign(:activities, activities)
-           |> assign(:notifications_count, notifications_count)}
-        else
-          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-          notifications_count = length(activities)
+        notifications_count = length(activities)
 
-          socket =
-            socket
-            |> assign(:project, nil)
-            |> assign(:projects, [])
-            |> assign(:page, 1)
-            |> assign(:per_page, 10)
-            |> assign(:total_pages, 0)
-            |> assign(:total_count, 0)
-            |> assign(:search_term, "")
-            |> assign(:status_filter, "")
-            |> assign(:fasa_filter, "")
-            |> assign(:activities, activities)
-            |> assign(:notifications_count, notifications_count)
-            |> Phoenix.LiveView.put_flash(
-              :error,
-              "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk melihat projek ini."
-            )
-            |> Phoenix.LiveView.redirect(to: ~p"/projek")
-
-          {:ok, socket}
-        end
-      else
         {:ok,
          socket
-         |> assign(:project, nil)
+         |> assign(:project, project)
          |> assign(:projects, [])
-         |> assign(:activities, [])
-         |> assign(:notifications_count, 0)
+         |> assign(:current_tab, "Soal Selidik")
+         |> assign(:soal_selidik_document, get_soal_selidik_document(project.nama))
+         |> assign(
+           :analisis_pdf_data,
+           Sppa.AnalisisDanRekabentuk.pdf_data(
+             nama_projek: project_name,
+             modules: Sppa.AnalisisDanRekabentuk.initial_modules()
+           )
+         )
+         |> assign(:modules, get_modules_from_analisis_dan_rekabentuk())
+         |> assign(:change_requests, get_change_requests())
          |> assign(:page, 1)
          |> assign(:per_page, 10)
          |> assign(:total_pages, 0)
          |> assign(:total_count, 0)
          |> assign(:search_term, "")
          |> assign(:status_filter, "")
-         |> assign(:fasa_filter, "")}
+         |> assign(:fasa_filter, "")
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
+      else
+        activities =
+          if connected?(socket) do
+            Projects.list_recent_activities(socket.assigns.current_scope, 10)
+          else
+            []
+          end
+
+        notifications_count = length(activities)
+
+        socket =
+          socket
+          |> assign(:project, nil)
+          |> assign(:projects, [])
+          |> assign(:page, 1)
+          |> assign(:per_page, 10)
+          |> assign(:total_pages, 0)
+          |> assign(:total_count, 0)
+          |> assign(:search_term, "")
+          |> assign(:status_filter, "")
+          |> assign(:fasa_filter, "")
+          |> assign(:activities, activities)
+          |> assign(:notifications_count, notifications_count)
+          |> Phoenix.LiveView.put_flash(
+            :error,
+            "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk melihat projek ini."
+          )
+          |> Phoenix.LiveView.redirect(to: ~p"/projek")
+
+        {:ok, socket}
       end
     else
       socket =
@@ -374,422 +406,71 @@ defmodule SppaWeb.ProjekLive do
      |> assign(:total_count, length(socket.assigns.all_projects))}
   end
 
-  # Mock data function - will be replaced with database queries later
-  # Filters projects based on user role:
+  # Fetches projects from database based on user role:
   # - Developers see projects where they are assigned as developer
   # - Project managers see projects where they are assigned as project manager
   # - Directors/Admins see all projects
   defp list_projects(current_scope, user_role) do
-    _current_user_id = current_scope.user.id
+    projects =
+      case user_role do
+        "ketua penolong pengarah" ->
+          # Directors/Admins see all projects
+          Projects.list_all_projects()
 
-    all_projects = [
-      %{
-        id: 1,
-        nama: "Sistem Pengurusan Projek A",
-        status: "Dalam Pembangunan",
-        fasa: "Pengaturcaraan",
-        tarikh_mula: ~D[2024-01-15],
-        tarikh_siap: ~D[2024-06-30],
-        pengurus_projek: "Ahmad bin Abdullah",
-        pembangun_sistem: "Ali bin Hassan",
-        developer_id: 1,
-        project_manager_id: 2,
-        dokumen_sokongan: 3,
-        isu: "Tiada",
-        tindakan: "Teruskan pembangunan"
-      },
-      %{
-        id: 2,
-        nama: "Sistem Analisis Data B",
-        status: "Ujian Penerimaan Pengguna",
-        fasa: "UAT",
-        tarikh_mula: ~D[2023-11-01],
-        tarikh_siap: ~D[2024-05-15],
-        pengurus_projek: "Siti Nurhaliza",
-        pembangun_sistem: "Ali bin Hassan",
-        developer_id: 1,
-        project_manager_id: 3,
-        dokumen_sokongan: 2,
-        isu: "Perlu pembetulan pada modul laporan",
-        tindakan: "Selesaikan isu sebelum penyerahan"
-      },
-      %{
-        id: 3,
-        nama: "Portal E-Services C",
-        status: "Selesai",
-        fasa: "Penyerahan",
-        tarikh_mula: ~D[2023-06-01],
-        tarikh_siap: ~D[2024-01-31],
-        pengurus_projek: "Mohd Faizal",
-        pembangun_sistem: "Ahmad bin Ismail",
-        developer_id: 2,
-        project_manager_id: 4,
-        dokumen_sokongan: 5,
-        isu: "Tiada",
-        tindakan: "Projek telah diserahkan"
-      },
-      %{
-        id: 4,
-        nama: "Sistem Pengurusan Dokumen D",
-        status: "Dalam Pembangunan",
-        fasa: "Analisis dan Rekabentuk",
-        tarikh_mula: ~D[2024-02-01],
-        tarikh_siap: ~D[2024-08-31],
-        pengurus_projek: "Nurul Aina",
-        pembangun_sistem: "Siti Fatimah",
-        developer_id: 3,
-        project_manager_id: 5,
-        dokumen_sokongan: 1,
-        isu: "Menunggu kelulusan bajet tambahan",
-        tindakan: "Sambung semula selepas kelulusan"
-      },
-      %{
-        id: 5,
-        nama: "Aplikasi Mobile E",
-        status: "Dalam Pembangunan",
-        fasa: "Soal Selidik",
-        tarikh_mula: ~D[2024-03-01],
-        tarikh_siap: ~D[2024-09-30],
-        pengurus_projek: "Lim Wei Ming",
-        pembangun_sistem: "Ali bin Hassan",
-        developer_id: 1,
-        project_manager_id: 2,
-        dokumen_sokongan: 0,
-        isu: "Masalah integrasi dengan API",
-        tindakan: "Selesaikan integrasi API"
-      },
-      %{
-        id: 6,
-        nama: "Sistem Pengurusan Inventori F",
-        status: "Dalam Pembangunan",
-        fasa: "Jadual Projek",
-        tarikh_mula: ~D[2024-04-15],
-        tarikh_siap: ~D[2024-10-31],
-        pengurus_projek: "Ahmad bin Abdullah",
-        pembangun_sistem: "Ahmad bin Ismail",
-        developer_id: 2,
-        project_manager_id: 2,
-        dokumen_sokongan: 4,
-        isu: "Tiada",
-        tindakan: "Teruskan pembangunan modul inventori"
-      },
-      %{
-        id: 7,
-        nama: "Portal Pelanggan G",
-        status: "Ujian Penerimaan Pengguna",
-        fasa: "Ujian Keselamatan",
-        tarikh_mula: ~D[2023-12-01],
-        tarikh_siap: ~D[2024-07-15],
-        pengurus_projek: "Siti Nurhaliza",
-        pembangun_sistem: "Ahmad bin Ismail",
-        developer_id: 2,
-        project_manager_id: 3,
-        dokumen_sokongan: 2,
-        isu: "Isu keselamatan data perlu disemak",
-        tindakan: "Lengkapkan audit keselamatan"
-      },
-      %{
-        id: 8,
-        nama: "Sistem Laporan Automatik H",
-        status: "Selesai",
-        fasa: "Maklumbalas Pelanggan",
-        tarikh_mula: ~D[2023-08-01],
-        tarikh_siap: ~D[2024-02-28],
-        pengurus_projek: "Mohd Faizal",
-        pembangun_sistem: "Siti Fatimah",
-        developer_id: 3,
-        project_manager_id: 4,
-        dokumen_sokongan: 6,
-        isu: "Tiada",
-        tindakan: "Projek telah diserahkan dan beroperasi"
-      },
-      %{
-        id: 9,
-        nama: "Aplikasi Web Responsif I",
-        status: "Dalam Pembangunan",
-        fasa: "Pengurusan Perubahan",
-        tarikh_mula: ~D[2024-05-01],
-        tarikh_siap: ~D[2024-11-30],
-        pengurus_projek: "Nurul Aina",
-        pembangun_sistem: "Ali bin Hassan",
-        developer_id: 1,
-        project_manager_id: 5,
-        dokumen_sokongan: 0,
-        isu: "Perlu penambahbaikan pada reka bentuk UI",
-        tindakan: "Kemaskini reka bentuk mengikut spesifikasi"
-      },
-      %{
-        id: 10,
-        nama: "Sistem Integrasi API J",
-        status: "Ujian Penerimaan Pengguna",
-        fasa: "Penempatan",
-        tarikh_mula: ~D[2024-01-10],
-        tarikh_siap: ~D[2024-06-30],
-        pengurus_projek: "Lim Wei Ming",
-        pembangun_sistem: "Siti Fatimah",
-        developer_id: 3,
-        project_manager_id: 2,
-        dokumen_sokongan: 3,
-        isu: "Masalah dengan endpoint tertentu",
-        tindakan: "Betulkan endpoint yang bermasalah"
-      },
-      %{
-        id: 11,
-        nama: "Sistem Backup dan Pemulihan K",
-        status: "Selesai",
-        fasa: "Penyerahan",
-        tarikh_mula: ~D[2023-09-15],
-        tarikh_siap: ~D[2024-03-31],
-        pengurus_projek: "Ahmad bin Abdullah",
-        pembangun_sistem: "Ahmad bin Ismail",
-        developer_id: 2,
-        project_manager_id: 2,
-        dokumen_sokongan: 4,
-        isu: "Tiada",
-        tindakan: "Sistem telah diserahkan dan beroperasi"
-      },
-      %{
-        id: 12,
-        nama: "Portal Pentadbiran L",
-        status: "Dalam Pembangunan",
-        fasa: "Soal Selidik",
-        tarikh_mula: ~D[2024-06-01],
-        tarikh_siap: ~D[2024-12-31],
-        pengurus_projek: "Siti Nurhaliza",
-        pembangun_sistem: "Ali bin Hassan",
-        developer_id: 1,
-        project_manager_id: 3,
-        dokumen_sokongan: 1,
-        isu: "Menunggu kelulusan dari pihak pengurusan",
-        tindakan: "Sambung semula selepas kelulusan"
-      }
-    ]
-    |> Enum.map(&normalize_project_status/1)
+        "pembangun sistem" ->
+          # Developers see projects where they are assigned as developer
+          Projects.list_projects_for_pembangun_sistem(current_scope)
 
-    # Filter based on user role
-    # Temporarily showing all projects for pagination testing
-    # TODO: Re-enable role-based filtering when ready
-    case user_role do
-      "ketua penolong pengarah" ->
-        # Directors/Admins see all projects
-        all_projects
+        "pengurus projek" ->
+          # Project managers see projects where they are assigned as project manager
+          Projects.list_projects_for_pengurus_projek(current_scope)
 
-      _ ->
-        # For testing pagination, show all projects to all roles
-        # TODO: Re-enable role-based filtering:
-        # "pembangun sistem" -> Enum.filter(all_projects, fn p -> p.developer_id == current_user_id end)
-        # "pengurus projek" -> Enum.filter(all_projects, fn p -> p.project_manager_id == current_user_id end)
-        all_projects
-    end
+        _ ->
+          # Default: return empty list for unknown roles
+          []
+      end
+
+    # Normalize status for consistency
+    Enum.map(projects, &normalize_project_status/1)
   end
 
-  # Get a single project by ID - will be replaced with database query later
-  defp get_project_by_id(project_id, current_scope, _user_role) do
-    _current_user_id = current_scope.user.id
+  # Get a single project by ID from database
+  defp get_project_by_id(project_id, current_scope, user_role) do
+    current_user_id = current_scope.user.id
 
-    all_projects = [
-      %{
-        id: 1,
-        nama: "Sistem Pengurusan Projek A",
-        status: "Dalam Pembangunan",
-        fasa: "Soal Selidik",
-        tarikh_mula: ~D[2024-01-15],
-        tarikh_siap: ~D[2024-06-30],
-        pengurus_projek: "Ahmad bin Abdullah",
-        developer_id: 1,
-        project_manager_id: 2,
-        isu: "Tiada",
-        tindakan: "Teruskan pembangunan",
-        keterangan:
-          "Sistem pengurusan projek yang komprehensif untuk menguruskan semua aspek projek IT di JPKN."
-      },
-      %{
-        id: 2,
-        nama: "Sistem Analisis Data B",
-        status: "Ujian Penerimaan Pengguna",
-        fasa: "Analisis dan Rekabentuk",
-        tarikh_mula: ~D[2023-11-01],
-        tarikh_siap: ~D[2024-05-15],
-        pengurus_projek: "Siti Nurhaliza",
-        developer_id: 1,
-        project_manager_id: 3,
-        isu: "Perlu pembetulan pada modul laporan",
-        tindakan: "Selesaikan isu sebelum penyerahan",
-        keterangan: "Sistem untuk menganalisis data dan menjana laporan automatik."
-      },
-      %{
-        id: 3,
-        nama: "Portal E-Services C",
-        status: "Selesai",
-        fasa: "Pengaturcaraan",
-        tarikh_mula: ~D[2023-06-01],
-        tarikh_siap: ~D[2024-01-31],
-        pengurus_projek: "Mohd Faizal",
-        developer_id: 2,
-        project_manager_id: 4,
-        isu: "Tiada",
-        tindakan: "Projek telah diserahkan",
-        keterangan:
-          "Portal e-services untuk kemudahan awam mengakses perkhidmatan JPKN secara dalam talian."
-      },
-      %{
-        id: 4,
-        nama: "Sistem Pengurusan Dokumen D",
-        status: "Dalam Pembangunan",
-        fasa: "Pengaturcaraan",
-        tarikh_mula: ~D[2024-02-01],
-        tarikh_siap: ~D[2024-08-31],
-        pengurus_projek: "Nurul Aina",
-        developer_id: 3,
-        project_manager_id: 5,
-        isu: "Menunggu kelulusan bajet tambahan",
-        tindakan: "Sambung semula selepas kelulusan",
-        keterangan: "Sistem untuk menguruskan dokumen digital dengan sistem pengesanan dan versi."
-      },
-      %{
-        id: 5,
-        nama: "Aplikasi Mobile E",
-        status: "Dalam Pembangunan",
-        fasa: "Soal Selidik",
-        tarikh_mula: ~D[2024-03-01],
-        tarikh_siap: ~D[2024-09-30],
-        pengurus_projek: "Lim Wei Ming",
-        developer_id: 1,
-        project_manager_id: 2,
-        isu: "Masalah integrasi dengan API",
-        tindakan: "Selesaikan integrasi API",
-        keterangan:
-          "Aplikasi mobile untuk akses mudah kepada perkhidmatan JPKN melalui telefon pintar."
-      },
-      %{
-        id: 6,
-        nama: "Sistem Pengurusan Inventori F",
-        status: "Dalam Pembangunan",
-        fasa: "Jadual Projek",
-        tarikh_mula: ~D[2024-04-15],
-        tarikh_siap: ~D[2024-10-31],
-        pengurus_projek: "Ahmad bin Abdullah",
-        developer_id: 2,
-        project_manager_id: 2,
-        isu: "Tiada",
-        tindakan: "Teruskan pembangunan modul inventori",
-        keterangan:
-          "Sistem untuk menguruskan inventori peralatan dan aset JPKN dengan kemas kini masa nyata."
-      },
-      %{
-        id: 7,
-        nama: "Portal Pelanggan G",
-        status: "Ujian Penerimaan Pengguna",
-        fasa: "Ujian Keselamatan",
-        tarikh_mula: ~D[2023-12-01],
-        tarikh_siap: ~D[2024-07-15],
-        pengurus_projek: "Siti Nurhaliza",
-        developer_id: 2,
-        project_manager_id: 3,
-        isu: "Isu keselamatan data perlu disemak",
-        tindakan: "Lengkapkan audit keselamatan",
-        keterangan:
-          "Portal untuk pelanggan mengakses maklumat dan perkhidmatan JPKN dengan mudah."
-      },
-      %{
-        id: 8,
-        nama: "Sistem Laporan Automatik H",
-        status: "Selesai",
-        fasa: "Maklumbalas Pelanggan",
-        tarikh_mula: ~D[2023-08-01],
-        tarikh_siap: ~D[2024-02-28],
-        pengurus_projek: "Mohd Faizal",
-        developer_id: 3,
-        project_manager_id: 4,
-        isu: "Tiada",
-        tindakan: "Projek telah diserahkan dan beroperasi",
-        keterangan: "Sistem untuk menjana laporan automatik berdasarkan data yang dikumpulkan."
-      },
-      %{
-        id: 9,
-        nama: "Aplikasi Web Responsif I",
-        status: "Dalam Pembangunan",
-        fasa: "Pengurusan Perubahan",
-        tarikh_mula: ~D[2024-05-01],
-        tarikh_siap: ~D[2024-11-30],
-        pengurus_projek: "Nurul Aina",
-        developer_id: 1,
-        project_manager_id: 5,
-        isu: "Perlu penambahbaikan pada reka bentuk UI",
-        tindakan: "Kemaskini reka bentuk mengikut spesifikasi",
-        keterangan: "Aplikasi web yang responsif untuk akses melalui pelbagai peranti."
-      },
-      %{
-        id: 10,
-        nama: "Sistem Integrasi API J",
-        status: "Ujian Penerimaan Pengguna",
-        fasa: "Penempatan",
-        tarikh_mula: ~D[2024-01-10],
-        tarikh_siap: ~D[2024-06-30],
-        pengurus_projek: "Lim Wei Ming",
-        developer_id: 3,
-        project_manager_id: 2,
-        isu: "Masalah dengan endpoint tertentu",
-        tindakan: "Betulkan endpoint yang bermasalah",
-        keterangan: "Sistem untuk mengintegrasikan pelbagai sistem melalui API yang standard."
-      },
-      %{
-        id: 11,
-        nama: "Sistem Backup dan Pemulihan K",
-        status: "Selesai",
-        fasa: "Penyerahan",
-        tarikh_mula: ~D[2023-09-15],
-        tarikh_siap: ~D[2024-03-31],
-        pengurus_projek: "Ahmad bin Abdullah",
-        developer_id: 2,
-        project_manager_id: 2,
-        isu: "Tiada",
-        tindakan: "Sistem telah diserahkan dan beroperasi",
-        keterangan: "Sistem untuk backup dan pemulihan data secara automatik dan berkala."
-      },
-      %{
-        id: 12,
-        nama: "Portal Pentadbiran L",
-        status: "Dalam Pembangunan",
-        fasa: "Soal Selidik",
-        tarikh_mula: ~D[2024-06-01],
-        tarikh_siap: ~D[2024-12-31],
-        pengurus_projek: "Siti Nurhaliza",
-        developer_id: 1,
-        project_manager_id: 3,
-        isu: "Menunggu kelulusan dari pihak pengurusan",
-        tindakan: "Sambung semula selepas kelulusan",
-        keterangan:
-          "Portal untuk pentadbiran dalaman dengan akses terhad kepada kakitangan yang berkenaan."
-      }
-    ]
-    |> Enum.map(&normalize_project_status/1)
+    # Fetch project from database based on user role
+    project =
+      case user_role do
+        "ketua penolong pengarah" ->
+          # Directors/Admins can view any project
+          Projects.get_project_by_id(project_id)
 
-    # Find project by ID
-    project = Enum.find(all_projects, fn p -> p.id == project_id end)
+        "pembangun sistem" ->
+          # Developers can only view projects where they are assigned as developer
+          case Projects.get_project_by_id(project_id) do
+            nil -> nil
+            p -> if p.developer_id == current_user_id, do: p, else: nil
+          end
 
-    # Check if user has permission to view this project
-    # Temporarily allowing all users to view all projects (consistent with list_projects)
-    # TODO: Re-enable role-based filtering when ready:
-    # cond do
-    #   is_nil(project) ->
-    #     nil
-    #
-    #   user_role == "pembangun sistem" ->
-    #     if project.developer_id == current_user_id, do: project, else: nil
-    #
-    #   user_role == "pengurus projek" ->
-    #     if project.project_manager_id == current_user_id, do: project, else: nil
-    #
-    #   user_role == "ketua penolong pengarah" ->
-    #     project
-    #
-    #   true ->
-    #     nil
-    # end
+        "pengurus projek" ->
+          # Project managers can only view projects where they are assigned as project manager
+          case Projects.get_project_by_id(project_id) do
+            nil -> nil
+            p -> if p.project_manager_id == current_user_id, do: p, else: nil
+          end
 
-    # For now, allow all authenticated users to view all projects (for testing)
-    project
+        _ ->
+          nil
+      end
+
+    # Format project for display if found
+    if project do
+      project
+      |> Projects.format_project_for_display()
+      |> normalize_project_status()
+    else
+      nil
+    end
   end
 
   defp normalize_project_status(project) do
@@ -818,10 +499,9 @@ defmodule SppaWeb.ProjekLive do
     search_lower = String.downcase(search_term)
 
     Enum.filter(projects, fn project ->
-      String.contains?(String.downcase(project.nama), search_lower) ||
+      String.contains?(String.downcase(project.nama || ""), search_lower) ||
         String.contains?(String.downcase(project.pengurus_projek || ""), search_lower) ||
-        String.contains?(String.downcase(project.pembangun_sistem || ""), search_lower) ||
-        String.contains?(String.downcase(project.isu || ""), search_lower)
+        String.contains?(String.downcase(project.pembangun_sistem || ""), search_lower)
     end)
   end
 

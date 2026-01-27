@@ -32,35 +32,14 @@
         min-height: 20px !important;
       }
     }
-
-    @media screen {
-      .a4-page {
-        width: 297mm;
-        min-height: 210mm;
-        max-height: 210mm;
-        padding: 15mm 20mm;
-        margin-bottom: 20mm;
-        background: white;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-direction: column;
-        position: relative;
-      }
-      
-      .a4-content {
-        flex: 1;
-        overflow-y: auto;
-        overflow-x: hidden;
-      }
-    }
   </style>
   
   <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
     <%!-- Overlay --%>
     <div
       class={[
-        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
-        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+        "fixed inset-0 bg-blue-900/60 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100 z-40", else: "opacity-0 pointer-events-none z-0")
       ]}
       phx-click="close_sidebar"
     >
@@ -75,27 +54,30 @@
     />
     
     <%!-- Main Content --%>
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden relative z-50">
       <%!-- Header --%>
-      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
-        <.system_title />
-        <div class="flex items-center gap-4">
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-md relative z-50 gap-2 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0" style="max-width: min(30%, 200px);">
           <button
             phx-click="toggle_sidebar"
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 relative z-50 flex-shrink-0"
           >
-            <.icon name="hero-bars-3" class="w-6 h-6" />
+            <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           <.header_logos />
         </div>
-        
-        <.header_actions
-          notifications_open={@notifications_open}
-          notifications_count={@notifications_count}
-          activities={@activities}
-          profile_menu_open={@profile_menu_open}
-          current_scope={@current_scope}
-        />
+        <div class="flex-1 flex justify-center min-w-0">
+          <.system_title />
+        </div>
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <.header_actions
+            notifications_open={@notifications_open}
+            notifications_count={@notifications_count}
+            activities={@activities}
+            profile_menu_open={@profile_menu_open}
+            current_scope={@current_scope}
+          />
+        </div>
       </header>
       
       <%!-- TAJUK SOAL SELIDIK --%>
@@ -111,15 +93,13 @@
       <%!-- Form Content --%>
       <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6" id="main-content">
         <div class="mx-auto max-w-7xl">
-          <%!-- A4 Paper Container (Landscape) --%>
+          <%!-- Form Container --%>
           <div
             id="pdf-content"
-            class="a4-page bg-white shadow-lg"
-            style="font-family: Arial, sans-serif; font-size: 11pt;"
+            class="bg-white shadow-lg rounded-lg p-6 md:p-8"
           >
-            <div class="a4-content">
-              <%!-- Document Header --%>
-              <div class="mb-6 text-center avoid-break">
+            <%!-- Document Header --%>
+            <div class="mb-6 text-center">
                 <div class="flex justify-end mb-3">
                   <span class="text-xs text-gray-600 font-bold">{@document_id}</span>
                 </div>
@@ -132,22 +112,16 @@
                   />
                 </div>
                 
-                <h1
-                  class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight"
-                  style="font-size: 11pt;"
-                >
-                  Template Soal Selidik Kajian Keperluan Pembangunan Aplikasi
+                <h1 class="text-xl md:text-2xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight">
+                  Soal Selidik Kajian Keperluan Pembangunan Aplikasi
                 </h1>
                 
-                <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
-                  <span>Nama Sistem :</span>
-                  <input
-                    type="text"
-                    name="soal_selidik[nama_sistem]"
-                    value={Phoenix.HTML.Form.input_value(@form, :nama_sistem) || @system_name}
-                    class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Masukkan Nama Sistem"
-                  />
+                <%!-- Project Name --%>
+                <div :if={@project_name && @project_name != ""} class="mb-4">
+                  <div class="text-base font-semibold text-gray-800 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                    <span class="text-gray-600">Projek:</span>
+                    <span class="ml-2 text-blue-700">{@project_name}</span>
+                  </div>
                 </div>
               </div>
               
@@ -181,14 +155,6 @@
                         </button>
                       </button>
                     </nav>
-                    <button
-                      phx-click="show_add_tab_modal"
-                      class="ml-4 px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200 flex items-center gap-2"
-                      title="Tambah tab baru"
-                    >
-                      <.icon name="hero-plus" class="w-4 h-4" />
-                      <span>Tambah Tab</span>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -197,14 +163,49 @@
               <.form
                 for={@form}
                 phx-change="validate"
+                phx-debounce="1000"
                 phx-submit="save"
                 id="soal-selidik-form"
+                phx-hook="PreserveFormData"
                 class="space-y-6"
               >
+                <%!-- Nama Sistem Field - Moved after title, before tabs, but inside form --%>
+                <div class="mb-6 -mt-6">
+                  <div class="text-sm text-gray-700 font-medium text-left flex items-center gap-2">
+                    <span>Nama Sistem :</span>
+                    <%= if @form[:nama_sistem] do %>
+                      <.input
+                        field={@form[:nama_sistem]}
+                        type="text"
+                        class="flex-1 px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Masukkan Nama Sistem"
+                        phx-debounce="300"
+                        phx-change="validate"
+                        phx-hook="SetInputValue"
+                        data-initial-value={@form[:nama_sistem].value || ""}
+                      />
+                    <% else %>
+                      <.input
+                        type="text"
+                        name="soal_selidik[nama_sistem]"
+                        id="soal_selidik_nama_sistem"
+                        value={@nama_sistem_value || @system_name || ""}
+                        class="flex-1 px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Masukkan Nama Sistem"
+                        phx-debounce="300"
+                        phx-change="validate"
+                        phx-hook="SetInputValue"
+                        data-initial-value={@nama_sistem_value || @system_name || ""}
+                      />
+                    <% end %>
+                  </div>
+                </div>
                 <%!-- Functional Requirements Tab --%>
                 <div class={["space-y-4", if(@active_tab != "fr", do: "hidden")]}>
                   <details
                     :for={category <- @fr_categories}
+                    id={"category-#{category.key}"}
+                    phx-hook="PreserveDetailsOpen"
                     class="group border border-gray-300 rounded-lg overflow-hidden"
                   >
                     <summary class="bg-blue-100 px-4 py-3 cursor-pointer hover:bg-blue-200 transition-colors duration-200 font-semibold text-gray-900 uppercase tracking-wide text-sm">
@@ -228,6 +229,8 @@
                 <div class={["space-y-4", if(@active_tab != "nfr", do: "hidden")]}>
                   <details
                     :for={category <- @nfr_categories}
+                    id={"category-#{category.key}"}
+                    phx-hook="PreserveDetailsOpen"
                     class="group border border-gray-300 rounded-lg overflow-hidden"
                   >
                     <summary class="bg-blue-100 px-4 py-3 cursor-pointer hover:bg-blue-200 transition-colors duration-200 font-semibold text-gray-900 uppercase tracking-wide text-sm">
@@ -369,7 +372,7 @@
                 </div>
                 
                 <%!-- Action Buttons for other tabs --%>
-                <div :if={@active_tab != "disediakan_oleh"} class="flex justify-end items-center gap-3 pt-4 avoid-break border-t border-gray-300 mt-6">
+                <div :if={@active_tab != "disediakan_oleh"} class="flex justify-end items-center gap-3 pt-4 border-t border-gray-300 mt-6">
                   <div class="flex gap-3">
                     <button
                       type="button"
@@ -386,7 +389,6 @@
                   </div>
                 </div>
               </.form>
-            </div>
           </div>
         </div>
       </main>
@@ -396,7 +398,7 @@
   <%!-- PDF Modal --%>
   <%= if @show_pdf_modal && @pdf_data do %>
     <div
-      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
+      class="fixed inset-0 bg-opacity-50 z-[60] flex items-center justify-center p-4"
       phx-click="close_pdf_modal"
       phx-key="escape"
       phx-window-keydown="close_pdf_modal"
@@ -434,7 +436,7 @@
               </div>
               
               <h1 class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight">
-                Template Soal Selidik Kajian Keperluan Pembangunan Aplikasi
+                Soal Selidik Kajian Keperluan Pembangunan Aplikasi
               </h1>
               
               <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
@@ -650,22 +652,22 @@
     </div>
   <% end %>
 
-  <%!-- Add Tab Modal --%>
-  <%= if @show_add_tab_modal do %>
+  <%!-- Edit Question Modal --%>
+  <%= if @show_edit_question_modal && @selected_question do %>
     <div
-      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
-      phx-click="close_add_tab_modal"
+      class="fixed inset-0 bg-opacity-50 z-[60] flex items-center justify-center p-4"
+      phx-click="close_edit_question_modal"
       phx-key="escape"
-      phx-window-keydown="close_add_tab_modal"
+      phx-window-keydown="close_edit_question_modal"
     >
       <div
-        class="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
-        phx-click-away="close_add_tab_modal"
+        class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6"
+        phx-click-away="close_edit_question_modal"
       >
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Tambah Tab Baru</h2>
+          <h2 class="text-xl font-bold text-gray-900">Edit Soalan</h2>
           <button
-            phx-click="close_add_tab_modal"
+            phx-click="close_edit_question_modal"
             class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
             title="Tutup"
           >
@@ -674,45 +676,71 @@
         </div>
 
         <.form
-          for={@new_tab_form}
-          phx-change="validate_new_tab"
-          phx-submit="add_tab"
-          id="add-tab-form"
+          for={@edit_question_form}
+          phx-change="validate_edit_question"
+          phx-submit="save_edit_question"
+          id="edit-question-form"
           class="space-y-5"
         >
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Label Tab <span class="text-red-500">*</span>
+              Soalan <span class="text-red-500">*</span>
             </label>
-            <.input
-              field={@new_tab_form[:label]}
-              type="text"
-              placeholder="Contoh: Tab Baru"
+            <textarea
+              name="edit_question[soalan]"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              placeholder="Masukkan soalan..."
               required
-            />
-            <p :if={@new_tab_form[:label].errors != []} class="mt-1 text-xs text-red-600">
-              <%= Enum.at(@new_tab_form[:label].errors, 0) %>
+            >{Phoenix.HTML.Form.input_value(@edit_question_form, :soalan) || ""}</textarea>
+            <p :if={@edit_question_form[:soalan].errors != []} class="mt-1 text-xs text-red-600">
+              <%= Enum.at(@edit_question_form[:soalan].errors, 0) %>
             </p>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              ID Tab (Opsional)
+              Jenis Input <span class="text-red-500">*</span>
             </label>
-            <.input
-              field={@new_tab_form[:id]}
-              type="text"
-              placeholder="Akan dijana secara automatik jika kosong"
-            />
+            <select
+              name="edit_question[type]"
+              id="edit-question-type"
+              class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              required
+              phx-hook="ToggleOptionsField"
+            >
+              <option value="text" selected={Phoenix.HTML.Form.input_value(@edit_question_form, :type) == "text"}>Text</option>
+              <option value="textarea" selected={Phoenix.HTML.Form.input_value(@edit_question_form, :type) == "textarea"}>Textarea</option>
+              <option value="select" selected={Phoenix.HTML.Form.input_value(@edit_question_form, :type) == "select"}>Select (Dropdown)</option>
+              <option value="checkbox" selected={Phoenix.HTML.Form.input_value(@edit_question_form, :type) == "checkbox"}>Checkbox</option>
+            </select>
             <p class="mt-1 text-xs text-gray-500">
-              ID akan digunakan untuk mengenal pasti tab. Jika kosong, ID akan dijana dari label.
+              Pilih jenis input untuk maklumbalas soalan ini.
+            </p>
+          </div>
+
+          <div id="options-field" class={[
+            "transition-all duration-200",
+            if(Phoenix.HTML.Form.input_value(@edit_question_form, :type) in ["select", "checkbox"], do: "block", else: "hidden")
+          ]}>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Pilihan (Opsional)
+            </label>
+            <textarea
+              name="edit_question[options]"
+              rows="4"
+              class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              placeholder="Masukkan pilihan, satu setiap baris&#10;Contoh:&#10;Ya&#10;Tidak&#10;Tidak Pasti"
+            >{Phoenix.HTML.Form.input_value(@edit_question_form, :options) || ""}</textarea>
+            <p class="mt-1 text-xs text-gray-500">
+              Masukkan pilihan untuk select atau checkbox, satu setiap baris. Kosongkan jika tidak diperlukan.
             </p>
           </div>
 
           <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
-              phx-click="close_add_tab_modal"
+              phx-click="close_edit_question_modal"
               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
             >
               Batal
@@ -721,7 +749,7 @@
               type="submit"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow transition-all duration-200"
             >
-              Tambah Tab
+              Simpan Perubahan
             </button>
           </div>
         </.form>

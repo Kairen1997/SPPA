@@ -32,8 +32,34 @@ defmodule Sppa.Projects do
     |> Enum.map(&format_project_for_display/1)
   end
 
-  # Format project data for display in senarai projek
-  defp format_project_for_display(project) do
+  @doc """
+  Returns the list of all projects (for directors/admins).
+  """
+  def list_all_projects do
+    Project
+    |> preload([:developer, :project_manager])
+    |> order_by([p], desc: p.last_updated)
+    |> Repo.all()
+    |> Enum.map(&format_project_for_display/1)
+  end
+
+  @doc """
+  Returns the list of projects for a pembangun sistem (developer).
+  Projects where the current user is assigned as developer.
+  """
+  def list_projects_for_pembangun_sistem(current_scope) do
+    Project
+    |> where([p], p.developer_id == ^current_scope.user.id)
+    |> preload([:developer, :project_manager])
+    |> order_by([p], desc: p.last_updated)
+    |> Repo.all()
+    |> Enum.map(&format_project_for_display/1)
+  end
+
+  @doc """
+  Formats project data for display in senarai projek.
+  """
+  def format_project_for_display(project) do
     %{
       id: project.id,
       nama: project.nama,
@@ -114,6 +140,17 @@ defmodule Sppa.Projects do
     |> where([p], p.id == ^id and p.user_id == ^current_scope.user.id)
     |> preload([:developer, :project_manager])
     |> Repo.one!()
+  end
+
+  @doc """
+  Gets a single project by ID without user scope restriction.
+  Used for directors/admins who can view all projects.
+  """
+  def get_project_by_id(id) do
+    Project
+    |> where([p], p.id == ^id)
+    |> preload([:developer, :project_manager])
+    |> Repo.one()
   end
 
   @doc """

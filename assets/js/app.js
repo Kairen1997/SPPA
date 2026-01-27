@@ -330,6 +330,77 @@ const UpdateSectionCategory = {
   }
 }
 
+// Auto Resize Textarea Hook
+const AutoResize = {
+  mounted() {
+    this.resize()
+    this.el.addEventListener("input", () => this.resize())
+  },
+  
+  updated() {
+    this.resize()
+  },
+  
+  resize() {
+    // Reset height to auto to get the correct scrollHeight
+    this.el.style.height = "auto"
+    // Set height to scrollHeight, but respect max-height
+    const maxHeight = parseInt(this.el.style.maxHeight) || 320 // 20rem = 320px
+    const scrollHeight = this.el.scrollHeight
+    this.el.style.height = `${Math.min(scrollHeight, maxHeight)}px`
+    // Enable scrolling if content exceeds max height
+    this.el.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden"
+  }
+}
+
+// Toggle Options Field Hook
+const ToggleOptionsField = {
+  mounted() {
+    this.toggleField()
+    this.el.addEventListener("change", () => this.toggleField())
+  },
+  
+  updated() {
+    this.toggleField()
+  },
+  
+  toggleField() {
+    const optionsField = document.getElementById("options-field")
+    if (optionsField) {
+      const selectedType = this.el.value
+      if (selectedType === "select" || selectedType === "checkbox") {
+        optionsField.classList.remove("hidden")
+        optionsField.classList.add("block")
+      } else {
+        optionsField.classList.remove("block")
+        optionsField.classList.add("hidden")
+      }
+    }
+  }
+}
+
+// Preserve Details Open State Hook
+const PreserveDetailsOpen = {
+  mounted() {
+    // Store initial open state
+    this.wasOpen = this.el.hasAttribute("open")
+  },
+  
+  updated() {
+    // Restore open state if it was open before
+    if (this.wasOpen && !this.el.hasAttribute("open")) {
+      this.el.setAttribute("open", "")
+    }
+    // Update stored state
+    this.wasOpen = this.el.hasAttribute("open")
+  },
+  
+  beforeUpdate() {
+    // Store current open state before update
+    this.wasOpen = this.el.hasAttribute("open")
+  }
+}
+
 // Notification Toggle Hook
 const NotificationToggle = {
   mounted() {
@@ -398,6 +469,320 @@ const NotificationToggle = {
   }
 }
 
+// Profile Menu Toggle Hook
+const ProfileMenuToggle = {
+  mounted() {
+    const dropdown = document.getElementById("profile-menu-dropdown")
+    const container = document.getElementById("profile-menu-container")
+    
+    if (!dropdown || !container) return
+    
+    this.handleClick = (e) => {
+      e.stopPropagation()
+      // Toggle dropdown visibility
+      const isOpen = dropdown.classList.contains("opacity-100")
+      
+      if (isOpen) {
+        dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
+        dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
+        this.el.setAttribute("aria-expanded", "false")
+      } else {
+        dropdown.classList.remove("opacity-0", "scale-95", "pointer-events-none")
+        dropdown.classList.add("opacity-100", "scale-100", "pointer-events-auto")
+        this.el.setAttribute("aria-expanded", "true")
+      }
+      
+      // Try to push event to LiveView if available
+      if (this.pushEvent) {
+        this.pushEvent("toggle_profile_menu", {})
+      }
+    }
+    
+    this.handleClickAway = (e) => {
+      if (!container.contains(e.target)) {
+        dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
+        dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
+        this.el.setAttribute("aria-expanded", "false")
+        
+        if (this.pushEvent) {
+          this.pushEvent("close_profile_menu", {})
+        }
+      }
+    }
+    
+    this.el.addEventListener("click", this.handleClick)
+    document.addEventListener("click", this.handleClickAway)
+  },
+  
+  updated() {
+    // Re-sync with LiveView state if available
+    const dropdown = document.getElementById("profile-menu-dropdown")
+    if (dropdown && this.el.dataset.profileMenuOpen === "true") {
+      dropdown.classList.remove("opacity-0", "scale-95", "pointer-events-none")
+      dropdown.classList.add("opacity-100", "scale-100", "pointer-events-auto")
+      this.el.setAttribute("aria-expanded", "true")
+    } else if (dropdown) {
+      dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
+      dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
+      this.el.setAttribute("aria-expanded", "false")
+    }
+  },
+  
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick)
+    }
+    if (this.handleClickAway) {
+      document.removeEventListener("click", this.handleClickAway)
+    }
+  }
+}
+
+// Set Input Value Hook - ensures input value is set after mount/update
+const SetInputValue = {
+  mounted() {
+    const initialValue = this.el.dataset.initialValue
+    if (initialValue && initialValue !== "") {
+      this.el.value = initialValue
+    }
+  },
+  updated() {
+    const initialValue = this.el.dataset.initialValue
+    if (initialValue && initialValue !== "") {
+      this.el.value = initialValue
+    }
+  }
+}
+
+// Preserve Form Data Hook - ensures all form data is sent on phx-change
+const PreserveFormData = {
+  mounted() {
+    const form = this.el
+    if (!form) return
+    
+    // Function to get all form data
+    const getAllFormData = () => {
+      const formData = new FormData(form)
+      const formParams = {}
+      
+      // Convert FormData to nested object structure
+      for (let [key, value] of formData.entries()) {
+        // Handle array notation like "soal_selidik[fr][category][1][maklumbalas][]"
+        const keys = key.split(/[\[\]]+/).filter(k => k !== "")
+        let current = formParams
+        
+        for (let i = 0; i < keys.length - 1; i++) {
+          const k = keys[i]
+          if (!current[k]) {
+            current[k] = {}
+          }
+          current = current[k]
+        }
+        
+        const lastKey = keys[keys.length - 1]
+        // Handle array values (for checkboxes)
+        if (key.endsWith("[]")) {
+          if (!current[lastKey]) {
+            current[lastKey] = []
+          }
+          if (Array.isArray(current[lastKey])) {
+            current[lastKey].push(value)
+          }
+        } else {
+          if (current[lastKey] && Array.isArray(current[lastKey])) {
+            current[lastKey].push(value)
+          } else if (current[lastKey]) {
+            current[lastKey] = [current[lastKey], value]
+          } else {
+            current[lastKey] = value
+          }
+        }
+      }
+      
+      return formParams.soal_selidik || {}
+    }
+    
+    // Intercept phx-change events before they're sent to LiveView
+    this.handlePhxChange = (e) => {
+      // Only process if this is our form
+      if (e.target.closest('form') !== form && e.target !== form) {
+        return
+      }
+      
+      // Small delay to ensure input value is updated in DOM
+      setTimeout(() => {
+        // Get all form data
+        const allFormData = getAllFormData()
+        
+        // Update the event detail to include all form data
+        if (e.detail) {
+          e.detail.soal_selidik = allFormData
+        }
+      }, 10)
+    }
+    
+    // Listen for phx-change events
+    form.addEventListener("phx-change", this.handlePhxChange, true)
+    
+    // Also intercept before LiveView processes the change
+    this.handleInput = (e) => {
+      if (e.target.closest('form') === form) {
+        // Debounce to avoid too many updates
+        if (this.debounceTimer) {
+          clearTimeout(this.debounceTimer)
+        }
+        
+        this.debounceTimer = setTimeout(() => {
+          // Small delay to ensure input value is updated in DOM
+          setTimeout(() => {
+            const allFormData = getAllFormData()
+            
+            // Push all form data to LiveView
+            if (typeof this.pushEvent === 'function') {
+              this.pushEvent("validate", { soal_selidik: allFormData })
+            }
+          }, 10)
+        }, 300)
+      }
+    }
+    
+    // Attach listeners for input/change events
+    form.addEventListener("input", this.handleInput, true)
+    form.addEventListener("change", this.handleInput, true)
+  },
+  
+  updated() {
+    // Re-attach listeners if needed
+    const form = this.el
+    if (form && !this.handleInputAttached) {
+      form.addEventListener("phx-change", this.handlePhxChange, true)
+      form.addEventListener("input", this.handleInput, true)
+      form.addEventListener("change", this.handleInput, true)
+      this.handleInputAttached = true
+    }
+  },
+  
+  destroyed() {
+    const form = this.el
+    if (form) {
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer)
+      }
+      if (this.handlePhxChange) {
+        form.removeEventListener("phx-change", this.handlePhxChange, true)
+      }
+      if (this.handleInput) {
+        form.removeEventListener("input", this.handleInput, true)
+        form.removeEventListener("change", this.handleInput, true)
+      }
+    }
+  }
+}
+
+// Save Row Data Hook
+const SaveRowData = {
+  mounted() {
+    const handleClick = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      
+      const formId = this.el.dataset.formId || "soal-selidik-form"
+      const form = document.getElementById(formId)
+      
+      if (!form) {
+        console.error("Form not found:", formId)
+        return
+      }
+      
+      // Get phx-value attributes
+      const tabType = this.el.getAttribute("phx-value-tab_type")
+      const categoryKey = this.el.getAttribute("phx-value-category_key")
+      const questionNo = this.el.getAttribute("phx-value-question_no")
+      
+      // Get form data
+      const formData = new FormData(form)
+      const formParams = {}
+      
+      // Convert FormData to nested object structure
+      for (let [key, value] of formData.entries()) {
+        // Handle array notation like "soal_selidik[fr][category][1][maklumbalas][]"
+        const keys = key.split(/[\[\]]+/).filter(k => k !== "")
+        let current = formParams
+        
+        for (let i = 0; i < keys.length - 1; i++) {
+          const k = keys[i]
+          if (!current[k]) {
+            current[k] = {}
+          }
+          current = current[k]
+        }
+        
+        const lastKey = keys[keys.length - 1]
+        // Handle array values (for checkboxes)
+        if (key.endsWith("[]")) {
+          if (!current[lastKey]) {
+            current[lastKey] = []
+          }
+          if (Array.isArray(current[lastKey])) {
+            current[lastKey].push(value)
+          }
+        } else {
+          if (current[lastKey] && Array.isArray(current[lastKey])) {
+            current[lastKey].push(value)
+          } else if (current[lastKey]) {
+            current[lastKey] = [current[lastKey], value]
+          } else {
+            current[lastKey] = value
+          }
+        }
+      }
+      
+      // Push event with form data
+      const eventData = {
+        tab_type: tabType,
+        category_key: categoryKey,
+        question_no: questionNo,
+        soal_selidik: formParams.soal_selidik || {}
+      }
+      
+      console.log("SaveRowData: Pushing event with data:", eventData)
+      console.log("SaveRowData: Hook context:", {
+        hasPushEvent: typeof this.pushEvent === 'function',
+        hasPushEventTo: typeof this.pushEventTo === 'function',
+        el: this.el
+      })
+      
+      // Use pushEvent if available (standard LiveView hook method)
+      if (typeof this.pushEvent === 'function') {
+        try {
+          this.pushEvent("save_row", eventData)
+          console.log("SaveRowData: Event pushed successfully")
+        } catch (error) {
+          console.error("SaveRowData: Error pushing event:", error)
+        }
+      } else {
+        console.error("pushEvent not available in hook context")
+        // Fallback: try to dispatch a custom event that LiveView can catch
+        const customEvent = new CustomEvent("phx:save-row", {
+          detail: eventData,
+          bubbles: true,
+          cancelable: true
+        })
+        this.el.dispatchEvent(customEvent)
+      }
+    }
+    
+    this.handleClick = handleClick
+    this.el.addEventListener("click", handleClick, true)
+  },
+  
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick, true)
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
@@ -407,7 +792,14 @@ const liveSocket = new LiveSocket("/live", Socket, {
     PrintDocument,
     UpdateSectionCategory,
     GeneratePDF,
-    NotificationToggle
+    NotificationToggle,
+    ProfileMenuToggle,
+    AutoResize,
+    ToggleOptionsField,
+    PreserveDetailsOpen,
+    PreserveFormData,
+    SaveRowData,
+    SetInputValue
   },
 })
 
@@ -460,4 +852,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-
