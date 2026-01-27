@@ -1,9 +1,12 @@
 defmodule SppaWeb.ProjectListLive do
   use SppaWeb, :live_view
 
-  alias Sppa.Projects.Project
+  alias Sppa.Projects
+  alias Sppa.ApprovedProjects
   alias Sppa.Accounts
   alias Sppa.Repo
+  alias Oban
+  require Logger
   import Ecto.Query
 
   @impl true
@@ -14,13 +17,15 @@ defmodule SppaWeb.ProjectListLive do
         socket.assigns.current_scope.user.role
 
     if user_role && user_role == "pengurus projek" do
-      socket = assign(socket, :hide_root_header, true)
-      socket = assign(socket, :page_title, "Senarai Projek")
-      socket = assign(socket, :desktop_sidebar_visible, true)
-
-      # Filter assigns
       socket =
         socket
+        |> assign(:hide_root_header, true)
+        |> assign(:page_title, "Senarai Projek Diluluskan")
+        |> assign(:sidebar_open, false)
+        |> assign(:notifications_open, false)
+        |> assign(:profile_menu_open, false)
+        |> assign(:notifications_count, 0)
+        |> assign(:activities, [])
         |> assign(:status_filter, "")
         |> assign(:phase_filter, "")
         |> assign(:search_query, "")
@@ -60,9 +65,33 @@ defmodule SppaWeb.ProjectListLive do
   end
 
   @impl true
-  def handle_event("toggle_desktop_sidebar", _params, socket) do
-    new_state = !socket.assigns.desktop_sidebar_visible
-    {:noreply, assign(socket, :desktop_sidebar_visible, new_state)}
+  def handle_event("toggle_sidebar", _params, socket) do
+    {:noreply, Phoenix.Component.update(socket, :sidebar_open, &(!&1))}
+  end
+
+  @impl true
+  def handle_event("close_sidebar", _params, socket) do
+    {:noreply, assign(socket, :sidebar_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_notifications", _params, socket) do
+    {:noreply, Phoenix.Component.update(socket, :notifications_open, &(!&1))}
+  end
+
+  @impl true
+  def handle_event("close_notifications", _params, socket) do
+    {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_profile_menu", _params, socket) do
+    {:noreply, Phoenix.Component.update(socket, :profile_menu_open, &(!&1))}
+  end
+
+  @impl true
+  def handle_event("close_profile_menu", _params, socket) do
+    {:noreply, assign(socket, :profile_menu_open, false)}
   end
 
   @impl true
@@ -118,24 +147,95 @@ defmodule SppaWeb.ProjectListLive do
      |> put_flash(:info, "Projek akan disimpan selepas penambahan medan pangkalan data")}
   end
 
+  @impl true
+  def handle_event("sync_external_data", _params, socket) do
+    # Check if Oban is running
+    try do
+      # Manually trigger the sync worker
+      job = Sppa.Workers.ExternalSyncWorker.new(%{})
+
+      case Oban.insert(job) do
+        {:ok, inserted_job} ->
+          Logger.info("Sync job inserted: #{inspect(inserted_job.id)}")
+          # Reload projects after a short delay
+          Process.send_after(self(), :reload_projects, 3000)
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Sinkronisasi data telah dimulakan. Sila tunggu sebentar...")}
+
+        {:error, reason} ->
+          Logger.error("Failed to insert sync job: #{inspect(reason)}")
+          {:noreply,
+           socket
+           |> put_flash(:error, "Ralat semasa memulakan sinkronisasi: #{inspect(reason)}")}
+      end
+    rescue
+      e ->
+        Logger.error("Exception during sync: #{inspect(e)}")
+        {:noreply,
+         socket
+         |> put_flash(:error, "Ralat: #{Exception.message(e)}. Pastikan Oban sedang berjalan.")}
+    end
+  end
+
+  @impl true
+  def handle_event("create_project", %{"id" => approved_project_id}, socket) do
+    approved_project_id = String.to_integer(approved_project_id)
+
+    case ApprovedProjects.get_approved_project!(approved_project_id) do
+      approved_project ->
+        # Create project from approved project data
+        project_attrs = %{
+          "nama" => approved_project.nama_projek || "",
+          "jabatan" => approved_project.jabatan || "",
+          "status" => "Dalam Pembangunan",
+          "fasa" => "Analisis dan Rekabentuk",
+          "tarikh_mula" => approved_project.tarikh_mula,
+          "approved_project_id" => approved_project.id
+        }
+
+        case Projects.create_project(project_attrs, socket.assigns.current_scope) do
+          {:ok, _project} ->
+            # Reload projects
+            projects = list_projects(socket)
+            total_pages = calculate_total_pages(socket)
+
+            {:noreply,
+             socket
+             |> assign(:projects, projects)
+             |> assign(:total_pages, total_pages)
+             |> put_flash(:info, "Projek berjaya didaftarkan")}
+
+          {:error, _changeset} ->
+            {:noreply,
+             socket
+             |> put_flash(:error, "Terdapat ralat semasa mendaftarkan projek")}
+        end
+    end
+  end
+
+  @impl true
+  def handle_info(:reload_projects, socket) do
+    projects = list_projects(socket)
+    total_pages = calculate_total_pages(socket)
+
+    {:noreply,
+     socket
+     |> assign(:projects, projects)
+     |> assign(:total_pages, total_pages)
+     |> put_flash(:info, "Data telah dikemaskini")}
+  end
+
   defp list_projects(socket) do
     base_query =
-      Project
-      |> where([p], p.user_id == ^socket.assigns.current_scope.user.id)
-
-    # Apply status filter
-    base_query =
-      if socket.assigns.status_filter != "" do
-        where(base_query, [p], p.status == ^socket.assigns.status_filter)
-      else
-        base_query
-      end
+      Sppa.ApprovedProjects.ApprovedProject
 
     # Apply search filter
     base_query =
       if socket.assigns.search_query != "" do
         search_term = "%#{socket.assigns.search_query}%"
-        where(base_query, [p], ilike(p.nama, ^search_term))
+        where(base_query, [ap], ilike(ap.nama_projek, ^search_term))
       else
         base_query
       end
@@ -144,8 +244,8 @@ defmodule SppaWeb.ProjectListLive do
     offset = (socket.assigns.page - 1) * socket.assigns.per_page
 
     base_query
-    |> preload([:developer, :project_manager])
-    |> order_by([p], desc: p.last_updated)
+    |> preload(:project)
+    |> order_by([ap], desc: ap.inserted_at)
     |> limit(^socket.assigns.per_page)
     |> offset(^offset)
     |> Repo.all()
@@ -153,22 +253,13 @@ defmodule SppaWeb.ProjectListLive do
 
   defp calculate_total_pages(socket) do
     base_query =
-      Project
-      |> where([p], p.user_id == ^socket.assigns.current_scope.user.id)
-
-    # Apply status filter
-    base_query =
-      if socket.assigns.status_filter != "" do
-        where(base_query, [p], p.status == ^socket.assigns.status_filter)
-      else
-        base_query
-      end
+      Sppa.ApprovedProjects.ApprovedProject
 
     # Apply search filter
     base_query =
       if socket.assigns.search_query != "" do
         search_term = "%#{socket.assigns.search_query}%"
-        where(base_query, [p], ilike(p.nama, ^search_term))
+        where(base_query, [ap], ilike(ap.nama_projek, ^search_term))
       else
         base_query
       end
@@ -181,23 +272,54 @@ defmodule SppaWeb.ProjectListLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
-      <div class="flex min-h-screen flex-col bg-[#F4F5FB] text-gray-800">
-        <.topbar current_scope={@current_scope} />
-        <.sidebar
-          current_scope={@current_scope}
-          desktop_sidebar_visible={@desktop_sidebar_visible}
-          current_path="/senarai-projek"
+      <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
+        <%!-- Overlay --%>
+        <div
+          class={[
+            "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
+            if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+          ]}
+          phx-click="close_sidebar"
         >
-          <%!-- Main content --%>
-          <main class="flex-1 overflow-y-auto px-4 pb-10 pt-6 sm:px-6 lg:px-10">
-            <div class="mx-auto flex max-w-7xl flex-col gap-6">
-              <%!-- Page title --%>
-              <div class="flex items-center justify-between">
-                <div class="flex flex-col">
-                  <span class="text-xs font-semibold tracking-[0.2em] text-gray-400">
-                    SENARAI PROJEK
-                  </span>
-                  <span class="text-2xl font-semibold tracking-wide text-gray-800">Tapisan</span>
+        </div>
+         <%!-- Sidebar --%>
+        <.dashboard_sidebar
+          sidebar_open={@sidebar_open}
+          dashboard_path={~p"/dashboard-pp"}
+          logo_src={~p"/images/logojpkn.png"}
+          current_scope={@current_scope}
+          current_path="/senarai-projek-diluluskan"
+        /> <%!-- Main Content --%>
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <%!-- Header --%>
+          <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
+            <.system_title />
+            <div class="flex items-center gap-4">
+              <button
+                phx-click="toggle_sidebar"
+                class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+              >
+                <.icon name="hero-bars-3" class="w-6 h-6" />
+              </button>
+              <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+            </div>
+
+            <.header_actions
+              notifications_open={@notifications_open}
+              notifications_count={@notifications_count}
+              activities={@activities}
+              profile_menu_open={@profile_menu_open}
+              current_scope={@current_scope}
+            />
+          </header>
+           <%!-- Content --%>
+          <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
+            <%!-- Projek List Content --%>
+            <div class="max-w-7xl mx-auto">
+              <div class="mb-8 flex items-center justify-between">
+                <div>
+                  <h1 class="text-3xl font-bold text-gray-900 mb-2">Senarai Projek Diluluskan</h1>
+                  <p class="text-gray-600">Senarai lengkap semua projek yang diluluskan</p>
                 </div>
                 <%!-- Print Button --%>
                 <div class="print:hidden">
@@ -261,8 +383,16 @@ defmodule SppaWeb.ProjectListLive do
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     />
                   </div>
-                   <%!-- New Project button --%>
-                  <div class="flex-shrink-0">
+                   <%!-- Action buttons --%>
+                  <div class="flex-shrink-0 flex gap-3">
+                    <button
+                      type="button"
+                      phx-click="sync_external_data"
+                      class="rounded-lg bg-green-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center gap-2"
+                    >
+                      <.icon name="hero-arrow-path" class="w-4 h-4" />
+                      <span>Sync Data</span>
+                    </button>
                     <button
                       type="button"
                       phx-click="open_new_project_modal"
@@ -279,23 +409,23 @@ defmodule SppaWeb.ProjectListLive do
                   <thead class="bg-gray-50">
                     <tr>
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Nama Projek
+                        Nama
                       </th>
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Status
+                        Emel
                       </th>
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Fasa Semasa
+                        Kementerian/Jabatan
                       </th>
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Progress
+                        Nama Sistem
                       </th>
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Dokumen
+                        Tarikh
                       </th>
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -307,37 +437,50 @@ defmodule SppaWeb.ProjectListLive do
                   <tbody class="divide-y divide-gray-200 bg-white">
                     <tr :for={project <- @projects} class="hover:bg-gray-50">
                       <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                        {project.nama}
+                        {project.nama_projek}
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                        <span class={[
-                          "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
-                          status_badge_class(project.status)
-                        ]}>
-                          {project.status}
-                        </span>
+                        {project.pengurus_email || "-"}
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                        {get_phase(project)}
+                        {project.jabatan || "-"}
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                        {get_progress(project)}%
+                        {project.nama_projek}
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                        {get_documents(project)}
+                        <%= if project.tarikh_mula do %>
+                          {Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}
+                        <% else %>
+                          <span class="text-gray-400">-</span>
+                        <% end %>
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm">
-                        <.link
-                          navigate={~p"/projek/#{project.id}"}
-                          class="font-medium text-[#2F80ED] transition hover:text-[#2563EB]"
-                        >
-                          [Lihat]
-                        </.link>
+                        <%= if project.project do %>
+                          <div class="flex items-center gap-3">
+                            <.link
+                              navigate={~p"/projek/#{project.project.id}"}
+                              class="font-medium text-[#2F80ED] transition hover:text-[#2563EB]"
+                            >
+                              Lihat
+                            </.link>
+                            <.link
+                              navigate={~p"/projek/#{project.project.id}/modul"}
+                              class="font-medium text-[#2F80ED] transition hover:text-[#2563EB]"
+                            >
+                              Modul
+                            </.link>
+                          </div>
+                        <% else %>
+                          <.button phx-click="create_project" phx-value-id={project.id}>
+                            Daftar Projek
+                          </.button>
+                        <% end %>
                       </td>
                     </tr>
 
@@ -394,8 +537,7 @@ defmodule SppaWeb.ProjectListLive do
               </div>
             </div>
           </main>
-        </.sidebar>
-         <%!-- New Project Modal --%>
+           <%!-- New Project Modal --%>
         <div
           :if={@show_modal}
           class="fixed inset-0 z-50 overflow-y-auto"
@@ -612,50 +754,11 @@ defmodule SppaWeb.ProjectListLive do
           </div>
         </div>
       </div>
+    </div>
     </Layouts.app>
     """
   end
 
-  # Helper functions for display
-  defp status_badge_class(status) do
-    case status do
-      "Selesai" -> "bg-green-100 text-green-800"
-      "Dalam Pembangunan" -> "bg-blue-100 text-blue-800"
-      _ -> "bg-gray-100 text-gray-800"
-    end
-  end
-
-  defp get_phase(project) do
-    # Placeholder - map status to phase for now
-    case project.status do
-      "Dalam Pembangunan" -> "Pembangunan"
-      "UAT" -> "UAT"
-      "Selesai" -> "Penyerahan"
-      "Ditangguhkan" -> "Analisis dan Rekabentuk"
-      _ -> "Analisis dan Rekabentuk"
-    end
-  end
-
-  defp get_progress(project) do
-    # Placeholder - calculate based on status for now
-    case project.status do
-      "Selesai" -> 100
-      "UAT" -> 75
-      "Dalam Pembangunan" -> 45
-      "Ditangguhkan" -> 30
-      _ -> 0
-    end
-  end
-
-  defp get_documents(project) do
-    # Placeholder - return mock document count
-    case project.status do
-      "Selesai" -> "6/6"
-      "UAT" -> "4/6"
-      "Dalam Pembangunan" -> "2/6"
-      _ -> "0/6"
-    end
-  end
 
   defp pagination_pages(current_page, total_pages) do
     cond do

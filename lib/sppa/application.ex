@@ -12,6 +12,7 @@ defmodule Sppa.Application do
       Sppa.Repo,
       {DNSCluster, query: Application.get_env(:sppa, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Sppa.PubSub},
+      {Oban, Application.get_env(:sppa, Oban)},
       # Start a worker by calling: Sppa.Worker.start_link(arg)
       # {Sppa.Worker, arg},
       # Start to serve requests, typically the last entry
