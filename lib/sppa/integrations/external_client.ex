@@ -29,10 +29,6 @@ defmodule Sppa.Integrations.ExternalClient do
       {:error, %HTTPoison.Error{reason: reason}} ->
         Logger.error("HTTPoison error: #{inspect(reason)}")
         {:error, {:http_error, reason}}
-
-      {:error, reason} ->
-        Logger.error("Unknown error: #{inspect(reason)}")
-        {:error, reason}
     end
   end
 end

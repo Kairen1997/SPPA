@@ -146,8 +146,6 @@ defmodule Sppa.Workers.ExternalSyncWorker do
     end
   end
 
-  defp get_string(_, _), do: nil
-
   defp get_integer(map, key) when is_map(map) do
     case Map.get(map, key) || Map.get(map, to_string(key)) do
       nil -> nil
@@ -161,8 +159,6 @@ defmodule Sppa.Workers.ExternalSyncWorker do
     end
   end
 
-  defp get_integer(_, _), do: nil
-
   defp parse_date(nil), do: nil
   defp parse_date(date) when is_binary(date) do
     case Date.from_iso8601(date) do
@@ -172,6 +168,5 @@ defmodule Sppa.Workers.ExternalSyncWorker do
         nil
     end
   end
-  defp parse_date(%Date{} = date), do: date
   defp parse_date(_), do: nil
 end
