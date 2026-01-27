@@ -87,6 +87,10 @@ defmodule SppaWeb.SoalSelidikLive do
       # Try to load existing soal selidik if ID is provided
       {soal_selidik_id, initial_data} = load_initial_data(params, socket)
 
+      # Load project information
+      project = load_project_info(params, socket, soal_selidik_id, initial_data)
+      project_name = if project, do: project.nama, else: ""
+
       socket =
         socket
         |> assign(:hide_root_header, true)
@@ -96,6 +100,8 @@ defmodule SppaWeb.SoalSelidikLive do
         |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/soal-selidik")
         |> assign(:soal_selidik_id, soal_selidik_id)
+        |> assign(:project, project)
+        |> assign(:project_name, project_name)
         |> assign(:document_id, initial_data.document_id)
         |> assign(:system_name, initial_data.nama_sistem)
         |> assign(:active_tab, "fr")
@@ -178,105 +184,131 @@ defmodule SppaWeb.SoalSelidikLive do
   end
 
   @impl true
-  def handle_event("remove_tab", %{"tab_id" => tab_id}, socket) do
-    # Prevent removing default tabs
-    tab = Enum.find(socket.assigns.tabs, &(&1.id == tab_id))
-
-    if tab && tab.removable do
-      updated_tabs = Enum.reject(socket.assigns.tabs, &(&1.id == tab_id))
-
-      # If we removed the active tab, switch to the first tab
-      new_active_tab =
-        if socket.assigns.active_tab == tab_id do
-          case List.first(updated_tabs) do
-            nil -> "fr"
-            first_tab -> first_tab.id
-          end
-        else
-          socket.assigns.active_tab
+  def handle_event("validate", %{"soal_selidik" => params}, socket) do
+    try do
+      # Get existing form data to preserve user input
+      # Handle both map source and changeset source
+      existing_form_data =
+        case socket.assigns.form.source do
+          %{params: form_params} when is_map(form_params) ->
+            form_params
+          source when is_map(source) ->
+            source
+          _ ->
+            %{}
         end
 
-      {:noreply,
-       socket
-       |> assign(:tabs, updated_tabs)
-       |> assign(:active_tab, new_active_tab)
-       |> Phoenix.LiveView.put_flash(:info, "Tab telah dibuang.")}
-    else
-      {:noreply,
-       socket
-       |> Phoenix.LiveView.put_flash(:error, "Tab ini tidak boleh dibuang.")}
+      existing_soal_selidik = Map.get(existing_form_data, "soal_selidik", %{})
+
+      # Deep merge: preserve existing user input, then add new params
+      # This ensures user input is never lost
+      # Start with existing (to preserve all fields), then merge new params on top
+      merged_params = deep_merge_params(existing_soal_selidik, params)
+
+      # Merge soalan from categories (only if not already in params)
+      params_with_soalan = merge_soalan_from_categories(merged_params, socket.assigns.fr_categories, socket.assigns.nfr_categories)
+
+      # Ensure the params structure is complete (but preserve existing values)
+      final_params = ensure_complete_params(params_with_soalan, socket.assigns.fr_categories, socket.assigns.nfr_categories)
+
+      # Create form with the merged params - this will be used to render input values
+      form = to_form(final_params, as: :soal_selidik)
+      {:noreply, assign(socket, form: form)}
+    rescue
+      e ->
+        # Log error but don't crash - return current form state
+        require Logger
+        Logger.error("Error in validate: #{inspect(e)}")
+        {:noreply, socket}
     end
   end
 
   @impl true
-  def handle_event("validate", %{"soal_selidik" => params}, socket) do
-    # The PreserveFormData hook should send all form data in params
-    # But we still need to ensure soalan from categories is included
-    # Start with params (which should be complete from the hook)
-    params_with_soalan = merge_soalan_from_categories(params, socket.assigns.fr_categories, socket.assigns.nfr_categories)
-
-    # Use params_with_soalan (from current form + categories) as the single source of truth
-    # We no longer deep-merge with any existing params to avoid unintended data retention
-    # Ensure the params structure is complete
-    final_params = ensure_complete_params(params_with_soalan, socket.assigns.fr_categories, socket.assigns.nfr_categories)
-
-    form = to_form(final_params, as: :soal_selidik)
-    {:noreply, assign(socket, form: form)}
+  def handle_event("validate", _params, socket) do
+    # Fallback for validate events without soal_selidik params
+    {:noreply, socket}
   end
 
   @impl true
   def handle_event("save", %{"soal_selidik" => params}, socket) do
-    # Prepare data for saving
-    attrs = prepare_save_data(params, socket)
+    require Logger
 
-    result =
-      case socket.assigns.soal_selidik_id do
-        nil ->
-          # Create new
-          SoalSelidiks.create_soal_selidik(attrs, socket.assigns.current_scope)
+    # Check if current_scope exists
+    unless socket.assigns.current_scope && socket.assigns.current_scope.user do
+      {:noreply,
+       socket
+       |> Phoenix.LiveView.put_flash(:error, "Sesi anda telah tamat. Sila log masuk semula.")}
+    else
+      # Log incoming params for debugging
+      Logger.info("Save event received with params: #{inspect(params, limit: :infinity)}")
 
-        id ->
-          # Update existing
-          soal_selidik = SoalSelidiks.get_soal_selidik!(id, socket.assigns.current_scope)
-          SoalSelidiks.update_soal_selidik(soal_selidik, attrs)
+      # Prepare data for saving
+      attrs = prepare_save_data(params, socket)
+
+      # Add user_id to attrs for changeset validation
+      attrs = Map.put(attrs, :user_id, socket.assigns.current_scope.user.id)
+
+      # Log the attrs for debugging
+      Logger.info("Attempting to save soal selidik with attrs: #{inspect(attrs, limit: :infinity)}")
+      Logger.info("nama_sistem in attrs: #{inspect(Map.get(attrs, :nama_sistem))}")
+      Logger.info("nama_sistem key exists: #{inspect(Map.has_key?(attrs, :nama_sistem))}")
+
+      result =
+        case socket.assigns.soal_selidik_id do
+          nil ->
+            # Create new
+            SoalSelidiks.create_soal_selidik(attrs, socket.assigns.current_scope)
+
+          id ->
+            # Update existing
+            soal_selidik = SoalSelidiks.get_soal_selidik!(id, socket.assigns.current_scope)
+            SoalSelidiks.update_soal_selidik(soal_selidik, attrs)
+        end
+
+      case result do
+        {:ok, soal_selidik} ->
+          socket =
+            socket
+            |> assign(:soal_selidik_id, soal_selidik.id)
+            |> assign(:form, to_form(params, as: :soal_selidik))
+            |> Phoenix.LiveView.put_flash(:info, "Soal selidik telah disimpan dengan jayanya.")
+
+          {:noreply, socket}
+
+        {:error, changeset} ->
+          # Log the actual errors
+          Logger.error("Failed to save soal selidik. Errors: #{inspect(changeset.errors)}")
+          Logger.error("Changeset changes: #{inspect(changeset.changes)}")
+          Logger.error("Changeset data: #{inspect(changeset.data)}")
+
+          # Build detailed error message
+          error_message =
+            if changeset.errors != [] do
+              errors =
+                Enum.map(changeset.errors, fn {field, {msg, _}} ->
+                  "#{field}: #{msg}"
+                end)
+              "Ralat: #{Enum.join(errors, ", ")}"
+            else
+              "Ralat semasa menyimpan soal selidik. Sila cuba lagi."
+            end
+
+          socket =
+            socket
+            |> assign(:form, to_form(params, as: :soal_selidik))
+            |> Phoenix.LiveView.put_flash(:error, error_message)
+
+          {:noreply, socket}
       end
-
-    case result do
-      {:ok, soal_selidik} ->
-        socket =
-          socket
-          |> assign(:soal_selidik_id, soal_selidik.id)
-          |> assign(:form, to_form(params, as: :soal_selidik))
-          |> Phoenix.LiveView.put_flash(:info, "Soal selidik telah disimpan dengan jayanya.")
-
-        {:noreply, socket}
-
-      {:error, _changeset} ->
-        socket =
-          socket
-          |> assign(:form, to_form(params, as: :soal_selidik))
-          |> Phoenix.LiveView.put_flash(
-            :error,
-            "Ralat semasa menyimpan soal selidik. Sila cuba lagi."
-          )
-
-        {:noreply, socket}
     end
   end
 
   @impl true
   def handle_event("generate_pdf", _params, socket) do
-    nama_sistem =
-      Phoenix.HTML.Form.input_value(socket.assigns.form, :nama_sistem) ||
-        socket.assigns.system_name ||
-        "Sistem Pengurusan Projek Aplikasi (SPPA)"
-
-    dummy_data = Sppa.SoalSelidik.pdf_data(nama_sistem: nama_sistem)
-
     {:noreply,
       socket
-     |> assign(:show_pdf_modal, true)
-     |> assign(:pdf_data, dummy_data)}
+     |> assign(:show_pdf_modal, false)
+     |> assign(:pdf_data, nil)}
   end
 
   @impl true
@@ -336,6 +368,9 @@ defmodule SppaWeb.SoalSelidikLive do
 
   @impl true
   def handle_event("update_question_text", %{"soal_selidik" => soal_selidik_params} = params, socket) do
+    # This handler is kept for backward compatibility
+    # But now soalan input uses phx-change="validate" which handles form updates
+    # So we just update the categories to keep them in sync
     tab_type = Map.get(params, "tab_type")
     category_key = Map.get(params, "category_key")
     question_no = Map.get(params, "question_no")
@@ -367,8 +402,30 @@ defmodule SppaWeb.SoalSelidikLive do
         end
       end)
 
-    # Update form as well
-    updated_form = to_form(soal_selidik_params, as: :soal_selidik)
+    # Get existing form data to preserve other fields
+    existing_form_data =
+      case socket.assigns.form.source do
+        %{params: form_params} when is_map(form_params) ->
+          form_params
+        source when is_map(source) ->
+          source
+        _ ->
+          %{}
+      end
+
+    existing_soal_selidik = Map.get(existing_form_data, "soal_selidik", %{})
+
+    # Merge new params with existing to preserve all data
+    merged_params = deep_merge_params(existing_soal_selidik, soal_selidik_params)
+
+    # Merge soalan from categories
+    params_with_soalan = merge_soalan_from_categories(merged_params, socket.assigns.fr_categories, socket.assigns.nfr_categories)
+
+    # Ensure complete structure
+    final_params = ensure_complete_params(params_with_soalan, socket.assigns.fr_categories, socket.assigns.nfr_categories)
+
+    # Update form
+    updated_form = to_form(final_params, as: :soal_selidik)
 
     socket =
       case tab_type do
@@ -730,11 +787,74 @@ defmodule SppaWeb.SoalSelidikLive do
   # Ensure value is a map (for to_form compatibility)
   defp ensure_map(data) when is_map(data), do: data
 
+  defp load_project_info(params, socket, soal_selidik_id, initial_data) do
+    # Extract project_id from initial_data first
+    project_id_from_data = Map.get(initial_data, :project_id)
+
+    cond do
+      # If project_id is in params, load project directly
+      Map.has_key?(params, "project_id") ->
+        case Integer.parse(params["project_id"]) do
+          {project_id, _} ->
+            try do
+              Projects.get_project!(project_id, socket.assigns.current_scope)
+            rescue
+              Ecto.NoResultsError -> nil
+            end
+          :error -> nil
+        end
+
+      # If we have project_id in initial_data (from soal_selidik)
+      project_id_from_data != nil ->
+        try do
+          Projects.get_project!(project_id_from_data, socket.assigns.current_scope)
+        rescue
+          Ecto.NoResultsError -> nil
+        end
+
+      # If we have a soal_selidik_id, try to load project from it
+      soal_selidik_id != nil ->
+        try do
+          soal_selidik = SoalSelidiks.get_soal_selidik!(soal_selidik_id, socket.assigns.current_scope)
+          # Project should be preloaded
+          if Ecto.assoc_loaded?(soal_selidik.project) && soal_selidik.project do
+            soal_selidik.project
+          else
+            # If not preloaded, load it separately
+            if soal_selidik.project_id do
+              try do
+                Projects.get_project!(soal_selidik.project_id, socket.assigns.current_scope)
+              rescue
+                Ecto.NoResultsError -> nil
+              end
+            else
+              nil
+            end
+          end
+        rescue
+          Ecto.NoResultsError -> nil
+        end
+
+      # Default: no project
+      true -> nil
+    end
+  end
   # Load initial data from database or use defaults
   defp load_initial_data(params, socket) do
     case Map.get(params, "id") do
       nil ->
         # No ID provided, use defaults
+        # Check if project_id is in params
+        project_id =
+          if Map.has_key?(params, "project_id") do
+            case Integer.parse(params["project_id"]) do
+              {id, _} -> id
+              :error -> nil
+            end
+          else
+            nil
+          end
+
         {nil,
          %{
            document_id: "JPKN-BPA-01/B1",
@@ -742,7 +862,8 @@ defmodule SppaWeb.SoalSelidikLive do
            tabs: nil,
            fr_categories: nil,
            nfr_categories: nil,
-           form_data: %{}
+           form_data: %{"nama_sistem" => ""},
+           project_id: project_id
          }}
 
       id ->
@@ -769,6 +890,13 @@ defmodule SppaWeb.SoalSelidikLive do
                 |> Map.put("fr", data.fr_data)
                 |> Map.put("nfr", data.nfr_data)
 
+              # Get project_id from soal_selidik if available
+              project_id = if Ecto.assoc_loaded?(soal_selidik.project) && soal_selidik.project do
+                soal_selidik.project.id
+              else
+                soal_selidik.project_id
+              end
+
               {id_int,
                %{
                  document_id: data.document_id,
@@ -776,11 +904,23 @@ defmodule SppaWeb.SoalSelidikLive do
                  tabs: data.tabs,
                  fr_categories: data.fr_categories,
                  nfr_categories: data.nfr_categories,
-                 form_data: form_data
+                 form_data: form_data,
+                 project_id: project_id
                }}
             rescue
               Ecto.NoResultsError ->
                 # ID not found, use defaults
+                # Check if project_id is in params
+                project_id =
+                  if Map.has_key?(params, "project_id") do
+                    case Integer.parse(params["project_id"]) do
+                      {id, _} -> id
+                      :error -> nil
+                    end
+                  else
+                    nil
+                  end
+
                 {nil,
                  %{
                    document_id: "JPKN-BPA-01/B1",
@@ -788,12 +928,24 @@ defmodule SppaWeb.SoalSelidikLive do
                    tabs: nil,
                    fr_categories: nil,
                    nfr_categories: nil,
-                   form_data: %{}
+                   form_data: %{},
+                   project_id: project_id
                  }}
             end
 
           :error ->
             # Invalid ID, use defaults
+            # Check if project_id is in params
+            project_id =
+              if Map.has_key?(params, "project_id") do
+                case Integer.parse(params["project_id"]) do
+                  {id, _} -> id
+                  :error -> nil
+                end
+              else
+                nil
+              end
+
             {nil,
              %{
                document_id: "JPKN-BPA-01/B1",
@@ -801,7 +953,8 @@ defmodule SppaWeb.SoalSelidikLive do
                tabs: nil,
                fr_categories: nil,
                nfr_categories: nil,
-               form_data: %{}
+               form_data: %{},
+               project_id: project_id
              }}
         end
     end
@@ -809,8 +962,50 @@ defmodule SppaWeb.SoalSelidikLive do
 
   # Prepare data for saving to database
   defp prepare_save_data(params, socket) do
-    # Extract basic fields
-    nama_sistem = Map.get(params, "nama_sistem", "") || socket.assigns.system_name || ""
+    require Logger
+
+    # Log all params keys for debugging
+    Logger.info("prepare_save_data params keys: #{inspect(Map.keys(params))}")
+    Logger.info("prepare_save_data full params: #{inspect(params, limit: :infinity)}")
+
+    # Extract basic fields - trim whitespace
+    # Priority: params -> socket.assigns.system_name -> form data -> empty string (let validation catch it)
+    nama_sistem_raw = Map.get(params, "nama_sistem")
+    nama_sistem_from_assigns = socket.assigns[:system_name]
+
+    # Also check form data as fallback (in case params don't have it)
+    nama_sistem_from_form =
+      case socket.assigns.form do
+        %{source: %{params: form_params}} when is_map(form_params) ->
+          Map.get(form_params, "nama_sistem")
+        %{source: form_source} when is_map(form_source) ->
+          Map.get(form_source, "nama_sistem")
+        _ ->
+          nil
+      end
+
+    nama_sistem =
+      cond do
+        # If in params (even if empty string), use it after trimming
+        Map.has_key?(params, "nama_sistem") ->
+          (nama_sistem_raw || "") |> String.trim()
+        # Fallback to assigns if available
+        nama_sistem_from_assigns && nama_sistem_from_assigns != "" ->
+          nama_sistem_from_assigns |> String.trim()
+        # Fallback to form data
+        nama_sistem_from_form && nama_sistem_from_form != "" ->
+          nama_sistem_from_form |> String.trim()
+        # Otherwise empty string - validate_required will catch it
+        true ->
+          ""
+      end
+
+    # Log for debugging
+    Logger.info("nama_sistem from params: #{inspect(nama_sistem_raw)}")
+    Logger.info("nama_sistem from assigns: #{inspect(nama_sistem_from_assigns)}")
+    Logger.info("nama_sistem from form: #{inspect(nama_sistem_from_form)}")
+    Logger.info("nama_sistem final (after trim): #{inspect(nama_sistem)}")
+
     document_id = socket.assigns.document_id || "JPKN-BPA-01/B1"
 
     # Extract disediakan_oleh
@@ -824,21 +1019,70 @@ defmodule SppaWeb.SoalSelidikLive do
     custom_tabs = Map.get(params, "custom_tabs", %{})
 
     # Get categories and tabs from assigns
-    fr_categories = socket.assigns.fr_categories || []
-    nfr_categories = socket.assigns.nfr_categories || []
-    tabs = socket.assigns.tabs || []
+    # Convert lists to maps for database storage (database expects :map type)
+    fr_categories_list = socket.assigns.fr_categories || []
+    nfr_categories_list = socket.assigns.nfr_categories || []
+    tabs_list = socket.assigns.tabs || []
+
+    # Convert lists to maps: use category key as map key
+    fr_categories_map =
+      fr_categories_list
+      |> Enum.map(fn category -> {category.key, category} end)
+      |> Map.new()
+
+    nfr_categories_map =
+      nfr_categories_list
+      |> Enum.map(fn category -> {category.key, category} end)
+      |> Map.new()
+
+    # Convert tabs list to map: use tab id as map key
+    tabs_map =
+      tabs_list
+      |> Enum.map(fn tab -> {tab.id, tab} end)
+      |> Map.new()
 
     %{
       nama_sistem: nama_sistem,
       document_id: document_id,
-      fr_categories: fr_categories,
-      nfr_categories: nfr_categories,
+      fr_categories: fr_categories_map,
+      nfr_categories: nfr_categories_map,
       fr_data: fr_data,
       nfr_data: nfr_data,
       disediakan_oleh: disediakan_oleh,
       custom_tabs: custom_tabs,
-      tabs: tabs
+      tabs: tabs_map
     }
+  end
+
+  # Deep merge params to preserve existing user input
+  # This ensures that when new params come in, existing values are not lost
+  defp deep_merge_params(existing, new) do
+    # Start with existing, then merge new on top
+    # This way new values (user input) take precedence, but existing values are preserved
+    Map.merge(existing, new, fn
+      _key, existing_val, new_val when is_map(existing_val) and is_map(new_val) ->
+        # Recursively merge nested maps
+        deep_merge_params(existing_val, new_val)
+      _key, existing_val, _new_val when is_map(existing_val) ->
+        # Existing is map but new is not - keep existing
+        existing_val
+      _key, _existing_val, new_val when is_map(new_val) ->
+        # New is map but existing is not - use new
+        new_val
+      _key, existing_val, new_val ->
+        # Both are simple values - prefer new if not empty, otherwise keep existing
+        cond do
+          # If new value is not empty, use it (user just typed this)
+          new_val != "" && new_val != nil ->
+            new_val
+          # If existing value exists and new is empty, keep existing (preserve previous input)
+          existing_val != "" && existing_val != nil ->
+            existing_val
+          # Otherwise use new value
+          true ->
+            new_val
+        end
+    end)
   end
 
   # Ensure params structure is complete with all required keys
@@ -861,12 +1105,9 @@ defmodule SppaWeb.SoalSelidikLive do
         updated_category_params =
           Enum.reduce(category.questions || [], category_params, fn question, cat_acc ->
             question_no = to_string(question.no)
-            # Only add if doesn't exist, preserve existing values
-            if Map.has_key?(cat_acc, question_no) do
-              cat_acc
-            else
-              Map.put(cat_acc, question_no, %{})
-            end
+            # Preserve existing values, only add empty map if doesn't exist
+            existing_question_params = Map.get(cat_acc, question_no, %{})
+            Map.put(cat_acc, question_no, existing_question_params)
           end)
 
         updated_fr_params = Map.put(fr_params, category_key, updated_category_params)
@@ -887,12 +1128,9 @@ defmodule SppaWeb.SoalSelidikLive do
         updated_category_params =
           Enum.reduce(category.questions || [], category_params, fn question, cat_acc ->
             question_no = to_string(question.no)
-            # Only add if doesn't exist, preserve existing values
-            if Map.has_key?(cat_acc, question_no) do
-              cat_acc
-            else
-              Map.put(cat_acc, question_no, %{})
-            end
+            # Preserve existing values, only add empty map if doesn't exist
+            existing_question_params = Map.get(cat_acc, question_no, %{})
+            Map.put(cat_acc, question_no, existing_question_params)
           end)
 
         updated_nfr_params = Map.put(nfr_params, category_key, updated_category_params)

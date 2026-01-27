@@ -113,15 +113,12 @@
                   Soal Selidik Kajian Keperluan Pembangunan Aplikasi
                 </h1>
                 
-                <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
-                  <span>Nama Sistem :</span>
-                  <input
-                    type="text"
-                    name="soal_selidik[nama_sistem]"
-                    value={Phoenix.HTML.Form.input_value(@form, :nama_sistem) || @system_name}
-                    class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Masukkan Nama Sistem"
-                  />
+                <%!-- Project Name --%>
+                <div :if={@project_name && @project_name != ""} class="mb-4">
+                  <div class="text-base font-semibold text-gray-800 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                    <span class="text-gray-600">Projek:</span>
+                    <span class="ml-2 text-blue-700">{@project_name}</span>
+                  </div>
                 </div>
               </div>
               
@@ -169,6 +166,17 @@
                 phx-hook="PreserveFormData"
                 class="space-y-6"
               >
+                <%!-- Nama Sistem Field - Must be inside form to be submitted --%>
+                <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
+                  <span>Nama Sistem :</span>
+                  <.input
+                    field={@form[:nama_sistem]}
+                    type="text"
+                    class="flex-1"
+                    placeholder="Masukkan Nama Sistem"
+                    phx-debounce="300"
+                  />
+                </div>
                 <%!-- Functional Requirements Tab --%>
                 <div class={["space-y-4", if(@active_tab != "fr", do: "hidden")]}>
                   <details

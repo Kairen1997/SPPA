@@ -201,7 +201,6 @@ defmodule SppaWeb.ProjekLive do
            |> assign(:projects, [])
            |> assign(:current_tab, "Soal Selidik")
            |> assign(:soal_selidik_document, get_soal_selidik_document(project.nama))
-           |> assign(:soal_selidik_pdf_data, Sppa.SoalSelidik.pdf_data(nama_sistem: project_name))
            |> assign(
              :analisis_pdf_data,
              Sppa.AnalisisDanRekabentuk.pdf_data(

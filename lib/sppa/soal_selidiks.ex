@@ -4,7 +4,6 @@ defmodule Sppa.SoalSelidiks do
   """
 
   import Ecto.Query, warn: false
-  import Ecto.Changeset
   alias Sppa.Repo
   alias Sppa.SoalSelidiks.SoalSelidik
 
@@ -47,9 +46,11 @@ defmodule Sppa.SoalSelidiks do
   Creates a soal_selidik.
   """
   def create_soal_selidik(attrs, current_scope) do
+    # user_id should already be in attrs, but ensure it's set if missing
+    attrs = Map.put_new(attrs, :user_id, current_scope.user.id)
+
     %SoalSelidik{}
     |> SoalSelidik.changeset(attrs)
-    |> put_change(:user_id, current_scope.user.id)
     |> Repo.insert()
   end
 
