@@ -5,7 +5,6 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
-
   @impl true
   def mount(_params, _session, socket) do
     # Verify user has required role (defense in depth - router already checks this)
@@ -161,6 +160,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   @impl true
   def handle_event("go_to_step", %{"step" => step}, socket) do
     step_num = String.to_integer(step)
+
     if step_num >= 1 and step_num <= 4 do
       {:noreply, assign(socket, :current_step, step_num)}
     else
@@ -184,19 +184,22 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     current_step = socket.assigns.current_step || 1
     max_step = 4
 
-    socket = if current_step < max_step do
-      new_step = current_step + 1
-      # Update selected_module if we're going to step 3
-      socket = if new_step == 3 and socket.assigns.selected_module_id do
-        selected_module = get_selected_module_by_id(socket, socket.assigns.selected_module_id)
-        assign(socket, :selected_module, selected_module)
+    socket =
+      if current_step < max_step do
+        new_step = current_step + 1
+        # Update selected_module if we're going to step 3
+        socket =
+          if new_step == 3 and socket.assigns.selected_module_id do
+            selected_module = get_selected_module_by_id(socket, socket.assigns.selected_module_id)
+            assign(socket, :selected_module, selected_module)
+          else
+            socket
+          end
+
+        assign(socket, :current_step, new_step)
       else
         socket
       end
-      assign(socket, :current_step, new_step)
-    else
-      socket
-    end
 
     {:noreply, socket}
   end
@@ -227,7 +230,10 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     # Later, this will save to the database
     socket =
       socket
-      |> Phoenix.LiveView.put_flash(:info, "Borang verifikasi spesifikasi aplikasi telah disimpan dengan jayanya.")
+      |> Phoenix.LiveView.put_flash(
+        :info,
+        "Borang verifikasi spesifikasi aplikasi telah disimpan dengan jayanya."
+      )
       |> assign(:form, to_form(params, as: :analisis_dan_rekabentuk))
 
     {:noreply, socket}
@@ -288,18 +294,20 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         end
       end)
 
-    socket = socket
+    socket =
+      socket
       |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
 
     # Update selected_module if it's the one being edited
-    socket = if socket.assigns.selected_module_id == module_id do
-      selected_module = get_selected_module_by_id(socket, module_id)
-      assign(socket, :selected_module, selected_module)
-    else
-      socket
-    end
+    socket =
+      if socket.assigns.selected_module_id == module_id do
+        selected_module = get_selected_module_by_id(socket, module_id)
+        assign(socket, :selected_module, selected_module)
+      else
+        socket
+      end
 
     {:noreply, socket}
   end
@@ -325,18 +333,20 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         end
       end)
 
-    socket = socket
+    socket =
+      socket
       |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
 
     # Update selected_module if it's the one being edited
-    socket = if socket.assigns.selected_module_id == module_id do
-      selected_module = get_selected_module_by_id(socket, module_id)
-      assign(socket, :selected_module, selected_module)
-    else
-      socket
-    end
+    socket =
+      if socket.assigns.selected_module_id == module_id do
+        selected_module = get_selected_module_by_id(socket, module_id)
+        assign(socket, :selected_module, selected_module)
+      else
+        socket
+      end
 
     {:noreply, socket}
   end
@@ -354,10 +364,11 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         end
       end)
 
-    {:noreply, socket
-      |> stream(:modules, updated_modules, reset: true)
-      |> assign(:modules_list, updated_modules)
-      |> update_summary()}
+    {:noreply,
+     socket
+     |> stream(:modules, updated_modules, reset: true)
+     |> assign(:modules_list, updated_modules)
+     |> update_summary()}
   end
 
   @impl true
@@ -378,24 +389,27 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
                 func
               end
             end)
+
           Map.put(module, :functions, updated_functions)
         else
           module
         end
       end)
 
-    socket = socket
+    socket =
+      socket
       |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
 
     # Update selected_module if it's the one being edited
-    socket = if socket.assigns.selected_module_id == module_id do
-      selected_module = get_selected_module_by_id(socket, module_id)
-      assign(socket, :selected_module, selected_module)
-    else
-      socket
-    end
+    socket =
+      if socket.assigns.selected_module_id == module_id do
+        selected_module = get_selected_module_by_id(socket, module_id)
+        assign(socket, :selected_module, selected_module)
+      else
+        socket
+      end
 
     {:noreply, socket}
   end
@@ -422,20 +436,26 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
                 func
               end
             end)
+
           Map.put(module, :functions, updated_functions)
         else
           module
         end
       end)
 
-    {:noreply, socket
-      |> stream(:modules, updated_modules, reset: true)
-      |> assign(:modules_list, updated_modules)
-      |> update_summary()}
+    {:noreply,
+     socket
+     |> stream(:modules, updated_modules, reset: true)
+     |> assign(:modules_list, updated_modules)
+     |> update_summary()}
   end
 
   @impl true
-  def handle_event("remove_sub_function", %{"module_id" => module_id, "func_id" => func_id, "sub_func_id" => sub_func_id}, socket) do
+  def handle_event(
+        "remove_sub_function",
+        %{"module_id" => module_id, "func_id" => func_id, "sub_func_id" => sub_func_id},
+        socket
+      ) do
     updated_modules =
       get_modules_from_stream(socket)
       |> Enum.map(fn module ->
@@ -449,24 +469,27 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
                 func
               end
             end)
+
           Map.put(module, :functions, updated_functions)
         else
           module
         end
       end)
 
-    socket = socket
+    socket =
+      socket
       |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
 
     # Update selected_module if it's the one being edited
-    socket = if socket.assigns.selected_module_id == module_id do
-      selected_module = get_selected_module_by_id(socket, module_id)
-      assign(socket, :selected_module, selected_module)
-    else
-      socket
-    end
+    socket =
+      if socket.assigns.selected_module_id == module_id do
+        selected_module = get_selected_module_by_id(socket, module_id)
+        assign(socket, :selected_module, selected_module)
+      else
+        socket
+      end
 
     {:noreply, socket}
   end
@@ -493,21 +516,24 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
                       sub_func
                     end
                   end)
+
                 Map.put(func, :sub_functions, updated_sub_functions)
               else
                 func
               end
             end)
+
           Map.put(module, :functions, updated_functions)
         else
           module
         end
       end)
 
-    {:noreply, socket
-      |> stream(:modules, updated_modules, reset: true)
-      |> assign(:modules_list, updated_modules)
-      |> update_summary()}
+    {:noreply,
+     socket
+     |> stream(:modules, updated_modules, reset: true)
+     |> assign(:modules_list, updated_modules)
+     |> update_summary()}
   end
 
   # `Sppa.AnalisisDanRekabentuk.pdf_data/1` now owns preview generation.

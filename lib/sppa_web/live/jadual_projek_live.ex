@@ -182,8 +182,10 @@ defmodule SppaWeb.JadualProjekLive do
     case user_role do
       "pembangun sistem" ->
         Enum.filter(all_projects, fn p -> p.developer_id == current_scope.user.id end)
+
       "pengurus projek" ->
         Enum.filter(all_projects, fn p -> p.project_manager_id == current_scope.user.id end)
+
       _ ->
         all_projects
     end
@@ -191,7 +193,14 @@ defmodule SppaWeb.JadualProjekLive do
 
   # Prepare data for Gantt chart
   defp prepare_gantt_data(projects) when is_list(projects) and length(projects) == 0 do
-    %{projects: [], min_date: Date.utc_today(), max_date: Date.utc_today(), total_days: 0, today_offset: 0, today_percent: 0}
+    %{
+      projects: [],
+      min_date: Date.utc_today(),
+      max_date: Date.utc_today(),
+      total_days: 0,
+      today_offset: 0,
+      today_percent: 0
+    }
   end
 
   defp prepare_gantt_data(projects) do
@@ -217,14 +226,22 @@ defmodule SppaWeb.JadualProjekLive do
       |> Enum.map(fn project ->
         start_offset = Date.diff(project.tarikh_mula, min_date)
         duration = Date.diff(project.tarikh_siap, project.tarikh_mula)
-        progress = calculate_progress(project.tarikh_mula, project.tarikh_siap, project.fasa, project.status, today)
+
+        progress =
+          calculate_progress(
+            project.tarikh_mula,
+            project.tarikh_siap,
+            project.fasa,
+            project.status,
+            today
+          )
 
         Map.merge(project, %{
           start_offset: start_offset,
           duration: duration,
           progress: progress,
-          start_percent: if(total_days > 0, do: (start_offset / total_days) * 100, else: 0),
-          width_percent: if(total_days > 0, do: (duration / total_days) * 100, else: 0)
+          start_percent: if(total_days > 0, do: start_offset / total_days * 100, else: 0),
+          width_percent: if(total_days > 0, do: duration / total_days * 100, else: 0)
         })
       end)
 
@@ -234,7 +251,8 @@ defmodule SppaWeb.JadualProjekLive do
       max_date: max_date,
       total_days: total_days,
       today_offset: Date.diff(today, min_date),
-      today_percent: if(total_days > 0, do: (Date.diff(today, min_date) / total_days) * 100, else: 0)
+      today_percent:
+        if(total_days > 0, do: Date.diff(today, min_date) / total_days * 100, else: 0)
     }
   end
 
@@ -255,14 +273,15 @@ defmodule SppaWeb.JadualProjekLive do
     end
   end
 
-
   # Generate month labels for timeline
   defp generate_month_labels(min_date, max_date) do
     current = %Date{year: min_date.year, month: min_date.month, day: 1}
     end_date = %Date{year: max_date.year, month: max_date.month, day: 1}
     total_days = Date.diff(max_date, min_date)
 
-    months = generate_month_labels_recursive(current, end_date, min_date, max_date, total_days, [])
+    months =
+      generate_month_labels_recursive(current, end_date, min_date, max_date, total_days, [])
+
     months
   end
 
@@ -274,7 +293,7 @@ defmodule SppaWeb.JadualProjekLive do
       days_in_month = Date.days_in_month(current)
 
       # Calculate width percentage
-      width_percent = if total_days > 0, do: (days_in_month / total_days) * 100, else: 0
+      width_percent = if total_days > 0, do: days_in_month / total_days * 100, else: 0
 
       month_data = %{
         month: month_name,
@@ -289,7 +308,14 @@ defmodule SppaWeb.JadualProjekLive do
           %Date{year: current.year, month: current.month + 1, day: 1}
         end
 
-      generate_month_labels_recursive(next_month, end_date, min_date, max_date, total_days, acc ++ [month_data])
+      generate_month_labels_recursive(
+        next_month,
+        end_date,
+        min_date,
+        max_date,
+        total_days,
+        acc ++ [month_data]
+      )
     else
       acc
     end

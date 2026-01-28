@@ -21,14 +21,15 @@ defmodule SppaWeb.Router do
   # scope "/api", SppaWeb do
   #   pipe_through :api
   # end
-# ================================
-# Internal API (System-to-System)
-# ================================
+  # ================================
+  # Internal API (System-to-System)
+  # ================================
   scope "/internal", SppaWeb.Internal do
     pipe_through :api
 
     post "/approved-projects", ApprovedProjectController, :create
   end
+
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:sppa, :dev_routes) do
     # If you want to use the LiveDashboard in production, you should put
@@ -37,6 +38,7 @@ defmodule SppaWeb.Router do
     # you can use Plug.BasicAuth to set up some basic authentication
     # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
+
     scope "/dev" do
       pipe_through :browser
 
@@ -57,6 +59,7 @@ defmodule SppaWeb.Router do
       live "/projek", ProjekLive, :index
       live "/projek/:id", ProjekLive, :show
       live "/projek/:id/details", ProjectDetailsLive, :show
+      live "/projek/:id/soal-selidik", ProjekTabNavigationLive, :show
       live "/soal-selidik", SoalSelidikLive, :index
       live "/senarai-projek", PengurusProjekLive, :index
       live "/senarai-projek-diluluskan", ProjectListLive, :index

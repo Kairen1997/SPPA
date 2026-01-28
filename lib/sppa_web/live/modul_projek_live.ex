@@ -117,6 +117,7 @@ defmodule SppaWeb.ModulProjekLive do
   def handle_event("open_new_task_modal", _params, socket) do
     # Pre-fill project_id in the form
     form_data = %{"project_id" => Integer.to_string(socket.assigns.project_id)}
+
     {:noreply,
      socket
      |> assign(:show_new_task_modal, true)
@@ -140,7 +141,8 @@ defmodule SppaWeb.ModulProjekLive do
       form_data = %{
         "title" => task.title,
         "description" => task.description || "",
-        "developer_id" => if(task.developer_id, do: Integer.to_string(task.developer_id), else: ""),
+        "developer_id" =>
+          if(task.developer_id, do: Integer.to_string(task.developer_id), else: ""),
         "priority" => task.priority || "medium",
         "status" => task.status || "in_progress",
         "fasa" => task.fasa || "",
@@ -293,6 +295,7 @@ defmodule SppaWeb.ModulProjekLive do
           task
         end
       end)
+
     sorted_tasks = sort_tasks_by_phase_and_version(updated_tasks)
 
     {:noreply,
@@ -331,6 +334,7 @@ defmodule SppaWeb.ModulProjekLive do
           task
         end
       end)
+
     # Tasks remain sorted after status update since we're not changing phase/version
     sorted_tasks = sort_tasks_by_phase_and_version(updated_tasks)
 
@@ -447,7 +451,8 @@ defmodule SppaWeb.ModulProjekLive do
       %{
         id: 7,
         title: "Peningkatan Pengesahan Pengguna",
-        description: "Menambah peningkatan pada sistem pengesahan pengguna termasuk 2FA dan pengesahan email",
+        description:
+          "Menambah peningkatan pada sistem pengesahan pengguna termasuk 2FA dan pengesahan email",
         developer_id: 1,
         developer_name: "Ali bin Hassan",
         priority: "high",
@@ -462,7 +467,8 @@ defmodule SppaWeb.ModulProjekLive do
       %{
         id: 8,
         title: "Penambahan Fitur Keselamatan",
-        description: "Menambah lapisan keselamatan tambahan termasuk rate limiting dan audit logging",
+        description:
+          "Menambah lapisan keselamatan tambahan termasuk rate limiting dan audit logging",
         developer_id: 2,
         developer_name: "Ahmad bin Ismail",
         priority: "high",

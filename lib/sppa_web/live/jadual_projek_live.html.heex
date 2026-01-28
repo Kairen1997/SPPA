@@ -9,30 +9,31 @@
       phx-click="close_sidebar"
     >
     </div>
-    <%!-- Sidebar --%>
+     <%!-- Sidebar --%>
     <.dashboard_sidebar
       sidebar_open={@sidebar_open}
       dashboard_path={~p"/dashboard-pp"}
       logo_src={~p"/images/logojpkn.png"}
       current_scope={@current_scope}
       current_path="/jadual-projek"
-    />
-    <%!-- Main Content --%>
+    /> <%!-- Main Content --%>
     <div class="flex-1 flex flex-col overflow-hidden">
       <%!-- Header --%>
       <header class="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 border-b border-blue-800/50 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-xl relative gap-2 sm:gap-4">
-        <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0" style="max-width: min(30%, 200px);">
+        <div
+          class="flex items-center gap-2 sm:gap-4 flex-shrink-0"
+          style="max-width: min(30%, 200px);"
+        >
           <button
             phx-click="toggle_sidebar"
             class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
           >
             <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-          <.header_logos />
+          </button> <.header_logos />
         </div>
-        <div class="flex-1 flex justify-center min-w-0">
-          <.system_title />
-        </div>
+        
+        <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
+        
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <.header_actions
             notifications_open={@notifications_open}
@@ -43,8 +44,7 @@
           />
         </div>
       </header>
-
-      <%!-- Main Content Area --%>
+       <%!-- Main Content Area --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <%!-- Page Title Section --%>
@@ -54,19 +54,23 @@
                 <div class="p-3 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg shadow-md">
                   <.icon name="hero-calendar-days" class="w-8 h-8 text-white" />
                 </div>
+                
                 <div>
                   <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Jadual Projek</h1>
+                  
                   <p class="text-lg text-gray-600 mt-1">Pengurusan jadual dan timeline projek</p>
                 </div>
               </div>
+              
               <div class="mt-4 pt-4 border-t border-gray-200">
                 <p class="text-sm text-gray-600 leading-relaxed">
-                  <span class="font-semibold text-gray-800">Panduan:</span> Lihat dan urus jadual projek, timeline, dan milestone penting untuk semua projek yang sedang dijalankan.
+                  <span class="font-semibold text-gray-800">Panduan:</span>
+                  Lihat dan urus jadual projek, timeline, dan milestone penting untuk semua projek yang sedang dijalankan.
                 </p>
               </div>
             </div>
           </div>
-
+          
           <%= if @gantt_data && length(@gantt_data.projects) > 0 do %>
             <%!-- Gantt Chart Section --%>
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
@@ -74,13 +78,18 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <div class="w-2 h-2 rounded-full bg-blue-600"></div>
+                    
                     <h2 class="text-xl font-bold text-gray-900">Gantt Chart Projek</h2>
                   </div>
+                  
                   <div class="flex items-center gap-4">
                     <div class="text-sm text-gray-600">
-                      <span class="font-semibold">Tempoh:</span> 
-                      {Calendar.strftime(@gantt_data.min_date, "%d/%m/%Y")} - {Calendar.strftime(@gantt_data.max_date, "%d/%m/%Y")}
+                      <span class="font-semibold">Tempoh:</span> {Calendar.strftime(
+                        @gantt_data.min_date,
+                        "%d/%m/%Y"
+                      )} - {Calendar.strftime(@gantt_data.max_date, "%d/%m/%Y")}
                     </div>
+                    
                     <%= if @is_developer do %>
                       <button
                         type="button"
@@ -94,18 +103,23 @@
                   </div>
                 </div>
               </div>
+              
               <div class="p-6 overflow-x-auto">
                 <%!-- Gantt Chart Container --%>
                 <div class="gantt-container" style="min-width: 100%;">
                   <%!-- Timeline Header --%>
                   <div class="mb-4">
                     <div class="flex border-b-2 border-gray-300 pb-2" style="min-width: 1200px;">
-                      <div class="w-64 flex-shrink-0 font-semibold text-gray-700">Nama Projek</div>
+                      <div class="w-64 flex-shrink-0 font-semibold text-gray-700">
+                        Nama Projek
+                      </div>
+                      
                       <div class="flex-1 relative">
                         <div class="flex justify-between text-xs text-gray-600">
                           <%= for month <- @month_labels do %>
                             <div class="text-center" style="width: {month.width_percent}%;">
                               <div class="font-semibold">{month.month}</div>
+                              
                               <div class="text-gray-500">{month.year}</div>
                             </div>
                           <% end %>
@@ -113,34 +127,38 @@
                       </div>
                     </div>
                   </div>
-
-                  <%!-- Today Indicator Line --%>
+                   <%!-- Today Indicator Line --%>
                   <div class="relative mb-2" style="min-width: 1200px;">
-                    <div 
+                    <div
                       class="absolute h-full w-0.5 bg-red-500 z-10"
                       style="left: calc(256px + {@gantt_data.today_percent}%);"
                       title={"Hari Ini: #{Calendar.strftime(Date.utc_today(), "%d/%m/%Y")}"}
                     >
-                      <div class="absolute -top-2 -left-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-md"></div>
+                      <div class="absolute -top-2 -left-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-md">
+                      </div>
                     </div>
-                    <div 
+                    
+                    <div
                       class="absolute -top-6 text-xs font-semibold text-red-600 whitespace-nowrap"
                       style="left: calc(256px + {@gantt_data.today_percent}% - 30px);"
                     >
                       Hari Ini
                     </div>
                   </div>
-
-                  <%!-- Project Bars --%>
+                   <%!-- Project Bars --%>
                   <div class="space-y-3" style="min-width: 1200px;">
                     <%= for {project, index} <- Enum.with_index(@gantt_data.projects) do %>
                       <div class="flex items-center h-12">
                         <%!-- Project Name --%>
                         <div class="w-64 flex-shrink-0 pr-4">
                           <div class="flex items-center gap-2">
-                            <div class="font-medium text-gray-900 truncate flex-1" title={project.nama}>
+                            <div
+                              class="font-medium text-gray-900 truncate flex-1"
+                              title={project.nama}
+                            >
                               {project.nama}
                             </div>
+                            
                             <%= if @is_developer do %>
                               <div class="flex items-center gap-1">
                                 <button
@@ -165,22 +183,22 @@
                               </div>
                             <% end %>
                           </div>
+                          
                           <div class="text-xs text-gray-500">
                             {project.fasa} • {project.status}
                           </div>
                         </div>
-                        
-                        <%!-- Gantt Bar Area --%>
+                         <%!-- Gantt Bar Area --%>
                         <div class="flex-1 relative h-full">
                           <div class="relative h-full">
                             <%!-- Background Bar --%>
-                            <div 
+                            <div
                               class="absolute h-6 rounded-md opacity-20"
                               style={"left: #{project.start_percent}%; width: #{project.width_percent}%; background-color: #{@get_status_color.(project.status)};"}
-                            ></div>
-                            
-                            <%!-- Progress Bar --%>
-                            <div 
+                            >
+                            </div>
+                             <%!-- Progress Bar --%>
+                            <div
                               class="absolute h-6 rounded-md transition-all duration-300"
                               style={[
                                 "left: #{project.start_percent}%; width: #{project.width_percent}%;",
@@ -190,32 +208,32 @@
                               title={"#{project.nama}\nTarikh: #{Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")} - #{Calendar.strftime(project.tarikh_siap, "%d/%m/%Y")}\nKemajuan: #{project.progress}%"}
                             >
                               <%!-- Progress Indicator --%>
-                              <div 
+                              <div
                                 class="absolute top-0 left-0 h-full bg-gradient-to-r from-transparent to-white/30 rounded-md"
                                 style="width: {project.progress}%;"
-                              ></div>
-                              
-                              <%!-- Project Label on Bar --%>
+                              >
+                              </div>
+                               <%!-- Project Label on Bar --%>
                               <div class="absolute inset-0 flex items-center justify-center">
                                 <span class="text-xs font-semibold text-white drop-shadow-md px-2 truncate">
                                   {project.progress}%
                                 </span>
                               </div>
                             </div>
-                            
-                            <%!-- Start Date Marker --%>
-                            <div 
+                             <%!-- Start Date Marker --%>
+                            <div
                               class="absolute w-2 h-2 bg-blue-600 rounded-full border-2 border-white shadow-sm -top-1"
                               style="left: calc({@project.start_percent}% - 4px);"
                               title={"Mula: #{Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}"}
-                            ></div>
-                            
-                            <%!-- End Date Marker --%>
-                            <div 
+                            >
+                            </div>
+                             <%!-- End Date Marker --%>
+                            <div
                               class="absolute w-2 h-2 bg-red-600 rounded-full border-2 border-white shadow-sm -top-1"
                               style="left: calc({@project.start_percent}% + {@project.width_percent}% - 4px);"
                               title={"Siap: #{Calendar.strftime(project.tarikh_siap, "%d/%m/%Y")}"}
-                            ></div>
+                            >
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -224,23 +242,28 @@
                 </div>
               </div>
             </div>
-
-            <%!-- Timeline View Section --%>
+             <%!-- Timeline View Section --%>
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
               <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center gap-3">
                   <div class="w-2 h-2 rounded-full bg-indigo-600"></div>
+                  
                   <h2 class="text-xl font-bold text-gray-900">Timeline Projek</h2>
                 </div>
               </div>
+              
               <div class="p-6">
                 <div class="space-y-6">
                   <%= for project <- @gantt_data.projects do %>
-                    <div class="border-l-4 pl-6 pb-6" style={"border-color: #{@get_status_color.(project.status)};"}>
+                    <div
+                      class="border-l-4 pl-6 pb-6"
+                      style={"border-color: #{@get_status_color.(project.status)};"}
+                    >
                       <div class="flex items-start justify-between mb-2">
                         <div class="flex-1">
                           <div class="flex items-center gap-2 mb-1">
                             <h3 class="text-lg font-semibold text-gray-900">{project.nama}</h3>
+                            
                             <%= if @is_developer do %>
                               <div class="flex items-center gap-1">
                                 <button
@@ -265,17 +288,20 @@
                               </div>
                             <% end %>
                           </div>
+                          
                           <div class="flex items-center gap-4 text-sm text-gray-600 mb-2">
                             <span class="flex items-center gap-1">
-                              <.icon name="hero-calendar" class="w-4 h-4" />
-                              {Calendar.strftime(project.tarikh_mula, "%d %b %Y")} - {Calendar.strftime(project.tarikh_siap, "%d %b %Y")}
+                              <.icon name="hero-calendar" class="w-4 h-4" /> {Calendar.strftime(
+                                project.tarikh_mula,
+                                "%d %b %Y"
+                              )} - {Calendar.strftime(project.tarikh_siap, "%d %b %Y")}
                             </span>
                             <span class="flex items-center gap-1">
-                              <.icon name="hero-user" class="w-4 h-4" />
-                              {project.pengurus_projek}
+                              <.icon name="hero-user" class="w-4 h-4" /> {project.pengurus_projek}
                             </span>
                           </div>
                         </div>
+                        
                         <div class="flex items-center gap-2">
                           <span class={[
                             "px-3 py-1 rounded-full text-xs font-semibold",
@@ -288,35 +314,38 @@
                           </span>
                         </div>
                       </div>
-                      
-                      <%!-- Progress Bar --%>
+                       <%!-- Progress Bar --%>
                       <div class="mb-3">
                         <div class="flex items-center justify-between mb-1">
                           <span class="text-sm font-medium text-gray-700">Kemajuan Projek</span>
                           <span class="text-sm font-bold text-gray-900">{project.progress}%</span>
                         </div>
+                        
                         <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                          <div 
+                          <div
                             class="h-full rounded-full transition-all duration-500"
                             style={"width: #{project.progress}%; background: linear-gradient(90deg, #{@get_status_color.(project.status)}, #{@get_status_color.(project.status)}dd);"}
-                          ></div>
+                          >
+                          </div>
                         </div>
                       </div>
-                      
-                      <%!-- Project Info --%>
+                       <%!-- Project Info --%>
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
                           <span class="font-semibold text-gray-700">Tempoh:</span>
                           <span class="text-gray-600 ml-2">{project.duration} hari</span>
                         </div>
+                        
                         <div>
                           <span class="font-semibold text-gray-700">Baki:</span>
                           <span class="text-gray-600 ml-2">
-                            <%= remaining_days = Date.diff(project.tarikh_siap, Date.utc_today()) %>
+                            {remaining_days = Date.diff(project.tarikh_siap, Date.utc_today())}
                             <%= if remaining_days > 0 do %>
                               hari
                             <% else %>
-                              <span class="text-red-600 font-semibold">Lewat {abs(remaining_days)} hari</span>
+                              <span class="text-red-600 font-semibold">
+                                Lewat {abs(remaining_days)} hari
+                              </span>
                             <% end %>
                           </span>
                         </div>
@@ -325,11 +354,19 @@
                       <%= if project.isu && project.isu != "Tiada" do %>
                         <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                           <div class="flex items-start gap-2">
-                            <.icon name="hero-exclamation-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <.icon
+                              name="hero-exclamation-triangle"
+                              class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
+                            />
                             <div>
                               <div class="font-semibold text-amber-900 text-sm mb-1">Isu:</div>
+                              
                               <div class="text-amber-800 text-sm">{project.isu}</div>
-                              <div class="font-semibold text-amber-900 text-sm mt-2 mb-1">Tindakan:</div>
+                              
+                              <div class="font-semibold text-amber-900 text-sm mt-2 mb-1">
+                                Tindakan:
+                              </div>
+                              
                               <div class="text-amber-800 text-sm">{project.tindakan}</div>
                             </div>
                           </div>
@@ -346,14 +383,17 @@
               <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center gap-3">
                   <div class="w-2 h-2 rounded-full bg-blue-600"></div>
+                  
                   <h2 class="text-xl font-bold text-gray-900">Jadual Projek</h2>
                 </div>
               </div>
+              
               <div class="p-8">
                 <div class="text-center py-12">
                   <div class="flex flex-col items-center justify-center">
                     <.icon name="hero-calendar-days" class="w-16 h-16 text-gray-400 mb-4" />
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Tiada Projek</h3>
+                    
                     <p class="text-gray-600 mb-6 max-w-md">
                       Tiada projek ditemui. Projek akan dipaparkan di sini selepas ditambah.
                     </p>
@@ -366,8 +406,7 @@
       </main>
     </div>
   </div>
-
-  <%!-- New Project Modal --%>
+   <%!-- New Project Modal --%>
   <%= if @show_new_project_modal do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
@@ -378,7 +417,7 @@
     >
       <%!-- Backdrop --%>
       <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-      <%!-- Modal container --%>
+       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
           class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -389,10 +428,12 @@
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Tambah Projek Baru</h2>
+                
                 <p class="mt-1 text-sm text-blue-100">
                   Lengkapkan maklumat di bawah untuk menambah projek baharu
                 </p>
               </div>
+              
               <button
                 type="button"
                 phx-click="close_new_project_modal"
@@ -403,7 +444,7 @@
               </button>
             </div>
           </div>
-          <%!-- Modal body --%>
+           <%!-- Modal body --%>
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@form}
@@ -416,8 +457,10 @@
               <div class="space-y-5">
                 <div class="border-b border-gray-200 pb-2">
                   <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
+                  
                   <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:nama]}
@@ -428,6 +471,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:pengurus_projek]}
@@ -438,13 +482,14 @@
                   />
                 </div>
               </div>
-
-              <%!-- Timeline --%>
+               <%!-- Timeline --%>
               <div class="space-y-5">
                 <div class="border-b border-gray-200 pb-2">
                   <h3 class="text-lg font-semibold text-gray-900">Jadual Projek</h3>
+                  
                   <p class="mt-1 text-sm text-gray-500">Tetapkan tarikh mula dan jangkaan siap</p>
                 </div>
+                
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
                     <.input
@@ -455,6 +500,7 @@
                       class="w-full"
                     />
                   </div>
+                  
                   <div>
                     <.input
                       field={@form[:tarikh_siap]}
@@ -466,13 +512,14 @@
                   </div>
                 </div>
               </div>
-
-              <%!-- Status and Phase --%>
+               <%!-- Status and Phase --%>
               <div class="space-y-5">
                 <div class="border-b border-gray-200 pb-2">
                   <h3 class="text-lg font-semibold text-gray-900">Status & Fasa</h3>
+                  
                   <p class="mt-1 text-sm text-gray-500">Tetapkan status dan fasa projek</p>
                 </div>
+                
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
                     <.input
@@ -489,6 +536,7 @@
                       class="w-full"
                     />
                   </div>
+                  
                   <div>
                     <.input
                       field={@form[:fasa]}
@@ -506,29 +554,27 @@
                   </div>
                 </div>
               </div>
-
-              <%!-- Issues and Actions --%>
+               <%!-- Issues and Actions --%>
               <div class="space-y-5">
                 <div class="border-b border-gray-200 pb-2">
                   <h3 class="text-lg font-semibold text-gray-900">Isu & Tindakan</h3>
-                  <p class="mt-1 text-sm text-gray-500">Nyatakan isu dan tindakan yang perlu diambil</p>
+                  
+                  <p class="mt-1 text-sm text-gray-500">
+                    Nyatakan isu dan tindakan yang perlu diambil
+                  </p>
                 </div>
+                
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Isu
-                  </label>
-                  <textarea
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Isu</label> <textarea
                     name="project[isu]"
                     rows="3"
                     placeholder="Nyatakan isu projek (jika ada)..."
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   ><%= if @form[:isu] && @form[:isu].value, do: @form[:isu].value, else: "" %></textarea>
                 </div>
+                
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Tindakan
-                  </label>
-                  <textarea
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Tindakan</label> <textarea
                     name="project[tindakan]"
                     rows="3"
                     placeholder="Nyatakan tindakan yang perlu diambil..."
@@ -536,8 +582,7 @@
                   ><%= if @form[:tindakan] && @form[:tindakan].value, do: @form[:tindakan].value, else: "" %></textarea>
                 </div>
               </div>
-
-              <%!-- Modal footer --%>
+               <%!-- Modal footer --%>
               <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
                 <button
                   type="button"
@@ -559,8 +604,7 @@
       </div>
     </div>
   <% end %>
-
-  <%!-- Edit Project Modal --%>
+   <%!-- Edit Project Modal --%>
   <%= if @show_edit_project_modal && @selected_project do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
@@ -571,7 +615,7 @@
     >
       <%!-- Backdrop --%>
       <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-      <%!-- Modal container --%>
+       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
           class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -582,10 +626,10 @@
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Edit Projek</h2>
-                <p class="mt-1 text-sm text-indigo-100">
-                  Kemaskini maklumat projek
-                </p>
+                
+                <p class="mt-1 text-sm text-indigo-100">Kemaskini maklumat projek</p>
               </div>
+              
               <button
                 type="button"
                 phx-click="close_edit_project_modal"
@@ -596,7 +640,7 @@
               </button>
             </div>
           </div>
-          <%!-- Modal body --%>
+           <%!-- Modal body --%>
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@form}
@@ -609,8 +653,10 @@
               <div class="space-y-5">
                 <div class="border-b border-gray-200 pb-2">
                   <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
+                  
                   <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:nama]}
@@ -621,6 +667,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:pengurus_projek]}
@@ -631,13 +678,14 @@
                   />
                 </div>
               </div>
-
-              <%!-- Timeline --%>
+               <%!-- Timeline --%>
               <div class="space-y-5">
                 <div class="border-b border-gray-200 pb-2">
                   <h3 class="text-lg font-semibold text-gray-900">Jadual Projek</h3>
+                  
                   <p class="mt-1 text-sm text-gray-500">Tetapkan tarikh mula dan jangkaan siap</p>
                 </div>
+                
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
                     <.input
@@ -648,6 +696,7 @@
                       class="w-full"
                     />
                   </div>
+                  
                   <div>
                     <.input
                       field={@form[:tarikh_siap]}
@@ -659,13 +708,14 @@
                   </div>
                 </div>
               </div>
-
-              <%!-- Status and Phase --%>
+               <%!-- Status and Phase --%>
               <div class="space-y-5">
                 <div class="border-b border-gray-200 pb-2">
                   <h3 class="text-lg font-semibold text-gray-900">Status & Fasa</h3>
+                  
                   <p class="mt-1 text-sm text-gray-500">Tetapkan status dan fasa projek</p>
                 </div>
+                
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
                     <.input
@@ -682,6 +732,7 @@
                       class="w-full"
                     />
                   </div>
+                  
                   <div>
                     <.input
                       field={@form[:fasa]}
@@ -699,29 +750,27 @@
                   </div>
                 </div>
               </div>
-
-              <%!-- Issues and Actions --%>
+               <%!-- Issues and Actions --%>
               <div class="space-y-5">
                 <div class="border-b border-gray-200 pb-2">
                   <h3 class="text-lg font-semibold text-gray-900">Isu & Tindakan</h3>
-                  <p class="mt-1 text-sm text-gray-500">Nyatakan isu dan tindakan yang perlu diambil</p>
+                  
+                  <p class="mt-1 text-sm text-gray-500">
+                    Nyatakan isu dan tindakan yang perlu diambil
+                  </p>
                 </div>
+                
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Isu
-                  </label>
-                  <textarea
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Isu</label> <textarea
                     name="project[isu]"
                     rows="3"
                     placeholder="Nyatakan isu projek (jika ada)..."
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 resize-none"
                   ><%= if @form[:isu] && @form[:isu].value, do: @form[:isu].value, else: "" %></textarea>
                 </div>
+                
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Tindakan
-                  </label>
-                  <textarea
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Tindakan</label> <textarea
                     name="project[tindakan]"
                     rows="3"
                     placeholder="Nyatakan tindakan yang perlu diambil..."
@@ -729,8 +778,7 @@
                   ><%= if @form[:tindakan] && @form[:tindakan].value, do: @form[:tindakan].value, else: "" %></textarea>
                 </div>
               </div>
-
-              <%!-- Modal footer --%>
+               <%!-- Modal footer --%>
               <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
                 <button
                   type="button"
@@ -753,4 +801,3 @@
     </div>
   <% end %>
 </Layouts.app>
-

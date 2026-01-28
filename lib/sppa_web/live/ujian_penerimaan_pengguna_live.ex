@@ -179,7 +179,8 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
             id: "REG-002",
             senario: "Pendaftaran berjaya dengan data yang sah",
             langkah: "Isikan semua maklumat dengan betul",
-            keputusan_dijangka: "Akaun berjaya dicipta dan mesej 'Pendaftaran Pengguna berjaya didaftarkan' dipaparkan",
+            keputusan_dijangka:
+              "Akaun berjaya dicipta dan mesej 'Pendaftaran Pengguna berjaya didaftarkan' dipaparkan",
             keputusan_sebenar: nil,
             hasil: nil,
             penguji: nil,
@@ -239,7 +240,8 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
             id: "REG-007",
             senario: "Pendaftaran gagal - kata laluan terlalu pendek",
             langkah: "Isikan kata laluan yang kurang daripada 8 aksara",
-            keputusan_dijangka: "Mesej ralat 'Kata laluan mesti sekurang-kurangnya 8 aksara' dipaparkan",
+            keputusan_dijangka:
+              "Mesej ralat 'Kata laluan mesti sekurang-kurangnya 8 aksara' dipaparkan",
             keputusan_sebenar: nil,
             hasil: nil,
             penguji: nil,
@@ -251,7 +253,8 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
             id: "REG-008",
             senario: "Pendaftaran gagal - kata laluan tidak mengandungi nombor",
             langkah: "Isikan kata laluan tanpa nombor",
-            keputusan_dijangka: "Mesej ralat 'Kata laluan mesti mengandungi sekurang-kurangnya satu nombor' dipaparkan",
+            keputusan_dijangka:
+              "Mesej ralat 'Kata laluan mesti mengandungi sekurang-kurangnya satu nombor' dipaparkan",
             keputusan_sebenar: nil,
             hasil: nil,
             penguji: nil,
@@ -273,9 +276,19 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
         hasil: "Lulus",
         catatan: "Semua fungsi asas berfungsi dengan baik",
         senarai_ujian: [
-          %{id: "test_1_1", nama: "Ujian Pendaftaran Pengguna", status: "Lulus", catatan: "Berfungsi dengan baik"},
+          %{
+            id: "test_1_1",
+            nama: "Ujian Pendaftaran Pengguna",
+            status: "Lulus",
+            catatan: "Berfungsi dengan baik"
+          },
           %{id: "test_1_2", nama: "Ujian Log Masuk", status: "Lulus", catatan: "Tiada masalah"},
-          %{id: "test_1_3", nama: "Ujian Kemaskini Profil", status: "Gagal", catatan: "Perlu pembaikan pada validasi"}
+          %{
+            id: "test_1_3",
+            nama: "Ujian Kemaskini Profil",
+            status: "Gagal",
+            catatan: "Perlu pembaikan pada validasi"
+          }
         ]
       },
       %{
@@ -290,9 +303,24 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
         hasil: "Lulus",
         catatan: "Semua ujian berjaya diluluskan",
         senarai_ujian: [
-          %{id: "test_2_1", nama: "Ujian Pendaftaran Permohonan", status: "Lulus", catatan: "Berfungsi dengan baik"},
-          %{id: "test_2_2", nama: "Ujian Kemaskini Permohonan", status: "Lulus", catatan: "Tiada masalah"},
-          %{id: "test_2_3", nama: "Ujian Semakan Status", status: "Lulus", catatan: "Berfungsi dengan baik"}
+          %{
+            id: "test_2_1",
+            nama: "Ujian Pendaftaran Permohonan",
+            status: "Lulus",
+            catatan: "Berfungsi dengan baik"
+          },
+          %{
+            id: "test_2_2",
+            nama: "Ujian Kemaskini Permohonan",
+            status: "Lulus",
+            catatan: "Tiada masalah"
+          },
+          %{
+            id: "test_2_3",
+            nama: "Ujian Semakan Status",
+            status: "Lulus",
+            catatan: "Berfungsi dengan baik"
+          }
         ],
         senarai_kes_ujian: []
       },
@@ -499,8 +527,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
           status: ujian_params["status"],
           penguji: ujian_params["penguji"] || "",
           hasil: ujian_params["hasil"] || editing_ujian.hasil,
-          catatan:
-            if(ujian_params["catatan"] == "", do: nil, else: ujian_params["catatan"])
+          catatan: if(ujian_params["catatan"] == "", do: nil, else: ujian_params["catatan"])
       }
 
       # Update in list if we're on index page
@@ -549,9 +576,14 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
           "keputusan_sebenar" => kes.keputusan_sebenar || "",
           "hasil" => kes.hasil || "",
           "penguji" => Map.get(kes, :penguji, "") || "",
-          "tarikh_ujian" => if(kes.tarikh_ujian, do: Calendar.strftime(kes.tarikh_ujian, "%Y-%m-%d"), else: ""),
+          "tarikh_ujian" =>
+            if(kes.tarikh_ujian, do: Calendar.strftime(kes.tarikh_ujian, "%Y-%m-%d"), else: ""),
           "disahkan" => if(Map.get(kes, :disahkan, false), do: "true", else: ""),
-          "tarikh_pengesahan" => if(kes.tarikh_pengesahan, do: Calendar.strftime(kes.tarikh_pengesahan, "%Y-%m-%d"), else: "")
+          "tarikh_pengesahan" =>
+            if(kes.tarikh_pengesahan,
+              do: Calendar.strftime(kes.tarikh_pengesahan, "%Y-%m-%d"),
+              else: ""
+            )
         }
 
         form = to_form(form_data, as: :kes)
@@ -614,7 +646,11 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
       | senario: kes_params["senario"] || socket.assigns.selected_kes.senario,
         langkah: kes_params["langkah"] || "",
         keputusan_dijangka: kes_params["keputusan_dijangka"] || "",
-        keputusan_sebenar: if(kes_params["keputusan_sebenar"] == "", do: nil, else: kes_params["keputusan_sebenar"]),
+        keputusan_sebenar:
+          if(kes_params["keputusan_sebenar"] == "",
+            do: nil,
+            else: kes_params["keputusan_sebenar"]
+          ),
         hasil: if(kes_params["hasil"] == "", do: nil, else: kes_params["hasil"]),
         penguji: if(kes_params["penguji"] == "", do: nil, else: kes_params["penguji"]),
         tarikh_ujian: tarikh_ujian,
@@ -646,7 +682,8 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
   def handle_event("add_new_kes", _params, socket) do
     if socket.assigns[:selected_ujian] && socket.assigns.selected_ujian.senarai_kes_ujian do
       # Generate new ID based on existing kes
-      existing_ids = Enum.map(socket.assigns.selected_ujian.senarai_kes_ujian, fn kes -> kes.id end)
+      existing_ids =
+        Enum.map(socket.assigns.selected_ujian.senarai_kes_ujian, fn kes -> kes.id end)
 
       new_number =
         existing_ids

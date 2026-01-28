@@ -73,7 +73,7 @@ defmodule SppaWeb.CoreComponents do
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
-
+          
           <p>{msg}</p>
         </div>
          <div class="flex-1" />
@@ -291,10 +291,10 @@ defmodule SppaWeb.CoreComponents do
     <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
       <div>
         <h1 class="text-lg font-semibold leading-8">{render_slot(@inner_block)}</h1>
-
+        
         <p :if={@subtitle != []} class="text-sm text-base-content/70">{render_slot(@subtitle)}</p>
       </div>
-
+      
       <div class="flex-none">{render_slot(@actions)}</div>
     </header>
     """
@@ -336,11 +336,11 @@ defmodule SppaWeb.CoreComponents do
       <thead>
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>
-
+          
           <th :if={@action != []}><span class="sr-only">{gettext("Actions")}</span></th>
         </tr>
       </thead>
-
+      
       <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
         <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
           <td
@@ -350,7 +350,7 @@ defmodule SppaWeb.CoreComponents do
           >
             {render_slot(col, @row_item.(row))}
           </td>
-
+          
           <td :if={@action != []} class="w-0 font-semibold">
             <div class="flex gap-4">
               <%= for action <- @action do %>
@@ -384,7 +384,7 @@ defmodule SppaWeb.CoreComponents do
       <li :for={item <- @item} class="list-row">
         <div class="list-col-grow">
           <div class="font-bold">{item.title}</div>
-
+          
           <div>{render_slot(item)}</div>
         </div>
       </li>
@@ -495,7 +495,8 @@ defmodule SppaWeb.CoreComponents do
     doc: "Controls truncation width across breakpoints"
 
   attr :class, :string,
-    default: "text-sm font-semibold tracking-wide text-white/95 drop-shadow sm:text-base md:text-lg lg:text-xl",
+    default:
+      "text-sm font-semibold tracking-wide text-white/95 drop-shadow sm:text-base md:text-lg lg:text-xl",
     doc: "Additional/override classes for the title text"
 
   def system_title(assigns) do
@@ -548,13 +549,16 @@ defmodule SppaWeb.CoreComponents do
   attr :dashboard_path, :string, required: true
   attr :logo_src, :string, required: true
   attr :current_scope, :any, default: nil
-  attr :current_path, :string, default: "/dashboard-pp", doc: "Current path for active link highlighting"
+
+  attr :current_path, :string,
+    default: "/dashboard-pp",
+    doc: "Current path for active link highlighting"
 
   def dashboard_sidebar(assigns) do
     ~H"""
     <aside
       class={[
-        "fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-gray-900/80 to-gray-800/80 backdrop-blur-xl text-white z-50 transform transition-transform duration-300 ease-in-out shadow-2xl border-r border-white/10",
+        "fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-gray-900/80 to-gray-800/80 backdrop-blur-xl text-white z-[60] transform transition-transform duration-300 ease-in-out shadow-2xl border-r border-white/10",
         if(@sidebar_open, do: "translate-x-0", else: "-translate-x-full pointer-events-none")
       ]}
       id="sidebar"
@@ -568,6 +572,7 @@ defmodule SppaWeb.CoreComponents do
               class="h-24 w-auto object-contain"
             />
           </div>
+          
           <button
             phx-click="toggle_sidebar"
             class="text-gray-400 hover:text-white hover:bg-gray-700 p-2 rounded-lg transition-all duration-200"
@@ -575,7 +580,7 @@ defmodule SppaWeb.CoreComponents do
             <.icon name="hero-x-mark" class="w-5 h-5" />
           </button>
         </div>
-
+        
         <nav class="flex-1 overflow-y-auto py-4 px-3">
           <%= if @current_scope && @current_scope.user && @current_scope.user.role == "pengurus projek" do %>
             <div class="space-y-1">
@@ -692,7 +697,8 @@ defmodule SppaWeb.CoreComponents do
                 )
               ]}
             >
-              <.icon name="hero-check-circle" class="w-5 h-5" /> <span>Ujian Penerimaan Pengguna</span>
+              <.icon name="hero-check-circle" class="w-5 h-5" />
+              <span>Ujian Penerimaan Pengguna</span>
             </.link>
             <.link
               navigate={~p"/ujian-keselamatan"}
@@ -747,6 +753,63 @@ defmodule SppaWeb.CoreComponents do
     """
   end
 
+  attr :id, :string, required: true, doc: "unique id for the table"
+  attr :title, :string, required: true, doc: "category title"
+  attr :questions, :list, required: true, doc: "list of question maps"
+  attr :form, :any, required: true, doc: "the form struct"
+  attr :tab_type, :string, required: true, doc: "either 'fr' or 'nfr'"
+  attr :category_key, :string, required: true, doc: "category key for form params"
+
+  # Reads fr/nfr form data from form source (map with "fr"/"nfr") for display.
+  # Phoenix.HTML.Form.input_value does not reliably support deeply nested paths,
+  # so we use get_in on the form params map to show saved soalan/maklumbalas/catatan.
+  defp requirement_form_params(form) do
+    if is_map(form.source) and not is_struct(form.source) do
+      form.source
+    else
+      form.params || %{}
+    end
+  end
+
+  defp requirement_form_value(form, tab_type, category_key, question_no, field, default) do
+    params = requirement_form_params(form)
+    path = [tab_type, category_key, to_string(question_no), field]
+    case get_in(params, path) do
+      nil -> default
+      val -> val
+    end
+  end
+
+  defp requirement_form_value_raw(form, tab_type, category_key, question_no, field) do
+    params = requirement_form_params(form)
+    get_in(params, [tab_type, category_key, to_string(question_no), field])
+  end
+
+  defp requirement_has_data?(form, tab_type, category_key, question) do
+    # Check soalan from form or question.soalan
+    soalan =
+      requirement_form_value(form, tab_type, category_key, question.no, "soalan", question.soalan || "")
+      |> String.trim()
+
+    # Check maklumbalas from form
+    maklumbalas_raw = requirement_form_value_raw(form, tab_type, category_key, question.no, "maklumbalas")
+    
+    maklumbalas =
+      cond do
+        is_list(maklumbalas_raw) -> length(maklumbalas_raw) > 0
+        is_binary(maklumbalas_raw) -> String.trim(maklumbalas_raw) != ""
+        true -> false
+      end
+
+    # Check catatan from form
+    catatan =
+      requirement_form_value(form, tab_type, category_key, question.no, "catatan", "")
+      |> String.trim()
+
+    # Return true if at least one field has data
+    soalan != "" || maklumbalas || catatan != ""
+  end
+
   @doc """
   Renders a requirement table for the soal selidik form.
 
@@ -761,13 +824,6 @@ defmodule SppaWeb.CoreComponents do
         category_key="pendaftaran_login"
       />
   """
-  attr :id, :string, required: true, doc: "unique id for the table"
-  attr :title, :string, required: true, doc: "category title"
-  attr :questions, :list, required: true, doc: "list of question maps"
-  attr :form, :any, required: true, doc: "the form struct"
-  attr :tab_type, :string, required: true, doc: "either 'fr' or 'nfr'"
-  attr :category_key, :string, required: true, doc: "category key for form params"
-
   def requirement_table(assigns) do
     ~H"""
     <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
@@ -781,83 +837,120 @@ defmodule SppaWeb.CoreComponents do
           class="px-3 py-1.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm flex items-center gap-2"
           title="Tambah baris soalan baru"
         >
-          <.icon name="hero-plus" class="w-4 h-4" />
-          <span>Tambah Baris</span>
+          <.icon name="hero-plus" class="w-4 h-4" /> <span>Tambah Baris</span>
         </button>
       </div>
-
+      
       <table class="w-full border-collapse text-sm">
         <thead>
           <tr class="bg-gray-100 border-b border-gray-400">
-            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">
+            <th
+              class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+              style="width: 6%;"
+            >
               No
             </th>
-            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 40%;">
+            
+            <th
+              class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+              style="width: 40%;"
+            >
               Soalan
             </th>
-            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 25%;">
+            
+            <th
+              class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+              style="width: 25%;"
+            >
               Maklumbalas
             </th>
-            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 25%;">
+            
+            <th
+              class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+              style="width: 25%;"
+            >
               Catatan
             </th>
+            
             <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 10%;">
               Tindakan
             </th>
           </tr>
         </thead>
+        
         <tbody class="divide-y divide-gray-300">
           <tr :for={question <- @questions} class="hover:bg-gray-50">
             <td class="px-3 py-2 border-r border-gray-400 align-top">
-              <div class="px-2 py-1 text-sm font-medium text-gray-900">
-                {question.no}
-              </div>
+              <div class="px-2 py-1 text-sm font-medium text-gray-900">{question.no}</div>
             </td>
+            
             <td class="px-3 py-2 border-r border-gray-400 align-top">
               <textarea
                 id={"soalan-#{@tab_type}-#{@category_key}-#{question.no}"}
                 name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][soalan]"}
                 rows="1"
-                class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
+                class="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                 placeholder="Masukkan soalan..."
                 phx-change="validate"
-                phx-hook="AutoResize"
+                phx-value-tab_type={@tab_type}
+                phx-value-category_key={@category_key}
+                phx-value-question_no={question.no}
+                phx-value-field="soalan"
+                phx-hook="AutoResizeTextarea"
                 style="min-height: 2.5rem; max-height: 20rem;"
-              >{get_form_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.soalan") || question.soalan || ""}</textarea>
+              >{requirement_form_value(@form, @tab_type, @category_key, question.no, "soalan", question.soalan || "")}</textarea>
             </td>
+            
             <td class="px-3 py-2 border-r border-gray-400 align-top">
               <%= cond do %>
                 <% question.type == :text -> %>
                   <textarea
+                    id={"maklumbalas-#{@tab_type}-#{@category_key}-#{question.no}"}
                     name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
                     rows="1"
-                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
+                    class="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                     placeholder="Masukkan maklumbalas..."
                     phx-change="validate"
+                    phx-value-tab_type={@tab_type}
+                    phx-value-category_key={@category_key}
+                    phx-value-question_no={question.no}
+                    phx-value-field="maklumbalas"
+                    phx-hook="AutoResizeTextarea"
                     style="min-height: 2.5rem; max-height: 20rem;"
-                  >{get_form_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}</textarea>
+                  >{requirement_form_value(@form, @tab_type, @category_key, question.no, "maklumbalas", "")}</textarea>
                 <% question.type == :textarea -> %>
                   <textarea
+                    id={"maklumbalas-#{@tab_type}-#{@category_key}-#{question.no}"}
                     name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
                     rows="1"
-                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
+                    class="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                     placeholder="Masukkan maklumbalas..."
                     phx-change="validate"
+                    phx-value-tab_type={@tab_type}
+                    phx-value-category_key={@category_key}
+                    phx-value-question_no={question.no}
+                    phx-value-field="maklumbalas"
+                    phx-hook="AutoResizeTextarea"
                     style="min-height: 2.5rem; max-height: 20rem;"
-                  >{get_form_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}</textarea>
+                  >{requirement_form_value(@form, @tab_type, @category_key, question.no, "maklumbalas", "")}</textarea>
                 <% question.type == :select -> %>
                   <select
+                    id={"maklumbalas-#{@tab_type}-#{@category_key}-#{question.no}"}
                     name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
                     class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     phx-change="validate"
+                    phx-value-tab_type={@tab_type}
+                    phx-value-category_key={@category_key}
+                    phx-value-question_no={question.no}
+                    phx-value-field="maklumbalas"
+                    phx-hook="SaveFieldOnBlur"
                   >
                     <option value="">-- Pilih --</option>
+                    
                     <option
                       :for={option <- question.options || []}
                       value={option}
-                      selected={
-                        get_form_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") == option
-                      }
+                      selected={requirement_form_value(@form, @tab_type, @category_key, question.no, "maklumbalas", "") == option}
                     >
                       {option}
                     </option>
@@ -867,57 +960,78 @@ defmodule SppaWeb.CoreComponents do
                     <%= for option <- question.options || [] do %>
                       <label class="flex items-center gap-2 cursor-pointer">
                         <input
+                          id={"maklumbalas-#{@tab_type}-#{@category_key}-#{question.no}-#{option}"}
                           type="checkbox"
                           name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas][]"}
                           value={option}
                           checked={
-                            case get_form_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") do
+                            case requirement_form_value_raw(@form, @tab_type, @category_key, question.no, "maklumbalas") do
                               values when is_list(values) -> option in values
                               value when is_binary(value) -> value == option
                               _ -> false
                             end
                           }
                           phx-change="validate"
+                          phx-value-tab_type={@tab_type}
+                          phx-value-category_key={@category_key}
+                          phx-value-question_no={question.no}
+                          phx-value-field="maklumbalas"
+                          phx-hook="SaveFieldOnBlur"
                           class="rounded border-gray-400 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <span class="text-sm text-gray-700">{option}</span>
+                        /> <span class="text-sm text-gray-700">{option}</span>
                       </label>
                     <% end %>
                   </div>
                 <% true -> %>
                   <textarea
+                    id={"maklumbalas-#{@tab_type}-#{@category_key}-#{question.no}"}
                     name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
                     rows="1"
-                    class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
+                    class="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                     placeholder="Masukkan maklumbalas..."
                     phx-change="validate"
+                    phx-value-tab_type={@tab_type}
+                    phx-value-category_key={@category_key}
+                    phx-value-question_no={question.no}
+                    phx-value-field="maklumbalas"
+                    phx-hook="AutoResizeTextarea"
                     style="min-height: 2.5rem; max-height: 20rem;"
-                  >{get_form_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.maklumbalas") || ""}</textarea>
+                  >{requirement_form_value(@form, @tab_type, @category_key, question.no, "maklumbalas", "")}</textarea>
               <% end %>
             </td>
+            
             <td class="px-3 py-2 border-r border-gray-400 align-top">
               <textarea
+                id={"catatan-#{@tab_type}-#{@category_key}-#{question.no}"}
                 name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][catatan]"}
                 rows="1"
-                class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
+                class="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                 placeholder="Catatan..."
                 phx-change="validate"
+                phx-value-tab_type={@tab_type}
+                phx-value-category_key={@category_key}
+                phx-value-question_no={question.no}
+                phx-value-field="catatan"
+                phx-hook="AutoResizeTextarea"
                 style="min-height: 2.5rem; max-height: 20rem;"
-              >{get_form_value(@form, "#{@tab_type}.#{@category_key}.#{question.no}.catatan") || ""}</textarea>
+              >{requirement_form_value(@form, @tab_type, @category_key, question.no, "catatan", "")}</textarea>
             </td>
+            
             <td class="px-3 py-2 align-top">
               <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  phx-click="edit_question"
-                  phx-value-tab_type={@tab_type}
-                  phx-value-category_key={@category_key}
-                  phx-value-question_no={question.no}
-                  class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors duration-200"
-                  title="Edit"
-                >
-                  <.icon name="hero-pencil" class="w-4 h-4" />
-                </button>
+                <%= if requirement_has_data?(@form, @tab_type, @category_key, question) do %>
+                  <button
+                    type="button"
+                    phx-click="edit_question"
+                    phx-value-tab_type={@tab_type}
+                    phx-value-category_key={@category_key}
+                    phx-value-question_no={question.no}
+                    class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors duration-200"
+                    title="Edit"
+                  >
+                    <.icon name="hero-pencil" class="w-4 h-4" />
+                  </button>
+                <% end %>
                 <button
                   type="button"
                   phx-click="delete_question"
@@ -937,44 +1051,4 @@ defmodule SppaWeb.CoreComponents do
     </div>
     """
   end
-
-  # Helper function to get form value reliably
-  # Tries multiple methods to get the value from nested form structure
-  defp get_form_value(form, path) do
-    keys = String.split(path, ".")
-
-    # First try to get from form source directly
-    source_value =
-      case form.source do
-        %{params: params} when is_map(params) ->
-          get_nested_value(params, keys)
-        source when is_map(source) ->
-          get_nested_value(source, keys)
-        _ ->
-          nil
-      end
-
-    # If we got a value from source, use it
-    if source_value != nil do
-      source_value
-    else
-      # Otherwise try Phoenix.HTML.Form.input_value as fallback
-      case Phoenix.HTML.Form.input_value(form, path) do
-        nil -> nil
-        value -> value
-      end
-    end
-  end
-
-  # Helper to get nested value from map using list of keys
-  defp get_nested_value(map, [key | rest]) when is_map(map) do
-    case Map.get(map, key) do
-      nil -> nil
-      value when rest == [] -> value
-      value when is_map(value) -> get_nested_value(value, rest)
-      _ -> nil
-    end
-  end
-
-  defp get_nested_value(_map, []), do: nil
 end

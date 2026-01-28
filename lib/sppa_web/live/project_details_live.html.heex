@@ -7,21 +7,26 @@
           navigate={~p"/projek"}
           class="inline-flex w-fit items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
         >
-          <.icon name="hero-arrow-left" class="h-4 w-4" />
-          <span>Kembali ke Senarai Projek</span>
+          <.icon name="hero-arrow-left" class="h-4 w-4" /> <span>Kembali ke Senarai Projek</span>
         </.link>
-
         <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div class="min-w-0">
-            <div class="text-xs font-semibold tracking-[0.22em] text-gray-400">BUTIRAN PROJEK</div>
+            <div class="text-xs font-semibold tracking-[0.22em] text-gray-400">
+              BUTIRAN PROJEK
+            </div>
+            
             <h1 class="mt-1 truncate text-2xl font-bold text-gray-900 sm:text-3xl">
               {@project.nama}
             </h1>
+            
             <p class="mt-1 text-sm text-gray-600">
-              Dikemaskini: <span class="font-medium text-gray-900">{format_datetime(@project.last_updated)}</span>
+              Dikemaskini:
+              <span class="font-medium text-gray-900">
+                {format_datetime(@project.last_updated)}
+              </span>
             </p>
           </div>
-
+          
           <div class="flex flex-wrap items-center gap-2">
             <span class={[
               "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold shadow-sm",
@@ -32,34 +37,35 @@
                 _ -> "bg-gray-100 text-gray-800"
               end
             ]}>
-              <span class="h-1.5 w-1.5 rounded-full bg-current opacity-70"></span>
-              {@project.status}
+              <span class="h-1.5 w-1.5 rounded-full bg-current opacity-70"></span> {@project.status}
             </span>
-
             <.link
               :if={@project.id}
               id="go-to-modul"
               navigate={~p"/projek/#{@project.id}/modul"}
               class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
-              <.icon name="hero-cog-6-tooth" class="h-4 w-4" />
-              <span>Modul</span>
+              <.icon name="hero-cog-6-tooth" class="h-4 w-4" /> <span>Modul</span>
             </.link>
           </div>
         </div>
       </div>
-
-      <div :if={@project.id} class="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      
+      <div
+        :if={@project.id}
+        class="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+      >
         <div class="border-b border-gray-200 px-6 py-4">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-2">
               <.icon name="hero-squares-2x2" class="h-5 w-5 text-gray-500" />
               <div class="text-sm font-semibold text-gray-900">Navigasi Tab</div>
             </div>
+            
             <div class="text-xs font-semibold tracking-[0.22em] text-gray-400">PROJEK</div>
           </div>
         </div>
-
+        
         <nav
           id="project-tabs"
           class="flex flex-nowrap items-center gap-1 overflow-x-auto px-3 py-3 sm:px-6"
@@ -68,70 +74,60 @@
           <span class="px-3 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white shadow-sm whitespace-nowrap">
             Details
           </span>
-
           <.link
             navigate={~p"/projek/#{@project.id}?tab=soal-selidik"}
             class="px-3 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition whitespace-nowrap"
           >
             Soal Selidik
           </.link>
-
           <.link
             navigate={~p"/projek/#{@project.id}?tab=analisis-dan-rekabentuk"}
             class="px-3 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition whitespace-nowrap"
           >
             Analisis dan Rekabentuk
           </.link>
-
           <.link
             navigate={~p"/projek/#{@project.id}?tab=jadual-projek"}
             class="px-3 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition whitespace-nowrap"
           >
             Jadual Projek
           </.link>
-
           <.link
             navigate={~p"/projek/#{@project.id}?tab=pengaturcaraan"}
             class="px-3 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition whitespace-nowrap"
           >
             Pengaturcaraan
           </.link>
-
           <.link
             navigate={~p"/projek/#{@project.id}?tab=pengurus-perubahan"}
             class="px-3 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition whitespace-nowrap"
           >
             Pengurus Perubahan
           </.link>
-
           <.link
             navigate={~p"/projek/#{@project.id}?tab=uat"}
             class="px-3 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition whitespace-nowrap"
           >
             UAT
           </.link>
-
           <.link
             navigate={~p"/projek/#{@project.id}?tab=ujian-keselamatan"}
             class="px-3 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition whitespace-nowrap"
           >
             Ujian Keselamatan
           </.link>
-
           <.link
             navigate={~p"/projek/#{@project.id}?tab=penempatan"}
             class="px-3 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition whitespace-nowrap"
           >
             Penempatan
           </.link>
-
           <.link
             navigate={~p"/projek/#{@project.id}?tab=penyerahan"}
             class="px-3 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition whitespace-nowrap"
           >
             Penyerahan
           </.link>
-
           <.link
             navigate={~p"/projek/#{@project.id}?tab=maklumbalas-pelanggan"}
             class="px-3 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition whitespace-nowrap"
@@ -140,92 +136,107 @@
           </.link>
         </nav>
       </div>
-
+      
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div class="lg:col-span-2">
           <div class="rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div class="border-b border-gray-200 px-6 py-5">
               <h2 class="text-lg font-semibold text-gray-900">Ringkasan</h2>
+              
               <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
             </div>
-
+            
             <div class="grid grid-cols-1 gap-5 px-6 py-6 sm:grid-cols-2">
               <div class="rounded-xl bg-gray-50 p-4">
                 <div class="text-xs font-semibold tracking-wide text-gray-500">Fasa</div>
+                
                 <div class="mt-1 text-sm font-semibold text-gray-900">{@project.fasa}</div>
               </div>
-
+              
               <div class="rounded-xl bg-gray-50 p-4">
-                <div class="text-xs font-semibold tracking-wide text-gray-500">Pengurus Projek</div>
+                <div class="text-xs font-semibold tracking-wide text-gray-500">
+                  Pengurus Projek
+                </div>
+                
                 <div class="mt-1 text-sm font-semibold text-gray-900">
                   {@project.pengurus_projek || "-"}
                 </div>
               </div>
-
+              
               <div class="rounded-xl bg-gray-50 p-4">
                 <div class="text-xs font-semibold tracking-wide text-gray-500">Tarikh Mula</div>
+                
                 <div class="mt-1 text-sm font-semibold text-gray-900">
                   {format_date(@project.tarikh_mula)}
                 </div>
               </div>
-
+              
               <div class="rounded-xl bg-gray-50 p-4">
                 <div class="text-xs font-semibold tracking-wide text-gray-500">Tarikh Siap</div>
+                
                 <div class="mt-1 text-sm font-semibold text-gray-900">
                   {format_date(@project.tarikh_siap)}
                 </div>
               </div>
             </div>
-
+            
             <div class="border-t border-gray-200 px-6 py-6">
               <h3 class="text-sm font-semibold text-gray-900">Keterangan</h3>
+              
               <p class="mt-2 text-sm leading-relaxed text-gray-700">
                 {@project.keterangan || "Tiada keterangan disediakan."}
               </p>
             </div>
           </div>
         </div>
-
+        
         <aside class="space-y-6">
           <div class="rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div class="border-b border-gray-200 px-6 py-5">
               <h2 class="text-lg font-semibold text-gray-900">Isu & Tindakan</h2>
+              
               <p class="mt-1 text-sm text-gray-500">Catatan ringkas untuk tindakan susulan</p>
             </div>
-
+            
             <div class="px-6 py-6 space-y-4">
               <div>
                 <div class="text-xs font-semibold tracking-wide text-gray-500">Isu</div>
+                
                 <div class="mt-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
                   {@project.isu || "-"}
                 </div>
               </div>
-
+              
               <div>
                 <div class="text-xs font-semibold tracking-wide text-gray-500">Tindakan</div>
+                
                 <div class="mt-2 rounded-xl bg-blue-50 px-4 py-3 text-sm font-medium text-blue-900">
                   {@project.tindakan || "-"}
                 </div>
               </div>
             </div>
           </div>
-
+          
           <div class="rounded-2xl border border-gray-200 bg-gradient-to-br from-gray-900 to-gray-800 p-6 text-white shadow-sm">
             <div class="flex items-start justify-between gap-4">
               <div>
                 <div class="text-xs font-semibold tracking-[0.22em] text-white/70">TIP</div>
-                <div class="mt-2 text-sm font-semibold">Gunakan tab “Projek” jika perlu paparan lengkap.</div>
+                
+                <div class="mt-2 text-sm font-semibold">
+                  Gunakan tab “Projek” jika perlu paparan lengkap.
+                </div>
+                
                 <div class="mt-1 text-sm text-white/80">
                   Halaman ini fokus pada ringkasan butiran.
                 </div>
               </div>
+              
               <.link
                 id="open-full-view"
                 navigate={if(@project.id, do: ~p"/projek/#{@project.id}", else: ~p"/projek")}
                 class="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
               >
-                <.icon name="hero-eye" class="h-4 w-4" />
-                <span>Buka Paparan Penuh</span>
+                <.icon name="hero-eye" class="h-4 w-4" /> <span>Buka Paparan Penuh</span>
               </.link>
             </div>
           </div>
@@ -234,5 +245,3 @@
     </main>
   </div>
 </Layouts.app>
-
-

@@ -2,6 +2,7 @@ defmodule SppaWeb.ProjekLive do
   use SppaWeb, :live_view
 
   alias Sppa.Projects
+  alias Sppa.SoalSelidiks
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
@@ -46,9 +47,60 @@ defmodule SppaWeb.ProjekLive do
       if project do
         project_name = Map.get(project, :nama) || Map.get(project, :name) || "Projek"
 
+        # Load soal selidik for this project (for tab paparan Soal Selidik)
+        soal_selidik =
+          SoalSelidiks.get_soal_selidik_for_project_or_by_name(
+            project,
+            socket.assigns.current_scope
+          )
+
+        soal_selidik_pdf_data =
+          if soal_selidik do
+            data = SoalSelidiks.to_liveview_format(soal_selidik)
+
+            # Debug logging untuk pastikan data dimuatkan
+            require Logger
+            Logger.info("=== PROJEK LIVE - SOAL SELIDIK DATA ===")
+            Logger.info("Soal Selidik ID: #{soal_selidik.id}")
+            Logger.info("Nama Sistem: #{data.nama_sistem}")
+            Logger.info("FR Categories count: #{length(data.fr_categories)}")
+            Logger.info("NFR Categories count: #{length(data.nfr_categories)}")
+
+            # Log sample fr_data untuk debug
+            case data.fr_data do
+              %{} = fr when map_size(fr) > 0 ->
+                first_cat = fr |> Map.keys() |> List.first()
+                if first_cat do
+                  cat_data = Map.get(fr, first_cat, %{})
+                  Logger.info("Sample FR data for category '#{first_cat}': #{inspect(cat_data, limit: 3)}")
+
+                  if map_size(cat_data) > 0 do
+                    first_q = cat_data |> Map.keys() |> List.first()
+                    if first_q do
+                      q_data = Map.get(cat_data, first_q, %{})
+                      Logger.info("Sample question data for '#{first_q}': #{inspect(q_data, limit: 5)}")
+                    end
+                  end
+                end
+
+              _ ->
+                Logger.info("FR data is empty")
+            end
+
+            Logger.info("=====================================")
+            data
+          else
+            require Logger
+            Logger.info("=== PROJEK LIVE - NO SOAL SELIDIK ===")
+            Logger.info("Project ID: #{project.id}, Nama: #{project.nama}")
+            Logger.info("No soal selidik found for this project")
+            Logger.info("=====================================")
+            nil
+          end
+
         socket
         |> assign(:project, project)
-        |> assign(:soal_selidik_document, get_soal_selidik_document(project.nama))
+        |> assign(:soal_selidik_pdf_data, soal_selidik_pdf_data)
         |> assign(
           :analisis_pdf_data,
           Sppa.AnalisisDanRekabentuk.pdf_data(
@@ -127,10 +179,13 @@ defmodule SppaWeb.ProjekLive do
   # Helper function to build navigation path with tab parameter
   def build_project_navigate_path(project, user_role) do
     tab_slug = fasa_to_tab_slug(project.fasa)
-    base_path = if(user_role == "pembangun sistem",
-      do: "/projek/#{project.id}/details",
-      else: "/projek/#{project.id}"
-    )
+
+    base_path =
+      if(user_role == "pembangun sistem",
+        do: "/projek/#{project.id}/details",
+        else: "/projek/#{project.id}"
+      )
+
     "#{base_path}?tab=#{tab_slug}"
   end
 
@@ -228,6 +283,58 @@ defmodule SppaWeb.ProjekLive do
       if project do
         project_name = Map.get(project, :nama) || Map.get(project, :name) || "Projek"
 
+        # Load soal selidik untuk projek ini agar tab Soal Selidik memaparkan
+        # data sebenar yang telah diisi di borang Soal Selidik.
+        soal_selidik =
+          SoalSelidiks.get_soal_selidik_for_project_or_by_name(
+            project,
+            socket.assigns.current_scope
+          )
+
+        soal_selidik_pdf_data =
+          if soal_selidik do
+            data = SoalSelidiks.to_liveview_format(soal_selidik)
+
+            # Debug logging untuk pastikan data dimuatkan
+            require Logger
+            Logger.info("=== PROJEK LIVE - SOAL SELIDIK DATA ===")
+            Logger.info("Soal Selidik ID: #{soal_selidik.id}")
+            Logger.info("Nama Sistem: #{data.nama_sistem}")
+            Logger.info("FR Categories count: #{length(data.fr_categories)}")
+            Logger.info("NFR Categories count: #{length(data.nfr_categories)}")
+
+            # Log sample fr_data untuk debug
+            case data.fr_data do
+              %{} = fr when map_size(fr) > 0 ->
+                first_cat = fr |> Map.keys() |> List.first()
+                if first_cat do
+                  cat_data = Map.get(fr, first_cat, %{})
+                  Logger.info("Sample FR data for category '#{first_cat}': #{inspect(cat_data, limit: 3)}")
+
+                  if map_size(cat_data) > 0 do
+                    first_q = cat_data |> Map.keys() |> List.first()
+                    if first_q do
+                      q_data = Map.get(cat_data, first_q, %{})
+                      Logger.info("Sample question data for '#{first_q}': #{inspect(q_data, limit: 5)}")
+                    end
+                  end
+                end
+
+              _ ->
+                Logger.info("FR data is empty")
+            end
+
+            Logger.info("=====================================")
+            data
+          else
+            require Logger
+            Logger.info("=== PROJEK LIVE - NO SOAL SELIDIK ===")
+            Logger.info("Project ID: #{project.id}, Nama: #{project.nama}")
+            Logger.info("No soal selidik found for this project")
+            Logger.info("=====================================")
+            nil
+          end
+
         activities =
           if connected?(socket) do
             Projects.list_recent_activities(socket.assigns.current_scope, 10)
@@ -242,7 +349,7 @@ defmodule SppaWeb.ProjekLive do
          |> assign(:project, project)
          |> assign(:projects, [])
          |> assign(:current_tab, "Soal Selidik")
-         |> assign(:soal_selidik_document, get_soal_selidik_document(project.nama))
+         |> assign(:soal_selidik_pdf_data, soal_selidik_pdf_data)
          |> assign(
            :analisis_pdf_data,
            Sppa.AnalisisDanRekabentuk.pdf_data(
@@ -545,9 +652,17 @@ defmodule SppaWeb.ProjekLive do
         tarikh_jangka_siap: ~D[2024-12-31],
         catatan: "Pembangunan sedang dijalankan mengikut jadual",
         functions: [
-          %{id: "func_1_1", name: "Pendaftaran Pengguna", sub_functions: [%{id: "sub_1_1_1", name: "Pengesahan Pendaftaran"}]},
+          %{
+            id: "func_1_1",
+            name: "Pendaftaran Pengguna",
+            sub_functions: [%{id: "sub_1_1_1", name: "Pengesahan Pendaftaran"}]
+          },
           %{id: "func_1_2", name: "Laman Log Masuk", sub_functions: []},
-          %{id: "func_1_3", name: "Penyelenggaraan Profail", sub_functions: [%{id: "sub_1_3_1", name: "Pengemaskinian Profil"}]}
+          %{
+            id: "func_1_3",
+            name: "Penyelenggaraan Profail",
+            sub_functions: [%{id: "sub_1_3_1", name: "Pengemaskinian Profil"}]
+          }
         ]
       },
       %{
@@ -633,8 +748,10 @@ defmodule SppaWeb.ProjekLive do
         modul_terlibat: "Modul Pengurusan Pengguna",
         status: "Dalam Semakan",
         tarikh_dibuat: ~D[2024-11-15],
-        justifikasi: "Perlu menambah fungsi pengesahan dua faktor untuk meningkatkan keselamatan sistem",
-        kesan: "Akan meningkatkan keselamatan sistem tetapi memerlukan latihan tambahan untuk pengguna",
+        justifikasi:
+          "Perlu menambah fungsi pengesahan dua faktor untuk meningkatkan keselamatan sistem",
+        kesan:
+          "Akan meningkatkan keselamatan sistem tetapi memerlukan latihan tambahan untuk pengguna",
         catatan: "Menunggu kelulusan dari ketua bahagian"
       },
       %{
@@ -655,7 +772,8 @@ defmodule SppaWeb.ProjekLive do
         modul_terlibat: "Modul Dashboard",
         status: "Ditolak",
         tarikh_dibuat: ~D[2024-11-25],
-        justifikasi: "Meningkatkan pengalaman pengguna dengan reka bentuk yang lebih moden dan intuitif",
+        justifikasi:
+          "Meningkatkan pengalaman pengguna dengan reka bentuk yang lebih moden dan intuitif",
         kesan: "Akan meningkatkan kepuasan pengguna tetapi memerlukan masa pembangunan tambahan",
         catatan: "Ditangguhkan ke fasa seterusnya"
       },
@@ -671,51 +789,5 @@ defmodule SppaWeb.ProjekLive do
         catatan: "Menunggu maklumbalas dari pihak e-Sabah"
       }
     ]
-  end
-
-  # Get soal selidik document data - will be replaced with database query later
-  defp get_soal_selidik_document(system_name) do
-    %{
-      document_id: "JPKN-BPA-01/B1",
-      system_name: system_name,
-      sections: [
-        %{
-          title: "PENDAFTARAN DAN LOG MASUK",
-          questions: [
-            %{
-              number: 1,
-              question:
-                "Adakah sistem perlu pendaftaran pengguna baru? (atau hanya menggunakan pengguna SM2)",
-              response: nil,
-              notes: nil
-            },
-            %{
-              number: 2,
-              question: "Apakah jenis login yang digunakan?",
-              response: nil,
-              notes: nil,
-              options: ["ID/EMEL & Kata Laluan", "Single Sign On", "Integrasi sistem sedia ada"]
-            },
-            %{
-              number: 3,
-              question: "Adakah perlu log audit untuk semua aktiviti pengguna?",
-              response: nil,
-              notes: nil
-            }
-          ]
-        },
-        %{
-          title: "PENGURUSAN DATA",
-          questions: [
-            %{
-              number: 4,
-              question: "Apakah jenis data yang perlu dikendalikan oleh sistem?",
-              response: nil,
-              notes: nil
-            }
-          ]
-        }
-      ]
-    }
   end
 end

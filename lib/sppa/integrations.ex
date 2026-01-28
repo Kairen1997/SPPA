@@ -157,7 +157,11 @@ defmodule Sppa.Integrations do
       %Ecto.Changeset{data: %ExternalDocument{}}
 
   """
-  def change_external_document(%Scope{} = scope, %ExternalDocument{} = external_document, attrs \\ %{}) do
+  def change_external_document(
+        %Scope{} = scope,
+        %ExternalDocument{} = external_document,
+        attrs \\ %{}
+      ) do
     true = external_document.user_id == scope.user.id
 
     ExternalDocument.changeset(external_document, attrs, scope)

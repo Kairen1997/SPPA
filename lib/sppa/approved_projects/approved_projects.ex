@@ -19,9 +19,11 @@ defmodule Sppa.ApprovedProjects do
       {:ok, %ApprovedProject{id: nil}} ->
         # Duplicate detected (on_conflict returned struct without ID)
         {:ok, nil}
+
       {:ok, project} ->
         # New record inserted successfully
         {:ok, project}
+
       {:error, error_changeset} ->
         # Validation or other error
         {:error, error_changeset}

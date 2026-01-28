@@ -269,7 +269,8 @@ defmodule SppaWeb.PenempatanLive do
       if socket.assigns[:penempatan] && length(socket.assigns.penempatan) > 0 do
         Enum.find(socket.assigns.penempatan, fn p -> p.id == penempatan_id end)
       else
-        if socket.assigns[:selected_penempatan] && socket.assigns.selected_penempatan.id == penempatan_id do
+        if socket.assigns[:selected_penempatan] &&
+             socket.assigns.selected_penempatan.id == penempatan_id do
           socket.assigns.selected_penempatan
         else
           get_penempatan_by_id(penempatan_id)
@@ -291,9 +292,21 @@ defmodule SppaWeb.PenempatanLive do
         "dibina_oleh" => penempatan.dibina_oleh || "",
         "disemak_oleh" => Map.get(penempatan, :disemak_oleh, "") || "",
         "diluluskan_oleh" => Map.get(penempatan, :diluluskan_oleh, "") || "",
-        "tarikh_dibina" => if(penempatan.tarikh_dibina, do: Calendar.strftime(penempatan.tarikh_dibina, "%Y-%m-%d"), else: ""),
-        "tarikh_disemak" => if(Map.get(penempatan, :tarikh_disemak), do: Calendar.strftime(penempatan.tarikh_disemak, "%Y-%m-%d"), else: ""),
-        "tarikh_diluluskan" => if(Map.get(penempatan, :tarikh_diluluskan), do: Calendar.strftime(penempatan.tarikh_diluluskan, "%Y-%m-%d"), else: "")
+        "tarikh_dibina" =>
+          if(penempatan.tarikh_dibina,
+            do: Calendar.strftime(penempatan.tarikh_dibina, "%Y-%m-%d"),
+            else: ""
+          ),
+        "tarikh_disemak" =>
+          if(Map.get(penempatan, :tarikh_disemak),
+            do: Calendar.strftime(penempatan.tarikh_disemak, "%Y-%m-%d"),
+            else: ""
+          ),
+        "tarikh_diluluskan" =>
+          if(Map.get(penempatan, :tarikh_diluluskan),
+            do: Calendar.strftime(penempatan.tarikh_diluluskan, "%Y-%m-%d"),
+            else: ""
+          )
       }
 
       form = to_form(form_data, as: :penempatan)
@@ -391,10 +404,19 @@ defmodule SppaWeb.PenempatanLive do
       jenis: penempatan_params["jenis"] || "",
       persekitaran: penempatan_params["persekitaran"] || "",
       url: penempatan_params["url"] || "",
-      catatan: if(penempatan_params["catatan"] == "", do: nil, else: penempatan_params["catatan"]),
+      catatan:
+        if(penempatan_params["catatan"] == "", do: nil, else: penempatan_params["catatan"]),
       dibina_oleh: penempatan_params["dibina_oleh"] || "",
-      disemak_oleh: if(penempatan_params["disemak_oleh"] == "", do: nil, else: penempatan_params["disemak_oleh"]),
-      diluluskan_oleh: if(penempatan_params["diluluskan_oleh"] == "", do: nil, else: penempatan_params["diluluskan_oleh"]),
+      disemak_oleh:
+        if(penempatan_params["disemak_oleh"] == "",
+          do: nil,
+          else: penempatan_params["disemak_oleh"]
+        ),
+      diluluskan_oleh:
+        if(penempatan_params["diluluskan_oleh"] == "",
+          do: nil,
+          else: penempatan_params["diluluskan_oleh"]
+        ),
       tarikh_dibina: tarikh_dibina,
       tarikh_disemak: tarikh_disemak,
       tarikh_diluluskan: tarikh_diluluskan
@@ -413,7 +435,8 @@ defmodule SppaWeb.PenempatanLive do
   @impl true
   def handle_event("update_penempatan", %{"penempatan" => penempatan_params}, socket) do
     # TODO: In the future, this should update the database
-    editing_penempatan = socket.assigns[:editing_penempatan] || socket.assigns[:selected_penempatan]
+    editing_penempatan =
+      socket.assigns[:editing_penempatan] || socket.assigns[:selected_penempatan]
 
     if editing_penempatan do
       penempatan_id = editing_penempatan.id
@@ -479,10 +502,19 @@ defmodule SppaWeb.PenempatanLive do
           jenis: penempatan_params["jenis"],
           persekitaran: penempatan_params["persekitaran"],
           url: penempatan_params["url"] || "",
-          catatan: if(penempatan_params["catatan"] == "", do: nil, else: penempatan_params["catatan"]),
+          catatan:
+            if(penempatan_params["catatan"] == "", do: nil, else: penempatan_params["catatan"]),
           dibina_oleh: penempatan_params["dibina_oleh"] || "",
-          disemak_oleh: if(penempatan_params["disemak_oleh"] == "", do: nil, else: penempatan_params["disemak_oleh"]),
-          diluluskan_oleh: if(penempatan_params["diluluskan_oleh"] == "", do: nil, else: penempatan_params["diluluskan_oleh"]),
+          disemak_oleh:
+            if(penempatan_params["disemak_oleh"] == "",
+              do: nil,
+              else: penempatan_params["disemak_oleh"]
+            ),
+          diluluskan_oleh:
+            if(penempatan_params["diluluskan_oleh"] == "",
+              do: nil,
+              else: penempatan_params["diluluskan_oleh"]
+            ),
           tarikh_dibina: tarikh_dibina,
           tarikh_disemak: tarikh_disemak,
           tarikh_diluluskan: tarikh_diluluskan
@@ -509,7 +541,8 @@ defmodule SppaWeb.PenempatanLive do
 
       # Only update selected_penempatan if we're on detail page
       final_socket =
-        if socket.assigns[:selected_penempatan] && socket.assigns.selected_penempatan.id == penempatan_id do
+        if socket.assigns[:selected_penempatan] &&
+             socket.assigns.selected_penempatan.id == penempatan_id do
           assign(updated_socket, :selected_penempatan, updated_penempatan_data)
         else
           updated_socket

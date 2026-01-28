@@ -73,9 +73,17 @@ defmodule SppaWeb.PembangunanLive do
         tarikh_jangka_siap: ~D[2024-12-31],
         catatan: "Pembangunan sedang dijalankan mengikut jadual",
         functions: [
-          %{id: "func_1_1", name: "Pendaftaran Pengguna", sub_functions: [%{id: "sub_1_1_1", name: "Pengesahan Pendaftaran"}]},
+          %{
+            id: "func_1_1",
+            name: "Pendaftaran Pengguna",
+            sub_functions: [%{id: "sub_1_1_1", name: "Pengesahan Pendaftaran"}]
+          },
           %{id: "func_1_2", name: "Laman Log Masuk", sub_functions: []},
-          %{id: "func_1_3", name: "Penyelenggaraan Profail", sub_functions: [%{id: "sub_1_3_1", name: "Pengemaskinian Profil"}]}
+          %{
+            id: "func_1_3",
+            name: "Penyelenggaraan Profail",
+            sub_functions: [%{id: "sub_1_3_1", name: "Pengemaskinian Profil"}]
+          }
         ]
       },
       %{
@@ -224,7 +232,8 @@ defmodule SppaWeb.PembangunanLive do
         "version" => module.version,
         "priority" => module.priority,
         "status" => module.status,
-        "tarikh_mula" => if(module.tarikh_mula, do: Calendar.strftime(module.tarikh_mula, "%Y-%m-%d"), else: ""),
+        "tarikh_mula" =>
+          if(module.tarikh_mula, do: Calendar.strftime(module.tarikh_mula, "%Y-%m-%d"), else: ""),
         "tarikh_jangka_siap" => Calendar.strftime(module.tarikh_jangka_siap, "%Y-%m-%d"),
         "catatan" => module.catatan || ""
       }

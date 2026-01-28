@@ -13,9 +13,17 @@ defmodule Sppa.AnalisisDanRekabentuk do
         number: 1,
         name: "Modul Pengurusan Pengguna",
         functions: [
-          %{id: "func_1_1", name: "Pendaftaran Pengguna", sub_functions: [%{id: "sub_1_1_1", name: "Pengesahan Pendaftaran"}]},
+          %{
+            id: "func_1_1",
+            name: "Pendaftaran Pengguna",
+            sub_functions: [%{id: "sub_1_1_1", name: "Pengesahan Pendaftaran"}]
+          },
           %{id: "func_1_2", name: "Laman Log Masuk", sub_functions: []},
-          %{id: "func_1_3", name: "Penyelenggaraan Profail", sub_functions: [%{id: "sub_1_3_1", name: "Pengemaskinian Profil"}]}
+          %{
+            id: "func_1_3",
+            name: "Penyelenggaraan Profail",
+            sub_functions: [%{id: "sub_1_3_1", name: "Pengemaskinian Profil"}]
+          }
         ]
       },
       %{
@@ -86,12 +94,17 @@ defmodule Sppa.AnalisisDanRekabentuk do
 
     %{
       document_id: Keyword.get(opts, :document_id, "JPKN-BPA-01/B2"),
-      nama_projek: Keyword.get(opts, :nama_projek, "Sistem Pengurusan Permohonan Aplikasi (SPPA)"),
+      nama_projek:
+        Keyword.get(opts, :nama_projek, "Sistem Pengurusan Permohonan Aplikasi (SPPA)"),
       nama_agensi: Keyword.get(opts, :nama_agensi, "Jabatan Pendaftaran Negara Sabah (JPKN)"),
       versi: Keyword.get(opts, :versi, "1.0.0"),
       tarikh_semakan: Keyword.get(opts, :tarikh_semakan, today),
       rujukan_perubahan:
-        Keyword.get(opts, :rujukan_perubahan, "Mesyuarat Jawatankuasa Teknologi Maklumat - 15 Disember 2024"),
+        Keyword.get(
+          opts,
+          :rujukan_perubahan,
+          "Mesyuarat Jawatankuasa Teknologi Maklumat - 15 Disember 2024"
+        ),
       modules: modules,
       total_modules: length(modules),
       total_functions:
