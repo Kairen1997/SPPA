@@ -74,7 +74,7 @@ defmodule Sppa.Workers.ExternalSyncWorker do
   end
 
   # Map external API response to ApprovedProject attributes
-  # Based on actual API response structure from http://10.71.67.195:4000/api/requests?status=Diluluskan
+  # Based on actual API response structure from http://10.71.67.159:4000/api/requests?status=Diluluskan
   defp map_to_approved_project(document) when is_map(document) do
     # Log the raw document for debugging
     Logger.debug("Mapping document: #{inspect(Map.keys(document))}")
@@ -91,7 +91,7 @@ defmodule Sppa.Workers.ExternalSyncWorker do
       Logger.warning("Document with id=#{external_id} has no nama_projek. Available keys: #{inspect(Map.keys(document))}")
     end
 
-    %{
+    attrs = %{
       "external_application_id" => external_id,
       "nama_projek" => nama_projek,
       # API uses "kementerian_jabatan"
@@ -129,11 +129,43 @@ defmodule Sppa.Workers.ExternalSyncWorker do
                              get_string(document, "user_group"),
       "implikasi" => get_string(document, "implikasi") ||
                      get_string(document, "implication"),
+      # Track external updated_at so we can order the list like the API
+      "external_updated_at" =>
+        parse_datetime(
+          get_string(document, "updated_at") ||
+            get_string(document, "updatedAt") ||
+            get_string(document, "tarikh_kemaskini") ||
+            get_string(document, "tarikh_kemaskinian")
+        ),
       # API uses "kertas_kerja_url"
-      "kertas_kerja_path" => get_string(document, "kertas_kerja_url") ||
-                             get_string(document, "kertas_kerja_path") ||
-                             get_string(document, "document_path")
+      # Some records may use alternative keys – try several options
+      "kertas_kerja_path" =>
+        get_string(document, "kertas_kerja_url") ||
+          get_string(document, "kertas_kerja_path") ||
+          get_string(document, "document_path") ||
+          get_string(document, "kertas_kerja") ||
+          get_string(document, "kertas_kerja_pdf") ||
+          get_string(document, "file_url") ||
+          get_string(document, "file")
     }
+
+    # Extra logging to help diagnose missing/invalid document URLs
+    case Map.get(attrs, "kertas_kerja_path") do
+      nil ->
+        Logger.debug(
+          "No kertas_kerja_path for external id=#{external_id}. Available keys: #{inspect(Map.keys(document))}"
+        )
+
+      "" ->
+        Logger.debug(
+          "Empty kertas_kerja_path for external id=#{external_id}. Raw value: #{inspect(document["kertas_kerja_url"] || document["kertas_kerja_path"] || document["document_path"])}"
+        )
+
+      _ ->
+        :ok
+    end
+
+    attrs
   end
 
   defp map_to_approved_project(_), do: %{}
@@ -145,8 +177,6 @@ defmodule Sppa.Workers.ExternalSyncWorker do
       value -> to_string(value)
     end
   end
-
-  defp get_string(_, _), do: nil
 
   defp get_integer(map, key) when is_map(map) do
     case Map.get(map, key) || Map.get(map, to_string(key)) do
@@ -161,8 +191,6 @@ defmodule Sppa.Workers.ExternalSyncWorker do
     end
   end
 
-  defp get_integer(_, _), do: nil
-
   defp parse_date(nil), do: nil
   defp parse_date(date) when is_binary(date) do
     case Date.from_iso8601(date) do
@@ -172,6 +200,20 @@ defmodule Sppa.Workers.ExternalSyncWorker do
         nil
     end
   end
-  defp parse_date(%Date{} = date), do: date
-  defp parse_date(_), do: nil
+
+  # Parse external updated_at (ISO8601) into a DateTime we can store
+  defp parse_datetime(nil), do: nil
+
+  defp parse_datetime(value) when is_binary(value) do
+    case DateTime.from_iso8601(value) do
+      {:ok, dt, _offset} ->
+        # Truncate to seconds to match :utc_datetime precision
+        DateTime.truncate(dt, :second)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp parse_datetime(_), do: nil
 end

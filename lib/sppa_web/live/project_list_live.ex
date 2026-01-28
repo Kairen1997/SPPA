@@ -253,8 +253,11 @@ defmodule SppaWeb.ProjectListLive do
     # Apply pagination
     offset = (socket.assigns.page - 1) * socket.assigns.per_page
 
+    # Order by external updated_at from the upstream system so the table follows
+    # the same ordering as the external API (newest first), regardless of local
+    # changes to tarikh_mula/tarikh_jangkaan_siap.
     base_query
-    |> order_by([ap, _p], desc: ap.inserted_at)
+    |> order_by([ap, _p], desc: ap.external_updated_at)
     |> limit(^socket.assigns.per_page)
     |> offset(^offset)
     |> Repo.all()
@@ -403,9 +406,9 @@ defmodule SppaWeb.ProjectListLive do
                 </.form>
               </div>
 
-              <%!-- Projects table --%>
+               <%!-- Projects table --%>
               <div id="senarai-projek-document" class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0">
-                 <table class="w-full">
+                <table class="w-full">
                   <thead class="bg-gray-50">
                     <tr>
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -455,13 +458,13 @@ defmodule SppaWeb.ProjectListLive do
                       <td class="whitespace-nowrap px-6 py-4 text-sm">
                         <div class="flex items-center gap-2">
                           <%!-- Sentiasa tunjuk butang Lihat untuk paparan penuh maklumat permohonan (data external) --%>
-                          <.link
+                            <.link
                             navigate={~p"/senarai-projek-diluluskan/#{project.id}"}
                             class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200"
-                          >
+                            >
                             <.icon name="hero-eye" class="w-4 h-4" />
                             <span class="hidden lg:inline">Lihat</span>
-                          </.link>
+                            </.link>
 
                           <%!-- Jika projek dalaman sudah wujud, benarkan ke modul; jika tidak, tunjuk butang Daftar Projek --%>
                           <%= if project.project do %>
@@ -472,11 +475,11 @@ defmodule SppaWeb.ProjectListLive do
                               <.icon name="hero-cog-6-tooth" class="w-4 h-4" />
                               <span class="hidden lg:inline">Modul</span>
                             </.link>
-                          <% else %>
-                            <.button phx-click="create_project" phx-value-id={project.id}>
-                              Daftar Projek
-                            </.button>
-                          <% end %>
+                        <% else %>
+                          <.button phx-click="create_project" phx-value-id={project.id}>
+                            Daftar Projek
+                          </.button>
+                        <% end %>
                         </div>
                       </td>
                     </tr>

@@ -72,6 +72,62 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp format_date(nil), do: "-"
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
 
+  defp ensure_full_url(nil), do: nil
+  defp ensure_full_url(url) when is_binary(url) do
+    url = String.trim(url)
+
+    # First, normalize any localhost references
+    normalized_url =
+      url
+      |> String.replace("localhost:4000", "10.71.67.159:4000")
+      |> String.replace("127.0.0.1:4000", "10.71.67.159:4000")
+
+    cond do
+      # Already a full URL with http:// or https://
+      String.starts_with?(normalized_url, ["http://", "https://"]) ->
+        normalized_url
+
+      # If it starts with the IP address directly (without http://)
+      String.starts_with?(normalized_url, "10.71.67.159:4000") ->
+        "http://" <> normalized_url
+
+      # If it starts with /localhost: or /127.0.0.1:, extract the path
+      String.starts_with?(normalized_url, "/localhost:") or String.starts_with?(normalized_url, "/127.0.0.1:") ->
+        # Remove /localhost:4000 or /127.0.0.1:4000 and keep the rest
+        # Pattern: /localhost:4000/uploads/... -> /uploads/...
+        path =
+          normalized_url
+          |> String.replace(~r/^\/localhost:\d+/, "")
+          |> String.replace(~r/^\/127\.0\.0\.1:\d+/, "")
+        "http://10.71.67.159:4000" <> path
+
+      # If it starts with localhost: or 127.0.0.1: (without leading slash)
+      String.starts_with?(normalized_url, "localhost:") or String.starts_with?(normalized_url, "127.0.0.1:") ->
+        # Replace localhost:4000 or 127.0.0.1:4000 with http://10.71.67.159:4000
+        normalized_url
+        |> String.replace(~r/^localhost:\d+/, "10.71.67.159:4000")
+        |> String.replace(~r/^127\.0\.0\.1:\d+/, "10.71.67.159:4000")
+        |> then(&("http://" <> &1))
+
+      # If it's a relative path starting with /
+      String.starts_with?(normalized_url, "/") ->
+        "http://10.71.67.159:4000" <> normalized_url
+
+      # If it's just a number or ID, construct the file download URL
+      Regex.match?(~r/^\d+$/, normalized_url) ->
+        "http://10.71.67.159:4000/api/files/#{normalized_url}"
+
+      # If it looks like a file path without leading slash
+      String.contains?(normalized_url, ["/", ".pdf", ".PDF"]) ->
+        "http://10.71.67.159:4000/" <> normalized_url
+
+      # Default: treat as relative path
+      true ->
+        "http://10.71.67.159:4000/" <> normalized_url
+    end
+  end
+  defp ensure_full_url(_), do: nil
+
   defp parse_pembangun_sistem(nil), do: []
   defp parse_pembangun_sistem(""), do: []
   defp parse_pembangun_sistem(str) when is_binary(str) do
@@ -185,45 +241,53 @@ defmodule SppaWeb.ApprovedProjectLive do
 
   @impl true
   def handle_event("update_tarikh_mula", %{"tarikh_mula" => date_str}, socket) do
-    case Date.from_iso8601(date_str) do
-      {:ok, date} ->
-        case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-          "tarikh_mula" => date
-        }) do
-          {:ok, updated_project} ->
-            {:noreply,
-             socket
-             |> assign(:approved_project, updated_project)
-             |> put_flash(:info, "Tarikh mula telah dikemaskini.")}
-
-          {:error, _changeset} ->
-            {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh mula.")}
+    date_value =
+      if date_str == "" or date_str == nil do
+        nil
+      else
+        case Date.from_iso8601(date_str) do
+          {:ok, date} -> date
+          {:error, _} -> nil
         end
+      end
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Format tarikh tidak sah.")}
+    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+      "tarikh_mula" => date_value
+    }) do
+      {:ok, updated_project} ->
+        {:noreply,
+         socket
+         |> assign(:approved_project, updated_project)
+         |> put_flash(:info, "Tarikh mula telah dikemaskini.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh mula.")}
     end
   end
 
   @impl true
   def handle_event("update_tarikh_jangkaan_siap", %{"tarikh_jangkaan_siap" => date_str}, socket) do
-    case Date.from_iso8601(date_str) do
-      {:ok, date} ->
-        case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-          "tarikh_jangkaan_siap" => date
-        }) do
-          {:ok, updated_project} ->
-            {:noreply,
-             socket
-             |> assign(:approved_project, updated_project)
-             |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
-
-          {:error, _changeset} ->
-            {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
+    date_value =
+      if date_str == "" or date_str == nil do
+        nil
+      else
+        case Date.from_iso8601(date_str) do
+          {:ok, date} -> date
+          {:error, _} -> nil
         end
+      end
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Format tarikh tidak sah.")}
+    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+      "tarikh_jangkaan_siap" => date_value
+    }) do
+      {:ok, updated_project} ->
+        {:noreply,
+         socket
+         |> assign(:approved_project, updated_project)
+         |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
     end
   end
 
@@ -625,14 +689,26 @@ defmodule SppaWeb.ApprovedProjectLive do
                         </h3>
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <%= if @approved_project.kertas_kerja_path do %>
-                            <.link
-                              navigate={@approved_project.kertas_kerja_path}
-                              class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
-                              target="_blank"
-                            >
-                              <.icon name="hero-document-arrow-down" class="w-4 h-4" />
-                              <span>Muat Turun Kertas Kerja</span>
-                            </.link>
+                            <% full_url = ensure_full_url(@approved_project.kertas_kerja_path) %>
+                            <%= if full_url do %>
+                              <div class="space-y-2">
+                                <a
+                                  href={full_url}
+                                  class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <.icon name="hero-document-arrow-down" class="w-4 h-4" />
+                                  <span>Muat Turun Kertas Kerja</span>
+                                </a>
+                                <p class="text-xs text-gray-500 break-all">
+                                  <span class="font-medium">URL:</span> {full_url}
+                                </p>
+                              </div>
+                            <% else %>
+                              <p class="text-sm text-gray-400 italic">URL dokumen tidak sah</p>
+                              <p class="text-xs text-gray-500 mt-1">Nilai tersimpan: {@approved_project.kertas_kerja_path}</p>
+                            <% end %>
                           <% else %>
                             <p class="text-sm text-gray-400 italic">Tiada dokumen kertas kerja tersedia</p>
                           <% end %>
