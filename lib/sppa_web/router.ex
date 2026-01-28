@@ -57,7 +57,9 @@ defmodule SppaWeb.Router do
       live "/dashboard-pp", DashboardPPLive, :index
       live "/dashboard", DashboardLive, :index
       live "/projek", ProjekLive, :index
-      live "/projek/:id", ProjekLive, :show
+      # Halaman /projek kini khusus untuk senarai projek sahaja.
+      # Paparan butiran projek dan tab Soal Selidik dikendalikan oleh ProjekTabNavigationLive.
+      live "/projek/:id", ProjekTabNavigationLive, :show
       live "/projek/:id/details", ProjectDetailsLive, :show
       live "/projek/:id/soal-selidik", ProjekTabNavigationLive, :show
       live "/soal-selidik", SoalSelidikLive, :index
