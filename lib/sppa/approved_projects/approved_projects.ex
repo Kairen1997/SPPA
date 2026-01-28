@@ -42,4 +42,13 @@ defmodule Sppa.ApprovedProjects do
     Repo.get!(ApprovedProject, id)
     |> Repo.preload(:project)
   end
+
+  @doc """
+  Update an approved project.
+  """
+  def update_approved_project(%ApprovedProject{} = approved_project, attrs) do
+    approved_project
+    |> ApprovedProject.changeset(attrs)
+    |> Repo.update()
+  end
 end

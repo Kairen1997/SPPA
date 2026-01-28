@@ -453,15 +453,18 @@ defmodule SppaWeb.ProjectListLive do
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm">
-                        <%= if project.project do %>
-                          <div class="flex items-center gap-2">
-                            <.link
-                              navigate={~p"/projek/#{project.project.id}"}
-                              class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200"
-                            >
-                              <.icon name="hero-eye" class="w-4 h-4" />
-                              <span class="hidden lg:inline">Lihat</span>
-                            </.link>
+                        <div class="flex items-center gap-2">
+                          <%!-- Sentiasa tunjuk butang Lihat untuk paparan penuh maklumat permohonan (data external) --%>
+                          <.link
+                            navigate={~p"/senarai-projek-diluluskan/#{project.id}"}
+                            class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200"
+                          >
+                            <.icon name="hero-eye" class="w-4 h-4" />
+                            <span class="hidden lg:inline">Lihat</span>
+                          </.link>
+
+                          <%!-- Jika projek dalaman sudah wujud, benarkan ke modul; jika tidak, tunjuk butang Daftar Projek --%>
+                          <%= if project.project do %>
                             <.link
                               navigate={~p"/projek/#{project.project.id}/modul"}
                               class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200"
@@ -469,12 +472,12 @@ defmodule SppaWeb.ProjectListLive do
                               <.icon name="hero-cog-6-tooth" class="w-4 h-4" />
                               <span class="hidden lg:inline">Modul</span>
                             </.link>
-                          </div>
-                        <% else %>
-                          <.button phx-click="create_project" phx-value-id={project.id}>
-                            Daftar Projek
-                          </.button>
-                        <% end %>
+                          <% else %>
+                            <.button phx-click="create_project" phx-value-id={project.id}>
+                              Daftar Projek
+                            </.button>
+                          <% end %>
+                        </div>
                       </td>
                     </tr>
 

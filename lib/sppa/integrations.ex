@@ -19,9 +19,9 @@ defmodule Sppa.Integrations do
     * {:deleted, %ExternalDocument{}}
 
   """
-  def store_document(attrs) do
+  def store_document(%Scope{} = scope, attrs) do
     %ExternalDocument{}
-    |> ExternalDocument.changeset(attrs)
+    |> ExternalDocument.changeset(attrs, scope)
     |> Repo.insert(on_conflict: :nothing)
   end
 
