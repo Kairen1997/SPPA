@@ -88,7 +88,7 @@
                     <.input
                       field={@form[:nama_projek]}
                       type="text"
-                      class="w-full px-3 py-2 text-sm border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
+                      class="w-full px-3 py-2 text-sm text-black border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
                       placeholder="Masukkan nama projek"
                     />
                   </div>
@@ -100,7 +100,7 @@
                     <.input
                       field={@form[:nama_agensi]}
                       type="text"
-                      class="w-full px-3 py-2 text-sm border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
+                      class="w-full px-3 py-2 text-sm text-black border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
                       placeholder="Masukkan Jabatan"
                     />
                   </div>
@@ -112,7 +112,7 @@
                     <.input
                       field={@form[:versi]}
                       type="text"
-                      class="w-full px-3 py-2 text-sm border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
+                      class="w-full px-3 py-2 text-sm text-black border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
                       placeholder="Contoh: 1.0.0"
                     />
                   </div>
@@ -125,7 +125,7 @@
                       <.input
                         field={@form[:tarikh_semakan]}
                         type="date"
-                        class="w-full px-3 py-2 pr-9 text-sm border border-gray-400 rounded bg-white text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
+                        class="w-full px-3 py-2 pr-9 text-sm text-black border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
                         placeholder="dd/mm/yyyy"
                       />
                       <.icon
@@ -142,7 +142,7 @@
                     <.input
                       field={@form[:rujukan_perubahan]}
                       type="text"
-                      class="w-full px-3 py-2 text-sm border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
+                      class="w-full px-3 py-2 text-sm text-black border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
                       placeholder="Nyatakan nama mesyuarat / perbincangan / tajuk kertas kerja dan Tarikh"
                     />
                   </div>
@@ -181,7 +181,7 @@
                             value=""
                             phx-change="update_module_name"
                             phx-value-module_id={module.id}
-                            class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-semibold placeholder:text-black"
+                            class="flex-1 px-2 py-1.5 text-sm text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-semibold placeholder:text-black"
                             placeholder="Masukkan nama modul"
                           />
                         <% else %>
@@ -280,7 +280,7 @@
                               phx-change="update_function_name"
                               phx-value-module_id={selected_module.id}
                               phx-value-func_id={func.id}
-                              class="flex-1 px-2 py-1.5 text-xs border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-black"
+                              class="flex-1 px-2 py-1.5 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-black"
                               placeholder="Nama Fungsi"
                             />
                             <button
@@ -306,7 +306,7 @@
                                   phx-value-module_id={selected_module.id}
                                   phx-value-func_id={func.id}
                                   phx-value-sub_func_id={sub_func.id}
-                                  class="flex-1 px-2 py-1 text-xs border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 placeholder:text-black"
+                                  class="flex-1 px-2 py-1 text-xs text-black border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 placeholder:text-black"
                                   placeholder="Sub-fungsi"
                                 />
                                 <button
@@ -353,7 +353,7 @@
                 </h3>
                 
                 <div class="grid grid-cols-2 gap-6 mt-4">
-                  <div class="border border-gray-300 rounded p-4 bg-gray-50">
+                  <div class="border border-gray-300 rounded p-4 bg-gray-50 disediakan-oleh-section" style="--input-color: #000;">
                     <div class="flex items-center gap-2 mb-3 pb-2 border-b border-gray-300">
                       <.icon name="hero-user-circle" class="w-5 h-5 text-blue-600" />
                       <h4 class="text-sm font-bold text-gray-900">Disediakan Oleh</h4>
@@ -372,7 +372,8 @@
                           type="text"
                           name="analisis_dan_rekabentuk[prepared_by_name]"
                           value={Map.get(@form.params || %{}, "prepared_by_name", "")}
-                          class="w-full px-2 py-1.5 text-xs border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          class="w-full px-2 py-1.5 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          style="color: #000;"
                         />
                       </div>
                       
@@ -384,7 +385,8 @@
                           type="text"
                           name="analisis_dan_rekabentuk[prepared_by_position]"
                           value={Map.get(@form.params || %{}, "prepared_by_position", "")}
-                          class="w-full px-2 py-1.5 text-xs border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          class="w-full px-2 py-1.5 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          style="color: #000;"
                         />
                       </div>
                       
@@ -397,7 +399,8 @@
                             type="date"
                             name="analisis_dan_rekabentuk[prepared_by_date]"
                             value={Map.get(@form.params || %{}, "prepared_by_date", "")}
-                            class="w-full px-2 py-1.5 pr-8 text-xs border border-gray-400 rounded bg-white text-gray-900 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-black"
+                            class="w-full px-2 py-1.5 pr-8 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-black"
+                            style="color: #000;"
                             placeholder="dd/mm/yyyy"
                           />
                           <.icon
@@ -437,7 +440,7 @@
                           type="text"
                           name="analisis_dan_rekabentuk[approved_by_name]"
                           value={Map.get(@form.params || %{}, "approved_by_name", "")}
-                          class="w-full px-2 py-1.5 text-xs border border-gray-400 rounded bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                          class="w-full px-2 py-1.5 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                         />
                       </div>
                       
@@ -449,7 +452,7 @@
                           type="text"
                           name="analisis_dan_rekabentuk[approved_by_position]"
                           value={Map.get(@form.params || %{}, "approved_by_position", "")}
-                          class="w-full px-2 py-1.5 text-xs border border-gray-400 rounded bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                          class="w-full px-2 py-1.5 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                         />
                       </div>
                       
@@ -462,7 +465,7 @@
                             type="date"
                             name="analisis_dan_rekabentuk[approved_by_date]"
                             value={Map.get(@form.params || %{}, "approved_by_date", "")}
-                            class="w-full px-2 py-1.5 pr-8 text-xs border border-gray-400 rounded bg-white text-gray-900 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder:text-black"
+                            class="w-full px-2 py-1.5 pr-8 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder:text-black"
                             placeholder="dd/mm/yyyy"
                           />
                           <.icon
@@ -569,7 +572,7 @@
                       Nama Projek
                     </td>
                     
-                    <td class="px-2 py-1.5 border border-gray-800">{@pdf_data.nama_projek}</td>
+                    <td class="px-2 py-1.5 border border-gray-800 text-black">{@pdf_data.nama_projek}</td>
                   </tr>
                   
                   <tr class="border-b border-gray-800">
@@ -577,7 +580,7 @@
                       Nama Agensi
                     </td>
                     
-                    <td class="px-2 py-1.5 border border-gray-800">{@pdf_data.nama_agensi}</td>
+                    <td class="px-2 py-1.5 border border-gray-800 text-black">{@pdf_data.nama_agensi}</td>
                   </tr>
                   
                   <tr class="border-b border-gray-800">
@@ -585,7 +588,7 @@
                       Versi
                     </td>
                     
-                    <td class="px-2 py-1.5 border border-gray-800">{@pdf_data.versi}</td>
+                    <td class="px-2 py-1.5 border border-gray-800 text-black">{@pdf_data.versi}</td>
                   </tr>
                   
                   <tr class="border-b border-gray-800">
@@ -593,7 +596,7 @@
                       Tarikh Semakan (jika ada)
                     </td>
                     
-                    <td class="px-2 py-1.5 border border-gray-800">{@pdf_data.tarikh_semakan}</td>
+                    <td class="px-2 py-1.5 border border-gray-800 text-black">{@pdf_data.tarikh_semakan}</td>
                   </tr>
                   
                   <tr>
@@ -601,7 +604,7 @@
                       Rujukan Perubahan (jika ada)
                     </td>
                     
-                    <td class="px-2 py-1.5 border border-gray-800">
+                    <td class="px-2 py-1.5 border border-gray-800 text-black">
                       {@pdf_data.rujukan_perubahan}
                     </td>
                   </tr>
@@ -670,19 +673,19 @@
                     <div>
                       <p class="text-gray-600 mb-1">(Nama)</p>
                       
-                      <div class="h-8">{@pdf_data.approved_by_name}</div>
+                      <div class="h-8 text-black">{@pdf_data.approved_by_name}</div>
                     </div>
                     
                     <div>
                       <p class="text-gray-600 mb-1">Jawatan:</p>
                       
-                      <div class="h-8">{@pdf_data.approved_by_position}</div>
+                      <div class="h-8 text-black">{@pdf_data.approved_by_position}</div>
                     </div>
                     
                     <div>
                       <p class="text-gray-600 mb-1">Tarikh:</p>
                       
-                      <div class="h-8">{@pdf_data.approved_by_date}</div>
+                      <div class="h-8 text-black">{@pdf_data.approved_by_date}</div>
                     </div>
                   </div>
                 </div>
@@ -702,19 +705,19 @@
                     <div>
                       <p class="text-gray-600 mb-1">(Nama)</p>
                       
-                      <div class="h-8">{@pdf_data.prepared_by_name}</div>
+                      <div class="h-8 text-black">{@pdf_data.prepared_by_name}</div>
                     </div>
                     
                     <div>
                       <p class="text-gray-600 mb-1">Jawatan:</p>
                       
-                      <div class="h-8">{@pdf_data.prepared_by_position}</div>
+                      <div class="h-8 text-black">{@pdf_data.prepared_by_position}</div>
                     </div>
                     
                     <div>
                       <p class="text-gray-600 mb-1">Tarikh:</p>
                       
-                      <div class="h-8">{@pdf_data.prepared_by_date}</div>
+                      <div class="h-8 text-black">{@pdf_data.prepared_by_date}</div>
                     </div>
                   </div>
                 </div>

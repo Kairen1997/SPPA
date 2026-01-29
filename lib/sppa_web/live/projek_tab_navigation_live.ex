@@ -1,10 +1,24 @@
 defmodule SppaWeb.ProjekTabNavigationLive do
   use SppaWeb, :live_view
 
+  alias Sppa.AnalisisDanRekabentuk
   alias Sppa.Projects
   alias Sppa.SoalSelidiks
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+
+  @tab_slug_to_label %{
+    "soal-selidik" => "Soal Selidik",
+    "analisis-dan-rekabentuk" => "Analisis dan Rekabentuk",
+    "jadual-projek" => "Jadual Projek",
+    "pengaturcaraan" => "Pengaturcaraan",
+    "pengurus-perubahan" => "Pengurus Perubahan",
+    "uat" => "UAT",
+    "ujian-keselamatan" => "Ujian Keselamatan",
+    "penempatan" => "Penempatan",
+    "penyerahan" => "Penyerahan",
+    "maklumbalas-pelanggan" => "Maklumbalas Pelanggan"
+  }
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -73,15 +87,20 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
         notifications_count = length(activities)
 
+        analisis_pdf_data =
+          AnalisisDanRekabentuk.pdf_data(nama_projek: project.nama || "Projek")
+
         {:ok,
          socket
          |> assign(:hide_root_header, true)
-         |> assign(:page_title, "Butiran Projek - Soal Selidik")
+         |> assign(:page_title, "Butiran Projek")
          |> assign(:sidebar_open, false)
          |> assign(:notifications_open, false)
          |> assign(:profile_menu_open, false)
          |> assign(:project, project)
          |> assign(:soal_selidik_pdf_data, soal_selidik_pdf_data)
+         |> assign(:analisis_pdf_data, analisis_pdf_data)
+         |> assign(:current_tab, "Soal Selidik")
          |> assign(:activities, activities)
          |> assign(:notifications_count, notifications_count)}
       else
@@ -105,6 +124,30 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
 
       {:ok, socket}
+    end
+  end
+
+  @impl true
+  def handle_params(params, uri, socket) do
+    current_tab = tab_from_params(params, uri)
+    {:noreply,
+     socket
+     |> assign(:current_tab, current_tab)
+     |> assign(:page_title, "Butiran Projek - #{current_tab}")}
+  end
+
+  defp tab_from_params(params, uri) do
+    slug =
+      params["tab"] ||
+        (uri.query && URI.decode_query(uri.query)["tab"])
+
+    cond do
+      slug && slug != "" ->
+        Map.get(@tab_slug_to_label, slug, "Soal Selidik")
+      String.ends_with?(uri.path, "/soal-selidik") ->
+        "Soal Selidik"
+      true ->
+        "Soal Selidik"
     end
   end
 
