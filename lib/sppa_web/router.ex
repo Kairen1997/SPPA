@@ -5,6 +5,7 @@ defmodule SppaWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
+    plug :ensure_query_params
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {SppaWeb.Layouts, :root}
@@ -105,5 +106,10 @@ defmodule SppaWeb.Router do
 
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
+  end
+
+  # Ensure query string parameters (like ?project_id=...) are available in conn.params
+  defp ensure_query_params(conn, _opts) do
+    Plug.Conn.fetch_query_params(conn)
   end
 end

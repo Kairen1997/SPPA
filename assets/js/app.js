@@ -615,6 +615,23 @@ const ProfileMenuToggle = {
   }
 }
 
+// Open Date Picker Hook - when icon/button is clicked, programmatically click the date input to open native picker
+const OpenDatePicker = {
+  mounted() {
+    this.el.addEventListener("click", (e) => {
+      e.preventDefault()
+      const inputId = this.el.dataset.dateInputId || this.el.getAttribute("for")
+      if (inputId) {
+        const input = document.getElementById(inputId)
+        if (input && input.type === "date") {
+          input.focus()
+          input.showPicker ? input.showPicker() : input.click()
+        }
+      }
+    })
+  }
+}
+
 // Set Input Value Hook - ensures input value is set after mount/update
 const SetInputValue = {
   mounted() {
@@ -1045,12 +1062,23 @@ const SaveFieldOnBlur = {
   }
 }
 
+// Prevents Enter key in an input from submitting the parent form (e.g. module name field)
+const PreventEnterSubmit = {
+  mounted() {
+    this.el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") e.preventDefault()
+    })
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   hooks: {
     ...colocatedHooks,
+    PreventEnterSubmit,
+    OpenDatePicker,
     PrintDocument,
     UpdateSectionCategory,
     GeneratePDF,

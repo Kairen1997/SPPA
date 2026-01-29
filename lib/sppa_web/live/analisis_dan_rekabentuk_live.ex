@@ -2,6 +2,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   use SppaWeb, :live_view
 
   alias Sppa.Projects
+  alias Sppa.AnalisisDanRekabentuk
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
@@ -28,6 +29,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         |> assign(:document_id, "JPKN-BPA-01/B2")
         |> assign(:form, to_form(%{}, as: :analisis_dan_rekabentuk))
         |> assign(:project, nil)
+        |> assign(:analisis_dan_rekabentuk_id, nil)
         |> assign(:current_step, 1)
         |> assign(:selected_module_id, nil)
         |> assign(:selected_module, nil)
@@ -84,15 +86,31 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
             end
 
           if project do
-            initial_params = %{
-              "nama_projek" => project.nama || "",
-              "nama_agensi" => project.jabatan || ""
-            }
+            # Try to load existing analisis_dan_rekabentuk for this project
+            existing_analisis =
+              AnalisisDanRekabentuk.get_analisis_dan_rekabentuk_by_project_for_display(
+                project_id,
+                current_scope
+              )
+
+            socket =
+              if existing_analisis do
+                # Load existing data
+                load_existing_analisis(socket, existing_analisis, project)
+              else
+                # Initialize with project data
+                initial_params = %{
+                  "nama_projek" => project.nama || "",
+                  "nama_agensi" => project.jabatan || ""
+                }
+
+                socket
+                |> assign(:project, project)
+                |> assign(:form, to_form(initial_params, as: :analisis_dan_rekabentuk))
+                |> update_summary()
+              end
 
             socket
-            |> assign(:project, project)
-            |> assign(:form, to_form(initial_params, as: :analisis_dan_rekabentuk))
-            |> update_summary()
           else
             socket
           end
@@ -113,6 +131,16 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   defp uri_query_param(uri, key) do
     uri = if is_binary(uri), do: URI.parse(uri), else: uri
     if uri.query, do: URI.decode_query(uri.query)[key], else: nil
+  end
+
+  # Ensure URL has project_id so that on refresh we load existing analisis (and modules) from DB
+  defp ensure_project_id_in_url(socket) do
+    case socket.assigns.project do
+      %{id: project_id} ->
+        push_patch(socket, to: ~p"/analisis-dan-rekabentuk?project_id=#{project_id}")
+      _ ->
+        socket
+    end
   end
 
   defp get_project_for_form(project_id, current_scope, user_role) do
@@ -299,17 +327,69 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
   @impl true
   def handle_event("save", %{"analisis_dan_rekabentuk" => params}, socket) do
-    # For now, just show a success message
-    # Later, this will save to the database
-    socket =
-      socket
-      |> Phoenix.LiveView.put_flash(
-        :info,
-        "Borang verifikasi spesifikasi aplikasi telah disimpan dengan jayanya."
-      )
-      |> assign(:form, to_form(params, as: :analisis_dan_rekabentuk))
+    current_scope = socket.assigns.current_scope
+    project = socket.assigns.project
+    modules = get_modules_from_stream(socket)
 
-    {:noreply, socket}
+    # Prepare data for database
+    attrs =
+      %{
+        document_id: socket.assigns.document_id || "JPKN-BPA-01/B2",
+        nama_projek: Map.get(params, "nama_projek", ""),
+        nama_agensi: Map.get(params, "nama_agensi", ""),
+        versi: Map.get(params, "versi", ""),
+        tarikh_semakan: parse_date(Map.get(params, "tarikh_semakan")),
+        rujukan_perubahan: Map.get(params, "rujukan_perubahan", ""),
+        prepared_by_name: Map.get(params, "prepared_by_name", ""),
+        prepared_by_position: Map.get(params, "prepared_by_position", ""),
+        prepared_by_date: parse_date(Map.get(params, "prepared_by_date")),
+        approved_by_name: Map.get(params, "approved_by_name", ""),
+        approved_by_position: Map.get(params, "approved_by_position", ""),
+        approved_by_date: parse_date(Map.get(params, "approved_by_date")),
+        project_id: if(project, do: project.id, else: nil),
+        modules: modules
+      }
+
+    result =
+      if socket.assigns.analisis_dan_rekabentuk_id do
+        # Update existing record
+        existing = AnalisisDanRekabentuk.get_analisis_dan_rekabentuk!(
+          socket.assigns.analisis_dan_rekabentuk_id,
+          current_scope
+        )
+        AnalisisDanRekabentuk.update_analisis_dan_rekabentuk(existing, attrs)
+      else
+        # Create new record
+        AnalisisDanRekabentuk.create_analisis_dan_rekabentuk(attrs, current_scope)
+      end
+
+    case result do
+      {:ok, saved_analisis} ->
+        # Reload the data into the socket
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(
+            :info,
+            "Borang verifikasi spesifikasi aplikasi telah disimpan dengan jayanya."
+          )
+          |> assign(:form, to_form(params, as: :analisis_dan_rekabentuk))
+          |> assign(:analisis_dan_rekabentuk_id, saved_analisis.id)
+          |> load_existing_analisis(saved_analisis, project)
+          |> ensure_project_id_in_url()
+
+        {:noreply, socket}
+
+      {:error, _changeset} ->
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(
+            :error,
+            "Ralat berlaku semasa menyimpan borang. Sila cuba lagi."
+          )
+          |> assign(:form, to_form(params, as: :analisis_dan_rekabentuk))
+
+        {:noreply, socket}
+    end
   end
 
   @impl true
@@ -326,12 +406,17 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
       functions: []
     }
 
-    {:noreply,
-     socket
-     |> stream(:modules, [new_module])
-     |> update(:modules_list, fn list -> (list || []) ++ [new_module] end)
-     |> update(:modules_count, &(&1 + 1))
-     |> update_summary()}
+    socket =
+      socket
+      |> stream(:modules, [new_module])
+      |> update(:modules_list, fn list -> (list || []) ++ [new_module] end)
+      |> update(:modules_count, &(&1 + 1))
+      |> update_summary()
+
+    case persist_analisis_to_db(socket) do
+      {:ok, updated_socket} -> {:noreply, updated_socket}
+      {:error, updated_socket} -> {:noreply, updated_socket}
+    end
   end
 
   @impl true
@@ -344,12 +429,17 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         Map.put(module, :number, new_number)
       end)
 
-    {:noreply,
-     socket
-     |> stream(:modules, modules, reset: true)
-     |> assign(:modules_list, modules)
-     |> update(:modules_count, fn count -> max(0, count - 1) end)
-     |> update_summary()}
+    socket =
+      socket
+      |> stream(:modules, modules, reset: true)
+      |> assign(:modules_list, modules)
+      |> update(:modules_count, fn count -> max(0, count - 1) end)
+      |> update_summary()
+
+    case persist_analisis_to_db(socket) do
+      {:ok, updated_socket} -> {:noreply, updated_socket}
+      {:error, updated_socket} -> {:noreply, updated_socket}
+    end
   end
 
   @impl true
@@ -382,7 +472,10 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         socket
       end
 
-    {:noreply, socket}
+    case persist_analisis_to_db(socket) do
+      {:ok, updated_socket} -> {:noreply, updated_socket}
+      {:error, updated_socket} -> {:noreply, updated_socket}
+    end
   end
 
   @impl true
@@ -421,7 +514,10 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         socket
       end
 
-    {:noreply, socket}
+    case persist_analisis_to_db(socket) do
+      {:ok, updated_socket} -> {:noreply, updated_socket}
+      {:error, updated_socket} -> {:noreply, updated_socket}
+    end
   end
 
   @impl true
@@ -437,11 +533,16 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         end
       end)
 
-    {:noreply,
-     socket
-     |> stream(:modules, updated_modules, reset: true)
-     |> assign(:modules_list, updated_modules)
-     |> update_summary()}
+    socket =
+      socket
+      |> stream(:modules, updated_modules, reset: true)
+      |> assign(:modules_list, updated_modules)
+      |> update_summary()
+
+    case persist_analisis_to_db(socket) do
+      {:ok, updated_socket} -> {:noreply, updated_socket}
+      {:error, updated_socket} -> {:noreply, updated_socket}
+    end
   end
 
   @impl true
@@ -484,7 +585,10 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         socket
       end
 
-    {:noreply, socket}
+    case persist_analisis_to_db(socket) do
+      {:ok, updated_socket} -> {:noreply, updated_socket}
+      {:error, updated_socket} -> {:noreply, updated_socket}
+    end
   end
 
   @impl true
@@ -516,11 +620,16 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         end
       end)
 
-    {:noreply,
-     socket
-     |> stream(:modules, updated_modules, reset: true)
-     |> assign(:modules_list, updated_modules)
-     |> update_summary()}
+    socket =
+      socket
+      |> stream(:modules, updated_modules, reset: true)
+      |> assign(:modules_list, updated_modules)
+      |> update_summary()
+
+    case persist_analisis_to_db(socket) do
+      {:ok, updated_socket} -> {:noreply, updated_socket}
+      {:error, updated_socket} -> {:noreply, updated_socket}
+    end
   end
 
   @impl true
@@ -564,7 +673,10 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         socket
       end
 
-    {:noreply, socket}
+    case persist_analisis_to_db(socket) do
+      {:ok, updated_socket} -> {:noreply, updated_socket}
+      {:error, updated_socket} -> {:noreply, updated_socket}
+    end
   end
 
   @impl true
@@ -602,11 +714,16 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         end
       end)
 
-    {:noreply,
-     socket
-     |> stream(:modules, updated_modules, reset: true)
-     |> assign(:modules_list, updated_modules)
-     |> update_summary()}
+    socket =
+      socket
+      |> stream(:modules, updated_modules, reset: true)
+      |> assign(:modules_list, updated_modules)
+      |> update_summary()
+
+    case persist_analisis_to_db(socket) do
+      {:ok, updated_socket} -> {:noreply, updated_socket}
+      {:error, updated_socket} -> {:noreply, updated_socket}
+    end
   end
 
   # `Sppa.AnalisisDanRekabentuk.pdf_data/1` now owns preview generation.
@@ -647,5 +764,116 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     }
 
     assign(socket, :summary, summary)
+  end
+
+  defp load_existing_analisis(socket, analisis_dan_rekabentuk, project) do
+    # Convert database format to LiveView format
+    liveview_data = AnalisisDanRekabentuk.to_liveview_format(analisis_dan_rekabentuk)
+
+    # Prepare form params
+    form_params = %{
+      "nama_projek" => liveview_data.nama_projek || "",
+      "nama_agensi" => liveview_data.nama_agensi || "",
+      "versi" => liveview_data.versi || "",
+      "tarikh_semakan" => format_date_for_input(liveview_data.tarikh_semakan),
+      "rujukan_perubahan" => liveview_data.rujukan_perubahan || "",
+      "prepared_by_name" => liveview_data.prepared_by_name || "",
+      "prepared_by_position" => liveview_data.prepared_by_position || "",
+      "prepared_by_date" => format_date_for_input(liveview_data.prepared_by_date),
+      "approved_by_name" => liveview_data.approved_by_name || "",
+      "approved_by_position" => liveview_data.approved_by_position || "",
+      "approved_by_date" => format_date_for_input(liveview_data.approved_by_date)
+    }
+
+    # Load modules into stream
+    modules = liveview_data.modules
+
+    socket
+    |> assign(:project, project)
+    |> assign(:analisis_dan_rekabentuk_id, analisis_dan_rekabentuk.id)
+    |> assign(:document_id, liveview_data.document_id)
+    |> assign(:form, to_form(form_params, as: :analisis_dan_rekabentuk))
+    |> stream(:modules, modules, reset: true)
+    |> assign(:modules_list, modules)
+    |> assign(:modules_count, length(modules))
+    |> update_summary()
+  end
+
+  defp format_date_for_input(nil), do: ""
+  defp format_date_for_input(%Date{} = date), do: Date.to_string(date)
+  defp format_date_for_input(date_string) when is_binary(date_string), do: date_string
+  defp format_date_for_input(_), do: ""
+
+  defp parse_date(nil), do: nil
+  defp parse_date(""), do: nil
+
+  defp parse_date(date_string) when is_binary(date_string) do
+    case Date.from_iso8601(date_string) do
+      {:ok, date} -> date
+      {:error, _} -> nil
+    end
+  end
+
+  defp parse_date(_), do: nil
+
+  # Auto-save to DB (used after module/function/sub_function changes so user doesn't need to click Simpan)
+  defp persist_analisis_to_db(socket) do
+    current_scope = socket.assigns.current_scope
+    project = socket.assigns.project
+    params = socket.assigns.form.params || %{}
+    modules = get_modules_from_stream(socket)
+
+    attrs =
+      %{
+        document_id: socket.assigns.document_id || "JPKN-BPA-01/B2",
+        nama_projek: Map.get(params, "nama_projek", ""),
+        nama_agensi: Map.get(params, "nama_agensi", ""),
+        versi: Map.get(params, "versi", ""),
+        tarikh_semakan: parse_date(Map.get(params, "tarikh_semakan")),
+        rujukan_perubahan: Map.get(params, "rujukan_perubahan", ""),
+        prepared_by_name: Map.get(params, "prepared_by_name", ""),
+        prepared_by_position: Map.get(params, "prepared_by_position", ""),
+        prepared_by_date: parse_date(Map.get(params, "prepared_by_date")),
+        approved_by_name: Map.get(params, "approved_by_name", ""),
+        approved_by_position: Map.get(params, "approved_by_position", ""),
+        approved_by_date: parse_date(Map.get(params, "approved_by_date")),
+        project_id: if(project, do: project.id, else: nil),
+        modules: modules
+      }
+
+    result =
+      if socket.assigns.analisis_dan_rekabentuk_id do
+        existing =
+          AnalisisDanRekabentuk.get_analisis_dan_rekabentuk!(
+            socket.assigns.analisis_dan_rekabentuk_id,
+            current_scope
+          )
+
+        AnalisisDanRekabentuk.update_analisis_dan_rekabentuk(existing, attrs)
+      else
+        AnalisisDanRekabentuk.create_analisis_dan_rekabentuk(attrs, current_scope)
+      end
+
+    case result do
+      {:ok, saved_analisis} ->
+        # Only set id so next auto-save or Simpan uses update; don't reload stream to avoid losing UI state / selection
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(:info, "Perubahan telah disimpan secara automatik.")
+          |> assign(:analisis_dan_rekabentuk_id, saved_analisis.id)
+          |> ensure_project_id_in_url()
+
+        {:ok, socket}
+
+      {:error, _changeset} ->
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(
+            :error,
+            "Ralat berlaku semasa menyimpan. Sila cuba lagi atau klik Simpan."
+          )
+
+        {:error, socket}
+    end
   end
 end

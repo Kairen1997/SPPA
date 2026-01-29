@@ -124,14 +124,20 @@
                     <div class="relative">
                       <.input
                         field={@form[:tarikh_semakan]}
+                        id="tarikh_semakan_date"
                         type="date"
                         class="w-full px-3 py-2 pr-9 text-sm text-black border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
                         placeholder="dd/mm/yyyy"
                       />
-                      <.icon
-                        name="hero-calendar"
-                        class="pointer-events-none w-4 h-4 text-gray-900 absolute right-3 top-1/2 -translate-y-1/2"
-                      />
+                      <label
+                        id="tarikh_semakan_calendar_trigger"
+                        for="tarikh_semakan_date"
+                        phx-hook="OpenDatePicker"
+                        data-date-input-id="tarikh_semakan_date"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-900 hover:text-gray-600 transition-colors"
+                      >
+                        <.icon name="hero-calendar" class="w-4 h-4" />
+                      </label>
                     </div>
                   </div>
                   
@@ -174,21 +180,18 @@
                   >
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-2 flex-1">
-                        <%= if module.name == "" do %>
                           <input
+                            id={"module-name-#{module.id}"}
                             type="text"
                             name="module_name"
-                            value=""
+                            value={module.name}
                             phx-change="update_module_name"
+                            phx-debounce="500"
                             phx-value-module_id={module.id}
+                            phx-hook="PreventEnterSubmit"
                             class="flex-1 px-2 py-1.5 text-sm text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-semibold placeholder:text-black"
                             placeholder="Masukkan nama modul"
                           />
-                        <% else %>
-                          <p class="font-semibold text-sm text-gray-900">
-                            {module.number}. {module.name}
-                          </p>
-                        <% end %>
                       </div>
                       
                       <div class="flex items-center gap-2 print:hidden">
@@ -278,6 +281,7 @@
                               name="function_name"
                               value={func.name}
                               phx-change="update_function_name"
+                              phx-debounce="500"
                               phx-value-module_id={selected_module.id}
                               phx-value-func_id={func.id}
                               class="flex-1 px-2 py-1.5 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-black"
@@ -303,6 +307,7 @@
                                   name="sub_function_name"
                                   value={sub_func.name}
                                   phx-change="update_sub_function_name"
+                                  phx-debounce="500"
                                   phx-value-module_id={selected_module.id}
                                   phx-value-func_id={func.id}
                                   phx-value-sub_func_id={sub_func.id}
@@ -396,6 +401,7 @@
                         </label>
                         <div class="relative">
                           <input
+                            id="prepared_by_date"
                             type="date"
                             name="analisis_dan_rekabentuk[prepared_by_date]"
                             value={Map.get(@form.params || %{}, "prepared_by_date", "")}
@@ -403,10 +409,15 @@
                             style="color: #000;"
                             placeholder="dd/mm/yyyy"
                           />
-                          <.icon
-                            name="hero-calendar"
-                            class="pointer-events-none w-4 h-4 text-gray-900 absolute right-2.5 top-1/2 -translate-y-1/2"
-                          />
+                          <label
+                            id="prepared_by_date_calendar_trigger"
+                            for="prepared_by_date"
+                            phx-hook="OpenDatePicker"
+                            data-date-input-id="prepared_by_date"
+                            class="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-900 hover:text-gray-600 transition-colors"
+                          >
+                            <.icon name="hero-calendar" class="w-4 h-4" />
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -453,16 +464,22 @@
                         </label>
                         <div class="relative">
                           <input
+                            id="approved_by_date"
                             type="date"
                             name="analisis_dan_rekabentuk[approved_by_date]"
                             value={Map.get(@form.params || %{}, "approved_by_date", "")}
                             class="w-full px-2 py-1.5 pr-8 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder:text-black"
                             placeholder="dd/mm/yyyy"
                           />
-                          <.icon
-                            name="hero-calendar"
-                            class="pointer-events-none w-4 h-4 text-gray-900 absolute right-2.5 top-1/2 -translate-y-1/2"
-                          />
+                          <label
+                            id="approved_by_date_calendar_trigger"
+                            for="approved_by_date"
+                            phx-hook="OpenDatePicker"
+                            data-date-input-id="approved_by_date"
+                            class="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-900 hover:text-gray-600 transition-colors"
+                          >
+                            <.icon name="hero-calendar" class="w-4 h-4" />
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -485,7 +502,7 @@
                   class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-semibold transition-colors duration-200 flex items-center gap-2"
                 >
                   <.icon name="hero-check-circle" class="w-4 h-4" />
-                  <span>Hantar Borang</span>
+                  <span>Simpan</span>
                 </button>
               </div>
             </.form>
