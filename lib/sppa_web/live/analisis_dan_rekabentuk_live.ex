@@ -27,6 +27,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         |> assign(:current_path, "/analisis-dan-rekabentuk")
         |> assign(:document_id, "JPKN-BPA-01/B2")
         |> assign(:form, to_form(%{}, as: :analisis_dan_rekabentuk))
+        |> assign(:project, nil)
         |> assign(:current_step, 1)
         |> assign(:selected_module_id, nil)
         |> assign(:selected_module, nil)
@@ -61,6 +62,87 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
 
       {:ok, socket}
+    end
+  end
+
+  @impl true
+  def handle_params(params, uri, socket) do
+    socket =
+      case project_id_from_request(params, uri) do
+        nil ->
+          socket
+
+        project_id ->
+          current_scope = socket.assigns.current_scope
+          user_role = current_scope && current_scope.user && current_scope.user.role
+
+          project =
+            if user_role && user_role in @allowed_roles do
+              get_project_for_form(project_id, current_scope, user_role)
+            else
+              nil
+            end
+
+          if project do
+            initial_params = %{
+              "nama_projek" => project.nama || "",
+              "nama_agensi" => project.jabatan || ""
+            }
+
+            socket
+            |> assign(:project, project)
+            |> assign(:form, to_form(initial_params, as: :analisis_dan_rekabentuk))
+            |> update_summary()
+          else
+            socket
+          end
+      end
+
+    {:noreply, socket}
+  end
+
+  defp project_id_from_request(params, uri) do
+    with id when is_binary(id) <- params["project_id"] || uri_query_param(uri, "project_id"),
+         {num, _} when num > 0 <- Integer.parse(id) do
+      num
+    else
+      _ -> nil
+    end
+  end
+
+  defp uri_query_param(uri, key) do
+    uri = if is_binary(uri), do: URI.parse(uri), else: uri
+    if uri.query, do: URI.decode_query(uri.query)[key], else: nil
+  end
+
+  defp get_project_for_form(project_id, current_scope, user_role) do
+    current_user_id = current_scope.user.id
+
+    project =
+      case user_role do
+        "ketua penolong pengarah" ->
+          Projects.get_project_by_id(project_id)
+
+        "pembangun sistem" ->
+          case Projects.get_project_by_id(project_id) do
+            nil -> nil
+            p -> if p.developer_id == current_user_id, do: p, else: nil
+          end
+
+        "pengurus projek" ->
+          case Projects.get_project_by_id(project_id) do
+            nil -> nil
+            p -> if p.project_manager_id == current_user_id, do: p, else: nil
+          end
+
+        _ ->
+          nil
+      end
+
+    if project do
+      Projects.format_project_for_display(project)
+    else
+      nil
     end
   end
 

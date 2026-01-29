@@ -21,7 +21,22 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   }
 
   @impl true
-  def mount(%{"id" => id}, _session, socket) do
+  def mount(params_or_uri, session, socket) do
+    params = ensure_params_map(params_or_uri)
+    do_mount(params, session, socket)
+  end
+
+  defp ensure_params_map(%{} = params), do: params
+
+  defp ensure_params_map(uri_string) when is_binary(uri_string) do
+    # Some code paths pass the request URL as the first argument; extract id from path
+    case Regex.run(~r{/projek/(\d+)(?:/|$)}, uri_string) do
+      [_, id] -> %{"id" => id}
+      _ -> %{}
+    end
+  end
+
+  defp do_mount(%{"id" => id}, _session, socket) when is_binary(id) do
     project_id = String.to_integer(id)
 
     # Verify user has required role
@@ -127,27 +142,54 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     end
   end
 
+  defp do_mount(_params, _session, socket) do
+    socket =
+      socket
+      |> Phoenix.LiveView.put_flash(:error, "Projek tidak ditemui.")
+      |> Phoenix.LiveView.redirect(to: ~p"/projek")
+
+    {:ok, socket}
+  end
+
   @impl true
   def handle_params(params, uri, socket) do
-    current_tab = tab_from_params(params, uri)
+    # Phoenix may pass uri as a string; ensure we have (params_map, uri_string)
+    {params_map, uri_string} = normalize_params_uri(params, uri)
+    current_tab = tab_from_params(params_map, uri_string)
     {:noreply,
      socket
      |> assign(:current_tab, current_tab)
      |> assign(:page_title, "Butiran Projek - #{current_tab}")}
   end
 
-  defp tab_from_params(params, uri) do
+  defp normalize_params_uri(params, uri) when is_map(params) do
+    {params, to_string(uri)}
+  end
+
+  defp normalize_params_uri(uri, params) when is_binary(uri) and is_map(params) do
+    # Some code paths pass (uri, params) instead of (params, uri)
+    {params, uri}
+  end
+
+  defp tab_from_params(params, uri_string) do
     slug =
       params["tab"] ||
-        (uri.query && URI.decode_query(uri.query)["tab"])
+        extract_tab_from_uri(uri_string)
 
     cond do
       slug && slug != "" ->
         Map.get(@tab_slug_to_label, slug, "Soal Selidik")
-      String.ends_with?(uri.path, "/soal-selidik") ->
+      String.ends_with?(uri_string, "/soal-selidik") ->
         "Soal Selidik"
       true ->
         "Soal Selidik"
+    end
+  end
+
+  defp extract_tab_from_uri(uri_string) when is_binary(uri_string) do
+    case URI.parse(uri_string) do
+      %{query: nil} -> nil
+      %{query: query} -> URI.decode_query(query)["tab"]
     end
   end
 
