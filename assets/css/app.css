@@ -143,6 +143,17 @@ input[type="date"]::-moz-focus-inner {
   border: 0;
 }
 
+/* Placeholder text color - black for all input and textarea */
+input::placeholder,
+textarea::placeholder {
+  color: #000 !important;
+}
+
+/* Select dropdown text color - black (e.g. Status, Fasa filter) */
+select,
+select option {
+  color: #000 !important;
+}
 
 /* Print styles for Soal Selidik Document */
 @media print {
