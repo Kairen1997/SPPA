@@ -2,6 +2,8 @@ defmodule SppaWeb.ModulProjekLive do
   use SppaWeb, :live_view
 
   alias Sppa.Accounts
+  alias Sppa.ProjectModules
+  alias Sppa.Projects
 
   @impl true
   def mount(%{"project_id" => project_id}, _session, socket) do
@@ -27,16 +29,23 @@ defmodule SppaWeb.ModulProjekLive do
         |> assign(:project_id, project_id)
 
       if connected?(socket) do
-        # Get project details
-        project = get_project_by_id(project_id, socket.assigns.current_scope)
+        # Get project details from database for this user scope
+        project =
+          try do
+            Projects.get_project!(project_id, socket.assigns.current_scope)
+          rescue
+            Ecto.NoResultsError -> nil
+          end
 
         if project do
           # Get all users for task assignment
           users = Accounts.list_users()
           developers = Enum.filter(users, fn user -> user.role == "pembangun sistem" end)
 
-          # Get mock tasks filtered by project_id and sort by phase and version
-          tasks = list_tasks(socket.assigns.current_scope, project_id)
+          # Get tasks (modules) from database for this project and sort by phase and version
+          tasks =
+            ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
+
           sorted_tasks = sort_tasks_by_phase_and_version(tasks)
 
           {:ok,
@@ -52,7 +61,7 @@ defmodule SppaWeb.ModulProjekLive do
               :error,
               "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk mengakses projek ini."
             )
-            |> Phoenix.LiveView.redirect(to: ~p"/senarai-projek")
+            |> Phoenix.LiveView.redirect(to: ~p"/senarai-projek-diluluskan")
 
           {:ok, socket}
         end
@@ -176,27 +185,10 @@ defmodule SppaWeb.ModulProjekLive do
 
   @impl true
   def handle_event("save_task", %{"task" => task_params}, socket) do
-    # Generate new task ID
-    new_id =
-      if Enum.empty?(socket.assigns.tasks) do
-        1
-      else
-        (socket.assigns.tasks |> Enum.map(& &1.id) |> Enum.max()) + 1
-      end
-
     # Parse developer_id if provided
     developer_id =
       if task_params["developer_id"] && task_params["developer_id"] != "" do
         String.to_integer(task_params["developer_id"])
-      else
-        nil
-      end
-
-    # Get developer name if developer_id is set
-    developer_name =
-      if developer_id do
-        developer = Enum.find(socket.assigns.developers, fn d -> d.id == developer_id end)
-        if developer, do: developer.email || developer.no_kp, else: nil
       else
         nil
       end
@@ -212,33 +204,52 @@ defmodule SppaWeb.ModulProjekLive do
         nil
       end
 
-    # Create new task
-    new_task = %{
-      id: new_id,
-      title: task_params["title"] || "",
-      description: task_params["description"] || "",
-      developer_id: developer_id,
-      developer_name: developer_name,
-      priority: task_params["priority"] || "medium",
-      status: task_params["status"] || "in_progress",
-      fasa: task_params["fasa"] || "",
-      versi: task_params["versi"] || "",
-      due_date: due_date,
-      created_at: Date.utc_today(),
-      project_id: socket.assigns.project_id,
-      project_name: socket.assigns.project.nama
+    project_end = project_end_date(socket.assigns.project)
+
+    attrs = %{
+      "title" => task_params["title"] || "",
+      "description" => task_params["description"] || "",
+      "developer_id" => developer_id,
+      "priority" => task_params["priority"] || "medium",
+      "status" => task_params["status"] || "in_progress",
+      "fasa" => task_params["fasa"] || "",
+      "versi" => task_params["versi"] || "",
+      "due_date" => due_date,
+      "project_id" => socket.assigns.project_id
     }
 
-    # Add new task to the tasks list and sort by phase and version
-    updated_tasks = [new_task | socket.assigns.tasks]
-    sorted_tasks = sort_tasks_by_phase_and_version(updated_tasks)
+    case ProjectModules.create_module(attrs) do
+      {:ok, _module} ->
+        tasks =
+          ProjectModules.list_modules_for_project(socket.assigns.current_scope, socket.assigns.project_id)
 
-    {:noreply,
-     socket
-     |> assign(:tasks, sorted_tasks)
-     |> assign(:show_new_task_modal, false)
-     |> assign(:form, to_form(%{}, as: :task))
-     |> put_flash(:info, "Modul baru telah ditambah")}
+        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+
+        socket =
+          socket
+          |> assign(:tasks, sorted_tasks)
+          |> assign(:show_new_task_modal, false)
+          |> assign(:form, to_form(%{}, as: :task))
+          |> put_flash(:info, "Modul baru telah ditambah")
+
+        socket =
+          if project_end && due_date && Date.compare(due_date, project_end) == :gt do
+            put_flash(
+              socket,
+              :error,
+              "Tarikh tugasan melebihi tarikh jangkaan siap projek. Sila semak semula jadual."
+            )
+          else
+            socket
+          end
+
+        {:noreply, socket}
+
+      {:error, _changeset} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Gagal menyimpan modul. Sila cuba lagi.")}
+    end
   end
 
   @impl true
@@ -273,48 +284,77 @@ defmodule SppaWeb.ModulProjekLive do
         nil
       end
 
-    # Update the task in the list and sort by phase and version
-    updated_tasks =
-      Enum.map(socket.assigns.tasks, fn task ->
-        if task.id == task_id do
-          %{
-            task
-            | title: task_params["title"] || task.title,
-              description: task_params["description"] || task.description,
-              developer_id: developer_id,
-              developer_name: developer_name,
-              priority: task_params["priority"] || task.priority,
-              status: task_params["status"] || task.status,
-              fasa: task_params["fasa"] || task.fasa,
-              versi: task_params["versi"] || task.versi,
-              due_date: due_date
-          }
-        else
-          task
-        end
-      end)
-    sorted_tasks = sort_tasks_by_phase_and_version(updated_tasks)
+    project_end = project_end_date(socket.assigns.project)
 
-    {:noreply,
-     socket
-     |> assign(:tasks, sorted_tasks)
-     |> assign(:show_edit_task_modal, false)
-     |> assign(:selected_task, nil)
-     |> assign(:form, to_form(%{}, as: :task))
-     |> put_flash(:info, "Tugasan telah dikemaskini")}
+    attrs = %{
+      "title" => task_params["title"] || socket.assigns.selected_task.title,
+      "description" => task_params["description"] || socket.assigns.selected_task.description,
+      "developer_id" => developer_id,
+      "priority" => task_params["priority"] || socket.assigns.selected_task.priority,
+      "status" => task_params["status"] || socket.assigns.selected_task.status,
+      "fasa" => task_params["fasa"] || socket.assigns.selected_task.fasa,
+      "versi" => task_params["versi"] || socket.assigns.selected_task.versi,
+      "due_date" => due_date
+    }
+
+    case ProjectModules.get_module!(task_id) |> ProjectModules.update_module(attrs) do
+      {:ok, _module} ->
+        tasks =
+          ProjectModules.list_modules_for_project(socket.assigns.current_scope, socket.assigns.project_id)
+
+        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+
+        socket =
+          socket
+          |> assign(:tasks, sorted_tasks)
+          |> assign(:show_edit_task_modal, false)
+          |> assign(:selected_task, nil)
+          |> assign(:form, to_form(%{}, as: :task))
+          |> put_flash(:info, "Tugasan telah dikemaskini")
+
+        socket =
+          if project_end && due_date && Date.compare(due_date, project_end) == :gt do
+            put_flash(
+              socket,
+              :error,
+              "Tarikh tugasan melebihi tarikh jangkaan siap projek. Sila semak semula jadual."
+            )
+          else
+            socket
+          end
+
+        {:noreply, socket}
+
+      {:error, _changeset} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Gagal mengemaskini tugasan. Sila cuba lagi.")}
+    end
   end
 
   @impl true
   def handle_event("delete_task", %{"task_id" => task_id}, socket) do
     task_id = String.to_integer(task_id)
-    updated_tasks = Enum.reject(socket.assigns.tasks, fn t -> t.id == task_id end)
-    # Tasks remain sorted after deletion since we're just removing one item
-    sorted_tasks = sort_tasks_by_phase_and_version(updated_tasks)
 
-    {:noreply,
-     socket
-     |> assign(:tasks, sorted_tasks)
-     |> put_flash(:info, "Tugasan telah dipadam")}
+    module = ProjectModules.get_module!(task_id)
+
+    case ProjectModules.delete_module(module) do
+      {:ok, _} ->
+        tasks =
+          ProjectModules.list_modules_for_project(socket.assigns.current_scope, socket.assigns.project_id)
+
+        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+
+        {:noreply,
+         socket
+         |> assign(:tasks, sorted_tasks)
+         |> put_flash(:info, "Tugasan telah dipadam")}
+
+      {:error, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Gagal memadam tugasan. Sila cuba lagi.")}
+    end
   end
 
   @impl true
@@ -323,54 +363,23 @@ defmodule SppaWeb.ModulProjekLive do
     # phx-change sends the select value as "status" when name="status"
     status = Map.get(params, "status", "in_progress")
 
-    updated_tasks =
-      Enum.map(socket.assigns.tasks, fn task ->
-        if task.id == task_id do
-          Map.put(task, :status, status)
-        else
-          task
-        end
-      end)
-    # Tasks remain sorted after status update since we're not changing phase/version
-    sorted_tasks = sort_tasks_by_phase_and_version(updated_tasks)
+    case ProjectModules.get_module!(task_id) |> ProjectModules.update_module(%{"status" => status}) do
+      {:ok, _module} ->
+        tasks =
+          ProjectModules.list_modules_for_project(socket.assigns.current_scope, socket.assigns.project_id)
 
-    {:noreply,
-     socket
-     |> assign(:tasks, sorted_tasks)
-     |> put_flash(:info, "Status tugasan telah dikemaskini")}
-  end
+        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
 
-  # Get project by ID - will be replaced with database query later
-  defp get_project_by_id(project_id, _current_scope) do
-    all_projects = [
-      %{
-        id: 1,
-        nama: "Sistem Pengurusan Projek A",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah"
-      },
-      %{
-        id: 2,
-        nama: "Sistem Analisis Data B",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah"
-      },
-      %{
-        id: 3,
-        nama: "Portal E-Services C",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah"
-      },
-      %{
-        id: 4,
-        nama: "Sistem Pengurusan Dokumen D",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah"
-      },
-      %{
-        id: 5,
-        nama: "Aplikasi Mobile E",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah"
-      }
-    ]
+        {:noreply,
+         socket
+         |> assign(:tasks, sorted_tasks)
+         |> put_flash(:info, "Status tugasan telah dikemaskini")}
 
-    Enum.find(all_projects, fn p -> p.id == project_id end)
+      {:error, _changeset} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Gagal mengemaskini status tugasan. Sila cuba lagi.")}
+    end
   end
 
   # Sort tasks by phase first, then by version within each phase
@@ -394,91 +403,6 @@ defmodule SppaWeb.ModulProjekLive do
 
   defp parse_numeric(value) when is_integer(value), do: value
   defp parse_numeric(_), do: 0
-
-  # Mock data function - will be replaced with database queries later
-  # Filters tasks by project_id to ensure each project has its own modules
-  defp list_tasks(_current_scope, project_id) do
-    all_tasks = [
-      %{
-        id: 1,
-        title: "Pengesahan Pengguna",
-        description: "Membina sistem log masuk dan pendaftaran pengguna dengan integrasi SM2",
-        developer_id: 1,
-        developer_name: "Ali bin Hassan",
-        priority: "high",
-        status: "in_progress",
-        fasa: "1",
-        versi: "1",
-        due_date: ~D[2024-07-15],
-        created_at: ~D[2024-06-01],
-        project_id: 1,
-        project_name: "Sistem Pengurusan Projek A"
-      },
-      %{
-        id: 2,
-        title: "Mereka bentuk pangkalan data",
-        description: "Mencipta skema pangkalan data untuk modul projek dan tugasan",
-        developer_id: 2,
-        developer_name: "Ahmad bin Ismail",
-        priority: "medium",
-        status: "done",
-        fasa: "2",
-        versi: "1",
-        due_date: ~D[2024-07-20],
-        created_at: ~D[2024-06-05],
-        project_id: 1,
-        project_name: "Sistem Pengurusan Projek A"
-      },
-      %{
-        id: 3,
-        title: "Membangunkan API untuk senarai projek",
-        description: "Mencipta endpoint API untuk mendapatkan dan mengurus senarai projek",
-        developer_id: 1,
-        developer_name: "Ali bin Hassan",
-        priority: "low",
-        status: "in_progress",
-        fasa: "3",
-        versi: "1",
-        due_date: ~D[2024-07-25],
-        created_at: ~D[2024-06-10],
-        project_id: 1,
-        project_name: "Sistem Pengurusan Projek A"
-      },
-      %{
-        id: 7,
-        title: "Peningkatan Pengesahan Pengguna",
-        description: "Menambah peningkatan pada sistem pengesahan pengguna termasuk 2FA dan pengesahan email",
-        developer_id: 1,
-        developer_name: "Ali bin Hassan",
-        priority: "high",
-        status: "in_progress",
-        fasa: "1",
-        versi: "2",
-        due_date: ~D[2024-08-15],
-        created_at: ~D[2024-07-16],
-        project_id: 1,
-        project_name: "Sistem Pengurusan Projek A"
-      },
-      %{
-        id: 8,
-        title: "Penambahan Fitur Keselamatan",
-        description: "Menambah lapisan keselamatan tambahan termasuk rate limiting dan audit logging",
-        developer_id: 2,
-        developer_name: "Ahmad bin Ismail",
-        priority: "high",
-        status: "in_progress",
-        fasa: "1",
-        versi: "3",
-        due_date: ~D[2024-09-10],
-        created_at: ~D[2024-08-16],
-        project_id: 1,
-        project_name: "Sistem Pengurusan Projek A"
-      }
-    ]
-
-    # Filter tasks by project_id - each project has its own modules
-    Enum.filter(all_tasks, fn task -> task.project_id == project_id end)
-  end
 
   # Helper function to get tasks by status (public for template access)
   def tasks_by_status(tasks, status) do
@@ -509,4 +433,21 @@ defmodule SppaWeb.ModulProjekLive do
   def status_label("in_progress"), do: "Dalam Proses"
   def status_label("done"), do: "Selesai"
   def status_label(_), do: "Dalam Proses"
+
+  # Derive the project's planned end date, used for validation and Gantt warnings
+  defp project_end_date(project) do
+    cond do
+      project.tarikh_siap ->
+        project.tarikh_siap
+
+      Map.has_key?(project, :approved_project) &&
+          project.approved_project &&
+          Map.has_key?(project.approved_project, :tarikh_jangkaan_siap) &&
+          project.approved_project.tarikh_jangkaan_siap ->
+        project.approved_project.tarikh_jangkaan_siap
+
+      true ->
+        nil
+    end
+  end
 end

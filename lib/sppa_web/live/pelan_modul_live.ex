@@ -1,6 +1,9 @@
 defmodule SppaWeb.PelanModulLive do
   use SppaWeb, :live_view
 
+  alias Sppa.Projects
+  alias Sppa.ProjectModules
+
   @impl true
   def mount(%{"project_id" => project_id}, _session, socket) do
     # Verify user is pengurus projek
@@ -20,12 +23,17 @@ defmodule SppaWeb.PelanModulLive do
         |> assign(:project_id, project_id)
 
       if connected?(socket) do
-        # Get project details
-        project = get_project_by_id(project_id, socket.assigns.current_scope)
+        # Get project details from database for this user scope
+        project =
+          try do
+            Projects.get_project!(project_id, socket.assigns.current_scope)
+          rescue
+            Ecto.NoResultsError -> nil
+          end
 
         if project do
-          # Get modules for this specific project
-          modules = list_modules_by_project(project_id)
+          # Get modules for this specific project from database
+          modules = ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
           gantt_data = build_gantt_data_for_project(project, modules)
 
           {:ok,
@@ -40,7 +48,7 @@ defmodule SppaWeb.PelanModulLive do
               :error,
               "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk mengakses projek ini."
             )
-            |> Phoenix.LiveView.redirect(to: ~p"/senarai-projek")
+            |> Phoenix.LiveView.redirect(to: ~p"/senarai-projek-diluluskan")
 
           {:ok, socket}
         end
@@ -84,42 +92,57 @@ defmodule SppaWeb.PelanModulLive do
     {:noreply, assign(socket, :notifications_open, false)}
   end
 
-  # Get project by ID - will be replaced with database query later
-  defp get_project_by_id(project_id, _current_scope) do
-    all_projects = [
-      %{
-        id: 1,
-        nama: "Sistem Pengurusan Projek A",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah"
-      },
-      %{
-        id: 2,
-        nama: "Sistem Analisis Data B",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah"
-      },
-      %{
-        id: 3,
-        nama: "Portal E-Services C",
-        jabatan: "Jabatan Perkhidmatan Awam Negeri Sabah"
-      }
-    ]
-
-    Enum.find(all_projects, fn p -> p.id == project_id end)
-  end
-
   # Build Gantt chart data for a specific project
   defp build_gantt_data_for_project(project, modules) do
     if Enum.empty?(modules) do
       nil
     else
+      # Derive project-wide start/end from project or its approved_project
+      project_start =
+        project.tarikh_mula ||
+          (project.approved_project && project.approved_project.tarikh_mula) ||
+          get_earliest_date(modules)
+
+      project_end =
+        project.tarikh_siap ||
+          (project.approved_project && project.approved_project.tarikh_jangkaan_siap) ||
+          get_latest_date(modules)
+
+      # Normalise modules with derived start/end dates and developer names
+      enriched_modules =
+        Enum.map(modules, fn m ->
+          start_date = project_start
+          end_date = m.due_date || project_end || project_start
+
+          developer_name =
+            cond do
+              m.developer && m.developer.email && m.developer.email != "" -> m.developer.email
+              m.developer && m.developer.no_kp && m.developer.no_kp != "" -> m.developer.no_kp
+              true -> nil
+            end
+
+          beyond_end? =
+            end_date && project_end && Date.compare(end_date, project_end) == :gt
+
+          Map.merge(
+            m,
+            %{
+              start_date: start_date,
+              end_date: end_date,
+              developer_name: developer_name,
+              beyond_end?: beyond_end?
+            }
+          )
+        end)
+
       # Sort modules: first by phase (numeric), then by version (numeric) within each phase
-      sorted_modules = sort_modules_by_phase_and_version(modules)
+      sorted_modules = sort_modules_by_phase_and_version(enriched_modules)
 
       %{
         project: project,
         modules: sorted_modules,
-        start_date: get_earliest_date(modules),
-        end_date: get_latest_date(modules)
+        start_date: project_start,
+        end_date: project_end
       }
     end
   end
@@ -147,119 +170,18 @@ defmodule SppaWeb.PelanModulLive do
   defp parse_numeric(value) when is_integer(value), do: value
   defp parse_numeric(_), do: 0
 
-  # Get modules for a specific project - will be replaced with database query later
-  defp list_modules_by_project(project_id) do
-    all_modules = [
-      %{
-        id: 1,
-        title: "Pengesahan Pengguna",
-        project_id: 1,
-        fasa: "1",
-        versi: "1",
-        status: "in_progress",
-        priority: "high",
-        start_date: ~D[2024-06-01],
-        end_date: ~D[2024-07-15],
-        developer_name: "Ali bin Hassan"
-      },
-      %{
-        id: 2,
-        title: "Mereka bentuk pangkalan data",
-        project_id: 1,
-        fasa: "2",
-        versi: "1",
-        status: "done",
-        priority: "medium",
-        start_date: ~D[2024-06-05],
-        end_date: ~D[2024-07-20],
-        developer_name: "Ahmad bin Ismail"
-      },
-      %{
-        id: 3,
-        title: "Membangunkan API untuk senarai projek",
-        project_id: 1,
-        fasa: "3",
-        versi: "1",
-        status: "in_progress",
-        priority: "low",
-        start_date: ~D[2024-06-10],
-        end_date: ~D[2024-07-25],
-        developer_name: "Ali bin Hassan"
-      },
-      %{
-        id: 7,
-        title: "Peningkatan Pengesahan Pengguna",
-        project_id: 1,
-        fasa: "1",
-        versi: "2",
-        status: "in_progress",
-        priority: "high",
-        start_date: ~D[2024-07-16],
-        end_date: ~D[2024-08-15],
-        developer_name: "Ali bin Hassan"
-      },
-      %{
-        id: 8,
-        title: "Penambahan Fitur Keselamatan",
-        project_id: 1,
-        fasa: "1",
-        versi: "3",
-        status: "in_progress",
-        priority: "high",
-        start_date: ~D[2024-08-16],
-        end_date: ~D[2024-09-10],
-        developer_name: "Ahmad bin Ismail"
-      },
-      %{
-        id: 4,
-        title: "Mengintegrasikan sistem notifikasi",
-        project_id: 2,
-        fasa: "1",
-        versi: "1",
-        status: "done",
-        priority: "low",
-        start_date: ~D[2024-06-01],
-        end_date: ~D[2024-07-10],
-        developer_name: "Siti Fatimah"
-      },
-      %{
-        id: 5,
-        title: "Mengoptimumkan prestasi carian",
-        project_id: 2,
-        fasa: "2",
-        versi: "1",
-        status: "in_progress",
-        priority: "medium",
-        start_date: ~D[2024-06-15],
-        end_date: ~D[2024-08-01],
-        developer_name: "Ahmad bin Ismail"
-      },
-      %{
-        id: 6,
-        title: "Modul Autentikasi",
-        project_id: 3,
-        fasa: "1",
-        versi: "1",
-        status: "in_progress",
-        priority: "high",
-        start_date: ~D[2024-06-20],
-        end_date: ~D[2024-08-15],
-        developer_name: "Ali bin Hassan"
-      }
-    ]
-
-    # Filter modules by project_id
-    Enum.filter(all_modules, fn module -> module.project_id == project_id end)
-  end
-
   # Helper functions
   defp get_earliest_date(modules) do
     if Enum.empty?(modules) do
       Date.utc_today()
     else
       modules
-      |> Enum.map(& &1.start_date)
-      |> Enum.min()
+      |> Enum.map(& &1.due_date)
+      |> Enum.filter(& &1)
+      |> case do
+        [] -> Date.utc_today()
+        dates -> Enum.min(dates)
+      end
     end
   end
 
@@ -268,8 +190,12 @@ defmodule SppaWeb.PelanModulLive do
       Date.utc_today()
     else
       modules
-      |> Enum.map(& &1.end_date)
-      |> Enum.max()
+      |> Enum.map(& &1.due_date)
+      |> Enum.filter(& &1)
+      |> case do
+        [] -> Date.utc_today()
+        dates -> Enum.max(dates)
+      end
     end
   end
 

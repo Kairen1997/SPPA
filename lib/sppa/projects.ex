@@ -112,7 +112,7 @@ defmodule Sppa.Projects do
   def get_project!(id, current_scope) do
     Project
     |> where([p], p.id == ^id and p.user_id == ^current_scope.user.id)
-    |> preload([:developer, :project_manager])
+    |> preload([:developer, :project_manager, :approved_project])
     |> Repo.one!()
   end
 

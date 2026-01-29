@@ -54,66 +54,82 @@
           <%!-- Back Button --%>
           <div class="mb-2">
             <.link
-              navigate={~p"/senarai-projek"}
+              navigate={~p"/senarai-projek-diluluskan"}
               class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 group"
             >
               <.icon name="hero-arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              <span>Kembali ke Senarai Projek</span>
+              <span>Kembali ke Senarai Projek Diluluskan</span>
             </.link>
           </div>
           
           <%!-- Page Header Section --%>
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <div class="space-y-2">
+            <%= if @project do %>
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <div class="space-y-2">
+                  <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                      <.icon name="hero-folder" class="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
+                        Modul Projek
+                      </h1>
+                      <p class="text-sm text-gray-500 mt-1">Pengurusan Tugasan dan Modul</p>
+                    </div>
+                  </div>
+                  <div class="ml-12 space-y-1">
+                    <h2 class="text-lg font-semibold text-gray-800">{@project.nama}</h2>
+                    <%= if @project.jabatan do %>
+                      <p class="text-sm text-gray-600 flex items-center gap-2">
+                        <.icon name="hero-building-office" class="w-4 h-4" />
+                        {@project.jabatan}
+                      </p>
+                    <% end %>
+                  </div>
+                </div>
+              
+                <%!-- Action Buttons --%>
+                <div class="flex items-center gap-3">
+                  <button
+                    id="print-modul-projek-btn"
+                    phx-hook="PrintDocument"
+                    data-target="modul-projek-document"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg print:hidden"
+                  >
+                    <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak</span>
+                  </button>
+                  <.link
+                    navigate={~p"/projek/#{@project_id}/pelan-modul"}
+                    class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                  >
+                    <.icon name="hero-chart-bar" class="w-5 h-5" />
+                    <span>Pelan Modul</span>
+                  </.link>
+                  <button
+                    phx-click="open_new_task_modal"
+                    class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                  >
+                    <.icon name="hero-plus-circle" class="w-5 h-5" />
+                    <span>Modul Baru</span>
+                  </button>
+                </div>
+              </div>
+            <% else %>
+              <div class="flex flex-col items-start gap-3">
                 <div class="flex items-center gap-3">
                   <div class="p-2 bg-blue-100 rounded-lg">
                     <.icon name="hero-folder" class="w-6 h-6 text-blue-600" />
                   </div>
-            <div>
+                  <div>
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
                       Modul Projek
-              </h1>
-                    <p class="text-sm text-gray-500 mt-1">Pengurusan Tugasan dan Modul</p>
+                    </h1>
+                    <p class="text-sm text-gray-500 mt-1">Memuatkan maklumat projek...</p>
                   </div>
                 </div>
-                <div class="ml-12 space-y-1">
-                  <h2 class="text-lg font-semibold text-gray-800">{@project.nama}</h2>
-                  <%= if @project.jabatan do %>
-                    <p class="text-sm text-gray-600 flex items-center gap-2">
-                      <.icon name="hero-building-office" class="w-4 h-4" />
-                      {@project.jabatan}
-                    </p>
-                  <% end %>
-                </div>
               </div>
-              
-              <%!-- Action Buttons --%>
-              <div class="flex items-center gap-3">
-                <button
-                  id="print-modul-projek-btn"
-                  phx-hook="PrintDocument"
-                  data-target="modul-projek-document"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg print:hidden"
-                >
-                  <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak</span>
-                </button>
-                <.link
-                  navigate={~p"/projek/#{@project_id}/pelan-modul"}
-                  class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-                >
-                  <.icon name="hero-chart-bar" class="w-5 h-5" />
-                  <span>Pelan Modul</span>
-                </.link>
-                <button
-                  phx-click="open_new_task_modal"
-                  class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-                >
-                  <.icon name="hero-plus-circle" class="w-5 h-5" />
-                  <span>Modul Baru</span>
-                </button>
-              </div>
-            </div>
+            <% end %>
           
             <%!-- Statistics Cards --%>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
@@ -216,9 +232,9 @@
                         <button
                           phx-click="delete_task"
                           phx-value-task_id={task.id}
-                              class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all duration-200 ml-3 p-1 rounded hover:bg-red-50"
-                          onclick="event.stopPropagation();"
-                              title="Padam tugasan"
+                          phx-stop-propagation
+                          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all duration-200 ml-3 p-1 rounded hover:bg-red-50"
+                          title="Padam tugasan"
                         >
                           <.icon name="hero-trash" class="w-4 h-4" />
                         </button>
@@ -260,16 +276,22 @@
                         </td>
                         <td class="px-6 py-4 border-r border-gray-200">
                           <div class="flex items-center gap-2">
-                            <%= if task.developer_name do %>
+                            <%= if task.developer do %>
                               <div class="flex items-center gap-2 flex-1">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                                   <.icon name="hero-user" class="w-4 h-4 text-blue-600" />
-                      </div>
-                                <span class="text-sm font-medium text-gray-700">{task.developer_name}</span>
-                      </div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">
+                                  <%= if task.developer.email && task.developer.email != "" do %>
+                                    {task.developer.email}
+                                  <% else %>
+                                    {task.developer.no_kp || "N/A"}
+                                  <% end %>
+                                </span>
+                              </div>
                             <% else %>
                               <span class="text-sm text-gray-400 italic">Tiada pembangun</span>
-                  <% end %>
+                            <% end %>
                         <button
                               type="button"
                               class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
@@ -331,8 +353,6 @@
     <div class="flex min-h-full items-center justify-center p-4">
       <div
         class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-        onclick="event.stopPropagation()"
-        phx-click-away="close_new_task_modal"
       >
         <%!-- Modal header --%>
         <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">

@@ -406,13 +406,25 @@ defmodule SppaWeb.ApprovedProjectLive do
                     Maklumat penuh permohonan projek yang telah diluluskan
                   </p>
                 </div>
-                <.link
-                  navigate={~p"/senarai-projek-diluluskan"}
-                  class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
-                >
-                  <.icon name="hero-arrow-left" class="w-4 h-4" />
-                  <span>Kembali ke Senarai</span>
-                </.link>
+                <div class="flex items-center gap-3">
+                  <%= if @approved_project.project do %>
+                    <.link
+                      navigate={~p"/projek/#{@approved_project.project.id}/modul"}
+                      class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-all duration-200"
+                    >
+                      <.icon name="hero-cog-6-tooth" class="w-4 h-4" />
+                      <span>Modul Projek</span>
+                    </.link>
+                  <% end %>
+
+                  <.link
+                    navigate={~p"/senarai-projek-diluluskan"}
+                    class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+                  >
+                    <.icon name="hero-arrow-left" class="w-4 h-4" />
+                    <span>Kembali ke Senarai</span>
+                  </.link>
+                </div>
               </div>
 
               <%!-- Main Project Card --%>
