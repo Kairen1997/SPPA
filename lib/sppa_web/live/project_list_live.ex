@@ -335,7 +335,7 @@ defmodule SppaWeb.ProjectListLive do
            <%!-- Content --%>
           <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
             <%!-- Projek List Content --%>
-            <div class="max-w-7xl mx-auto">
+            <div id="senarai-projek-document" class="max-w-7xl mx-auto">
               <div class="mb-8 flex items-center justify-between">
                 <div>
                   <h1 class="text-3xl font-bold text-gray-900 mb-2">Senarai Projek Diluluskan</h1>
@@ -354,7 +354,7 @@ defmodule SppaWeb.ProjectListLive do
                 </div>
               </div>
                <%!-- Filter section --%>
-              <div class="rounded-xl bg-white p-6 shadow-sm">
+              <div class="rounded-xl bg-white p-6 shadow-sm print:hidden">
                 <.form
                   for={%{}}
                   phx-change="filter"
@@ -407,11 +407,11 @@ defmodule SppaWeb.ProjectListLive do
               </div>
 
                <%!-- Projects table --%>
-              <div id="senarai-projek-document" class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0">
+              <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0">
                 <table class="w-full">
                   <thead class="bg-gray-50">
                     <tr>
-                      <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 print:hidden">
                         Nama
                       </th>
 
@@ -455,7 +455,7 @@ defmodule SppaWeb.ProjectListLive do
                         <% end %>
                       </td>
 
-                      <td class="whitespace-nowrap px-6 py-4 text-sm">
+                      <td class="whitespace-nowrap px-6 py-4 text-sm print:hidden">
                         <div class="flex items-center gap-2">
                           <%!-- Sentiasa tunjuk butang Lihat untuk paparan penuh maklumat permohonan (data external) --%>
                             <.link
