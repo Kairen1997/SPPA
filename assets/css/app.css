@@ -126,6 +126,24 @@
   }
 }
 
+/* Custom styling for date inputs so we can use our own calendar icon */
+input[type="date"] {
+  /* Hide the native calendar icon in most modern browsers */
+  color-scheme: light;
+}
+
+/* WebKit browsers (Chrome, Edge, Safari) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: block;
+}
+
+/* Firefox */
+input[type="date"]::-moz-focus-inner {
+  border: 0;
+}
+
+
 /* Print styles for Soal Selidik Document */
 @media print {
   @page {

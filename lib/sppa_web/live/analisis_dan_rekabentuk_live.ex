@@ -13,8 +13,9 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      # Initialize modules
-      initial_modules = Sppa.AnalisisDanRekabentuk.initial_modules()
+      # Start with no modules; user adds via "Tambah Modul"
+      socket = stream_configure(socket, :modules, dom_id: &"module_#{&1.id}")
+      socket = stream(socket, :modules, [], reset: true)
 
       socket =
         socket
@@ -32,18 +33,8 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         |> assign(:expanded_modules, MapSet.new())
         |> assign(:show_pdf_modal, false)
         |> assign(:pdf_data, nil)
-
-      # Initialize modules as a stream and also keep a list for processing
-      # Configure stream to use module.id as the DOM id
-      socket = stream_configure(socket, :modules, dom_id: &"module_#{&1.id}")
-
-      socket =
-        initial_modules
-        |> Enum.reduce(socket, fn module, acc ->
-          stream(acc, :modules, [module])
-        end)
-        |> assign(:modules_count, length(initial_modules))
-        |> assign(:modules_list, initial_modules)
+        |> assign(:modules_count, 0)
+        |> assign(:modules_list, [])
         |> update_summary()
 
       if connected?(socket) do
