@@ -176,15 +176,48 @@
             </div>
             
           <%!-- Tasks Table Section (used for printing as well) --%>
-          <div id="modul-projek-document" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0">
-            <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-              <div class="flex flex-col gap-1">
-                <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <.icon name="hero-table-cells" class="w-5 h-5 text-gray-600" />
-                  Senarai Tugasan
-                </h2>
+          <div
+            id="modul-projek-document"
+            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0"
+          >
+            <div class="px-6 py-5 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between gap-4">
+                  <div class="flex items-center gap-2">
+                    <.icon name="hero-table-cells" class="w-6 h-6 text-gray-700" />
+                    <div>
+                      <h2 class="text-base font-semibold text-gray-900 tracking-wide">
+                        Laporan Modul Projek
+                      </h2>
+                      <p class="text-xs text-gray-600">
+                        Senarai tugasan modul bagi projek yang sedang dibangunkan
+                      </p>
+                    </div>
+                  </div>
+                  <div class="text-right text-xs text-gray-600">
+                    <p>
+                      <span class="font-semibold">Tarikh Cetakan:</span>
+                      <span class="ml-1">
+                        {Calendar.strftime(Date.utc_today(), "%d/%m/%Y")}
+                      </span>
+                    </p>
+                    <%= if @current_scope && @current_scope.user do %>
+                      <p>
+                        <span class="font-semibold">Dicetak oleh:</span>
+                        <span class="ml-1">
+                          <%= if @current_scope.user.no_kp && @current_scope.user.no_kp != "" do %>
+                            {@current_scope.user.no_kp}
+                          <% else %>
+                            {@current_scope.user.email || "N/A"}
+                          <% end %>
+                        </span>
+                      </p>
+                    <% end %>
+                  </div>
+                </div>
+
                 <%= if @project do %>
-                  <div class="text-sm text-gray-700 space-y-0.5">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-gray-700 mt-1">
                     <p>
                       <span class="font-semibold">Nama Sistem:</span>
                       <span class="ml-1">{@project.nama}</span>
@@ -198,28 +231,28 @@
               </div>
             </div>
             <div class="overflow-x-auto">
-              <table class="w-full border-collapse">
+              <table class="w-full border-collapse text-xs">
                 <thead>
                   <tr class="bg-gray-50 border-b-2 border-gray-300">
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                    <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
                       Tugasan
                     </th>
-                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-20">
+                    <th class="px-6 py-3 text-center font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-20">
                       Fasa
                     </th>
-                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-20">
+                    <th class="px-6 py-3 text-center font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-20">
                       Versi
                     </th>
-                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-32">
+                    <th class="px-6 py-3 text-center font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-32">
                       Status
                     </th>
-                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-32">
+                    <th class="px-6 py-3 text-center font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-32">
                       Keutamaan
                     </th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                    <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
                       Ditugaskan kepada
                     </th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">
                       Sasaran
                     </th>
                   </tr>
@@ -227,7 +260,7 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                   <%= if Enum.empty?(@tasks) do %>
                     <tr>
-                      <td colspan="7" class="px-6 py-12 text-center">
+                      <td colspan="7" class="px-6 py-10 text-center">
                         <div class="flex flex-col items-center justify-center space-y-3">
                           <.icon name="hero-clipboard-document" class="w-12 h-12 text-gray-300" />
                           <p class="text-sm font-medium text-gray-500">Tiada tugasan pada masa ini</p>
@@ -237,9 +270,11 @@
                     </tr>
                   <% else %>
                     <%= for task <- @tasks do %>
-                      <tr class="hover:bg-blue-50/50 transition-colors duration-150 cursor-pointer group border-b border-gray-200"
-                      phx-click="open_edit_task_modal"
-                          phx-value-task_id={task.id}>
+                      <tr
+                        class="hover:bg-blue-50/50 transition-colors duration-150 cursor-pointer group border-b border-gray-200"
+                        phx-click="open_edit_task_modal"
+                        phx-value-task_id={task.id}
+                      >
                         <td class="px-6 py-4 border-r border-gray-200">
                           <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-gray-900">{task.title || ""}</span>
