@@ -1017,6 +1017,35 @@ const SaveRowData = {
   }
 }
 
+// Sub-function name: push value on blur so server always receives the typed name
+const SubFunctionInputBlur = {
+  mounted() {
+    const input = this.el
+    if (!input || input.tagName !== "INPUT") return
+
+    this.handleBlur = () => {
+      const value = input.value !== null && input.value !== undefined ? input.value : ""
+      const moduleId = input.getAttribute("phx-value-module_id")
+      const funcId = input.getAttribute("phx-value-func_id")
+      const subFuncId = input.getAttribute("phx-value-sub_func_id")
+      if (moduleId && funcId && subFuncId && typeof this.pushEvent === "function") {
+        this.pushEvent("update_sub_function_name", {
+          module_id: moduleId,
+          func_id: funcId,
+          sub_func_id: subFuncId,
+          value: value
+        })
+      }
+    }
+    input.addEventListener("blur", this.handleBlur)
+  },
+  destroyed() {
+    if (this.el && this.handleBlur) {
+      this.el.removeEventListener("blur", this.handleBlur)
+    }
+  }
+}
+
 // Save Field on Blur Hook - saves field value to database when user leaves the field
 const SaveFieldOnBlur = {
   mounted() {
@@ -1071,12 +1100,39 @@ const PreventEnterSubmit = {
   }
 }
 
+// Prevents double-click / duplicate phx-click: only one click is forwarded within the cooldown window
+const SingleClick = {
+  mounted() {
+    this.lastClickTime = 0
+    this.cooldownMs = parseInt(this.el.dataset.singleClickMs || "600", 10)
+
+    this.handleClick = (e) => {
+      const now = Date.now()
+      if (now - this.lastClickTime < this.cooldownMs) {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation()
+        return
+      }
+      this.lastClickTime = now
+    }
+
+    this.el.addEventListener("click", this.handleClick, true)
+  },
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick, true)
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   hooks: {
     ...colocatedHooks,
+    SingleClick,
     PreventEnterSubmit,
     OpenDatePicker,
     PrintDocument,
@@ -1090,6 +1146,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
     PreserveDetailsOpen,
     PreserveFormData,
     SaveFieldOnBlur,
+    SubFunctionInputBlur,
     SaveRowData,
     SetInputValue
   },

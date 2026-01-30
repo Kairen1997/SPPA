@@ -34,6 +34,20 @@ defmodule Sppa.AnalisisDanRekabentuk do
   end
 
   @doc """
+  Gets a single analisis_dan_rekabentuk by id and scope.
+
+  Returns nil if not found (does not raise).
+  """
+  def get_analisis_dan_rekabentuk(id, current_scope) when not is_nil(id) do
+    AnalisisDanRekabentuk
+    |> where([a], a.id == ^id and a.user_id == ^current_scope.user.id)
+    |> preload([:project, :user, modules: [functions: :sub_functions]])
+    |> Repo.one()
+  end
+
+  def get_analisis_dan_rekabentuk(_id, _current_scope), do: nil
+
+  @doc """
   Gets a single analisis_dan_rekabentuk by project_id.
 
   Returns nil if not found.

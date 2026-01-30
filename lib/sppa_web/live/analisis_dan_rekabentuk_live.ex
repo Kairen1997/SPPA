@@ -14,10 +14,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      # Start with no modules; user adds via "Tambah Modul"
-      socket = stream_configure(socket, :modules, dom_id: &"module_#{&1.id}")
-      socket = stream(socket, :modules, [], reset: true)
-
+      # Start with no modules; user adds via "Tambah Modul". Use assign only (no stream) so display = modules_list and no duplicate rows.
       socket =
         socket
         |> assign(:hide_root_header, true)
@@ -38,6 +35,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         |> assign(:pdf_data, nil)
         |> assign(:modules_count, 0)
         |> assign(:modules_list, [])
+        |> assign(:adding_module, false)
         |> update_summary()
 
       if connected?(socket) do
@@ -394,28 +392,38 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
   @impl true
   def handle_event("add_module", _params, socket) do
-    module_id = "module_#{System.unique_integer([:positive])}"
+    # Guard: prevent double-add when phx-click fires twice (only 1 in DB but 2 shown)
+    if socket.assigns[:adding_module] do
+      {:noreply, assign(socket, :adding_module, false)}
+    else
+      socket = assign(socket, :adding_module, true)
 
-    # Get next module number
-    next_number = get_next_module_number(socket)
+      module_id = "module_#{System.unique_integer([:positive])}"
+      next_number = get_next_module_number(socket)
 
-    new_module = %{
-      id: module_id,
-      number: next_number,
-      name: "",
-      functions: []
-    }
+      new_module = %{
+        id: module_id,
+        number: next_number,
+        name: "",
+        functions: []
+      }
 
-    socket =
-      socket
-      |> stream(:modules, [new_module])
-      |> update(:modules_list, fn list -> (list || []) ++ [new_module] end)
-      |> update(:modules_count, &(&1 + 1))
-      |> update_summary()
+      # Single source of truth: build new list from current modules_list, then set stream from that list (reset: true) so display matches DB
+      current_list = get_modules_from_stream(socket)
+      new_list = current_list ++ [new_module]
 
-    case persist_analisis_to_db(socket) do
-      {:ok, updated_socket} -> {:noreply, updated_socket}
-      {:error, updated_socket} -> {:noreply, updated_socket}
+      socket =
+        socket
+        |> assign(:modules_list, new_list)
+        |> update(:modules_count, &(&1 + 1))
+        |> update_summary()
+
+      Process.send_after(self(), :clear_adding_module_after_delay, 200)
+
+      case persist_analisis_to_db(socket) do
+        {:ok, updated_socket} -> {:noreply, updated_socket}
+        {:error, updated_socket} -> {:noreply, updated_socket}
+      end
     end
   end
 
@@ -431,7 +439,6 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     socket =
       socket
-      |> stream(:modules, modules, reset: true)
       |> assign(:modules_list, modules)
       |> update(:modules_count, fn count -> max(0, count - 1) end)
       |> update_summary()
@@ -445,7 +452,8 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   @impl true
   def handle_event("update_module_name", params, socket) do
     module_id = params["module_id"]
-    name = params["module_name"] || ""
+    # phx-blur sends value; phx-change sends module_name
+    name = params["module_name"] || params["value"] || ""
 
     updated_modules =
       get_modules_from_stream(socket)
@@ -459,7 +467,6 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     socket =
       socket
-      |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
 
@@ -501,7 +508,6 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     socket =
       socket
-      |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
 
@@ -535,7 +541,6 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     socket =
       socket
-      |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
 
@@ -549,7 +554,8 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   def handle_event("update_function_name", params, socket) do
     module_id = params["module_id"]
     func_id = params["func_id"]
-    name = params["function_name"] || ""
+    # phx-blur sends value; phx-change sends function_name
+    name = params["function_name"] || params["value"] || ""
 
     updated_modules =
       get_modules_from_stream(socket)
@@ -572,7 +578,6 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     socket =
       socket
-      |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
 
@@ -622,9 +627,17 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     socket =
       socket
-      |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
+
+    # Refresh selected_module so the new sub-function row appears in the "Fungsi Modul" section
+    socket =
+      if socket.assigns.selected_module_id == module_id do
+        selected_module = get_selected_module_by_id(socket, module_id)
+        assign(socket, :selected_module, selected_module)
+      else
+        socket
+      end
 
     case persist_analisis_to_db(socket) do
       {:ok, updated_socket} -> {:noreply, updated_socket}
@@ -660,7 +673,6 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     socket =
       socket
-      |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
 
@@ -684,7 +696,12 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     module_id = params["module_id"]
     func_id = params["func_id"]
     sub_func_id = params["sub_func_id"]
-    name = params["sub_function_name"] || ""
+    # Value: from unique input name, or LiveView's "value" for the blurred input
+    name =
+      params["sub_function_name_#{sub_func_id}"] ||
+        params["sub_function_name"] ||
+        params["value"] ||
+        ""
 
     updated_modules =
       get_modules_from_stream(socket)
@@ -716,14 +733,27 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     socket =
       socket
-      |> stream(:modules, updated_modules, reset: true)
       |> assign(:modules_list, updated_modules)
       |> update_summary()
+
+    # Refresh selected_module so the input shows the saved name
+    socket =
+      if socket.assigns.selected_module_id == module_id do
+        selected_module = get_selected_module_by_id(socket, module_id)
+        assign(socket, :selected_module, selected_module)
+      else
+        socket
+      end
 
     case persist_analisis_to_db(socket) do
       {:ok, updated_socket} -> {:noreply, updated_socket}
       {:error, updated_socket} -> {:noreply, updated_socket}
     end
+  end
+
+  @impl true
+  def handle_info(:clear_adding_module_after_delay, socket) do
+    {:noreply, assign(socket, :adding_module, false)}
   end
 
   # `Sppa.AnalisisDanRekabentuk.pdf_data/1` now owns preview generation.
@@ -785,7 +815,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
       "approved_by_date" => format_date_for_input(liveview_data.approved_by_date)
     }
 
-    # Load modules into stream
+    # Load modules into assign (single source of truth for display)
     modules = liveview_data.modules
 
     socket
@@ -793,7 +823,6 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     |> assign(:analisis_dan_rekabentuk_id, analisis_dan_rekabentuk.id)
     |> assign(:document_id, liveview_data.document_id)
     |> assign(:form, to_form(form_params, as: :analisis_dan_rekabentuk))
-    |> stream(:modules, modules, reset: true)
     |> assign(:modules_list, modules)
     |> assign(:modules_count, length(modules))
     |> update_summary()
@@ -819,6 +848,21 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   # Auto-save to DB (used after module/function/sub_function changes so user doesn't need to click Simpan)
   defp persist_analisis_to_db(socket) do
     current_scope = socket.assigns.current_scope
+
+    if current_scope && current_scope.user do
+      do_persist_analisis_to_db(socket, current_scope)
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(
+          :error,
+          "Sesi tidak sah. Sila log masuk semula."
+        )
+      {:error, socket}
+    end
+  end
+
+  defp do_persist_analisis_to_db(socket, current_scope) do
     project = socket.assigns.project
     params = socket.assigns.form.params || %{}
     modules = get_modules_from_stream(socket)
@@ -842,16 +886,28 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
       }
 
     result =
-      if socket.assigns.analisis_dan_rekabentuk_id do
-        existing =
-          AnalisisDanRekabentuk.get_analisis_dan_rekabentuk!(
-            socket.assigns.analisis_dan_rekabentuk_id,
-            current_scope
-          )
+      try do
+        if socket.assigns.analisis_dan_rekabentuk_id do
+          existing =
+            AnalisisDanRekabentuk.get_analisis_dan_rekabentuk(
+              socket.assigns.analisis_dan_rekabentuk_id,
+              current_scope
+            )
 
-        AnalisisDanRekabentuk.update_analisis_dan_rekabentuk(existing, attrs)
-      else
-        AnalisisDanRekabentuk.create_analisis_dan_rekabentuk(attrs, current_scope)
+          if existing do
+            AnalisisDanRekabentuk.update_analisis_dan_rekabentuk(existing, attrs)
+          else
+            # Record was deleted or no longer accessible; create new instead of crashing
+            AnalisisDanRekabentuk.create_analisis_dan_rekabentuk(attrs, current_scope)
+          end
+        else
+          AnalisisDanRekabentuk.create_analisis_dan_rekabentuk(attrs, current_scope)
+        end
+      rescue
+        e ->
+          require Logger
+          Logger.error("persist_analisis_to_db failed: #{inspect(e)}")
+          {:error, %Ecto.Changeset{}}
       end
 
     case result do
@@ -865,7 +921,26 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
         {:ok, socket}
 
-      {:error, _changeset} ->
+      {:error, error} ->
+        changeset =
+          cond do
+            is_struct(error, Ecto.Changeset) -> error
+            is_tuple(error) and tuple_size(error) == 2 ->
+              case elem(error, 1) do
+                cs when is_struct(cs, Ecto.Changeset) -> cs
+                _ -> nil
+              end
+            true -> nil
+          end
+
+        require Logger
+        if changeset do
+          Logger.warning(
+            "persist_analisis_to_db failed: #{inspect(Ecto.Changeset.traverse_errors(changeset, &translate_error/1))}"
+          )
+        else
+          Logger.warning("persist_analisis_to_db failed: #{inspect(error)}")
+        end
         socket =
           socket
           |> Phoenix.LiveView.put_flash(

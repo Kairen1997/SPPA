@@ -18,7 +18,14 @@ defmodule Sppa.AnalisisDanRekabentuk.Function do
   def changeset(function, attrs) do
     function
     |> cast(attrs, [:name, :analisis_dan_rekabentuk_module_id])
-    # Benarkan nama kosong semasa pengguna masih mengisi fungsi.
+    |> ensure_non_null_name()
     |> validate_required([:analisis_dan_rekabentuk_module_id])
+  end
+
+  defp ensure_non_null_name(changeset) do
+    case get_field(changeset, :name) do
+      nil -> put_change(changeset, :name, "")
+      _ -> changeset
+    end
   end
 end

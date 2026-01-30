@@ -163,19 +163,23 @@
                   </h3>
                   
                   <button
+                    id="tambah-modul-btn"
                     type="button"
                     phx-click="add_module"
-                    class="ml-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded transition-colors duration-200 flex items-center gap-1 print:hidden"
+                    phx-disable-with="Menambah..."
+                    phx-hook="SingleClick"
+                    data-single-click-ms="700"
+                    class="ml-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded transition-colors duration-200 flex items-center gap-1 print:hidden disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     <.icon name="hero-plus-circle" class="w-4 h-4" />
                     <span>Tambah Modul</span>
                   </button>
                 </div>
                 
-                <div id="modules" phx-update="stream" class="space-y-3 mt-4">
+                <div id="modules" class="space-y-3 mt-4">
+                  <%= for module <- @modules_list do %>
                   <div
-                    :for={{module_id, module} <- @streams.modules}
-                    id={module_id}
+                    id={"module-#{module.id}"}
                     class="border border-gray-300 rounded p-3 bg-gray-50"
                   >
                     <div class="flex items-center justify-between">
@@ -185,8 +189,7 @@
                             type="text"
                             name="module_name"
                             value={module.name}
-                            phx-change="update_module_name"
-                            phx-debounce="500"
+                            phx-blur="update_module_name"
                             phx-value-module_id={module.id}
                             phx-hook="PreventEnterSubmit"
                             class="flex-1 px-2 py-1.5 text-sm text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-semibold placeholder:text-black"
@@ -220,13 +223,13 @@
                         <%= for {func, index} <- Enum.with_index(module.functions) do %>
                           <div class="text-xs text-gray-700">
                             <span class="font-medium">
-                              {Enum.at(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], index)}.
+                              {Enum.at(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], index)}.
                             </span>
                             <span>{func.name}</span>
                             <%= if length(func.sub_functions) > 0 do %>
                               <div class="ml-4 mt-0.5">
-                                <%= for sub_func <- func.sub_functions do %>
-                                  <div class="text-gray-600">• {sub_func.name}</div>
+                                <%= for {sub_func, sub_index} <- Enum.with_index(func.sub_functions) do %>
+                                  <div class="text-gray-600">{Enum.at(["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"], sub_index)}. {sub_func.name}</div>
                                 <% end %>
                               </div>
                             <% end %>
@@ -235,6 +238,7 @@
                       </div>
                     <% end %>
                   </div>
+                  <% end %>
                 </div>
               </div>
               
@@ -257,10 +261,12 @@
                       </div>
                       
                       <button
+                        id="tambah-fungsi-btn"
                         type="button"
                         phx-click="add_function"
+                        phx-disable-with="Menambah..."
                         phx-value-module_id={selected_module.id}
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded transition-colors duration-200 flex items-center gap-1"
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded transition-colors duration-200 flex items-center gap-1 disabled:opacity-70 disabled:cursor-not-allowed"
                       >
                         <.icon name="hero-plus-circle" class="w-4 h-4" />
                         <span>Tambah Fungsi</span>
@@ -274,14 +280,13 @@
                         <div class="border border-gray-300 rounded p-3 bg-gray-50">
                           <div class="flex items-center gap-2 mb-2">
                             <span class="font-semibold text-xs text-gray-700 min-w-[20px]">
-                              {Enum.at(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], index)}.
+                              {Enum.at(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], index)}.
                             </span>
                             <input
                               type="text"
                               name="function_name"
                               value={func.name}
-                              phx-change="update_function_name"
-                              phx-debounce="500"
+                              phx-blur="update_function_name"
                               phx-value-module_id={selected_module.id}
                               phx-value-func_id={func.id}
                               class="flex-1 px-2 py-1.5 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-black"
@@ -299,15 +304,15 @@
                           </div>
                           
                           <div class="ml-6 space-y-1">
-                            <%= for sub_func <- func.sub_functions do %>
+                            <%= for {sub_func, sub_index} <- Enum.with_index(func.sub_functions) do %>
                               <div class="flex items-center gap-2">
-                                <span class="text-gray-500 text-xs">•</span>
+                                <span class="text-gray-500 text-xs font-medium inline-block min-w-[1.5ch]">{Enum.at(["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"], sub_index)}.</span>
                                 <input
+                                  id={"sub-function-input-#{sub_func.id}"}
                                   type="text"
-                                  name="sub_function_name"
+                                  name={"sub_function_name_#{sub_func.id}"}
                                   value={sub_func.name}
-                                  phx-change="update_sub_function_name"
-                                  phx-debounce="500"
+                                  phx-hook="SubFunctionInputBlur"
                                   phx-value-module_id={selected_module.id}
                                   phx-value-func_id={func.id}
                                   phx-value-sub_func_id={sub_func.id}
@@ -633,12 +638,12 @@
                       <%= for {func, index} <- Enum.with_index(module.functions) do %>
                         <div class="mb-1">
                           <span class="text-gray-700 font-medium">
-                            {Enum.at(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], index)}. {func.name}
+                            {Enum.at(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], index)}. {func.name}
                           </span>
                           <%= if length(func.sub_functions) > 0 do %>
                             <div class="ml-4 mt-1">
-                              <%= for sub_func <- func.sub_functions do %>
-                                <div class="text-gray-600">• {sub_func.name}</div>
+                              <%= for {sub_func, sub_index} <- Enum.with_index(func.sub_functions) do %>
+                                <div class="text-gray-600">{Enum.at(["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"], sub_index)}. {sub_func.name}</div>
                               <% end %>
                             </div>
                           <% end %>
