@@ -544,6 +544,15 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
       |> assign(:modules_list, updated_modules)
       |> update_summary()
 
+    # Refresh selected_module so the deleted function disappears from the "Fungsi Modul" panel
+    socket =
+      if socket.assigns.selected_module_id == module_id do
+        selected_module = get_selected_module_by_id(socket, module_id)
+        assign(socket, :selected_module, selected_module)
+      else
+        socket
+      end
+
     case persist_analisis_to_db(socket) do
       {:ok, updated_socket} -> {:noreply, updated_socket}
       {:error, updated_socket} -> {:noreply, updated_socket}
