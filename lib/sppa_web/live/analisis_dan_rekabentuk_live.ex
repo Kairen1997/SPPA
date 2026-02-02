@@ -563,16 +563,20 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   def handle_event("update_function_name", params, socket) do
     module_id = params["module_id"]
     func_id = params["func_id"]
-    # phx-blur sends value; phx-change sends function_name
+    # FunctionInputBlur hook sends "value"; phx-change sends "function_name"
     name = params["function_name"] || params["value"] || ""
+
+    # Normalize IDs for comparison (hook sends strings; in-memory ids may be string or from DB format)
+    module_id_norm = module_id && to_string(module_id)
+    func_id_norm = func_id && to_string(func_id)
 
     updated_modules =
       get_modules_from_stream(socket)
       |> Enum.map(fn module ->
-        if module.id == module_id do
+        if module_id_norm && to_string(module.id) == module_id_norm do
           updated_functions =
             Enum.map(module.functions, fn func ->
-              if func.id == func_id do
+              if func_id_norm && to_string(func.id) == func_id_norm do
                 Map.put(func, :name, name)
               else
                 func
@@ -592,7 +596,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     # Update selected_module if it's the one being edited
     socket =
-      if socket.assigns.selected_module_id == module_id do
+      if module_id_norm && to_string(socket.assigns.selected_module_id) == module_id_norm do
         selected_module = get_selected_module_by_id(socket, module_id)
         assign(socket, :selected_module, selected_module)
       else
@@ -777,10 +781,13 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     (socket.assigns.modules_count || 0) + 1
   end
 
+  defp get_selected_module_by_id(_socket, nil), do: nil
+
   defp get_selected_module_by_id(socket, module_id) do
+    module_id_str = to_string(module_id)
     get_modules_from_stream(socket)
     |> Enum.find_value(fn module ->
-      if module.id == module_id, do: module
+      if to_string(module.id) == module_id_str, do: module
     end)
   end
 

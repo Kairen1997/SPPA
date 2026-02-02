@@ -283,10 +283,13 @@
                               {Enum.at(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], index)}.
                             </span>
                             <input
+                              id={"function-name-input-#{func.id}"}
                               type="text"
                               name="function_name"
                               value={func.name}
-                              phx-blur="update_function_name"
+                              phx-hook="FunctionInputBlur"
+                              phx-change="update_function_name"
+                              phx-debounce="blur"
                               phx-value-module_id={selected_module.id}
                               phx-value-func_id={func.id}
                               class="flex-1 px-2 py-1.5 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-black"

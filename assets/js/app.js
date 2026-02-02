@@ -1017,6 +1017,33 @@ const SaveRowData = {
   }
 }
 
+// Function name: push value on blur so server always receives the typed name (same pattern as SubFunctionInputBlur)
+const FunctionInputBlur = {
+  mounted() {
+    const input = this.el
+    if (!input || input.tagName !== "INPUT") return
+
+    this.handleBlur = () => {
+      const value = input.value !== null && input.value !== undefined ? input.value : ""
+      const moduleId = input.getAttribute("phx-value-module_id")
+      const funcId = input.getAttribute("phx-value-func_id")
+      if (moduleId && funcId && typeof this.pushEvent === "function") {
+        this.pushEvent("update_function_name", {
+          module_id: moduleId,
+          func_id: funcId,
+          value: value
+        })
+      }
+    }
+    input.addEventListener("blur", this.handleBlur)
+  },
+  destroyed() {
+    if (this.el && this.handleBlur) {
+      this.el.removeEventListener("blur", this.handleBlur)
+    }
+  }
+}
+
 // Sub-function name: push value on blur so server always receives the typed name
 const SubFunctionInputBlur = {
   mounted() {
@@ -1146,6 +1173,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
     PreserveDetailsOpen,
     PreserveFormData,
     SaveFieldOnBlur,
+    FunctionInputBlur,
     SubFunctionInputBlur,
     SaveRowData,
     SetInputValue
