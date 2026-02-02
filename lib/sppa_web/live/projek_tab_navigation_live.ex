@@ -103,7 +103,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         notifications_count = length(activities)
 
         analisis_pdf_data =
-          AnalisisDanRekabentuk.pdf_data(nama_projek: project.nama || "Projek")
+          AnalisisDanRekabentuk.analisis_for_tab_display(project_id, socket.assigns.current_scope)
 
         {:ok,
          socket

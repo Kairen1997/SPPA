@@ -147,6 +147,38 @@ defmodule Sppa.AnalisisDanRekabentuk do
   end
 
   @doc """
+  Returns analisis data formatted for display on the project tab (e.g. projek/:id?tab=analisis-dan-rekabentuk).
+
+  Loads the latest analisis_dan_rekabentuk for the project from the database. Returns nil if none exists.
+  Dates are formatted as DD/MM/YYYY for display.
+  """
+  def analisis_for_tab_display(project_id, current_scope) when is_integer(project_id) do
+    case get_analisis_dan_rekabentuk_by_project_for_display(project_id, current_scope) do
+      nil -> nil
+      analisis -> analisis_to_display_format(analisis)
+    end
+  end
+
+  def analisis_for_tab_display(_project_id, _current_scope), do: nil
+
+  defp analisis_to_display_format(analisis_dan_rekabentuk) do
+    base = to_liveview_format(analisis_dan_rekabentuk)
+
+    base
+    |> Map.put(:tarikh_semakan, format_date_for_display(base.tarikh_semakan))
+    |> Map.put(:prepared_by_date, format_date_for_display(base.prepared_by_date))
+    |> Map.put(:approved_by_date, format_date_for_display(base.approved_by_date))
+  end
+
+  defp format_date_for_display(nil), do: ""
+
+  defp format_date_for_display(%Date{} = date) do
+    day = date.day |> to_string() |> String.pad_leading(2, "0")
+    month = date.month |> to_string() |> String.pad_leading(2, "0")
+    "#{day}/#{month}/#{date.year}"
+  end
+
+  @doc """
   Converts a analisis_dan_rekabentuk from database to the format expected by the LiveView.
   """
   def to_liveview_format(%AnalisisDanRekabentuk{} = analisis_dan_rekabentuk) do
