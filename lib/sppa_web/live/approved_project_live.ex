@@ -27,17 +27,22 @@ defmodule SppaWeb.ApprovedProjectLive do
                ApprovedProjects.get_approved_project!(approved_id) do
           # Get all developers for the dropdown
           all_users = Accounts.list_users()
-          developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
+          all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
 
           # Parse pembangun_sistem from string (comma-separated) to list of names
           stored_names = parse_pembangun_sistem(approved_project.pembangun_sistem)
-          # Match stored names with actual developers to get their IDs for checkbox state
           selected_developers = stored_names
+
+          # Get available developers (not already selected)
+          available_developers =
+            all_developers
+            |> Enum.filter(fn dev -> dev.no_kp not in selected_developers end)
 
           {:ok,
            socket
            |> assign(:approved_project, approved_project)
-           |> assign(:developers, developers)
+           |> assign(:developers, all_developers)
+           |> assign(:available_developers, available_developers)
            |> assign(:selected_developers, selected_developers)
            |> assign(:form_pembangun, to_form(%{"pembangun_sistem" => selected_developers}, as: :project))}
         else
@@ -52,6 +57,7 @@ defmodule SppaWeb.ApprovedProjectLive do
          socket
          |> assign(:approved_project, nil)
          |> assign(:developers, [])
+         |> assign(:available_developers, [])
          |> assign(:selected_developers, [])}
       end
     else
@@ -182,60 +188,75 @@ defmodule SppaWeb.ApprovedProjectLive do
   end
 
   @impl true
-  def handle_event("update_pembangun_sistem", %{"pembangun_sistem" => pembangun_ids}, socket) when is_map(pembangun_ids) do
-    # Convert map of selected IDs to list of integer IDs
-    selected_ids =
-      pembangun_ids
-      |> Map.to_list()
-      |> Enum.filter(fn {_key, value} -> value == "true" or value == true end)
-      |> Enum.map(fn {key, _value} ->
-        case Integer.parse(key) do
-          {id, _} -> id
-          :error -> nil
+  def handle_event("add_pembangun_sistem", %{"developer_id" => developer_id_str}, socket) do
+    case Integer.parse(developer_id_str) do
+      {developer_id, _} ->
+        # Find the developer
+        developer = Enum.find(socket.assigns.developers, fn dev -> dev.id == developer_id end)
+
+        if developer && developer.no_kp not in socket.assigns.selected_developers do
+          # Add to selected list
+          new_selected = socket.assigns.selected_developers ++ [developer.no_kp]
+
+          # Format as comma-separated string
+          pembangun_sistem_str = format_pembangun_sistem(new_selected)
+
+          # Update the approved project
+          case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+            "pembangun_sistem" => pembangun_sistem_str
+          }) do
+            {:ok, updated_project} ->
+              # Update available developers (exclude selected ones)
+              available_developers =
+                socket.assigns.developers
+                |> Enum.filter(fn dev -> dev.no_kp not in new_selected end)
+
+              {:noreply,
+               socket
+               |> assign(:approved_project, updated_project)
+               |> assign(:selected_developers, new_selected)
+               |> assign(:available_developers, available_developers)
+               |> put_flash(:info, "Pembangun sistem telah ditambah.")}
+
+            {:error, _changeset} ->
+              {:noreply, put_flash(socket, :error, "Gagal menambah pembangun sistem.")}
+          end
+        else
+          {:noreply, socket}
         end
-      end)
-      |> Enum.filter(&(&1 != nil))
 
-    # Get developer names (no_kp) from IDs
-    selected_names =
-      socket.assigns.developers
-      |> Enum.filter(fn dev -> dev.id in selected_ids end)
-      |> Enum.map(fn dev -> dev.no_kp || "Unknown" end)
+      :error ->
+        {:noreply, socket}
+    end
+  end
 
-    # Format as comma-separated string
-    pembangun_sistem_str = format_pembangun_sistem(selected_names)
+  @impl true
+  def handle_event("remove_pembangun_sistem", %{"no_kp" => no_kp}, socket) do
+    # Remove from selected list
+    new_selected = List.delete(socket.assigns.selected_developers, no_kp)
+
+    # Format as comma-separated string (or nil if empty)
+    pembangun_sistem_str = if new_selected == [], do: nil, else: format_pembangun_sistem(new_selected)
 
     # Update the approved project
     case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
       "pembangun_sistem" => pembangun_sistem_str
     }) do
       {:ok, updated_project} ->
+        # Update available developers (exclude selected ones)
+        available_developers =
+          socket.assigns.developers
+          |> Enum.filter(fn dev -> dev.no_kp not in new_selected end)
+
         {:noreply,
          socket
          |> assign(:approved_project, updated_project)
-         |> assign(:selected_developers, selected_names)
-         |> put_flash(:info, "Pembangun sistem telah dikemaskini.")}
+         |> assign(:selected_developers, new_selected)
+         |> assign(:available_developers, available_developers)
+         |> put_flash(:info, "Pembangun sistem telah dikeluarkan.")}
 
       {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Gagal mengemaskini pembangun sistem.")}
-    end
-  end
-
-  @impl true
-  def handle_event("update_pembangun_sistem", _params, socket) do
-    # No checkboxes selected - clear pembangun_sistem
-    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-      "pembangun_sistem" => nil
-    }) do
-      {:ok, updated_project} ->
-        {:noreply,
-         socket
-         |> assign(:approved_project, updated_project)
-         |> assign(:selected_developers, [])
-         |> put_flash(:info, "Pembangun sistem telah dikemaskini.")}
-
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Gagal mengemaskini pembangun sistem.")}
+        {:noreply, put_flash(socket, :error, "Gagal mengeluarkan pembangun sistem.")}
     end
   end
 
@@ -533,32 +554,70 @@ defmodule SppaWeb.ApprovedProjectLive do
                           Pembangun Sistem
                         </dt>
                         <dd>
-                          <.form
-                            for={%{}}
-                            phx-change="update_pembangun_sistem"
-                            id="pembangun-sistem-form"
-                            class="space-y-2"
-                          >
-                            <div class="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-2 bg-gray-50">
-                              <%= for developer <- @developers do %>
-                                <label class="flex items-center gap-2 p-2 hover:bg-white rounded cursor-pointer transition-colors">
-                                  <input
-                                    type="checkbox"
-                                    name={"pembangun_sistem[#{developer.id}]"}
-                                    value="true"
-                                    checked={developer.no_kp in @selected_developers}
-                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                  />
-                                  <span class="text-sm text-gray-700">{developer.no_kp || "Unknown"}</span>
-                                </label>
-                              <% end %>
-                            </div>
-                            <%= if @selected_developers != [] do %>
-                              <p class="text-xs text-gray-500 mt-2">
-                                Dipilih: {Enum.join(@selected_developers, ", ")}
+                          <div class="space-y-3">
+                            <%!-- Dropdown to add pembangun sistem --%>
+                            <%= if @available_developers != [] do %>
+                              <.form
+                                for={%{}}
+                                phx-submit="add_pembangun_sistem"
+                                id="add-pembangun-form"
+                                class="space-y-2"
+                              >
+                                <select
+                                  name="developer_id"
+                                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
+                                  required
+                                >
+                                  <option value="">Pilih Pembangun Sistem</option>
+                                  <%= for developer <- @available_developers do %>
+                                    <option value={developer.id}>
+                                      <%= developer.no_kp || "Unknown" %><%= if developer.email, do: " (#{developer.email})", else: "" %>
+                                    </option>
+                                  <% end %>
+                                </select>
+                                <button
+                                  type="submit"
+                                  class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all duration-200"
+                                >
+                                  <.icon name="hero-plus" class="w-4 h-4" />
+                                  <span>Tambah</span>
+                                </button>
+                              </.form>
+                            <% else %>
+                              <p class="text-sm text-gray-500 italic">
+                                Semua pembangun sistem telah dipilih
                               </p>
                             <% end %>
-                          </.form>
+
+                            <%!-- Display selected pembangun sistem --%>
+                            <%= if @selected_developers != [] do %>
+                              <div class="mt-4 space-y-2">
+                                <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                                  Pembangun Sistem Dipilih:
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                  <%= for no_kp <- @selected_developers do %>
+                                    <div class="inline-flex items-center gap-2 rounded-full bg-indigo-100 px-3 py-1.5 text-sm text-indigo-800">
+                                      <span><%= no_kp %></span>
+                                      <button
+                                        type="button"
+                                        phx-click="remove_pembangun_sistem"
+                                        phx-value-no_kp={no_kp}
+                                        class="ml-1 rounded-full p-0.5 hover:bg-indigo-200 transition-colors"
+                                        title="Keluarkan"
+                                      >
+                                        <.icon name="hero-x-mark" class="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  <% end %>
+                                </div>
+                              </div>
+                            <% else %>
+                              <p class="text-sm text-gray-400 italic mt-2">
+                                Tiada pembangun sistem dipilih
+                              </p>
+                            <% end %>
+                          </div>
                         </dd>
                       </div>
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">

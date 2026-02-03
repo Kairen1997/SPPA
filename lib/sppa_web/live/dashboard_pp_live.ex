@@ -2,6 +2,7 @@ defmodule SppaWeb.DashboardPPLive do
   use SppaWeb, :live_view
 
   alias Sppa.Projects
+  alias Sppa.ApprovedProjects
 
   @impl true
   def mount(_params, _session, socket) do
@@ -20,7 +21,11 @@ defmodule SppaWeb.DashboardPPLive do
         |> assign(:profile_menu_open, false)
 
       if connected?(socket) do
-        stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
+        # Subscribe to approved projects updates for live updates
+        Phoenix.PubSub.subscribe(Sppa.PubSub, "approved_projects")
+
+        # Get approved project stats
+        stats = ApprovedProjects.get_dashboard_stats()
         activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
         notifications_count = length(activities)
 
@@ -32,7 +37,7 @@ defmodule SppaWeb.DashboardPPLive do
       else
         {:ok,
          socket
-         |> assign(:stats, %{})
+         |> assign(:stats, %{jumlah: 0, jumlah_projek_berdaftar: 0, jumlah_projek_perlu_didaftar: 0})
          |> assign(:activities, [])
          |> assign(:notifications_count, 0)}
       end
@@ -47,6 +52,25 @@ defmodule SppaWeb.DashboardPPLive do
 
       {:ok, socket}
     end
+  end
+
+  @impl true
+  def handle_info({:created, _approved_project}, socket) do
+    # Refresh stats when a new approved project is created
+    stats = ApprovedProjects.get_dashboard_stats()
+    {:noreply, assign(socket, :stats, stats)}
+  end
+
+  @impl true
+  def handle_info({:updated, _approved_project}, socket) do
+    # Refresh stats when an approved project is updated (e.g., linked to internal project)
+    stats = ApprovedProjects.get_dashboard_stats()
+    {:noreply, assign(socket, :stats, stats)}
+  end
+
+  @impl true
+  def handle_info(_message, socket) do
+    {:noreply, socket}
   end
 
   @impl true
@@ -141,37 +165,37 @@ defmodule SppaWeb.DashboardPPLive do
               </div>
                <%!-- Summary Cards --%>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                <%!-- Total Projects --%>
+                <%!-- Jumlah --%>
                 <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-folder-open" class="w-8 h-8 text-yellow-800 opacity-80" />
                   </div>
 
                   <div class="text-4xl font-bold text-gray-900 mb-1">
-                    {@stats[:total_projects] || 0}
+                    {@stats[:jumlah] || 0}
                   </div>
 
-                  <div class="text-sm font-medium text-gray-800">Jumlah Projek</div>
+                  <div class="text-sm font-medium text-gray-800">Jumlah</div>
                 </div>
-                 <%!-- In Development --%>
+                 <%!-- Jumlah Projek Berdaftar --%>
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
-                    <.icon name="hero-cog-6-tooth" class="w-8 h-8 text-white opacity-90" />
+                    <.icon name="hero-check-circle" class="w-8 h-8 text-white opacity-90" />
                   </div>
 
-                  <div class="text-4xl font-bold text-white mb-1">{@stats[:in_development] || 0}</div>
+                  <div class="text-4xl font-bold text-white mb-1">{@stats[:jumlah_projek_berdaftar] || 0}</div>
 
-                  <div class="text-sm font-medium text-blue-50">Dalam Pembangunan</div>
+                  <div class="text-sm font-medium text-blue-50">Jumlah Projek Berdaftar</div>
                 </div>
-                 <%!-- Completed --%>
+                 <%!-- Jumlah Projek Perlu Didaftar --%>
                 <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
-                    <.icon name="hero-check-badge" class="w-8 h-8 text-white opacity-90" />
+                    <.icon name="hero-exclamation-triangle" class="w-8 h-8 text-white opacity-90" />
                   </div>
 
-                  <div class="text-4xl font-bold text-white mb-1">{@stats[:completed] || 0}</div>
+                  <div class="text-4xl font-bold text-white mb-1">{@stats[:jumlah_projek_perlu_didaftar] || 0}</div>
 
-                  <div class="text-sm font-medium text-green-50">Projek Selesai</div>
+                  <div class="text-sm font-medium text-green-50">Jumlah Projek Perlu Didaftar</div>
                 </div>
               </div>
                <%!-- Latest Activities --%>

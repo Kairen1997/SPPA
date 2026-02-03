@@ -264,15 +264,6 @@ defmodule SppaWeb.ModulProjekLive do
         nil
       end
 
-    # Get developer name if developer_id is set
-    developer_name =
-      if developer_id do
-        developer = Enum.find(socket.assigns.developers, fn d -> d.id == developer_id end)
-        if developer, do: developer.email || developer.no_kp, else: nil
-      else
-        nil
-      end
-
     # Parse due_date if provided
     due_date =
       if task_params["due_date"] && task_params["due_date"] != "" do

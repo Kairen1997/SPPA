@@ -62,6 +62,20 @@ create_confirmed_user.(
   "pembangun sistem"
 )
 
+create_confirmed_user.(
+  "123456127890",
+  "PembangunSistem123",
+  "pembangunsistem123@sppa.gov.my",
+  "pembangun sistem"
+)
+
+create_confirmed_user.(
+  "098765123456",
+  "Mark_00123456",
+  "mark_00@sppa.gov.my",
+  "pembangun sistem"
+)
+
 # Create Pengurus Projek (Project Manager)
 IO.puts("\nCreating Pengurus Projek...")
 
@@ -157,7 +171,7 @@ if developer && project_manager && owner do
         )
 
       %Project{
-        name: attrs.name,
+        nama: attrs.name,
         status: attrs.status,
         last_updated: last_updated,
         user_id: owner.id,
@@ -189,7 +203,7 @@ if developer && project_manager && owner do
         )
 
       %Project{
-        name: attrs.name,
+        nama: attrs.name,
         status: attrs.status,
         last_updated: last_updated,
         user_id: developer.id,

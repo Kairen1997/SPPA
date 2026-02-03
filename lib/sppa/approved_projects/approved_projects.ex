@@ -20,7 +20,8 @@ defmodule Sppa.ApprovedProjects do
         # Duplicate detected (on_conflict returned struct without ID)
         {:ok, nil}
       {:ok, project} ->
-        # New record inserted successfully
+        # Broadcast new project for live dashboard updates
+        Phoenix.PubSub.broadcast(Sppa.PubSub, "approved_projects", {:created, project})
         {:ok, project}
       {:error, error_changeset} ->
         # Validation or other error
@@ -47,8 +48,41 @@ defmodule Sppa.ApprovedProjects do
   Update an approved project.
   """
   def update_approved_project(%ApprovedProject{} = approved_project, attrs) do
-    approved_project
-    |> ApprovedProject.changeset(attrs)
-    |> Repo.update()
+    case approved_project
+         |> ApprovedProject.changeset(attrs)
+         |> Repo.update() do
+      {:ok, updated_project} ->
+        # Broadcast update for live dashboard updates
+        Phoenix.PubSub.broadcast(Sppa.PubSub, "approved_projects", {:updated, updated_project})
+        {:ok, updated_project}
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Get dashboard statistics for approved projects.
+  Returns:
+  - jumlah: Total number of approved projects
+  - jumlah_projek_berdaftar: Number of approved projects with linked internal projects
+  - jumlah_projek_perlu_didaftar: Number of approved projects without linked internal projects
+  """
+  def get_dashboard_stats do
+    result =
+      from(ap in ApprovedProject,
+        left_join: p in assoc(ap, :project),
+        select: %{
+          jumlah: count(ap.id),
+          jumlah_projek_berdaftar: filter(count(ap.id), not is_nil(p.id)),
+          jumlah_projek_perlu_didaftar: filter(count(ap.id), is_nil(p.id))
+        }
+      )
+      |> Repo.one()
+
+    %{
+      jumlah: result.jumlah || 0,
+      jumlah_projek_berdaftar: result.jumlah_projek_berdaftar || 0,
+      jumlah_projek_perlu_didaftar: result.jumlah_projek_perlu_didaftar || 0
+    }
   end
 end

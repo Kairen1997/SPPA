@@ -120,19 +120,39 @@ defmodule Sppa.Projects do
   Creates a project.
   """
   def create_project(attrs, current_scope) do
-    %Project{}
-    |> Project.changeset(attrs)
-    |> put_change(:user_id, current_scope.user.id)
-    |> Repo.insert()
+    case %Project{}
+         |> Project.changeset(attrs)
+         |> put_change(:user_id, current_scope.user.id)
+         |> Repo.insert() do
+      {:ok, project} ->
+        # If project is linked to an approved project, broadcast update
+        if project.approved_project_id do
+          approved_project = Sppa.ApprovedProjects.get_approved_project!(project.approved_project_id)
+          Phoenix.PubSub.broadcast(Sppa.PubSub, "approved_projects", {:updated, approved_project})
+        end
+        {:ok, project}
+      error ->
+        error
+    end
   end
 
   @doc """
   Updates a project.
   """
   def update_project(%Project{} = project, attrs) do
-    project
-    |> Project.changeset(attrs)
-    |> Repo.update()
+    case project
+         |> Project.changeset(attrs)
+         |> Repo.update() do
+      {:ok, updated_project} ->
+        # If project is linked to an approved project, broadcast update
+        if updated_project.approved_project_id do
+          approved_project = Sppa.ApprovedProjects.get_approved_project!(updated_project.approved_project_id)
+          Phoenix.PubSub.broadcast(Sppa.PubSub, "approved_projects", {:updated, approved_project})
+        end
+        {:ok, updated_project}
+      error ->
+        error
+    end
   end
 
   @doc """
