@@ -78,6 +78,62 @@ defmodule Sppa.AnalisisDanRekabentuk do
   end
 
   @doc """
+  Returns modules (nama modul, versi, fungsi modul) from Analisis dan Rekabentuk
+  for use on the Pembangunan (Pengaturcaraan) page.
+
+  Uses the user's most recent analisis_dan_rekabentuk document. Each module
+  includes the document version (versi). Fields not stored in Analisis dan
+  Rekabentuk (priority, status, tarikh_mula, tarikh_jangka_siap, catatan) are
+  set to defaults so the Pembangunan UI can display the list.
+  """
+  def list_modules_for_pembangunan(current_scope) do
+    analisis =
+      AnalisisDanRekabentuk
+      |> where([a], a.user_id == ^current_scope.user.id)
+      |> preload([modules: [functions: :sub_functions]])
+      |> order_by([a], desc: a.inserted_at)
+      |> limit(1)
+      |> Repo.one()
+
+    if analisis do
+      versi = analisis.versi || "1.0.0"
+
+      analisis.modules
+      |> Enum.sort_by(& &1.number)
+      |> Enum.map(fn module ->
+        functions =
+          module.functions
+          |> Enum.map(fn function ->
+            sub_functions =
+              (function.sub_functions || [])
+              |> Enum.map(fn sub -> %{id: "sub_#{sub.id}", name: sub.name || ""} end)
+
+            %{
+              id: "func_#{function.id}",
+              name: function.name || "",
+              sub_functions: sub_functions
+            }
+          end)
+
+        %{
+          id: "module_#{module.id}",
+          number: module.number,
+          name: module.name || "",
+          version: versi,
+          priority: nil,
+          status: "Belum Mula",
+          tarikh_mula: nil,
+          tarikh_jangka_siap: nil,
+          catatan: nil,
+          functions: functions
+        }
+      end)
+    else
+      []
+    end
+  end
+
+  @doc """
   Creates an analisis_dan_rekabentuk with modules, functions, and sub_functions.
   """
   def create_analisis_dan_rekabentuk(attrs, current_scope) do
