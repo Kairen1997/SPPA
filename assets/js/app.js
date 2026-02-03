@@ -353,6 +353,83 @@ const AutoResize = {
   }
 }
 
+// Auto Resize Textarea with Save on Blur Hook - combines auto-resize and save functionality
+const AutoResizeTextarea = {
+  mounted() {
+    this.resize()
+    this.el.addEventListener("input", () => this.resize())
+    
+    // Handle blur event to save field
+    this.handleBlur = (e) => {
+      const input = this.el
+      const value = input.value || ""
+      const tabType = input.getAttribute("phx-value-tab_type")
+      const categoryKey = input.getAttribute("phx-value-category_key")
+      const questionNo = input.getAttribute("phx-value-question_no")
+      const field = input.getAttribute("phx-value-field")
+      
+      if (tabType && categoryKey && questionNo && field && typeof this.pushEvent === 'function') {
+        // Push event with the field value
+        this.pushEvent("save_field", {
+          tab_type: tabType,
+          category_key: categoryKey,
+          question_no: questionNo,
+          field: field,
+          value: value
+        })
+      }
+    }
+    
+    this.el.addEventListener("blur", this.handleBlur)
+  },
+  
+  updated() {
+    this.resize()
+    
+    // Re-attach blur listener if needed
+    if (!this.handleBlurAttached) {
+      this.el.addEventListener("blur", this.handleBlur)
+      this.handleBlurAttached = true
+    }
+  },
+  
+  resize() {
+    // Reset height to auto to get the correct scrollHeight
+    this.el.style.height = "auto"
+    
+    // Get max-height from computed style (converts rem/em to px automatically)
+    const computedStyle = window.getComputedStyle(this.el)
+    let maxHeight = 320 // Default to 20rem = 320px
+    
+    const maxHeightStr = computedStyle.maxHeight
+    if (maxHeightStr && maxHeightStr !== 'none') {
+      maxHeight = parseInt(maxHeightStr) || 320
+    }
+    
+    // Get min-height from computed style
+    let minHeight = 40 // Default to 2.5rem = 40px
+    const minHeightStr = computedStyle.minHeight
+    if (minHeightStr && minHeightStr !== 'none' && minHeightStr !== '0px') {
+      minHeight = parseInt(minHeightStr) || 40
+    }
+    
+    const scrollHeight = this.el.scrollHeight
+    
+    // Set height to scrollHeight, but respect min and max height
+    const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight))
+    this.el.style.height = `${newHeight}px`
+    
+    // Enable scrolling if content exceeds max height
+    this.el.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden"
+  },
+  
+  destroyed() {
+    if (this.handleBlur) {
+      this.el.removeEventListener("blur", this.handleBlur)
+    }
+  }
+}
+
 // Toggle Options Field Hook
 const ToggleOptionsField = {
   mounted() {
@@ -538,6 +615,23 @@ const ProfileMenuToggle = {
   }
 }
 
+// Open Date Picker Hook - when icon/button is clicked, programmatically click the date input to open native picker
+const OpenDatePicker = {
+  mounted() {
+    this.el.addEventListener("click", (e) => {
+      e.preventDefault()
+      const inputId = this.el.dataset.dateInputId || this.el.getAttribute("for")
+      if (inputId) {
+        const input = document.getElementById(inputId)
+        if (input && input.type === "date") {
+          input.focus()
+          input.showPicker ? input.showPicker() : input.click()
+        }
+      }
+    })
+  }
+}
+
 // Set Input Value Hook - ensures input value is set after mount/update
 const SetInputValue = {
   mounted() {
@@ -560,17 +654,64 @@ const PreserveFormData = {
     const form = this.el
     if (!form) return
     
-    // Function to get all form data
+    // Function to get all form data - CRITICAL: This must capture ALL fields with CURRENT values
     const getAllFormData = () => {
-      const formData = new FormData(form)
-      const formParams = {}
+      const formParams = { soal_selidik: {} }
       
-      // Convert FormData to nested object structure
-      for (let [key, value] of formData.entries()) {
-        // Handle array notation like "soal_selidik[fr][category][1][maklumbalas][]"
-        const keys = key.split(/[\[\]]+/).filter(k => k !== "")
-        let current = formParams
+      // Get all inputs, textareas, and selects from the form
+      const allInputs = form.querySelectorAll('input, textarea, select')
+      
+      allInputs.forEach(input => {
+        // Skip if not part of soal_selidik or if it's a button
+        const name = input.name || input.getAttribute('name')
+        if (!name || !name.startsWith('soal_selidik[') || input.type === 'button' || input.type === 'submit' || input.type === 'hidden') {
+          return
+        }
         
+        // Get current value from DOM - CRITICAL: Read directly from input element
+        let value = ''
+        if (input.type === 'checkbox') {
+          value = input.checked ? (input.value || 'true') : ''
+        } else if (input.type === 'radio') {
+          if (input.checked) {
+            value = input.value || ''
+          } else {
+            return // Skip unchecked radio buttons
+          }
+        } else {
+          // For text, textarea, select - read value directly
+          // CRITICAL: Always read from input.value as it's the most reliable
+          // Don't use textContent or innerText as they may not reflect the actual value
+          value = input.value || ''
+          
+          // For date inputs, ensure we get the value even if it's empty
+          if (input.type === 'date' && !value) {
+            value = ''
+          }
+          
+          // Log if we're getting empty values for non-empty looking inputs (for debugging)
+          if (!value && input.offsetHeight > 0 && input.offsetWidth > 0 && name.includes('disediakan_oleh')) {
+            console.debug(`PreserveFormData: Empty value for visible input: ${name}, input.value: "${input.value}"`)
+          }
+        }
+        
+        // Skip if no value and not a checkbox (empty strings are valid for text inputs)
+        // Actually, we should include empty strings too, as they represent user clearing the field
+        
+        // Parse nested structure from name attribute
+        // Example: "soal_selidik[fr][pengurusan_data][1][soalan]"
+        const keys = name
+          .replace(/^soal_selidik\[/, '')
+          .replace(/\]$/, '')
+          .split(/[\[\]]+/)
+          .filter(k => k !== '')
+        
+        if (keys.length === 0) {
+          return // Invalid name format
+        }
+        
+        // Navigate/create nested structure
+        let current = formParams.soal_selidik
         for (let i = 0; i < keys.length - 1; i++) {
           const k = keys[i]
           if (!current[k]) {
@@ -580,69 +721,158 @@ const PreserveFormData = {
         }
         
         const lastKey = keys[keys.length - 1]
-        // Handle array values (for checkboxes)
-        if (key.endsWith("[]")) {
+        
+        // Handle array values (for checkboxes with [] notation)
+        if (name.endsWith('[]')) {
           if (!current[lastKey]) {
             current[lastKey] = []
           }
-          if (Array.isArray(current[lastKey])) {
-            current[lastKey].push(value)
+          if (Array.isArray(current[lastKey]) && value) {
+            // Check if value already exists to avoid duplicates
+            if (!current[lastKey].includes(value)) {
+              current[lastKey].push(value)
+            }
           }
         } else {
-          if (current[lastKey] && Array.isArray(current[lastKey])) {
-            current[lastKey].push(value)
-          } else if (current[lastKey]) {
-            current[lastKey] = [current[lastKey], value]
+          // For non-array values, always use the current DOM value
+          // This ensures we capture the latest user input
+          // CRITICAL: For disediakan_oleh fields, always include even if empty
+          // to ensure all fields are sent together
+          if (name.includes('disediakan_oleh')) {
+            // Always include disediakan_oleh fields, even if empty
+            current[lastKey] = value
+            console.debug(`PreserveFormData: Captured disediakan_oleh.${lastKey} = "${value}"`)
           } else {
             current[lastKey] = value
           }
         }
-      }
+      })
       
-      return formParams.soal_selidik || {}
+      return formParams.soal_selidik
     }
     
-    // Intercept phx-change events before they're sent to LiveView
+    // Intercept phx-change events BEFORE they are sent to server
     this.handlePhxChange = (e) => {
       // Only process if this is our form
       if (e.target.closest('form') !== form && e.target !== form) {
         return
       }
       
-      // Small delay to ensure input value is updated in DOM
-      setTimeout(() => {
-        // Get all form data
-        const allFormData = getAllFormData()
-        
-        // Update the event detail to include all form data
-        if (e.detail) {
-          e.detail.soal_selidik = allFormData
+      // Get the changed input's current value directly
+      const changedInput = e.target
+      const changedValue = changedInput.type === 'checkbox' 
+        ? (changedInput.checked ? (changedInput.value || 'true') : '')
+        : (changedInput.value || '')
+      
+      console.log("PreserveFormData: phx-change triggered for:", changedInput.name, "=", changedValue)
+      
+      // Get ALL form data - read directly from DOM elements
+      const allFormData = getAllFormData()
+      
+      // Log for debugging
+      console.log("PreserveFormData: All form data keys:", Object.keys(allFormData))
+      
+      // Log sample data to verify values are captured
+      if (allFormData.fr && Object.keys(allFormData.fr).length > 0) {
+        const firstCategory = Object.keys(allFormData.fr)[0]
+        if (allFormData.fr[firstCategory]) {
+          const firstQuestion = Object.keys(allFormData.fr[firstCategory])[0]
+          if (allFormData.fr[firstCategory][firstQuestion]) {
+            const qData = allFormData.fr[firstCategory][firstQuestion]
+            console.log(`PreserveFormData: Sample data [fr][${firstCategory}][${firstQuestion}]:`, {
+              soalan: qData.soalan || '(empty)',
+              maklumbalas: qData.maklumbalas || '(empty)',
+              catatan: qData.catatan || '(empty)'
+            })
+          }
         }
-      }, 10)
+      }
+      
+      // Log disediakan_oleh specifically
+      if (allFormData.disediakan_oleh) {
+        console.log("PreserveFormData: disediakan_oleh data:", {
+          nama: allFormData.disediakan_oleh.nama || '(empty)',
+          jawatan: allFormData.disediakan_oleh.jawatan || '(empty)',
+          tarikh: allFormData.disediakan_oleh.tarikh || '(empty)'
+        })
+        
+        // Also log the actual DOM values for debugging
+        const namaInput = form.querySelector('input[name="soal_selidik[disediakan_oleh][nama]"]')
+        const jawatanInput = form.querySelector('input[name="soal_selidik[disediakan_oleh][jawatan]"]')
+        const tarikhInput = form.querySelector('input[name="soal_selidik[disediakan_oleh][tarikh]"]')
+        
+        console.log("PreserveFormData: DOM values for disediakan_oleh:", {
+          nama_DOM: namaInput ? namaInput.value : 'input not found',
+          jawatan_DOM: jawatanInput ? jawatanInput.value : 'input not found',
+          tarikh_DOM: tarikhInput ? tarikhInput.value : 'input not found'
+        })
+      } else {
+        console.log("PreserveFormData: disediakan_oleh not found in form data")
+      }
+      
+      // CRITICAL: Modify the event detail to include ALL form data
+      // This must be done synchronously before LiveView processes the event
+      if (!e.detail) {
+        e.detail = {}
+      }
+      
+      // Replace the detail with our complete form data
+      e.detail.soal_selidik = allFormData
+      
+      console.log("PreserveFormData: Event detail updated")
     }
     
-    // Listen for phx-change events
+    // Helper function to deep merge objects
+    const deepMergeObjects = (target, source) => {
+      const result = { ...target }
+      
+      for (const key in source) {
+        if (source.hasOwnProperty(key)) {
+          if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+            // Recursively merge nested objects
+            result[key] = deepMergeObjects(result[key] || {}, source[key])
+          } else {
+            // For leaf values, prefer source (new input) if it's not empty
+            // Otherwise keep target (existing data)
+            if (source[key] !== "" && source[key] !== null && source[key] !== undefined) {
+              result[key] = source[key]
+            } else if (result[key] === undefined || result[key] === null) {
+              result[key] = source[key]
+            }
+            // If source is empty but target has value, keep target
+          }
+        }
+      }
+      
+      return result
+    }
+    
+    // Listen for phx-change events with capture phase to intercept early
     form.addEventListener("phx-change", this.handlePhxChange, true)
     
-    // Also intercept before LiveView processes the change
+    // Also handle input/change events to ensure data is captured
     this.handleInput = (e) => {
       if (e.target.closest('form') === form) {
-        // Debounce to avoid too many updates
+        // Clear existing debounce timer
         if (this.debounceTimer) {
           clearTimeout(this.debounceTimer)
         }
         
+        // Debounce to avoid too many updates
         this.debounceTimer = setTimeout(() => {
-          // Small delay to ensure input value is updated in DOM
-          setTimeout(() => {
+          // Use requestAnimationFrame to ensure input value is in DOM
+          requestAnimationFrame(() => {
+            // Get all form data
             const allFormData = getAllFormData()
+            
+            console.log("PreserveFormData: Pushing all form data via validate event", Object.keys(allFormData))
             
             // Push all form data to LiveView
             if (typeof this.pushEvent === 'function') {
               this.pushEvent("validate", { soal_selidik: allFormData })
             }
-          }, 10)
-        }, 300)
+          })
+        }, 300) // 300ms debounce for better performance
       }
     }
     
@@ -655,9 +885,13 @@ const PreserveFormData = {
     // Re-attach listeners if needed
     const form = this.el
     if (form && !this.handleInputAttached) {
-      form.addEventListener("phx-change", this.handlePhxChange, true)
-      form.addEventListener("input", this.handleInput, true)
-      form.addEventListener("change", this.handleInput, true)
+      if (this.handlePhxChange) {
+        form.addEventListener("phx-change", this.handlePhxChange, true)
+      }
+      if (this.handleInput) {
+        form.addEventListener("input", this.handleInput, true)
+        form.addEventListener("change", this.handleInput, true)
+      }
       this.handleInputAttached = true
     }
   },
@@ -783,21 +1017,164 @@ const SaveRowData = {
   }
 }
 
+// Function name: push value on blur so server always receives the typed name (same pattern as SubFunctionInputBlur)
+const FunctionInputBlur = {
+  mounted() {
+    const input = this.el
+    if (!input || input.tagName !== "INPUT") return
+
+    this.handleBlur = () => {
+      const value = input.value !== null && input.value !== undefined ? input.value : ""
+      const moduleId = input.getAttribute("phx-value-module_id")
+      const funcId = input.getAttribute("phx-value-func_id")
+      if (moduleId && funcId && typeof this.pushEvent === "function") {
+        this.pushEvent("update_function_name", {
+          module_id: moduleId,
+          func_id: funcId,
+          value: value
+        })
+      }
+    }
+    input.addEventListener("blur", this.handleBlur)
+  },
+  destroyed() {
+    if (this.el && this.handleBlur) {
+      this.el.removeEventListener("blur", this.handleBlur)
+    }
+  }
+}
+
+// Sub-function name: push value on blur so server always receives the typed name
+const SubFunctionInputBlur = {
+  mounted() {
+    const input = this.el
+    if (!input || input.tagName !== "INPUT") return
+
+    this.handleBlur = () => {
+      const value = input.value !== null && input.value !== undefined ? input.value : ""
+      const moduleId = input.getAttribute("phx-value-module_id")
+      const funcId = input.getAttribute("phx-value-func_id")
+      const subFuncId = input.getAttribute("phx-value-sub_func_id")
+      if (moduleId && funcId && subFuncId && typeof this.pushEvent === "function") {
+        this.pushEvent("update_sub_function_name", {
+          module_id: moduleId,
+          func_id: funcId,
+          sub_func_id: subFuncId,
+          value: value
+        })
+      }
+    }
+    input.addEventListener("blur", this.handleBlur)
+  },
+  destroyed() {
+    if (this.el && this.handleBlur) {
+      this.el.removeEventListener("blur", this.handleBlur)
+    }
+  }
+}
+
+// Save Field on Blur Hook - saves field value to database when user leaves the field
+const SaveFieldOnBlur = {
+  mounted() {
+    const input = this.el
+    if (!input) return
+    
+    this.handleBlur = (e) => {
+      const value = input.value || ""
+      const tabType = input.getAttribute("phx-value-tab_type")
+      const categoryKey = input.getAttribute("phx-value-category_key")
+      const questionNo = input.getAttribute("phx-value-question_no")
+      const field = input.getAttribute("phx-value-field")
+      
+      if (tabType && categoryKey && questionNo && field && typeof this.pushEvent === 'function') {
+        // Push event with the field value
+        this.pushEvent("save_field", {
+          tab_type: tabType,
+          category_key: categoryKey,
+          question_no: questionNo,
+          field: field,
+          value: value
+        })
+      }
+    }
+    
+    input.addEventListener("blur", this.handleBlur)
+  },
+  
+  updated() {
+    // Re-attach listener if needed
+    const input = this.el
+    if (input && !this.handleBlurAttached) {
+      input.addEventListener("blur", this.handleBlur)
+      this.handleBlurAttached = true
+    }
+  },
+  
+  destroyed() {
+    const input = this.el
+    if (input && this.handleBlur) {
+      input.removeEventListener("blur", this.handleBlur)
+    }
+  }
+}
+
+// Prevents Enter key in an input from submitting the parent form (e.g. module name field)
+const PreventEnterSubmit = {
+  mounted() {
+    this.el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") e.preventDefault()
+    })
+  }
+}
+
+// Prevents double-click / duplicate phx-click: only one click is forwarded within the cooldown window
+const SingleClick = {
+  mounted() {
+    this.lastClickTime = 0
+    this.cooldownMs = parseInt(this.el.dataset.singleClickMs || "600", 10)
+
+    this.handleClick = (e) => {
+      const now = Date.now()
+      if (now - this.lastClickTime < this.cooldownMs) {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation()
+        return
+      }
+      this.lastClickTime = now
+    }
+
+    this.el.addEventListener("click", this.handleClick, true)
+  },
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick, true)
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   hooks: {
     ...colocatedHooks,
+    SingleClick,
+    PreventEnterSubmit,
+    OpenDatePicker,
     PrintDocument,
     UpdateSectionCategory,
     GeneratePDF,
     NotificationToggle,
     ProfileMenuToggle,
     AutoResize,
+    AutoResizeTextarea,
     ToggleOptionsField,
     PreserveDetailsOpen,
     PreserveFormData,
+    SaveFieldOnBlur,
+    FunctionInputBlur,
+    SubFunctionInputBlur,
     SaveRowData,
     SetInputValue
   },

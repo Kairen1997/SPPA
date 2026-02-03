@@ -26,15 +26,13 @@ defmodule SppaWeb.UserLive.Login do
                 class="h-24 w-auto object-contain"
               />
             </div>
-
-            <%!-- System Title --%>
+             <%!-- System Title --%>
             <div class="text-center mb-8">
               <h2 class="text-lg font-semibold text-black leading-relaxed">
                 Sistem Pengurusan Pembangunan Aplikasi
               </h2>
             </div>
-
-            <%!-- Login Form --%>
+             <%!-- Login Form --%>
             <.form
               for={@form}
               id="login-form"
@@ -60,8 +58,7 @@ defmodule SppaWeb.UserLive.Login do
                   />
                 </div>
               </div>
-
-              <%!-- Password Field --%>
+               <%!-- Password Field --%>
               <div class="flex items-center gap-4">
                 <label
                   for="user_password"
@@ -78,8 +75,7 @@ defmodule SppaWeb.UserLive.Login do
                   />
                 </div>
               </div>
-
-              <%!-- Login Button --%>
+               <%!-- Login Button --%>
               <div class="pt-4 flex justify-center">
                 <button
                   type="submit"

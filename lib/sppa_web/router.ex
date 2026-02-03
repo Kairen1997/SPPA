@@ -5,6 +5,7 @@ defmodule SppaWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
+    plug :ensure_query_params
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {SppaWeb.Layouts, :root}
@@ -21,14 +22,15 @@ defmodule SppaWeb.Router do
   # scope "/api", SppaWeb do
   #   pipe_through :api
   # end
-# ================================
-# Internal API (System-to-System)
-# ================================
+  # ================================
+  # Internal API (System-to-System)
+  # ================================
   scope "/internal", SppaWeb.Internal do
     pipe_through :api
 
     post "/approved-projects", ApprovedProjectController, :create
   end
+
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:sppa, :dev_routes) do
     # If you want to use the LiveDashboard in production, you should put
@@ -37,6 +39,7 @@ defmodule SppaWeb.Router do
     # you can use Plug.BasicAuth to set up some basic authentication
     # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
+
     scope "/dev" do
       pipe_through :browser
 
@@ -55,8 +58,11 @@ defmodule SppaWeb.Router do
       live "/dashboard-pp", DashboardPPLive, :index
       live "/dashboard", DashboardLive, :index
       live "/projek", ProjekLive, :index
-      live "/projek/:id", ProjekLive, :show
+      # Halaman /projek kini khusus untuk senarai projek sahaja.
+      # Paparan butiran projek dan tab Soal Selidik dikendalikan oleh ProjekTabNavigationLive.
+      live "/projek/:id", ProjekTabNavigationLive, :show
       live "/projek/:id/details", ProjectDetailsLive, :show
+      live "/projek/:id/soal-selidik", ProjekTabNavigationLive, :show
       live "/soal-selidik", SoalSelidikLive, :index
       live "/senarai-projek", PengurusProjekLive, :index
       live "/senarai-projek-diluluskan", ProjectListLive, :index
@@ -100,5 +106,10 @@ defmodule SppaWeb.Router do
 
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
+  end
+
+  # Ensure query string parameters (like ?project_id=...) are available in conn.params
+  defp ensure_query_params(conn, _opts) do
+    Plug.Conn.fetch_query_params(conn)
   end
 end

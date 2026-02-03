@@ -73,7 +73,6 @@ config :logger, :default_formatter,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-
 config :sppa, Oban,
   repo: Sppa.Repo,
   plugins: [

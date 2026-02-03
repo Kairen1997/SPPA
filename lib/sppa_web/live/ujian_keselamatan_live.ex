@@ -178,7 +178,8 @@ defmodule SppaWeb.UjianKeselamatanLive do
           %{
             id: "SEC-002",
             senario: "Ujian perlindungan terhadap serangan brute force",
-            langkah: "1. Cuba log masuk dengan kata laluan salah berkali-kali\n2. Perhatikan tindakan sistem",
+            langkah:
+              "1. Cuba log masuk dengan kata laluan salah berkali-kali\n2. Perhatikan tindakan sistem",
             keputusan_dijangka: "Sistem mengunci akaun selepas beberapa percubaan gagal",
             keputusan_sebenar: nil,
             hasil: nil,
@@ -202,7 +203,8 @@ defmodule SppaWeb.UjianKeselamatanLive do
           %{
             id: "SEC-004",
             senario: "Ujian perlindungan terhadap XSS (Cross-Site Scripting)",
-            langkah: "1. Cuba masukkan skrip JavaScript dalam medan input\n2. Perhatikan respons sistem",
+            langkah:
+              "1. Cuba masukkan skrip JavaScript dalam medan input\n2. Perhatikan respons sistem",
             keputusan_dijangka: "Sistem menapis atau melarikan skrip JavaScript",
             keputusan_sebenar: nil,
             hasil: nil,
@@ -214,7 +216,8 @@ defmodule SppaWeb.UjianKeselamatanLive do
           %{
             id: "SEC-005",
             senario: "Ujian pengurusan sesi",
-            langkah: "1. Log masuk ke sistem\n2. Tutup pelayar tanpa log keluar\n3. Buka semula dan cuba akses",
+            langkah:
+              "1. Log masuk ke sistem\n2. Tutup pelayar tanpa log keluar\n3. Buka semula dan cuba akses",
             keputusan_dijangka: "Sesi tamat tempoh dan pengguna perlu log masuk semula",
             keputusan_sebenar: nil,
             hasil: nil,
@@ -443,8 +446,7 @@ defmodule SppaWeb.UjianKeselamatanLive do
           status: ujian_params["status"],
           penguji: ujian_params["penguji"] || "",
           hasil: ujian_params["hasil"] || editing_ujian.hasil,
-          catatan:
-            if(ujian_params["catatan"] == "", do: nil, else: ujian_params["catatan"])
+          catatan: if(ujian_params["catatan"] == "", do: nil, else: ujian_params["catatan"])
       }
 
       # Update in list if we're on index page
@@ -493,9 +495,14 @@ defmodule SppaWeb.UjianKeselamatanLive do
           "keputusan_sebenar" => kes.keputusan_sebenar || "",
           "hasil" => kes.hasil || "",
           "penguji" => Map.get(kes, :penguji, "") || "",
-          "tarikh_ujian" => if(kes.tarikh_ujian, do: Calendar.strftime(kes.tarikh_ujian, "%Y-%m-%d"), else: ""),
+          "tarikh_ujian" =>
+            if(kes.tarikh_ujian, do: Calendar.strftime(kes.tarikh_ujian, "%Y-%m-%d"), else: ""),
           "disahkan" => if(Map.get(kes, :disahkan, false), do: "true", else: ""),
-          "tarikh_pengesahan" => if(kes.tarikh_pengesahan, do: Calendar.strftime(kes.tarikh_pengesahan, "%Y-%m-%d"), else: "")
+          "tarikh_pengesahan" =>
+            if(kes.tarikh_pengesahan,
+              do: Calendar.strftime(kes.tarikh_pengesahan, "%Y-%m-%d"),
+              else: ""
+            )
         }
 
         form = to_form(form_data, as: :kes)
@@ -558,7 +565,11 @@ defmodule SppaWeb.UjianKeselamatanLive do
       | senario: kes_params["senario"] || socket.assigns.selected_kes.senario,
         langkah: kes_params["langkah"] || "",
         keputusan_dijangka: kes_params["keputusan_dijangka"] || "",
-        keputusan_sebenar: if(kes_params["keputusan_sebenar"] == "", do: nil, else: kes_params["keputusan_sebenar"]),
+        keputusan_sebenar:
+          if(kes_params["keputusan_sebenar"] == "",
+            do: nil,
+            else: kes_params["keputusan_sebenar"]
+          ),
         hasil: if(kes_params["hasil"] == "", do: nil, else: kes_params["hasil"]),
         penguji: if(kes_params["penguji"] == "", do: nil, else: kes_params["penguji"]),
         tarikh_ujian: tarikh_ujian,
@@ -590,7 +601,8 @@ defmodule SppaWeb.UjianKeselamatanLive do
   def handle_event("add_new_kes", _params, socket) do
     if socket.assigns[:selected_ujian] && socket.assigns.selected_ujian.senarai_kes_ujian do
       # Generate new ID based on existing kes
-      existing_ids = Enum.map(socket.assigns.selected_ujian.senarai_kes_ujian, fn kes -> kes.id end)
+      existing_ids =
+        Enum.map(socket.assigns.selected_ujian.senarai_kes_ujian, fn kes -> kes.id end)
 
       new_number =
         existing_ids

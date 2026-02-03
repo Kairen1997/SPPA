@@ -248,7 +248,10 @@ defmodule SppaWeb.PengurusProjekLive do
     # Get the actual project from database - filter by project_manager_id for pengurus projek
     project =
       Project
-      |> where([p], p.id == ^project_id and p.project_manager_id == ^socket.assigns.current_scope.user.id)
+      |> where(
+        [p],
+        p.id == ^project_id and p.project_manager_id == ^socket.assigns.current_scope.user.id
+      )
       |> preload([:developer, :project_manager])
       |> Repo.one()
 
@@ -256,10 +259,17 @@ defmodule SppaWeb.PengurusProjekLive do
       form_data = %{
         "nama" => project.nama || "",
         "jabatan" => project.jabatan || "",
-        "project_manager_id" => if(project.project_manager_id, do: Integer.to_string(project.project_manager_id), else: ""),
-        "developer_id" => if(project.developer_id, do: Integer.to_string(project.developer_id), else: ""),
-        "tarikh_mula" => if(project.tarikh_mula, do: Date.to_iso8601(project.tarikh_mula), else: ""),
-        "tarikh_siap" => if(project.tarikh_siap, do: Date.to_iso8601(project.tarikh_siap), else: "")
+        "project_manager_id" =>
+          if(project.project_manager_id,
+            do: Integer.to_string(project.project_manager_id),
+            else: ""
+          ),
+        "developer_id" =>
+          if(project.developer_id, do: Integer.to_string(project.developer_id), else: ""),
+        "tarikh_mula" =>
+          if(project.tarikh_mula, do: Date.to_iso8601(project.tarikh_mula), else: ""),
+        "tarikh_siap" =>
+          if(project.tarikh_siap, do: Date.to_iso8601(project.tarikh_siap), else: "")
       }
 
       form = to_form(form_data, as: :project)
@@ -321,24 +331,36 @@ defmodule SppaWeb.PengurusProjekLive do
       processed_params =
         project_params
         |> Map.update("project_manager_id", nil, fn
-          "" -> nil
+          "" ->
+            nil
+
           id when is_binary(id) ->
             case Integer.parse(id) do
               {int_id, _} -> int_id
               :error -> nil
             end
-          id when is_integer(id) -> id
-          _ -> nil
+
+          id when is_integer(id) ->
+            id
+
+          _ ->
+            nil
         end)
         |> Map.update("developer_id", nil, fn
-          "" -> nil
+          "" ->
+            nil
+
           id when is_binary(id) ->
             case Integer.parse(id) do
               {int_id, _} -> int_id
               :error -> nil
             end
-          id when is_integer(id) -> id
-          _ -> nil
+
+          id when is_integer(id) ->
+            id
+
+          _ ->
+            nil
         end)
         |> Map.update("tarikh_mula", nil, fn
           "" -> nil
@@ -377,7 +399,10 @@ defmodule SppaWeb.PengurusProjekLive do
           {:noreply,
            socket
            |> assign(:form, to_form(changeset, as: :project))
-           |> put_flash(:error, "Terdapat ralat semasa mengemaskini projek. Sila semak maklumat yang dimasukkan.")}
+           |> put_flash(
+             :error,
+             "Terdapat ralat semasa mengemaskini projek. Sila semak maklumat yang dimasukkan."
+           )}
       end
     else
       {:noreply,
@@ -385,7 +410,6 @@ defmodule SppaWeb.PengurusProjekLive do
        |> put_flash(:error, "Projek tidak ditemui. Sila cuba lagi.")}
     end
   end
-
 
   # Filter projects based on search term
   defp filter_projects(projects, search_term) do
@@ -404,7 +428,6 @@ defmodule SppaWeb.PengurusProjekLive do
         String.contains?(String.downcase(project.pembangun_sistem || ""), search_lower)
     end)
   end
-
 
   # Paginate projects list
   defp paginate_projects(projects, page, per_page) do

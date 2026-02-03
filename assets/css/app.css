@@ -126,6 +126,47 @@
   }
 }
 
+/* Custom styling for date inputs so we can use our own calendar icon */
+input[type="date"] {
+  /* Hide the native calendar icon in most modern browsers */
+  color-scheme: light;
+}
+
+/* WebKit browsers (Chrome, Edge, Safari) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: block;
+}
+
+/* Firefox */
+input[type="date"]::-moz-focus-inner {
+  border: 0;
+}
+
+/* Input and textarea text color - black for readability */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea {
+  color: #000;
+}
+
+/* Disediakan Oleh section (Analisis dan Rekabentuk) - force input text black */
+.disediakan-oleh-section input,
+.disediakan-oleh-section input::placeholder {
+  color: #000 !important;
+}
+
+/* Placeholder text color - black for all input and textarea */
+input::placeholder,
+textarea::placeholder {
+  color: #000 !important;
+}
+
+/* Select dropdown text color - black (e.g. Status, Fasa filter) */
+select,
+select option {
+  color: #000 !important;
+}
+
 /* Print styles for Soal Selidik Document */
 @media print {
   @page {

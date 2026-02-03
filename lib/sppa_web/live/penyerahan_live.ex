@@ -290,8 +290,16 @@ defmodule SppaWeb.PenyerahanLive do
         "pengurus_projek" => penyerahan.pengurus_projek || "",
         "lokasi" => penyerahan.lokasi,
         "status" => penyerahan.status,
-        "tarikh_dijangka" => if(penyerahan.tarikh_dijangka, do: Calendar.strftime(penyerahan.tarikh_dijangka, "%Y-%m-%d"), else: ""),
-        "tarikh_penyerahan" => if(penyerahan.tarikh_penyerahan, do: Calendar.strftime(penyerahan.tarikh_penyerahan, "%Y-%m-%d"), else: ""),
+        "tarikh_dijangka" =>
+          if(penyerahan.tarikh_dijangka,
+            do: Calendar.strftime(penyerahan.tarikh_dijangka, "%Y-%m-%d"),
+            else: ""
+          ),
+        "tarikh_penyerahan" =>
+          if(penyerahan.tarikh_penyerahan,
+            do: Calendar.strftime(penyerahan.tarikh_penyerahan, "%Y-%m-%d"),
+            else: ""
+          ),
         "diserahkan_oleh" => penyerahan.diserahkan_oleh || "",
         "diterima_oleh" => penyerahan.diterima_oleh || "",
         "catatan" => penyerahan.catatan || ""
@@ -358,8 +366,10 @@ defmodule SppaWeb.PenyerahanLive do
     # TODO: In the future, this should save the file to storage and update the database
     penyerahan_id =
       upload_params["penyerahan_id"] ||
-      socket.assigns[:uploading_penyerahan_id] ||
-      (if socket.assigns[:selected_penyerahan], do: socket.assigns[:selected_penyerahan].id, else: nil)
+        socket.assigns[:uploading_penyerahan_id] ||
+        if socket.assigns[:selected_penyerahan],
+          do: socket.assigns[:selected_penyerahan].id,
+          else: nil
 
     if penyerahan_id do
       # Update the penyerahan record with the uploaded file
@@ -391,8 +401,10 @@ defmodule SppaWeb.PenyerahanLive do
     # TODO: In the future, this should save the file to storage and update the database
     penyerahan_id =
       upload_params["penyerahan_id"] ||
-      socket.assigns[:uploading_penyerahan_id] ||
-      (if socket.assigns[:selected_penyerahan], do: socket.assigns[:selected_penyerahan].id, else: nil)
+        socket.assigns[:uploading_penyerahan_id] ||
+        if socket.assigns[:selected_penyerahan],
+          do: socket.assigns[:selected_penyerahan].id,
+          else: nil
 
     if penyerahan_id do
       # Update the penyerahan record with the uploaded file
@@ -469,14 +481,31 @@ defmodule SppaWeb.PenyerahanLive do
       tarikh_dijangka: tarikh_dijangka,
       status: penyerahan_params["status"] || "Menunggu",
       penerima: penyerahan_params["penerima"],
-      pembangun_team: if(penyerahan_params["pembangun_team"] == "", do: nil, else: penyerahan_params["pembangun_team"]),
-      pengurus_projek: if(penyerahan_params["pengurus_projek"] == "", do: nil, else: penyerahan_params["pengurus_projek"]),
+      pembangun_team:
+        if(penyerahan_params["pembangun_team"] == "",
+          do: nil,
+          else: penyerahan_params["pembangun_team"]
+        ),
+      pengurus_projek:
+        if(penyerahan_params["pengurus_projek"] == "",
+          do: nil,
+          else: penyerahan_params["pengurus_projek"]
+        ),
       lokasi: penyerahan_params["lokasi"],
-      catatan: if(penyerahan_params["catatan"] == "", do: nil, else: penyerahan_params["catatan"]),
+      catatan:
+        if(penyerahan_params["catatan"] == "", do: nil, else: penyerahan_params["catatan"]),
       manual_pengguna_bahagian_a: nil,
       surat_akuan_penerimaan: nil,
-      diserahkan_oleh: if(penyerahan_params["diserahkan_oleh"] == "", do: nil, else: penyerahan_params["diserahkan_oleh"]),
-      diterima_oleh: if(penyerahan_params["diterima_oleh"] == "", do: nil, else: penyerahan_params["diterima_oleh"]),
+      diserahkan_oleh:
+        if(penyerahan_params["diserahkan_oleh"] == "",
+          do: nil,
+          else: penyerahan_params["diserahkan_oleh"]
+        ),
+      diterima_oleh:
+        if(penyerahan_params["diterima_oleh"] == "",
+          do: nil,
+          else: penyerahan_params["diterima_oleh"]
+        ),
       tarikh_diserahkan: tarikh_penyerahan,
       tarikh_diterima: nil
     }
@@ -524,15 +553,32 @@ defmodule SppaWeb.PenyerahanLive do
         | nama_sistem: penyerahan_params["nama_sistem"] || editing_penyerahan.nama_sistem,
           versi: penyerahan_params["versi"] || "",
           penerima: penyerahan_params["penerima"] || editing_penyerahan.penerima,
-          pembangun_team: if(penyerahan_params["pembangun_team"] == "", do: nil, else: penyerahan_params["pembangun_team"]),
-          pengurus_projek: if(penyerahan_params["pengurus_projek"] == "", do: nil, else: penyerahan_params["pengurus_projek"]),
+          pembangun_team:
+            if(penyerahan_params["pembangun_team"] == "",
+              do: nil,
+              else: penyerahan_params["pembangun_team"]
+            ),
+          pengurus_projek:
+            if(penyerahan_params["pengurus_projek"] == "",
+              do: nil,
+              else: penyerahan_params["pengurus_projek"]
+            ),
           lokasi: penyerahan_params["lokasi"] || editing_penyerahan.lokasi,
           status: penyerahan_params["status"] || editing_penyerahan.status,
           tarikh_penyerahan: tarikh_penyerahan,
           tarikh_dijangka: tarikh_dijangka,
-          catatan: if(penyerahan_params["catatan"] == "", do: nil, else: penyerahan_params["catatan"]),
-          diserahkan_oleh: if(penyerahan_params["diserahkan_oleh"] == "", do: nil, else: penyerahan_params["diserahkan_oleh"]),
-          diterima_oleh: if(penyerahan_params["diterima_oleh"] == "", do: nil, else: penyerahan_params["diterima_oleh"])
+          catatan:
+            if(penyerahan_params["catatan"] == "", do: nil, else: penyerahan_params["catatan"]),
+          diserahkan_oleh:
+            if(penyerahan_params["diserahkan_oleh"] == "",
+              do: nil,
+              else: penyerahan_params["diserahkan_oleh"]
+            ),
+          diterima_oleh:
+            if(penyerahan_params["diterima_oleh"] == "",
+              do: nil,
+              else: penyerahan_params["diterima_oleh"]
+            )
       }
 
       # Update in list
@@ -552,7 +598,8 @@ defmodule SppaWeb.PenyerahanLive do
 
       # Only update selected_penyerahan if we're on detail page
       final_socket =
-        if socket.assigns[:selected_penyerahan] && socket.assigns.selected_penyerahan.id == penyerahan_id do
+        if socket.assigns[:selected_penyerahan] &&
+             socket.assigns.selected_penyerahan.id == penyerahan_id do
           assign(updated_socket, :selected_penyerahan, updated_penyerahan_data)
         else
           updated_socket

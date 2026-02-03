@@ -101,7 +101,8 @@ defmodule SppaWeb.PengurusanPerubahanLive do
         status: "Ditolak",
         keutamaan: "Rendah",
         justifikasi: "Meningkatkan pengalaman pengguna dengan reka bentuk yang lebih moden",
-        kesan: "Akan meningkatkan kepuasan pengguna tetapi memerlukan masa pembangunan yang panjang",
+        kesan:
+          "Akan meningkatkan kepuasan pengguna tetapi memerlukan masa pembangunan yang panjang",
         catatan: "Ditangguhkan ke fasa seterusnya"
       },
       %{
@@ -275,7 +276,8 @@ defmodule SppaWeb.PengurusanPerubahanLive do
       tarikh_dijangka_siap: tarikh_dijangka_siap,
       status: perubahan_params["status"] || "Dalam Semakan",
       keutamaan: perubahan_params["keutamaan"],
-      justifikasi: if(perubahan_params["justifikasi"] == "", do: nil, else: perubahan_params["justifikasi"]),
+      justifikasi:
+        if(perubahan_params["justifikasi"] == "", do: nil, else: perubahan_params["justifikasi"]),
       kesan: if(perubahan_params["kesan"] == "", do: nil, else: perubahan_params["kesan"]),
       catatan: if(perubahan_params["catatan"] == "", do: nil, else: perubahan_params["catatan"])
     }
@@ -324,8 +326,12 @@ defmodule SppaWeb.PengurusanPerubahanLive do
               status: perubahan_params["status"],
               keutamaan: perubahan_params["keutamaan"],
               justifikasi:
-                if(perubahan_params["justifikasi"] == "", do: nil, else: perubahan_params["justifikasi"]),
-              kesan: if(perubahan_params["kesan"] == "", do: nil, else: perubahan_params["kesan"]),
+                if(perubahan_params["justifikasi"] == "",
+                  do: nil,
+                  else: perubahan_params["justifikasi"]
+                ),
+              kesan:
+                if(perubahan_params["kesan"] == "", do: nil, else: perubahan_params["kesan"]),
               catatan:
                 if(perubahan_params["catatan"] == "", do: nil, else: perubahan_params["catatan"])
           }

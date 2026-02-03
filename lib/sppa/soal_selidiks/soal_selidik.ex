@@ -37,10 +37,27 @@ defmodule Sppa.SoalSelidiks.SoalSelidik do
         :user_id
       ])
       |> ensure_nama_sistem_in_changes(attrs)
+      |> force_map_fields_in_changes(attrs)
       |> validate_required([:nama_sistem, :user_id])
       |> put_default_document_id()
 
     changeset
+  end
+
+  # Force map fields (fr_data, nfr_data, disediakan_oleh, custom_tabs) into changes
+  # so they are always persisted. Ecto's cast can omit map fields when it considers
+  # them "unchanged", which caused user input (soalan, maklumbalas, catatan) to never be saved.
+  defp force_map_fields_in_changes(changeset, attrs) do
+    [
+      :fr_data,
+      :nfr_data,
+      :disediakan_oleh,
+      :custom_tabs
+    ]
+    |> Enum.reduce(changeset, fn field, cs ->
+      val = Map.get(attrs, field) || Map.get(attrs, to_string(field))
+      if is_map(val), do: put_change(cs, field, val), else: cs
+    end)
   end
 
   # Ensure nama_sistem is always in changes, even if empty, so validate_required can catch it
@@ -65,6 +82,7 @@ defmodule Sppa.SoalSelidiks.SoalSelidik do
           # If not in attrs either, ensure it's in changes as empty string for validation
           put_change(changeset, :nama_sistem, "")
         end
+
       _ ->
         # Already in changes, no need to modify
         changeset

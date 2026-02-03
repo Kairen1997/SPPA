@@ -11,10 +11,15 @@ defmodule Sppa.Integrations.ExternalClient do
     case HTTPoison.get(@external_url, headers, timeout: 30_000, recv_timeout: 30_000) do
       {:ok, %{status_code: 200, body: body}} ->
         Logger.info("Received response with body length: #{String.length(body)}")
+
         case Jason.decode(body) do
           {:ok, decoded} ->
-            Logger.info("Successfully decoded JSON. Type: #{inspect(is_list(decoded))}, Count: #{if is_list(decoded), do: length(decoded), else: "N/A"}")
+            Logger.info(
+              "Successfully decoded JSON. Type: #{inspect(is_list(decoded))}, Count: #{if is_list(decoded), do: length(decoded), else: "N/A"}"
+            )
+
             {:ok, decoded}
+
           {:error, reason} ->
             Logger.error("Failed to decode JSON: #{inspect(reason)}")
             Logger.error("Response body: #{String.slice(body, 0, 500)}")

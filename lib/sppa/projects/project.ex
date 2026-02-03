@@ -12,7 +12,9 @@ defmodule Sppa.Projects.Project do
     field :dokumen_sokongan, :integer, default: 0
     field :last_updated, :utc_datetime
 
-    belongs_to :approved_project, Sppa.ApprovedProjects.ApprovedProject, foreign_key: :approved_project_id
+    belongs_to :approved_project, Sppa.ApprovedProjects.ApprovedProject,
+      foreign_key: :approved_project_id
+
     belongs_to :developer, Sppa.Accounts.User, foreign_key: :developer_id
     belongs_to :project_manager, Sppa.Accounts.User, foreign_key: :project_manager_id
     belongs_to :user, Sppa.Accounts.User

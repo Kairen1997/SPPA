@@ -166,6 +166,7 @@ defmodule SppaWeb.ProjectListLive do
 
         {:error, reason} ->
           Logger.error("Failed to insert sync job: #{inspect(reason)}")
+
           {:noreply,
            socket
            |> put_flash(:error, "Ralat semasa memulakan sinkronisasi: #{inspect(reason)}")}
@@ -173,6 +174,7 @@ defmodule SppaWeb.ProjectListLive do
     rescue
       e ->
         Logger.error("Exception during sync: #{inspect(e)}")
+
         {:noreply,
          socket
          |> put_flash(:error, "Ralat: #{Exception.message(e)}. Pastikan Oban sedang berjalan.")}
@@ -300,10 +302,9 @@ defmodule SppaWeb.ProjectListLive do
                 class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
               >
                 <.icon name="hero-bars-3" class="w-6 h-6" />
-              </button>
-              <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+              </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
+            
             <.header_actions
               notifications_open={@notifications_open}
               notifications_count={@notifications_count}
@@ -319,9 +320,10 @@ defmodule SppaWeb.ProjectListLive do
               <div class="mb-8 flex items-center justify-between">
                 <div>
                   <h1 class="text-3xl font-bold text-gray-900 mb-2">Senarai Projek Diluluskan</h1>
+                  
                   <p class="text-gray-600">Senarai lengkap semua projek yang diluluskan</p>
                 </div>
-                <%!-- Print Button --%>
+                 <%!-- Print Button --%>
                 <div class="print:hidden">
                   <button
                     id="print-senarai-projek-btn"
@@ -349,9 +351,9 @@ defmodule SppaWeb.ProjectListLive do
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     >
                       <option value="">Semua</option>
-
+                      
                       <option value="Dalam Pembangunan">Dalam Pembangunan</option>
-
+                      
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
@@ -363,13 +365,13 @@ defmodule SppaWeb.ProjectListLive do
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     >
                       <option value="">Semua</option>
-
+                      
                       <option value="Analisis dan Rekabentuk">Analisis dan Rekabentuk</option>
-
+                      
                       <option value="Pembangunan">Pembangunan</option>
-
+                      
                       <option value="UAT">UAT</option>
-
+                      
                       <option value="Penyerahan">Penyerahan</option>
                     </select>
                   </div>
@@ -390,8 +392,7 @@ defmodule SppaWeb.ProjectListLive do
                       phx-click="sync_external_data"
                       class="rounded-lg bg-green-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center gap-2"
                     >
-                      <.icon name="hero-arrow-path" class="w-4 h-4" />
-                      <span>Sync Data</span>
+                      <.icon name="hero-arrow-path" class="w-4 h-4" /> <span>Sync Data</span>
                     </button>
                     <button
                       type="button"
@@ -404,54 +405,57 @@ defmodule SppaWeb.ProjectListLive do
                 </.form>
               </div>
                <%!-- Projects table --%>
-              <div id="senarai-projek-document" class="overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0">
+              <div
+                id="senarai-projek-document"
+                class="overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0"
+              >
                 <table class="w-full">
                   <thead class="bg-gray-50">
                     <tr>
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Nama
                       </th>
-
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Emel
                       </th>
-
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Kementerian/Jabatan
                       </th>
-
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Nama Sistem
                       </th>
-
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Tarikh
                       </th>
-
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Tindakan
                       </th>
                     </tr>
                   </thead>
-
+                  
                   <tbody class="divide-y divide-gray-200 bg-white">
                     <tr :for={project <- @projects} class="hover:bg-gray-50">
                       <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                         {project.nama_projek}
                       </td>
-
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {project.pengurus_email || "-"}
                       </td>
-
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {project.jabatan || "-"}
                       </td>
-
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {project.nama_projek}
                       </td>
-
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         <%= if project.tarikh_mula do %>
                           {Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}
@@ -459,7 +463,7 @@ defmodule SppaWeb.ProjectListLive do
                           <span class="text-gray-400">-</span>
                         <% end %>
                       </td>
-
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm">
                         <%= if project.project do %>
                           <div class="flex items-center gap-3">
@@ -483,7 +487,7 @@ defmodule SppaWeb.ProjectListLive do
                         <% end %>
                       </td>
                     </tr>
-
+                    
                     <tr :if={@projects == []}>
                       <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">
                         Tiada projek dijumpai
@@ -538,227 +542,228 @@ defmodule SppaWeb.ProjectListLive do
             </div>
           </main>
            <%!-- New Project Modal --%>
-        <div
-          :if={@show_modal}
-          class="fixed inset-0 z-50 overflow-y-auto"
-          phx-click="close_modal"
-          phx-click-away="close_modal"
-          role="dialog"
-          aria-modal="true"
-        >
-          <%!-- Backdrop --%>
-          <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-           <%!-- Modal container --%>
-          <div class="flex min-h-full items-center justify-center p-4">
-            <div
-              class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-              phx-click-away="close_modal"
-            >
-              <%!-- Modal header --%>
-              <div class="border-b border-gray-200 bg-gradient-to-r from-[#2F80ED] to-[#2563EB] px-6 py-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <h2 class="text-2xl font-bold text-white">Projek Baru</h2>
-
-                    <p class="mt-1 text-sm text-blue-100">
-                      Lengkapkan maklumat di bawah untuk mencipta projek baharu
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    phx-click="close_modal"
-                    class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
-                    aria-label="Tutup"
-                  >
-                    <.icon name="hero-x-mark" class="h-6 w-6" />
-                  </button>
-                </div>
-              </div>
-               <%!-- Modal body --%>
-              <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
-                <.form
-                  for={@form}
-                  phx-change="validate"
-                  phx-submit="save"
-                  id="new-project-form"
-                  multipart={true}
-                  class="space-y-6"
-                >
-                  <%!-- Basic Information Section --%>
-                  <div class="space-y-5">
-                    <div class="border-b border-gray-200 pb-2">
-                      <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
-
-                      <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
-                    </div>
-                     <%!-- Nama Projek --%>
+          <div
+            :if={@show_modal}
+            class="fixed inset-0 z-50 overflow-y-auto"
+            phx-click="close_modal"
+            phx-click-away="close_modal"
+            role="dialog"
+            aria-modal="true"
+          >
+            <%!-- Backdrop --%>
+            <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+             <%!-- Modal container --%>
+            <div class="flex min-h-full items-center justify-center p-4">
+              <div
+                class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+                phx-click-away="close_modal"
+              >
+                <%!-- Modal header --%>
+                <div class="border-b border-gray-200 bg-gradient-to-r from-[#2F80ED] to-[#2563EB] px-6 py-5">
+                  <div class="flex items-center justify-between">
                     <div>
-                      <.input
-                        field={@form[:name]}
-                        type="text"
-                        label="Nama Projek"
-                        required
-                        placeholder="Masukkan nama projek"
-                        class="w-full"
-                      />
-                    </div>
-                     <%!-- Jabatan/Agensi --%>
-                    <div>
-                      <.input
-                        field={@form[:department]}
-                        type="text"
-                        label="Jabatan/Agensi"
-                        placeholder="Masukkan nama jabatan atau agensi"
-                        class="w-full"
-                      />
-                    </div>
-                  </div>
-                   <%!-- Team Assignment Section --%>
-                  <div class="space-y-5">
-                    <div class="border-b border-gray-200 pb-2">
-                      <h3 class="text-lg font-semibold text-gray-900">Penugasan Pasukan</h3>
-
-                      <p class="mt-1 text-sm text-gray-500">
-                        Tetapkan pengurus projek dan pembangun sistem
+                      <h2 class="text-2xl font-bold text-white">Projek Baru</h2>
+                      
+                      <p class="mt-1 text-sm text-blue-100">
+                        Lengkapkan maklumat di bawah untuk mencipta projek baharu
                       </p>
                     </div>
-
-                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                      <%!-- Pengurus Projek --%>
-                      <div>
-                        <.input
-                          field={@form[:project_manager_id]}
-                          type="select"
-                          label="Pengurus Projek"
-                          prompt="Pilih Pengurus Projek"
-                          options={
-                            Enum.map(@users, fn user ->
-                              {"#{user.no_kp} - #{user.role || "N/A"}", user.id}
-                            end)
-                          }
-                          class="w-full"
-                        />
-                      </div>
-                       <%!-- Pembangun Sistem --%>
-                      <div>
-                        <.input
-                          field={@form[:developer_id]}
-                          type="select"
-                          label="Pembangun Sistem"
-                          prompt="Pilih Pembangun Sistem"
-                          options={
-                            Enum.map(@users, fn user ->
-                              {"#{user.no_kp} - #{user.role || "N/A"}", user.id}
-                            end)
-                          }
-                          class="w-full"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                   <%!-- Timeline Section --%>
-                  <div class="space-y-5">
-                    <div class="border-b border-gray-200 pb-2">
-                      <h3 class="text-lg font-semibold text-gray-900">Jadual Projek</h3>
-
-                      <p class="mt-1 text-sm text-gray-500">Tetapkan tarikh mula dan jangkaan siap</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                      <%!-- Tarikh Mula --%>
-                      <div>
-                        <.input
-                          field={@form[:start_date]}
-                          type="date"
-                          label="Tarikh Mula"
-                          class="w-full"
-                        />
-                      </div>
-                       <%!-- Tarikh Jangkaan Siap --%>
-                      <div>
-                        <.input
-                          field={@form[:expected_completion_date]}
-                          type="date"
-                          label="Tarikh Jangkaan Siap"
-                          class="w-full"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                   <%!-- Documents Section --%>
-                  <div class="space-y-5">
-                    <div class="border-b border-gray-200 pb-2">
-                      <h3 class="text-lg font-semibold text-gray-900">Dokumen Sokongan</h3>
-
-                      <p class="mt-1 text-sm text-gray-500">
-                        Muat naik dokumen yang berkaitan dengan projek
-                      </p>
-                    </div>
-
-                    <div>
-                      <label class="mb-2 block text-sm font-medium text-gray-700">
-                        Dokumen Sokongan
-                        <span class="ml-1 text-xs font-normal text-gray-500">(Pilihan)</span>
-                      </label>
-                      <div class="mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-8 transition hover:border-[#2F80ED] hover:bg-gray-50">
-                        <div class="text-center">
-                          <.icon
-                            name="hero-document-arrow-up"
-                            class="mx-auto h-12 w-12 text-gray-400"
-                          />
-                          <div class="mt-4 flex text-sm leading-6 text-gray-600">
-                            <label
-                              for="file-upload"
-                              class="relative cursor-pointer rounded-md bg-white font-semibold text-[#2F80ED] focus-within:outline-none focus-within:ring-2 focus-within:ring-[#2F80ED] focus-within:ring-offset-2"
-                            >
-                              <span>Pilih fail</span>
-                              <input
-                                id="file-upload"
-                                name="supporting_documents"
-                                type="file"
-                                multiple
-                                accept=".pdf,.doc,.docx"
-                                class="sr-only"
-                              />
-                            </label>
-                            <p class="pl-1">atau seret dan lepaskan</p>
-                          </div>
-
-                          <p class="mt-2 text-xs leading-5 text-gray-600">
-                            PDF, DOC, DOCX sehingga 10MB setiap fail
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                   <%!-- Form Actions --%>
-                  <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
+                    
                     <button
                       type="button"
                       phx-click="close_modal"
-                      class="rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                      class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                      aria-label="Tutup"
                     >
-                      Batal
-                    </button>
-                    <button
-                      type="submit"
-                      class="rounded-lg bg-gradient-to-r from-[#2F80ED] to-[#2563EB] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-[#2563EB] hover:to-[#1d4ed8] focus:outline-none focus:ring-2 focus:ring-[#2F80ED] focus:ring-offset-2"
-                    >
-                      Simpan Projek
+                      <.icon name="hero-x-mark" class="h-6 w-6" />
                     </button>
                   </div>
-                </.form>
+                </div>
+                 <%!-- Modal body --%>
+                <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+                  <.form
+                    for={@form}
+                    phx-change="validate"
+                    phx-submit="save"
+                    id="new-project-form"
+                    multipart={true}
+                    class="space-y-6"
+                  >
+                    <%!-- Basic Information Section --%>
+                    <div class="space-y-5">
+                      <div class="border-b border-gray-200 pb-2">
+                        <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
+                        
+                        <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
+                      </div>
+                       <%!-- Nama Projek --%>
+                      <div>
+                        <.input
+                          field={@form[:name]}
+                          type="text"
+                          label="Nama Projek"
+                          required
+                          placeholder="Masukkan nama projek"
+                          class="w-full"
+                        />
+                      </div>
+                       <%!-- Jabatan/Agensi --%>
+                      <div>
+                        <.input
+                          field={@form[:department]}
+                          type="text"
+                          label="Jabatan/Agensi"
+                          placeholder="Masukkan nama jabatan atau agensi"
+                          class="w-full"
+                        />
+                      </div>
+                    </div>
+                     <%!-- Team Assignment Section --%>
+                    <div class="space-y-5">
+                      <div class="border-b border-gray-200 pb-2">
+                        <h3 class="text-lg font-semibold text-gray-900">Penugasan Pasukan</h3>
+                        
+                        <p class="mt-1 text-sm text-gray-500">
+                          Tetapkan pengurus projek dan pembangun sistem
+                        </p>
+                      </div>
+                      
+                      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <%!-- Pengurus Projek --%>
+                        <div>
+                          <.input
+                            field={@form[:project_manager_id]}
+                            type="select"
+                            label="Pengurus Projek"
+                            prompt="Pilih Pengurus Projek"
+                            options={
+                              Enum.map(@users, fn user ->
+                                {"#{user.no_kp} - #{user.role || "N/A"}", user.id}
+                              end)
+                            }
+                            class="w-full"
+                          />
+                        </div>
+                         <%!-- Pembangun Sistem --%>
+                        <div>
+                          <.input
+                            field={@form[:developer_id]}
+                            type="select"
+                            label="Pembangun Sistem"
+                            prompt="Pilih Pembangun Sistem"
+                            options={
+                              Enum.map(@users, fn user ->
+                                {"#{user.no_kp} - #{user.role || "N/A"}", user.id}
+                              end)
+                            }
+                            class="w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                     <%!-- Timeline Section --%>
+                    <div class="space-y-5">
+                      <div class="border-b border-gray-200 pb-2">
+                        <h3 class="text-lg font-semibold text-gray-900">Jadual Projek</h3>
+                        
+                        <p class="mt-1 text-sm text-gray-500">
+                          Tetapkan tarikh mula dan jangkaan siap
+                        </p>
+                      </div>
+                      
+                      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <%!-- Tarikh Mula --%>
+                        <div>
+                          <.input
+                            field={@form[:start_date]}
+                            type="date"
+                            label="Tarikh Mula"
+                            class="w-full"
+                          />
+                        </div>
+                         <%!-- Tarikh Jangkaan Siap --%>
+                        <div>
+                          <.input
+                            field={@form[:expected_completion_date]}
+                            type="date"
+                            label="Tarikh Jangkaan Siap"
+                            class="w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                     <%!-- Documents Section --%>
+                    <div class="space-y-5">
+                      <div class="border-b border-gray-200 pb-2">
+                        <h3 class="text-lg font-semibold text-gray-900">Dokumen Sokongan</h3>
+                        
+                        <p class="mt-1 text-sm text-gray-500">
+                          Muat naik dokumen yang berkaitan dengan projek
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <label class="mb-2 block text-sm font-medium text-gray-700">
+                          Dokumen Sokongan
+                          <span class="ml-1 text-xs font-normal text-gray-500">(Pilihan)</span>
+                        </label>
+                        <div class="mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-8 transition hover:border-[#2F80ED] hover:bg-gray-50">
+                          <div class="text-center">
+                            <.icon
+                              name="hero-document-arrow-up"
+                              class="mx-auto h-12 w-12 text-gray-400"
+                            />
+                            <div class="mt-4 flex text-sm leading-6 text-gray-600">
+                              <label
+                                for="file-upload"
+                                class="relative cursor-pointer rounded-md bg-white font-semibold text-[#2F80ED] focus-within:outline-none focus-within:ring-2 focus-within:ring-[#2F80ED] focus-within:ring-offset-2"
+                              >
+                                <span>Pilih fail</span>
+                                <input
+                                  id="file-upload"
+                                  name="supporting_documents"
+                                  type="file"
+                                  multiple
+                                  accept=".pdf,.doc,.docx"
+                                  class="sr-only"
+                                />
+                              </label>
+                              <p class="pl-1">atau seret dan lepaskan</p>
+                            </div>
+                            
+                            <p class="mt-2 text-xs leading-5 text-gray-600">
+                              PDF, DOC, DOCX sehingga 10MB setiap fail
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                     <%!-- Form Actions --%>
+                    <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
+                      <button
+                        type="button"
+                        phx-click="close_modal"
+                        class="rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="submit"
+                        class="rounded-lg bg-gradient-to-r from-[#2F80ED] to-[#2563EB] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-[#2563EB] hover:to-[#1d4ed8] focus:outline-none focus:ring-2 focus:ring-[#2F80ED] focus:ring-offset-2"
+                      >
+                        Simpan Projek
+                      </button>
+                    </div>
+                  </.form>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </Layouts.app>
     """
   end
-
 
   defp pagination_pages(current_page, total_pages) do
     cond do
