@@ -66,8 +66,7 @@
                 </span>
               </div>
             </div>
-            
-            <%!-- Form --%>
+             <%!-- Form --%>
             <.form
               for={@form}
               phx-change="validate"
@@ -154,12 +153,11 @@
                   </div>
                 </div>
               </div>
-              
-              <%!-- Section 2: Modul Sistem --%>
+               <%!-- Section 2: Modul Sistem --%>
               <div class="mb-8 pb-6 border-b border-gray-300">
                 <div class="flex items-center justify-between mb-4">
                   <h3 class="text-base font-bold text-gray-900 uppercase border-b-2 border-gray-400 pb-2 flex-1">
-                     Modul Sistem
+                    Modul Sistem
                   </h3>
                   
                   <button
@@ -171,19 +169,18 @@
                     data-single-click-ms="700"
                     class="ml-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded transition-colors duration-200 flex items-center gap-1 print:hidden disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    <.icon name="hero-plus-circle" class="w-4 h-4" />
-                    <span>Tambah Modul</span>
+                    <.icon name="hero-plus-circle" class="w-4 h-4" /> <span>Tambah Modul</span>
                   </button>
                 </div>
                 
                 <div id="modules" class="space-y-3 mt-4">
                   <%= for module <- @modules_list do %>
-                  <div
-                    id={"module-#{module.id}"}
-                    class="border border-gray-300 rounded p-3 bg-gray-50"
-                  >
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-2 flex-1">
+                    <div
+                      id={"module-#{module.id}"}
+                      class="border border-gray-300 rounded p-3 bg-gray-50"
+                    >
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 flex-1">
                           <input
                             id={"module-name-#{module.id}"}
                             type="text"
@@ -195,54 +192,71 @@
                             class="flex-1 px-2 py-1.5 text-sm text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-semibold placeholder:text-black"
                             placeholder="Masukkan nama modul"
                           />
+                        </div>
+                        
+                        <div class="flex items-center gap-2 print:hidden">
+                          <button
+                            type="button"
+                            phx-click="select_module"
+                            phx-value-module_id={module.id}
+                            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold transition-colors duration-200 flex items-center gap-1"
+                          >
+                            <.icon name="hero-pencil-square" class="w-3 h-3" />
+                            <span>Edit Fungsi</span>
+                          </button>
+                          <button
+                            type="button"
+                            phx-click="remove_module"
+                            phx-value-id={module.id}
+                            class="px-2 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs transition-colors duration-200"
+                          >
+                            <.icon name="hero-trash" class="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                       
-                      <div class="flex items-center gap-2 print:hidden">
-                        <button
-                          type="button"
-                          phx-click="select_module"
-                          phx-value-module_id={module.id}
-                          class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold transition-colors duration-200 flex items-center gap-1"
-                        >
-                          <.icon name="hero-pencil-square" class="w-3 h-3" />
-                          <span>Edit Fungsi</span>
-                        </button>
-                        <button
-                          type="button"
-                          phx-click="remove_module"
-                          phx-value-id={module.id}
-                          class="px-2 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs transition-colors duration-200"
-                        >
-                          <.icon name="hero-trash" class="w-3 h-3" />
-                        </button>
-                      </div>
+                      <%= if length(module.functions) > 0 do %>
+                        <div class="mt-2 ml-4 space-y-1">
+                          <%= for {func, index} <- Enum.with_index(module.functions) do %>
+                            <div class="text-xs text-gray-700">
+                              <span class="font-medium">
+                                {Enum.at(
+                                  ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
+                                  index
+                                )}.
+                              </span> <span>{func.name}</span>
+                              <%= if length(func.sub_functions) > 0 do %>
+                                <div class="ml-4 mt-0.5">
+                                  <%= for {sub_func, sub_index} <- Enum.with_index(func.sub_functions) do %>
+                                    <div class="text-gray-600">
+                                      {Enum.at(
+                                        [
+                                          "i",
+                                          "ii",
+                                          "iii",
+                                          "iv",
+                                          "v",
+                                          "vi",
+                                          "vii",
+                                          "viii",
+                                          "ix",
+                                          "x"
+                                        ],
+                                        sub_index
+                                      )}. {sub_func.name}
+                                    </div>
+                                  <% end %>
+                                </div>
+                              <% end %>
+                            </div>
+                          <% end %>
+                        </div>
+                      <% end %>
                     </div>
-                    
-                    <%= if length(module.functions) > 0 do %>
-                      <div class="mt-2 ml-4 space-y-1">
-                        <%= for {func, index} <- Enum.with_index(module.functions) do %>
-                          <div class="text-xs text-gray-700">
-                            <span class="font-medium">
-                              {Enum.at(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], index)}.
-                            </span>
-                            <span>{func.name}</span>
-                            <%= if length(func.sub_functions) > 0 do %>
-                              <div class="ml-4 mt-0.5">
-                                <%= for {sub_func, sub_index} <- Enum.with_index(func.sub_functions) do %>
-                                  <div class="text-gray-600">{Enum.at(["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"], sub_index)}. {sub_func.name}</div>
-                                <% end %>
-                              </div>
-                            <% end %>
-                          </div>
-                        <% end %>
-                      </div>
-                    <% end %>
-                  </div>
                   <% end %>
                 </div>
               </div>
-              
-              <%!-- Section 3: Fungsi Modul (for selected module) --%>
+               <%!-- Section 3: Fungsi Modul (for selected module) --%>
               <%= if @selected_module do %>
                 <% selected_module = @selected_module %>
                 <div class="mb-8 pb-6 border-b border-gray-300 print:hidden">
@@ -250,8 +264,9 @@
                     <div class="flex items-center justify-between mb-3">
                       <div>
                         <h3 class="text-base font-bold text-gray-900 uppercase border-b-2 border-gray-400 pb-2">
-                           Fungsi Modul
+                          Fungsi Modul
                         </h3>
+                        
                         <div class="flex items-center gap-2 text-gray-600 mt-2">
                           <span class="text-xs">Modul:</span>
                           <span class="font-semibold text-xs text-gray-800 bg-blue-50 px-2 py-1 rounded">
@@ -309,7 +324,12 @@
                           <div class="ml-6 space-y-1">
                             <%= for {sub_func, sub_index} <- Enum.with_index(func.sub_functions) do %>
                               <div class="flex items-center gap-2">
-                                <span class="text-gray-500 text-xs font-medium inline-block min-w-[1.5ch]">{Enum.at(["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"], sub_index)}.</span>
+                                <span class="text-gray-500 text-xs font-medium inline-block min-w-[1.5ch]">
+                                  {Enum.at(
+                                    ["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"],
+                                    sub_index
+                                  )}.
+                                </span>
                                 <input
                                   id={"sub-function-input-#{sub_func.id}"}
                                   type="text"
@@ -350,23 +370,23 @@
                       <% end %>
                     <% else %>
                       <div class="text-center py-6 bg-gray-50 rounded border-2 border-dashed border-gray-300">
-                        <p class="text-xs text-gray-500 italic">
-                          Tiada fungsi ditambah lagi
-                        </p>
+                        <p class="text-xs text-gray-500 italic">Tiada fungsi ditambah lagi</p>
                       </div>
                     <% end %>
                   </div>
                 </div>
               <% end %>
-              
-              <%!-- Section 4: Pengesahan & Perakuan --%>
+               <%!-- Section 4: Pengesahan & Perakuan --%>
               <div class="mb-6">
                 <h3 class="text-base font-bold text-gray-900 mb-4 uppercase border-b-2 border-gray-400 pb-2">
                   Pengesahan & Perakuan
                 </h3>
                 
                 <div class="grid grid-cols-2 gap-6 mt-4">
-                  <div class="border border-gray-300 rounded p-4 bg-gray-50 disediakan-oleh-section" style="--input-color: #000;">
+                  <div
+                    class="border border-gray-300 rounded p-4 bg-gray-50 disediakan-oleh-section"
+                    style="--input-color: #000;"
+                  >
                     <div class="flex items-center gap-2 mb-3 pb-2 border-b border-gray-300">
                       <.icon name="hero-user-circle" class="w-5 h-5 text-blue-600" />
                       <h4 class="text-sm font-bold text-gray-900">Disediakan Oleh</h4>
@@ -378,9 +398,7 @@
                     
                     <div class="space-y-3">
                       <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-gray-700">
-                          Nama
-                        </label>
+                        <label class="block text-xs font-semibold text-gray-700">Nama</label>
                         <input
                           type="text"
                           name="analisis_dan_rekabentuk[prepared_by_name]"
@@ -391,9 +409,7 @@
                       </div>
                       
                       <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-gray-700">
-                          Jawatan
-                        </label>
+                        <label class="block text-xs font-semibold text-gray-700">Jawatan</label>
                         <input
                           type="text"
                           name="analisis_dan_rekabentuk[prepared_by_position]"
@@ -404,9 +420,7 @@
                       </div>
                       
                       <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-gray-700">
-                          Tarikh
-                        </label>
+                        <label class="block text-xs font-semibold text-gray-700">Tarikh</label>
                         <div class="relative">
                           <input
                             id="prepared_by_date"
@@ -443,9 +457,7 @@
                     
                     <div class="space-y-3">
                       <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-gray-700">
-                          Nama
-                        </label>
+                        <label class="block text-xs font-semibold text-gray-700">Nama</label>
                         <input
                           type="text"
                           name="analisis_dan_rekabentuk[approved_by_name]"
@@ -455,9 +467,7 @@
                       </div>
                       
                       <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-gray-700">
-                          Jawatan
-                        </label>
+                        <label class="block text-xs font-semibold text-gray-700">Jawatan</label>
                         <input
                           type="text"
                           name="analisis_dan_rekabentuk[approved_by_position]"
@@ -467,9 +477,7 @@
                       </div>
                       
                       <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-gray-700">
-                          Tarikh
-                        </label>
+                        <label class="block text-xs font-semibold text-gray-700">Tarikh</label>
                         <div class="relative">
                           <input
                             id="approved_by_date"
@@ -494,15 +502,13 @@
                   </div>
                 </div>
               </div>
-              
-              <%!-- Action Buttons --%>
+               <%!-- Action Buttons --%>
               <div class="flex justify-end gap-3 pt-4 border-t border-gray-300 print:hidden">
                 <button
                   type="submit"
                   class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-semibold transition-colors duration-200 flex items-center gap-2"
                 >
-                  <.icon name="hero-check-circle" class="w-4 h-4" />
-                  <span>Simpan</span>
+                  <.icon name="hero-check-circle" class="w-4 h-4" /> <span>Simpan</span>
                 </button>
               </div>
             </.form>
@@ -571,7 +577,9 @@
                       Nama Projek
                     </td>
                     
-                    <td class="px-2 py-1.5 border border-gray-800 text-black">{@pdf_data.nama_projek}</td>
+                    <td class="px-2 py-1.5 border border-gray-800 text-black">
+                      {@pdf_data.nama_projek}
+                    </td>
                   </tr>
                   
                   <tr class="border-b border-gray-800">
@@ -579,7 +587,9 @@
                       Nama Agensi
                     </td>
                     
-                    <td class="px-2 py-1.5 border border-gray-800 text-black">{@pdf_data.nama_agensi}</td>
+                    <td class="px-2 py-1.5 border border-gray-800 text-black">
+                      {@pdf_data.nama_agensi}
+                    </td>
                   </tr>
                   
                   <tr class="border-b border-gray-800">
@@ -587,7 +597,9 @@
                       Versi
                     </td>
                     
-                    <td class="px-2 py-1.5 border border-gray-800 text-black">{@pdf_data.versi}</td>
+                    <td class="px-2 py-1.5 border border-gray-800 text-black">
+                      {@pdf_data.versi}
+                    </td>
                   </tr>
                   
                   <tr class="border-b border-gray-800">
@@ -595,7 +607,9 @@
                       Tarikh Semakan (jika ada)
                     </td>
                     
-                    <td class="px-2 py-1.5 border border-gray-800 text-black">{@pdf_data.tarikh_semakan}</td>
+                    <td class="px-2 py-1.5 border border-gray-800 text-black">
+                      {@pdf_data.tarikh_semakan}
+                    </td>
                   </tr>
                   
                   <tr>
@@ -638,7 +652,12 @@
                           <%= if length(func.sub_functions) > 0 do %>
                             <div class="ml-4 mt-1">
                               <%= for {sub_func, sub_index} <- Enum.with_index(func.sub_functions) do %>
-                                <div class="text-gray-600">{Enum.at(["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"], sub_index)}. {sub_func.name}</div>
+                                <div class="text-gray-600">
+                                  {Enum.at(
+                                    ["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"],
+                                    sub_index
+                                  )}. {sub_func.name}
+                                </div>
                               <% end %>
                             </div>
                           <% end %>

@@ -24,7 +24,7 @@ defmodule SppaWeb.PembangunanLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
-        |> assign(:current_path, "/pembangunan")
+        |> assign(:current_path, "/pengaturcaraan")
         |> assign(:modules, modules)
         |> assign(:view_mode, "table")
         |> assign(:show_view_modal, false)

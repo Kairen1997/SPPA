@@ -267,5 +267,4 @@ defmodule SppaWeb.ProjekLive do
 
     {paginated, total_pages}
   end
-
 end

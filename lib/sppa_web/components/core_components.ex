@@ -661,11 +661,11 @@ defmodule SppaWeb.CoreComponents do
               <.icon name="hero-calendar-days" class="w-5 h-5" /> <span>Jadual Projek</span>
             </.link>
             <.link
-              navigate={~p"/pembangunan"}
+              navigate={~p"/pengaturcaraan"}
               phx-click="close_sidebar"
               class={[
                 "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-                if(@current_path == "/pembangunan",
+                if(@current_path == "/pengaturcaraan",
                   do: "bg-gray-700 text-white",
                   else: "text-gray-300 hover:bg-gray-700 hover:text-white"
                 )
@@ -774,6 +774,7 @@ defmodule SppaWeb.CoreComponents do
   defp requirement_form_value(form, tab_type, category_key, question_no, field, default) do
     params = requirement_form_params(form)
     path = [tab_type, category_key, to_string(question_no), field]
+
     case get_in(params, path) do
       nil -> default
       val -> val
@@ -788,12 +789,20 @@ defmodule SppaWeb.CoreComponents do
   defp requirement_has_data?(form, tab_type, category_key, question) do
     # Check soalan from form or question.soalan
     soalan =
-      requirement_form_value(form, tab_type, category_key, question.no, "soalan", question.soalan || "")
+      requirement_form_value(
+        form,
+        tab_type,
+        category_key,
+        question.no,
+        "soalan",
+        question.soalan || ""
+      )
       |> String.trim()
 
     # Check maklumbalas from form
-    maklumbalas_raw = requirement_form_value_raw(form, tab_type, category_key, question.no, "maklumbalas")
-    
+    maklumbalas_raw =
+      requirement_form_value_raw(form, tab_type, category_key, question.no, "maklumbalas")
+
     maklumbalas =
       cond do
         is_list(maklumbalas_raw) -> length(maklumbalas_raw) > 0
@@ -950,7 +959,16 @@ defmodule SppaWeb.CoreComponents do
                     <option
                       :for={option <- question.options || []}
                       value={option}
-                      selected={requirement_form_value(@form, @tab_type, @category_key, question.no, "maklumbalas", "") == option}
+                      selected={
+                        requirement_form_value(
+                          @form,
+                          @tab_type,
+                          @category_key,
+                          question.no,
+                          "maklumbalas",
+                          ""
+                        ) == option
+                      }
                     >
                       {option}
                     </option>
@@ -965,7 +983,13 @@ defmodule SppaWeb.CoreComponents do
                           name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas][]"}
                           value={option}
                           checked={
-                            case requirement_form_value_raw(@form, @tab_type, @category_key, question.no, "maklumbalas") do
+                            case requirement_form_value_raw(
+                                   @form,
+                                   @tab_type,
+                                   @category_key,
+                                   question.no,
+                                   "maklumbalas"
+                                 ) do
                               values when is_list(values) -> option in values
                               value when is_binary(value) -> value == option
                               _ -> false
@@ -1032,6 +1056,7 @@ defmodule SppaWeb.CoreComponents do
                     <.icon name="hero-pencil" class="w-4 h-4" />
                   </button>
                 <% end %>
+                
                 <button
                   type="button"
                   phx-click="delete_question"

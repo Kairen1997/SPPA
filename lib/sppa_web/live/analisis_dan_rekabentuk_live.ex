@@ -136,6 +136,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     case socket.assigns.project do
       %{id: project_id} ->
         push_patch(socket, to: ~p"/analisis-dan-rekabentuk?project_id=#{project_id}")
+
       _ ->
         socket
     end
@@ -351,10 +352,12 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     result =
       if socket.assigns.analisis_dan_rekabentuk_id do
         # Update existing record
-        existing = AnalisisDanRekabentuk.get_analisis_dan_rekabentuk!(
-          socket.assigns.analisis_dan_rekabentuk_id,
-          current_scope
-        )
+        existing =
+          AnalisisDanRekabentuk.get_analisis_dan_rekabentuk!(
+            socket.assigns.analisis_dan_rekabentuk_id,
+            current_scope
+          )
+
         AnalisisDanRekabentuk.update_analisis_dan_rekabentuk(existing, attrs)
       else
         # Create new record
@@ -785,6 +788,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
   defp get_selected_module_by_id(socket, module_id) do
     module_id_str = to_string(module_id)
+
     get_modules_from_stream(socket)
     |> Enum.find_value(fn module ->
       if to_string(module.id) == module_id_str, do: module
@@ -874,6 +878,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
           :error,
           "Sesi tidak sah. Sila log masuk semula."
         )
+
       {:error, socket}
     end
   end
@@ -940,16 +945,21 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
       {:error, error} ->
         changeset =
           cond do
-            is_struct(error, Ecto.Changeset) -> error
+            is_struct(error, Ecto.Changeset) ->
+              error
+
             is_tuple(error) and tuple_size(error) == 2 ->
               case elem(error, 1) do
                 cs when is_struct(cs, Ecto.Changeset) -> cs
                 _ -> nil
               end
-            true -> nil
+
+            true ->
+              nil
           end
 
         require Logger
+
         if changeset do
           Logger.warning(
             "persist_analisis_to_db failed: #{inspect(Ecto.Changeset.traverse_errors(changeset, &translate_error/1))}"
@@ -957,6 +967,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         else
           Logger.warning("persist_analisis_to_db failed: #{inspect(error)}")
         end
+
         socket =
           socket
           |> Phoenix.LiveView.put_flash(

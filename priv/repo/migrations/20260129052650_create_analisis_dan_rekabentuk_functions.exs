@@ -4,7 +4,9 @@ defmodule Sppa.Repo.Migrations.CreateAnalisisDanRekabentukFunctions do
   def change do
     create table(:analisis_dan_rekabentuk_functions) do
       add :name, :string, null: false
-      add :analisis_dan_rekabentuk_module_id, references(:analisis_dan_rekabentuk_modules, on_delete: :delete_all), null: false
+
+      add :analisis_dan_rekabentuk_module_id,
+          references(:analisis_dan_rekabentuk_modules, on_delete: :delete_all), null: false
 
       timestamps(type: :utc_datetime)
     end

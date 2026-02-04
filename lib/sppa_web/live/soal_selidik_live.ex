@@ -235,14 +235,19 @@ defmodule SppaWeb.SoalSelidikLive do
 
       # Log disediakan_oleh specifically
       Logger.info("Incoming disediakan_oleh: #{inspect(Map.get(params, "disediakan_oleh"))}")
-      Logger.info("Existing disediakan_oleh: #{inspect(Map.get(existing_soal_selidik, "disediakan_oleh"))}")
+
+      Logger.info(
+        "Existing disediakan_oleh: #{inspect(Map.get(existing_soal_selidik, "disediakan_oleh"))}"
+      )
 
       # Special handling for disediakan_oleh to prevent fields from clearing each other
       incoming_disediakan_oleh = Map.get(params, "disediakan_oleh", %{})
       existing_disediakan_oleh = Map.get(existing_soal_selidik, "disediakan_oleh", %{})
 
       merged_disediakan_oleh =
-        Map.merge(existing_disediakan_oleh, incoming_disediakan_oleh, fn key, existing_val, new_val ->
+        Map.merge(existing_disediakan_oleh, incoming_disediakan_oleh, fn key,
+                                                                         existing_val,
+                                                                         new_val ->
           # If new value is empty string but we already have a value, keep existing
           if new_val == "" and existing_val not in [nil, ""] do
             Logger.debug(
@@ -251,16 +256,16 @@ defmodule SppaWeb.SoalSelidikLive do
 
             existing_val
           else
-            Logger.debug(
-              "validate: using new disediakan_oleh.#{key} value: #{inspect(new_val)}"
-            )
+            Logger.debug("validate: using new disediakan_oleh.#{key} value: #{inspect(new_val)}")
 
             new_val
           end
         end)
 
       # Put merged disediakan_oleh back into both existing data and incoming params
-      existing_soal_selidik = Map.put(existing_soal_selidik, "disediakan_oleh", merged_disediakan_oleh)
+      existing_soal_selidik =
+        Map.put(existing_soal_selidik, "disediakan_oleh", merged_disediakan_oleh)
+
       params = Map.put(params, "disediakan_oleh", merged_disediakan_oleh)
 
       # Log sample data to see what we're working with
@@ -928,10 +933,12 @@ defmodule SppaWeb.SoalSelidikLive do
             %{}
           end
 
-        question_data = get_in(form_params, [tab_type, category_key, to_string(question_no)]) || %{}
+        question_data =
+          get_in(form_params, [tab_type, category_key, to_string(question_no)]) || %{}
 
         # Get soalan from form data first (handle both string and atom keys), fallback to question.soalan from categories
         soalan_from_form = Map.get(question_data, "soalan") || Map.get(question_data, :soalan)
+
         soalan =
           if soalan_from_form && soalan_from_form != "" do
             soalan_from_form
@@ -939,7 +946,9 @@ defmodule SppaWeb.SoalSelidikLive do
             question.soalan || ""
           end
 
-        maklumbalas = Map.get(question_data, "maklumbalas") || Map.get(question_data, :maklumbalas) || ""
+        maklumbalas =
+          Map.get(question_data, "maklumbalas") || Map.get(question_data, :maklumbalas) || ""
+
         catatan = Map.get(question_data, "catatan") || Map.get(question_data, :catatan) || ""
 
         # Handle maklumbalas if it's a list (for checkbox type)
@@ -981,7 +990,10 @@ defmodule SppaWeb.SoalSelidikLive do
 
         {:noreply,
          socket
-         |> Phoenix.LiveView.put_flash(:error, "Ralat semasa membuka editor soalan. Sila cuba lagi.")}
+         |> Phoenix.LiveView.put_flash(
+           :error,
+           "Ralat semasa membuka editor soalan. Sila cuba lagi."
+         )}
     end
   end
 
@@ -1951,8 +1963,13 @@ defmodule SppaWeb.SoalSelidikLive do
       Logger.debug("deep_merge_params: new keys: #{inspect(Map.keys(new))}")
 
       # Log disediakan_oleh specifically
-      Logger.info("deep_merge_params: existing disediakan_oleh: #{inspect(Map.get(existing, "disediakan_oleh"))}")
-      Logger.info("deep_merge_params: new disediakan_oleh: #{inspect(Map.get(new, "disediakan_oleh"))}")
+      Logger.info(
+        "deep_merge_params: existing disediakan_oleh: #{inspect(Map.get(existing, "disediakan_oleh"))}"
+      )
+
+      Logger.info(
+        "deep_merge_params: new disediakan_oleh: #{inspect(Map.get(new, "disediakan_oleh"))}"
+      )
 
       # Start with existing as base, then merge new on top
       # This way new values (user input) take precedence, but existing values are preserved
@@ -1980,12 +1997,18 @@ defmodule SppaWeb.SoalSelidikLive do
                       cond do
                         # New value is empty string and existing has a value - preserve existing
                         new_sub_val == "" && existing_sub_val != "" && existing_sub_val != nil ->
-                          Logger.debug("deep_merge_params: preserving existing #{sub_key} value: #{inspect(existing_sub_val)}")
+                          Logger.debug(
+                            "deep_merge_params: preserving existing #{sub_key} value: #{inspect(existing_sub_val)}"
+                          )
+
                           existing_sub_val
 
                         # New value exists (even if empty - user might have cleared it) - use new
                         true ->
-                          Logger.debug("deep_merge_params: using new #{sub_key} value: #{inspect(new_sub_val)}")
+                          Logger.debug(
+                            "deep_merge_params: using new #{sub_key} value: #{inspect(new_sub_val)}"
+                          )
+
                           new_sub_val
                       end
                   end)
@@ -1994,7 +2017,10 @@ defmodule SppaWeb.SoalSelidikLive do
                   |> Map.put_new("jawatan", "")
                   |> Map.put_new("tarikh", "")
 
-                Logger.info("deep_merge_params: merged disediakan_oleh - existing: #{inspect(existing_val)}, new: #{inspect(filtered_new_val)}, result: #{inspect(result_map)}")
+                Logger.info(
+                  "deep_merge_params: merged disediakan_oleh - existing: #{inspect(existing_val)}, new: #{inspect(filtered_new_val)}, result: #{inspect(result_map)}"
+                )
+
                 result_map
               else
                 # For other nested maps, use recursive merge

@@ -90,10 +90,58 @@ defmodule Sppa.AnalisisDanRekabentuk do
     analisis =
       AnalisisDanRekabentuk
       |> where([a], a.user_id == ^current_scope.user.id)
-      |> preload([modules: [functions: :sub_functions]])
+      |> preload(modules: [functions: :sub_functions])
       |> order_by([a], desc: a.inserted_at)
       |> limit(1)
       |> Repo.one()
+
+    if analisis do
+      versi = analisis.versi || "1.0.0"
+
+      analisis.modules
+      |> Enum.sort_by(& &1.number)
+      |> Enum.map(fn module ->
+        functions =
+          module.functions
+          |> Enum.map(fn function ->
+            sub_functions =
+              (function.sub_functions || [])
+              |> Enum.map(fn sub -> %{id: "sub_#{sub.id}", name: sub.name || ""} end)
+
+            %{
+              id: "func_#{function.id}",
+              name: function.name || "",
+              sub_functions: sub_functions
+            }
+          end)
+
+        %{
+          id: "module_#{module.id}",
+          number: module.number,
+          name: module.name || "",
+          version: versi,
+          priority: nil,
+          status: "Belum Mula",
+          tarikh_mula: nil,
+          tarikh_jangka_siap: nil,
+          catatan: nil,
+          functions: functions
+        }
+      end)
+    else
+      []
+    end
+  end
+
+  @doc """
+  Returns modules for a specific project from Analisis dan Rekabentuk.
+
+  Used for the Pengaturcaraan tab on the project details page. Uses the
+  latest analisis_dan_rekabentuk document for the project. Format matches
+  list_modules_for_pembangunan.
+  """
+  def list_modules_for_project(project_id, _current_scope) do
+    analisis = get_analisis_dan_rekabentuk_by_project_for_display(project_id, nil)
 
     if analisis do
       versi = analisis.versi || "1.0.0"
@@ -155,7 +203,7 @@ defmodule Sppa.AnalisisDanRekabentuk do
           # Create modules with their functions and sub_functions
           create_modules_with_children(analisis_dan_rekabentuk.id, modules_data)
           # Reload with associations
-          Repo.preload(analisis_dan_rekabentuk, [modules: [functions: :sub_functions]])
+          Repo.preload(analisis_dan_rekabentuk, modules: [functions: :sub_functions])
 
         error ->
           Repo.rollback(error)
@@ -180,14 +228,12 @@ defmodule Sppa.AnalisisDanRekabentuk do
       case Repo.update(changeset) do
         {:ok, updated} ->
           # Delete existing modules (cascade will delete functions and sub_functions)
-          Repo.delete_all(
-            from(m in Module, where: m.analisis_dan_rekabentuk_id == ^updated.id)
-          )
+          Repo.delete_all(from(m in Module, where: m.analisis_dan_rekabentuk_id == ^updated.id))
 
           # Create new modules with their functions and sub_functions
           create_modules_with_children(updated.id, modules_data)
           # Reload with associations
-          Repo.preload(updated, [modules: [functions: :sub_functions]])
+          Repo.preload(updated, modules: [functions: :sub_functions])
 
         error ->
           Repo.rollback(error)
@@ -311,7 +357,8 @@ defmodule Sppa.AnalisisDanRekabentuk do
   end
 
   # Helper function to create modules with their functions and sub_functions
-  defp create_modules_with_children(analisis_dan_rekabentuk_id, modules_data) when is_list(modules_data) do
+  defp create_modules_with_children(analisis_dan_rekabentuk_id, modules_data)
+       when is_list(modules_data) do
     Enum.each(modules_data, fn module_data ->
       module_attrs = %{
         number: get_integer(module_data, :number) || get_integer(module_data, "number"),
@@ -322,7 +369,8 @@ defmodule Sppa.AnalisisDanRekabentuk do
       case Repo.insert(Module.changeset(%Module{}, module_attrs)) do
         {:ok, module} ->
           # Create functions for this module
-          functions_data = Map.get(module_data, :functions, []) || Map.get(module_data, "functions", [])
+          functions_data =
+            Map.get(module_data, :functions, []) || Map.get(module_data, "functions", [])
 
           Enum.each(functions_data, fn function_data ->
             function_attrs = %{
