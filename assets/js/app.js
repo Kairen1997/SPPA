@@ -1003,6 +1003,75 @@ const NotificationToggle = {
   }
 }
 
+// SingleClick Hook - Prevents double clicks within a specified time period
+const SingleClick = {
+  mounted() {
+    this.lastClickTime = 0
+    this.clickDelay = parseInt(this.el.dataset.singleClickMs || "700", 10)
+    
+    this.handleClick = (e) => {
+      const now = Date.now()
+      const timeSinceLastClick = now - this.lastClickTime
+      
+      if (timeSinceLastClick < this.clickDelay) {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation()
+        return false
+      }
+      
+      this.lastClickTime = now
+    }
+    
+    this.el.addEventListener("click", this.handleClick, true) // Use capture phase
+  },
+  
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick, true)
+    }
+  }
+}
+
+// PreventEnterSubmit Hook - Prevents form submission on Enter key
+const PreventEnterSubmit = {
+  mounted() {
+    this.handleKeyDown = (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault()
+        return false
+      }
+    }
+    
+    this.el.addEventListener("keydown", this.handleKeyDown)
+  },
+  
+  destroyed() {
+    if (this.handleKeyDown) {
+      this.el.removeEventListener("keydown", this.handleKeyDown)
+    }
+  }
+}
+
+// OpenDatePicker Hook - Opens date picker on focus
+const OpenDatePicker = {
+  mounted() {
+    this.handleFocus = () => {
+      if (this.el.type === "date" || this.el.type === "datetime-local") {
+        this.el.showPicker()
+      }
+    }
+    
+    this.el.addEventListener("focus", this.handleFocus)
+  },
+  
+  destroyed() {
+    if (this.handleFocus) {
+      this.el.removeEventListener("focus", this.handleFocus)
+    }
+  }
+}
+
 // Print Gantt Chart Hook - Opens PDF in hidden popup, triggers print, then closes
 const PrintGanttChart = {
   mounted() {

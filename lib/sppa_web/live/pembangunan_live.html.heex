@@ -55,8 +55,8 @@
               Senarai modul yang telah didaftarkan dalam Analisis dan Rekabentuk
             </p>
           </div>
-           <%!-- View Switcher and Module Count --%>
-          <div class="mb-6 flex items-center justify-between">
+           <%!-- View Switcher --%>
+          <div class="mb-6 flex items-center">
             <div class="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-gray-200">
               <button
                 phx-click="change_view"
@@ -84,11 +84,6 @@
               >
                 <.icon name="hero-squares-2x2" class="w-4 h-4" /> <span>Papan</span>
               </button>
-            </div>
-            
-            <div class="flex items-center gap-2 text-gray-600">
-              <.icon name="hero-code-bracket" class="w-5 h-5" />
-              <span class="text-sm font-medium">{length(@modules)} Modul</span>
             </div>
           </div>
            <%!-- Modules Container --%>
@@ -160,11 +155,11 @@
                       
                       <tbody class="bg-white divide-y divide-gray-200">
                         <tr
-                          :for={{module, index} <- Enum.with_index(@modules, 1)}
+                          :for={{module, index} <- Enum.with_index(@paginated_modules, 1)}
                           class="hover:bg-gray-50 transition-colors duration-150"
                         >
                           <td class="px-3 py-2 text-center text-xs text-gray-600 font-medium">
-                            {index}
+                            {( @page - 1 ) * @page_size + index}
                           </td>
                           
                           <td class="px-3 py-2">
@@ -309,9 +304,10 @@
                           <td class="px-3 py-2 whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1.5">
                               <button
+                                type="button"
                                 phx-click="open_edit_modal"
                                 phx-value-module_id={module.id}
-                                class="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200"
+                                class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
                                 title="Edit"
                               >
                                 <.icon name="hero-pencil" class="w-4 h-4" />
@@ -322,6 +318,72 @@
                       </tbody>
                     </table>
                   </div>
+                  <%= if @total_pages > 1 do %>
+                    <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
+                      <p class="text-sm text-gray-600">
+                        Paparan
+                        <span class="font-medium text-gray-900">{( @page - 1 ) * @page_size + 1}</span>
+                        –
+                        <span class="font-medium text-gray-900">{min(@page * @page_size, @total_modules)}</span>
+                        daripada
+                        <span class="font-medium text-gray-900">{@total_modules}</span>
+                        modul
+                      </p>
+                      <nav class="flex items-center gap-1" aria-label="Pagination">
+                        <button
+                          phx-click="go_to_page"
+                          phx-value-page={@page - 1}
+                          disabled={@page <= 1}
+                          class={[
+                            "p-2 rounded-lg text-sm font-medium transition-all duration-200",
+                            if(@page <= 1,
+                              do: "text-gray-400 cursor-not-allowed",
+                              else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
+                            )
+                          ]}
+                          aria-label="Muka surat sebelumnya"
+                        >
+                          <.icon name="hero-chevron-left" class="w-5 h-5" />
+                        </button>
+                        <div class="flex items-center gap-1">
+                          <%= for p <- @page_numbers do %>
+                            <%= if p == :ellipsis do %>
+                              <span class="px-2 text-gray-400">…</span>
+                            <% else %>
+                              <button
+                                phx-click="go_to_page"
+                                phx-value-page={p}
+                                class={[
+                                  "min-w-[2.25rem] py-2 px-2 rounded-lg text-sm font-medium transition-all duration-200",
+                                  if(p == @page,
+                                    do: "bg-blue-600 text-white shadow-sm",
+                                    else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
+                                  )
+                                ]}
+                              >
+                                {p}
+                              </button>
+                            <% end %>
+                          <% end %>
+                        </div>
+                        <button
+                          phx-click="go_to_page"
+                          phx-value-page={@page + 1}
+                          disabled={@page >= @total_pages}
+                          class={[
+                            "p-2 rounded-lg text-sm font-medium transition-all duration-200",
+                            if(@page >= @total_pages,
+                              do: "text-gray-400 cursor-not-allowed",
+                              else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
+                            )
+                          ]}
+                          aria-label="Muka surat seterusnya"
+                        >
+                          <.icon name="hero-chevron-right" class="w-5 h-5" />
+                        </button>
+                      </nav>
+                    </div>
+                  <% end %>
                 <% @view_mode == "board" -> %>
                   <%!-- Board View (Kanban Style by Status) --%>
                   <div class="p-6">
@@ -423,9 +485,10 @@
                                     
                                     <div class="flex items-center gap-1.5 mt-2">
                                       <button
+                                        type="button"
                                         phx-click="open_edit_modal"
                                         phx-value-module_id={module.id}
-                                        class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                                        class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                         title="Edit"
                                       >
                                         <.icon name="hero-pencil" class="w-3.5 h-3.5" />
@@ -457,13 +520,15 @@
   <%= if @show_view_modal && @selected_module do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_view_modal"
-      phx-click-away="close_view_modal"
       role="dialog"
       aria-modal="true"
     >
       <%!-- Backdrop --%>
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="close_view_modal"
+      ></div>
        <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
@@ -687,13 +752,15 @@
   <%= if @show_edit_modal && @selected_module do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_edit_modal"
-      phx-click-away="close_edit_modal"
       role="dialog"
       aria-modal="true"
     >
       <%!-- Backdrop --%>
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="close_edit_modal"
+      ></div>
        <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
@@ -701,12 +768,12 @@
           phx-click-away="close_edit_modal"
         >
           <%!-- Modal header --%>
-          <div class="border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
+          <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Modul</h2>
                 
-                <p class="mt-1 text-sm text-green-100">Edit maklumat modul</p>
+                <p class="mt-1 text-sm text-blue-100">Edit maklumat modul</p>
               </div>
               
               <button
@@ -729,7 +796,6 @@
             
             <.form
               for={@form}
-              phx-change="validate_module"
               phx-submit="update_module"
               id="edit-module-form"
               class="space-y-6"
@@ -739,26 +805,28 @@
                   <label class="block text-sm font-medium text-gray-700 mb-2">Keutamaan</label>
                   <select
                     name="module[priority]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 bg-white"
+                    style="color: rgb(17, 24, 39);"
                   >
-                    <option value="" selected={@form[:priority].value in [nil, ""]}>—</option>
+                    <option value="" selected={@form[:priority].value in [nil, ""]} style="color: rgb(107, 114, 128);">—</option>
                     
                     <option
                       value="Sangat Tinggi"
                       selected={@form[:priority].value == "Sangat Tinggi"}
+                      style="color: rgb(17, 24, 39);"
                     >
                       Sangat Tinggi
                     </option>
                     
-                    <option value="Tinggi" selected={@form[:priority].value == "Tinggi"}>
+                    <option value="Tinggi" selected={@form[:priority].value == "Tinggi"} style="color: rgb(17, 24, 39);">
                       Tinggi
                     </option>
                     
-                    <option value="Sederhana" selected={@form[:priority].value == "Sederhana"}>
+                    <option value="Sederhana" selected={@form[:priority].value == "Sederhana"} style="color: rgb(17, 24, 39);">
                       Sederhana
                     </option>
                     
-                    <option value="Rendah" selected={@form[:priority].value == "Rendah"}>
+                    <option value="Rendah" selected={@form[:priority].value == "Rendah"} style="color: rgb(17, 24, 39);">
                       Rendah
                     </option>
                   </select>
@@ -768,24 +836,26 @@
                   <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                   <select
                     name="module[status]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 bg-white"
+                    style="color: rgb(17, 24, 39);"
                   >
-                    <option value="Belum Mula" selected={@form[:status].value == "Belum Mula"}>
+                    <option value="Belum Mula" selected={@form[:status].value == "Belum Mula"} style="color: rgb(17, 24, 39);">
                       Belum Mula
                     </option>
                     
                     <option
                       value="Sedang Dibangunkan"
                       selected={@form[:status].value == "Sedang Dibangunkan"}
+                      style="color: rgb(17, 24, 39);"
                     >
                       Sedang Dibangunkan
                     </option>
                     
-                    <option value="Dalam Ujian" selected={@form[:status].value == "Dalam Ujian"}>
+                    <option value="Dalam Ujian" selected={@form[:status].value == "Dalam Ujian"} style="color: rgb(17, 24, 39);">
                       Dalam Ujian
                     </option>
                     
-                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>
+                    <option value="Selesai" selected={@form[:status].value == "Selesai"} style="color: rgb(17, 24, 39);">
                       Selesai
                     </option>
                   </select>
@@ -793,32 +863,49 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <.input
-                      field={@form[:tarikh_mula]}
-                      type="date"
-                      label="Tarikh Mula"
-                      placeholder="Pilih tarikh mula"
-                      class="w-full"
-                    />
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tarikh Mula</label>
+                    <label class="relative block">
+                      <.icon
+                        name="hero-calendar-days"
+                        class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+                      />
+                      <input
+                        type="date"
+                        id="module-tarikh-mula"
+                        name="module[tarikh_mula]"
+                        value={if @form[:tarikh_mula] && @form[:tarikh_mula].value != "", do: @form[:tarikh_mula].value, else: ""}
+                        phx-hook="OpenDatePicker"
+                        class="w-full pl-4 pr-9 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 bg-white"
+                      />
+                    </label>
                   </div>
                   
                   <div>
-                    <.input
-                      field={@form[:tarikh_jangka_siap]}
-                      type="date"
-                      label="Tarikh Jangka Siap"
-                      placeholder="Pilih tarikh jangka siap"
-                      class="w-full"
-                    />
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tarikh Jangka Siap</label>
+                    <label class="relative block">
+                      <.icon
+                        name="hero-calendar-days"
+                        class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+                      />
+                      <input
+                        type="date"
+                        id="module-tarikh-jangka-siap"
+                        name="module[tarikh_jangka_siap]"
+                        value={if @form[:tarikh_jangka_siap] && @form[:tarikh_jangka_siap].value != "", do: @form[:tarikh_jangka_siap].value, else: ""}
+                        phx-hook="OpenDatePicker"
+                        class="w-full pl-4 pr-9 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 bg-white"
+                      />
+                    </label>
                   </div>
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label> <textarea
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
+                  <textarea
                     name="module[catatan]"
                     rows="4"
                     placeholder="Masukkan catatan..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none text-gray-900 placeholder-gray-400 bg-white"
                   ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
                 </div>
               </div>
@@ -836,9 +923,9 @@
             <button
               type="submit"
               form="edit-module-form"
-              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
             >
-              Simpan Perubahan
+              Simpan
             </button>
           </div>
         </div>
