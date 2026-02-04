@@ -55,8 +55,8 @@
               Senarai modul yang telah didaftarkan dalam Analisis dan Rekabentuk
             </p>
           </div>
-           <%!-- View Switcher and Module Count --%>
-          <div class="mb-6 flex items-center justify-between">
+           <%!-- View Switcher --%>
+          <div class="mb-6 flex items-center">
             <div class="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-gray-200">
               <button
                 phx-click="change_view"
@@ -84,11 +84,6 @@
               >
                 <.icon name="hero-squares-2x2" class="w-4 h-4" /> <span>Papan</span>
               </button>
-            </div>
-            
-            <div class="flex items-center gap-2 text-gray-600">
-              <.icon name="hero-code-bracket" class="w-5 h-5" />
-              <span class="text-sm font-medium">{length(@modules)} Modul</span>
             </div>
           </div>
            <%!-- Modules Container --%>
@@ -160,11 +155,11 @@
                       
                       <tbody class="bg-white divide-y divide-gray-200">
                         <tr
-                          :for={{module, index} <- Enum.with_index(@modules, 1)}
+                          :for={{module, index} <- Enum.with_index(@paginated_modules, 1)}
                           class="hover:bg-gray-50 transition-colors duration-150"
                         >
                           <td class="px-3 py-2 text-center text-xs text-gray-600 font-medium">
-                            {index}
+                            {( @page - 1 ) * @page_size + index}
                           </td>
                           
                           <td class="px-3 py-2">
@@ -309,6 +304,7 @@
                           <td class="px-3 py-2 whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1.5">
                               <button
+                                type="button"
                                 phx-click="open_edit_modal"
                                 phx-value-module_id={module.id}
                                 class="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200"
@@ -322,6 +318,72 @@
                       </tbody>
                     </table>
                   </div>
+                  <%= if @total_pages > 1 do %>
+                    <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
+                      <p class="text-sm text-gray-600">
+                        Paparan
+                        <span class="font-medium text-gray-900">{( @page - 1 ) * @page_size + 1}</span>
+                        –
+                        <span class="font-medium text-gray-900">{min(@page * @page_size, @total_modules)}</span>
+                        daripada
+                        <span class="font-medium text-gray-900">{@total_modules}</span>
+                        modul
+                      </p>
+                      <nav class="flex items-center gap-1" aria-label="Pagination">
+                        <button
+                          phx-click="go_to_page"
+                          phx-value-page={@page - 1}
+                          disabled={@page <= 1}
+                          class={[
+                            "p-2 rounded-lg text-sm font-medium transition-all duration-200",
+                            if(@page <= 1,
+                              do: "text-gray-400 cursor-not-allowed",
+                              else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
+                            )
+                          ]}
+                          aria-label="Muka surat sebelumnya"
+                        >
+                          <.icon name="hero-chevron-left" class="w-5 h-5" />
+                        </button>
+                        <div class="flex items-center gap-1">
+                          <%= for p <- @page_numbers do %>
+                            <%= if p == :ellipsis do %>
+                              <span class="px-2 text-gray-400">…</span>
+                            <% else %>
+                              <button
+                                phx-click="go_to_page"
+                                phx-value-page={p}
+                                class={[
+                                  "min-w-[2.25rem] py-2 px-2 rounded-lg text-sm font-medium transition-all duration-200",
+                                  if(p == @page,
+                                    do: "bg-blue-600 text-white shadow-sm",
+                                    else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
+                                  )
+                                ]}
+                              >
+                                {p}
+                              </button>
+                            <% end %>
+                          <% end %>
+                        </div>
+                        <button
+                          phx-click="go_to_page"
+                          phx-value-page={@page + 1}
+                          disabled={@page >= @total_pages}
+                          class={[
+                            "p-2 rounded-lg text-sm font-medium transition-all duration-200",
+                            if(@page >= @total_pages,
+                              do: "text-gray-400 cursor-not-allowed",
+                              else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
+                            )
+                          ]}
+                          aria-label="Muka surat seterusnya"
+                        >
+                          <.icon name="hero-chevron-right" class="w-5 h-5" />
+                        </button>
+                      </nav>
+                    </div>
+                  <% end %>
                 <% @view_mode == "board" -> %>
                   <%!-- Board View (Kanban Style by Status) --%>
                   <div class="p-6">
@@ -423,6 +485,7 @@
                                     
                                     <div class="flex items-center gap-1.5 mt-2">
                                       <button
+                                        type="button"
                                         phx-click="open_edit_modal"
                                         phx-value-module_id={module.id}
                                         class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
