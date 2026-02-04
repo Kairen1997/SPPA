@@ -2,6 +2,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
   use SppaWeb, :live_view
 
   alias Sppa.Projects
+  alias Sppa.UjianPenerimaanPengguna
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
@@ -24,7 +25,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
 
     if user_role && user_role in @allowed_roles do
       # Get user acceptance tests (ujian penerimaan pengguna)
-      ujian = get_ujian()
+      ujian = UjianPenerimaanPengguna.list_ujian()
 
       socket =
         socket
@@ -87,7 +88,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
         |> assign(:current_path, "/ujian-penerimaan-pengguna")
 
       if connected?(socket) do
-        ujian = get_ujian_by_id(ujian_id)
+        ujian = UjianPenerimaanPengguna.get_ujian(ujian_id)
 
         if ujian do
           activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
@@ -141,205 +142,6 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
     end
   end
 
-  # Get ujian by id
-  defp get_ujian_by_id(ujian_id) do
-    get_ujian()
-    |> Enum.find(fn u -> u.id == ujian_id end)
-  end
-
-  # Get user acceptance tests (ujian penerimaan pengguna)
-  # TODO: In the future, this should be retrieved from a database or context module
-  defp get_ujian do
-    [
-      %{
-        id: "ujian_1",
-        number: 1,
-        tajuk: "Ujian Modul Pendaftaran",
-        modul: "Modul Pendaftaran",
-        tarikh_ujian: ~D[2024-12-01],
-        tarikh_dijangka_siap: ~D[2024-12-15],
-        status: "Dalam Proses",
-        penguji: "Ahmad bin Abdullah",
-        hasil: "Belum Selesai",
-        catatan: "Ujian pendaftaran pengguna",
-        senarai_kes_ujian: [
-          %{
-            id: "REG-001",
-            senario: "Semak paparan halaman pendaftaran",
-            langkah: "1. Layari laman utama Sistem\n2. Klik butang 'Daftar'",
-            keputusan_dijangka: "Halaman pendaftaran dipaparkan dengan betul",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-002",
-            senario: "Pendaftaran berjaya dengan data yang sah",
-            langkah: "Isikan semua maklumat dengan betul",
-            keputusan_dijangka:
-              "Akaun berjaya dicipta dan mesej 'Pendaftaran Pengguna berjaya didaftarkan' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-003",
-            senario: "Pendaftaran gagal - kata laluan tidak sepadan",
-            langkah: "Isikan kata laluan dan pengesahan kata laluan yang berbeza",
-            keputusan_dijangka: "Mesej ralat 'Kata laluan tidak sepadan' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-004",
-            senario: "Pendaftaran gagal - emel telah digunakan",
-            langkah: "Isikan emel yang telah wujud dalam sistem",
-            keputusan_dijangka: "Mesej ralat 'Emel telah digunakan' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-005",
-            senario: "Pendaftaran gagal - medan wajib kosong",
-            langkah: "Biarkan medan wajib kosong dan cuba hantar borang",
-            keputusan_dijangka: "Mesej ralat 'Sila isi semua medan wajib' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-006",
-            senario: "Pendaftaran gagal - format emel tidak sah",
-            langkah: "Isikan format emel yang tidak sah (cth: emel@)",
-            keputusan_dijangka: "Mesej ralat 'Format emel tidak sah' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-007",
-            senario: "Pendaftaran gagal - kata laluan terlalu pendek",
-            langkah: "Isikan kata laluan yang kurang daripada 8 aksara",
-            keputusan_dijangka:
-              "Mesej ralat 'Kata laluan mesti sekurang-kurangnya 8 aksara' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-008",
-            senario: "Pendaftaran gagal - kata laluan tidak mengandungi nombor",
-            langkah: "Isikan kata laluan tanpa nombor",
-            keputusan_dijangka:
-              "Mesej ralat 'Kata laluan mesti mengandungi sekurang-kurangnya satu nombor' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          }
-        ]
-      },
-      %{
-        id: "ujian_2",
-        number: 2,
-        tajuk: "Ujian Modul Pengurusan Pengguna",
-        modul: "Modul Pengurusan Pengguna",
-        tarikh_ujian: ~D[2024-12-01],
-        tarikh_dijangka_siap: ~D[2024-12-15],
-        status: "Dalam Proses",
-        penguji: "Ahmad bin Abdullah",
-        hasil: "Lulus",
-        catatan: "Semua fungsi asas berfungsi dengan baik",
-        senarai_ujian: [
-          %{
-            id: "test_1_1",
-            nama: "Ujian Pendaftaran Pengguna",
-            status: "Lulus",
-            catatan: "Berfungsi dengan baik"
-          },
-          %{id: "test_1_2", nama: "Ujian Log Masuk", status: "Lulus", catatan: "Tiada masalah"},
-          %{
-            id: "test_1_3",
-            nama: "Ujian Kemaskini Profil",
-            status: "Gagal",
-            catatan: "Perlu pembaikan pada validasi"
-          }
-        ]
-      },
-      %{
-        id: "ujian_2",
-        number: 2,
-        tajuk: "Ujian Modul Permohonan",
-        modul: "Modul Permohonan",
-        tarikh_ujian: ~D[2024-12-05],
-        tarikh_dijangka_siap: ~D[2024-12-20],
-        status: "Selesai",
-        penguji: "Siti binti Hassan",
-        hasil: "Lulus",
-        catatan: "Semua ujian berjaya diluluskan",
-        senarai_ujian: [
-          %{
-            id: "test_2_1",
-            nama: "Ujian Pendaftaran Permohonan",
-            status: "Lulus",
-            catatan: "Berfungsi dengan baik"
-          },
-          %{
-            id: "test_2_2",
-            nama: "Ujian Kemaskini Permohonan",
-            status: "Lulus",
-            catatan: "Tiada masalah"
-          },
-          %{
-            id: "test_2_3",
-            nama: "Ujian Semakan Status",
-            status: "Lulus",
-            catatan: "Berfungsi dengan baik"
-          }
-        ],
-        senarai_kes_ujian: []
-      },
-      %{
-        id: "ujian_3",
-        number: 3,
-        tajuk: "Ujian Modul Pengurusan Permohonan",
-        modul: "Modul Pengurusan Permohonan",
-        tarikh_ujian: ~D[2024-12-10],
-        tarikh_dijangka_siap: ~D[2024-12-25],
-        status: "Menunggu",
-        penguji: "Mohd bin Ismail",
-        hasil: "Belum Selesai",
-        catatan: "Menunggu untuk memulakan ujian",
-        senarai_ujian: [],
-        senarai_kes_ujian: []
-      }
-    ]
-  end
 
   @impl true
   def handle_event("toggle_sidebar", _params, socket) do
@@ -405,7 +207,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
         if socket.assigns[:selected_ujian] && socket.assigns.selected_ujian.id == ujian_id do
           socket.assigns.selected_ujian
         else
-          get_ujian_by_id(ujian_id)
+          UjianPenerimaanPengguna.get_ujian(ujian_id)
         end
       end
 

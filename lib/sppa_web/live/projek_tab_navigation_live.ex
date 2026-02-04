@@ -4,6 +4,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   alias Sppa.AnalisisDanRekabentuk
   alias Sppa.Projects
   alias Sppa.SoalSelidiks
+  alias Sppa.UjianPenerimaanPengguna
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
@@ -110,6 +111,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           AnalisisDanRekabentuk.list_modules_for_project(project_id, socket.assigns.current_scope)
 
         perubahan = get_perubahan()
+        ujian = UjianPenerimaanPengguna.list_ujian()
 
         {:ok,
          socket
@@ -123,6 +125,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:analisis_pdf_data, analisis_pdf_data)
          |> assign(:modules, modules)
          |> assign(:perubahan, perubahan)
+         |> assign(:ujian, ujian)
          |> assign(:show_view_modal, false)
          |> assign(:show_edit_modal, false)
          |> assign(:show_create_modal, false)
