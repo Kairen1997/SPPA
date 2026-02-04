@@ -1,4 +1,4 @@
-﻿defmodule SppaWeb.PengurusProjekLive do
+defmodule SppaWeb.PengurusProjekLive do
   use SppaWeb, :live_view
 
   import Ecto.Query

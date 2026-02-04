@@ -1046,6 +1046,44 @@ const PrintGanttChart = {
   }
 }
 
+// Prevent double-clicking buttons (e.g. \"Tambah Modul\") by temporarily disabling them.
+// Usage: add phx-hook=\"SingleClick\" and optional data-single-click-ms=\"700\".
+const SingleClick = {
+  mounted() {
+    const defaultDelay = 700
+    const attrValue = this.el.getAttribute("data-single-click-ms")
+    const delay = attrValue ? parseInt(attrValue, 10) || defaultDelay : defaultDelay
+
+    this.handleClick = event => {
+      // If already disabled via our flag, block the click completely
+      if (this.el.dataset.singleClickDisabled === "true") {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+        return
+      }
+
+      // Mark as disabled and let this click through, but block subsequent clicks
+      this.el.dataset.singleClickDisabled = "true"
+
+      // Also disable the native button state for visual feedback
+      this.el.disabled = true
+
+      setTimeout(() => {
+        this.el.dataset.singleClickDisabled = "false"
+        this.el.disabled = false
+      }, delay)
+    }
+
+    this.el.addEventListener("click", this.handleClick, true)
+  },
+
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick, true)
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,

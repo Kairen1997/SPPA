@@ -66,6 +66,7 @@ defmodule SppaWeb.Router do
       live "/soal-selidik", SoalSelidikLive, :index
       live "/senarai-projek-diluluskan", ProjectListLive, :index
       live "/senarai-projek-diluluskan/:id", ApprovedProjectLive, :show
+      get "/senarai-projek-diluluskan/pdf", ProjectListPdfController, :index
       live "/projek/:project_id/modul", ModulProjekLive, :index
       get "/projek/:project_id/modul/pdf", ModulProjekPdfController, :show
       live "/projek/:project_id/pelan-modul", PelanModulLive, :index

@@ -14,8 +14,8 @@ config :sppa, Sppa.Repo,
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
-#config :sppa, :system_a,
-config :sppa, :system_permohonan_aplikasi, base_url: "http://10.71.67.159:4000/api/requests?status=Diluluskan"
+config :sppa, :system_permohonan_aplikasi,
+  base_url: "http://10.71.68.215:4000/api/requests?status=Diluluskan"
 
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
