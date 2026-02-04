@@ -9,17 +9,17 @@ defmodule Sppa.Repo.Migrations.CreateAnalisisDanRekabentuk do
       add :versi, :string
       add :tarikh_semakan, :date
       add :rujukan_perubahan, :string
-      
+
       # Prepared by section
       add :prepared_by_name, :string
       add :prepared_by_position, :string
       add :prepared_by_date, :date
-      
+
       # Approved by section
       add :approved_by_name, :string
       add :approved_by_position, :string
       add :approved_by_date, :date
-      
+
       add :project_id, references(:projects, on_delete: :nilify_all)
       add :user_id, references(:users, type: :id, on_delete: :delete_all), null: false
 

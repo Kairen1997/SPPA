@@ -71,7 +71,9 @@ defmodule Sppa.SoalSelidiks do
     require Logger
     project_id = project.id
 
-    Logger.info("get_soal_selidik_for_project_or_by_name: Looking for project_id=#{project_id}, nama=#{project.nama}")
+    Logger.info(
+      "get_soal_selidik_for_project_or_by_name: Looking for project_id=#{project_id}, nama=#{project.nama}"
+    )
 
     result =
       case get_soal_selidik_by_project_for_display(project_id, current_scope) do
@@ -80,7 +82,10 @@ defmodule Sppa.SoalSelidiks do
           soal_selidik
 
         nil ->
-          Logger.info("No soal_selidik found by project_id, trying by nama_sistem=#{project.nama}")
+          Logger.info(
+            "No soal_selidik found by project_id, trying by nama_sistem=#{project.nama}"
+          )
+
           result_by_name =
             SoalSelidik
             |> where([s], s.nama_sistem == ^project.nama)
@@ -138,15 +143,18 @@ defmodule Sppa.SoalSelidiks do
   def to_liveview_format(%SoalSelidik{} = soal_selidik) do
     fr_data_normalized = normalize_data(soal_selidik.fr_data || %{})
     nfr_data_normalized = normalize_data(soal_selidik.nfr_data || %{})
-    
+
     fr_categories_normalized = normalize_categories(soal_selidik.fr_categories || [], :fr)
     nfr_categories_normalized = normalize_categories(soal_selidik.nfr_categories || [], :nfr)
-    
+
     # Merge questions from fr_data/nfr_data with questions from categories
     # This ensures all questions (including user-added ones) are displayed
-    fr_categories_with_data = merge_questions_from_data(fr_categories_normalized, fr_data_normalized)
-    nfr_categories_with_data = merge_questions_from_data(nfr_categories_normalized, nfr_data_normalized)
-    
+    fr_categories_with_data =
+      merge_questions_from_data(fr_categories_normalized, fr_data_normalized)
+
+    nfr_categories_with_data =
+      merge_questions_from_data(nfr_categories_normalized, nfr_data_normalized)
+
     %{
       id: soal_selidik.id,
       nama_sistem: soal_selidik.nama_sistem || "",
@@ -375,24 +383,24 @@ defmodule Sppa.SoalSelidiks do
     Enum.map(categories, fn category ->
       category_key = category.key
       category_key_str = to_string(category_key)
-      
+
       # Try both atom and string keys
-      category_data = 
-        Map.get(data, category_key, %{}) || 
-        Map.get(data, category_key_str, %{}) || 
-        %{}
-      
+      category_data =
+        Map.get(data, category_key, %{}) ||
+          Map.get(data, category_key_str, %{}) ||
+          %{}
+
       # Only process if category_data is a map
       if is_map(category_data) do
         # Get existing questions from category
         existing_questions = category.questions || []
-        
+
         # Get question numbers that exist in category.questions
-        existing_question_nos = 
+        existing_question_nos =
           existing_questions
           |> Enum.map(& &1.no)
           |> MapSet.new()
-        
+
         # Find questions in data that are not in category.questions
         additional_questions =
           category_data
@@ -406,14 +414,14 @@ defmodule Sppa.SoalSelidiks do
           end)
           |> Enum.map(fn {qno_str, qdata} ->
             # Extract soalan from data if available
-            soalan = 
-              Map.get(qdata, "soalan") || 
-              Map.get(qdata, :soalan) || 
-              ""
-            
+            soalan =
+              Map.get(qdata, "soalan") ||
+                Map.get(qdata, :soalan) ||
+                ""
+
             # Parse question number (we know it's valid from filter above)
             {qno, _} = Integer.parse(to_string(qno_str))
-            
+
             %{
               no: qno,
               soalan: soalan,
@@ -422,10 +430,10 @@ defmodule Sppa.SoalSelidiks do
             }
           end)
           |> Enum.sort_by(& &1.no)
-        
+
         # Combine existing and additional questions, sorted by question number
         all_questions = (existing_questions ++ additional_questions) |> Enum.sort_by(& &1.no)
-        
+
         Map.put(category, :questions, all_questions)
       else
         # If category_data is not a map, return category as-is

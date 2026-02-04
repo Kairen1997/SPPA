@@ -9,12 +9,12 @@ defmodule Sppa.AnalisisDanRekabentuk.AnalisisDanRekabentuk do
     field :versi, :string
     field :tarikh_semakan, :date
     field :rujukan_perubahan, :string
-    
+
     # Prepared by section
     field :prepared_by_name, :string
     field :prepared_by_position, :string
     field :prepared_by_date, :date
-    
+
     # Approved by section
     field :approved_by_name, :string
     field :approved_by_position, :string

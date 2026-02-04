@@ -92,6 +92,10 @@
                 <table class="w-full text-sm">
                   <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
+                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-14">
+                        Bil
+                      </th>
+                      
                       <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Tajuk Perubahan
                       </th>
@@ -132,15 +136,13 @@
                   
                   <tbody class="bg-white divide-y divide-gray-200">
                     <tr
-                      :for={perubahan <- @perubahan}
+                      :for={{perubahan, bil} <- Enum.with_index(@perubahan, 1)}
                       class="hover:bg-gray-50 transition-colors duration-150"
                     >
+                      <td class="px-3 py-2 text-center text-gray-600 font-medium">{bil}</td>
+                      
                       <td class="px-3 py-2">
-                        <div>
-                          <div class="text-xs font-semibold text-gray-900">{perubahan.tajuk}</div>
-                          
-                          <div class="text-xs text-gray-500">{perubahan.id}</div>
-                        </div>
+                        <div class="text-xs font-semibold text-gray-900">{perubahan.tajuk}</div>
                       </td>
                       
                       <td class="px-3 py-2 whitespace-nowrap">

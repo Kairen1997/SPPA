@@ -2,6 +2,7 @@ defmodule SppaWeb.PembangunanLive do
   use SppaWeb, :live_view
 
   alias Sppa.Projects
+  alias Sppa.AnalisisDanRekabentuk
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
@@ -13,8 +14,8 @@ defmodule SppaWeb.PembangunanLive do
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      # Get modules from Analisis dan Rekabentuk
-      modules = get_modules_from_analisis_dan_rekabentuk()
+      # Get modules (nama modul, versi, fungsi modul) from Analisis dan Rekabentuk database
+      modules = AnalisisDanRekabentuk.list_modules_for_pembangunan(socket.assigns.current_scope)
 
       socket =
         socket
@@ -23,7 +24,7 @@ defmodule SppaWeb.PembangunanLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
-        |> assign(:current_path, "/pembangunan")
+        |> assign(:current_path, "/pengaturcaraan")
         |> assign(:modules, modules)
         |> assign(:view_mode, "table")
         |> assign(:show_view_modal, false)
@@ -55,108 +56,6 @@ defmodule SppaWeb.PembangunanLive do
 
       {:ok, socket}
     end
-  end
-
-  # Get modules that were registered in Analisis dan Rekabentuk page
-  # This uses the same initial modules structure as AnalisisDanRekabentukLive
-  # TODO: In the future, this should be retrieved from a database or context module
-  defp get_modules_from_analisis_dan_rekabentuk do
-    [
-      %{
-        id: "module_1",
-        number: 1,
-        name: "Modul Pengurusan Pengguna",
-        priority: "Tinggi",
-        version: "1.0.0",
-        status: "Sedang Dibangunkan",
-        tarikh_mula: ~D[2024-10-01],
-        tarikh_jangka_siap: ~D[2024-12-31],
-        catatan: "Pembangunan sedang dijalankan mengikut jadual",
-        functions: [
-          %{
-            id: "func_1_1",
-            name: "Pendaftaran Pengguna",
-            sub_functions: [%{id: "sub_1_1_1", name: "Pengesahan Pendaftaran"}]
-          },
-          %{id: "func_1_2", name: "Laman Log Masuk", sub_functions: []},
-          %{
-            id: "func_1_3",
-            name: "Penyelenggaraan Profail",
-            sub_functions: [%{id: "sub_1_3_1", name: "Pengemaskinian Profil"}]
-          }
-        ]
-      },
-      %{
-        id: "module_2",
-        number: 2,
-        name: "Penyelenggaraan Kata Laluan",
-        priority: "Tinggi",
-        version: "1.0.0",
-        status: "Belum Mula",
-        tarikh_mula: nil,
-        tarikh_jangka_siap: ~D[2025-01-15],
-        catatan: nil,
-        functions: []
-      },
-      %{
-        id: "module_3",
-        number: 3,
-        name: "Modul Permohonan",
-        priority: "Sangat Tinggi",
-        version: "2.1.0",
-        status: "Dalam Ujian",
-        tarikh_mula: ~D[2024-09-15],
-        tarikh_jangka_siap: ~D[2024-12-20],
-        catatan: "Sedang menjalani ujian QA, menunggu maklumbalas",
-        functions: [
-          %{id: "func_3_1", name: "Pendaftaran Permohonan", sub_functions: []},
-          %{id: "func_3_2", name: "Kemaskini Permohonan", sub_functions: []},
-          %{id: "func_3_3", name: "Semakan Status Permohonan", sub_functions: []}
-        ]
-      },
-      %{
-        id: "module_4",
-        number: 4,
-        name: "Modul Pengurusan Permohonan",
-        priority: "Sangat Tinggi",
-        version: "2.0.0",
-        status: "Selesai",
-        tarikh_mula: ~D[2024-08-01],
-        tarikh_jangka_siap: ~D[2024-11-30],
-        catatan: "Modul telah selesai dan diserahkan untuk deployment",
-        functions: [
-          %{id: "func_4_1", name: "Verifikasi Permohonan", sub_functions: []},
-          %{id: "func_4_2", name: "Kelulusan Permohonan", sub_functions: []}
-        ]
-      },
-      %{
-        id: "module_5",
-        number: 5,
-        name: "Modul Laporan",
-        priority: "Sederhana",
-        version: "1.5.0",
-        status: "Sedang Dibangunkan",
-        tarikh_mula: ~D[2024-12-01],
-        tarikh_jangka_siap: ~D[2025-02-28],
-        catatan: "Perlu integrasi dengan sistem sedia ada",
-        functions: [
-          %{id: "func_5_1", name: "Laporan mengikut tahun", sub_functions: []},
-          %{id: "func_5_2", name: "Laporan mengikut lokasi/daerah", sub_functions: []}
-        ]
-      },
-      %{
-        id: "module_6",
-        number: 6,
-        name: "Modul Dashboard",
-        priority: "Rendah",
-        version: "1.0.0",
-        status: "Belum Mula",
-        tarikh_mula: nil,
-        tarikh_jangka_siap: ~D[2025-03-15],
-        catatan: nil,
-        functions: []
-      }
-    ]
   end
 
   @impl true
@@ -228,13 +127,15 @@ defmodule SppaWeb.PembangunanLive do
 
     if module do
       form_data = %{
-        "name" => module.name,
-        "version" => module.version,
-        "priority" => module.priority,
-        "status" => module.status,
+        "priority" => module.priority || "",
+        "status" => module.status || "Belum Mula",
         "tarikh_mula" =>
           if(module.tarikh_mula, do: Calendar.strftime(module.tarikh_mula, "%Y-%m-%d"), else: ""),
-        "tarikh_jangka_siap" => Calendar.strftime(module.tarikh_jangka_siap, "%Y-%m-%d"),
+        "tarikh_jangka_siap" =>
+          if(module.tarikh_jangka_siap,
+            do: Calendar.strftime(module.tarikh_jangka_siap, "%Y-%m-%d"),
+            else: ""
+          ),
         "catatan" => module.catatan || ""
       }
 
@@ -286,17 +187,19 @@ defmodule SppaWeb.PembangunanLive do
             end
 
           tarikh_jangka_siap =
-            case Date.from_iso8601(module_params["tarikh_jangka_siap"]) do
-              {:ok, date} -> date
-              _ -> module.tarikh_jangka_siap
+            if module_params["tarikh_jangka_siap"] && module_params["tarikh_jangka_siap"] != "" do
+              case Date.from_iso8601(module_params["tarikh_jangka_siap"]) do
+                {:ok, date} -> date
+                _ -> module.tarikh_jangka_siap
+              end
+            else
+              nil
             end
 
           %{
             module
-            | name: module_params["name"],
-              version: module_params["version"],
-              priority: module_params["priority"],
-              status: module_params["status"],
+            | priority: module_params["priority"],
+              status: module_params["status"] || "Belum Mula",
               tarikh_mula: tarikh_mula,
               tarikh_jangka_siap: tarikh_jangka_siap,
               catatan: if(module_params["catatan"] == "", do: nil, else: module_params["catatan"])

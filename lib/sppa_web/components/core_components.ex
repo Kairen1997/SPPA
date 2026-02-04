@@ -632,120 +632,6 @@ defmodule SppaWeb.CoreComponents do
             >
               <.icon name="hero-folder" class="w-5 h-5" /> <span>Senarai Projek</span>
             </.link>
-            <.link
-              navigate={~p"/soal-selidik"}
-              phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-            >
-              <.icon name="hero-clipboard-document-list" class="w-5 h-5" /> <span>Soal Selidik</span>
-            </.link>
-            <.link
-              navigate={~p"/analisis-dan-rekabentuk"}
-              phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-            >
-              <.icon name="hero-document-magnifying-glass" class="w-5 h-5" />
-              <span>Analisis dan Rekabentuk</span>
-            </.link>
-            <.link
-              navigate={~p"/jadual-projek"}
-              phx-click="close_sidebar"
-              class={[
-                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-                if(@current_path == "/jadual-projek",
-                  do: "bg-gray-700 text-white",
-                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
-                )
-              ]}
-            >
-              <.icon name="hero-calendar-days" class="w-5 h-5" /> <span>Jadual Projek</span>
-            </.link>
-            <.link
-              navigate={~p"/pembangunan"}
-              phx-click="close_sidebar"
-              class={[
-                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-                if(@current_path == "/pembangunan",
-                  do: "bg-gray-700 text-white",
-                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
-                )
-              ]}
-            >
-              <.icon name="hero-code-bracket" class="w-5 h-5" /> <span>Pengaturcaraan</span>
-            </.link>
-            <.link
-              navigate={~p"/pengurusan-perubahan"}
-              phx-click="close_sidebar"
-              class={[
-                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-                if(@current_path == "/pengurusan-perubahan",
-                  do: "bg-gray-700 text-white",
-                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
-                )
-              ]}
-            >
-              <.icon name="hero-arrow-path" class="w-5 h-5" /> <span>Pengurusan Perubahan</span>
-            </.link>
-            <.link
-              navigate={~p"/ujian-penerimaan-pengguna"}
-              phx-click="close_sidebar"
-              class={[
-                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-                if(@current_path == "/ujian-penerimaan-pengguna",
-                  do: "bg-gray-700 text-white",
-                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
-                )
-              ]}
-            >
-              <.icon name="hero-check-circle" class="w-5 h-5" />
-              <span>Ujian Penerimaan Pengguna</span>
-            </.link>
-            <.link
-              navigate={~p"/ujian-keselamatan"}
-              phx-click="close_sidebar"
-              class={[
-                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-                if(@current_path == "/ujian-keselamatan",
-                  do: "bg-gray-700 text-white",
-                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
-                )
-              ]}
-            >
-              <.icon name="hero-shield-check" class="w-5 h-5" /> <span>Ujian Keselamatan</span>
-            </.link>
-            <.link
-              navigate={~p"/penempatan"}
-              phx-click="close_sidebar"
-              class={[
-                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-                if(@current_path == "/penempatan",
-                  do: "bg-gray-700 text-white",
-                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
-                )
-              ]}
-            >
-              <.icon name="hero-server" class="w-5 h-5" /> <span>Penempatan</span>
-            </.link>
-            <.link
-              navigate={~p"/penyerahan"}
-              phx-click="close_sidebar"
-              class={[
-                "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-                if(@current_path == "/penyerahan",
-                  do: "bg-gray-700 text-white",
-                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
-                )
-              ]}
-            >
-              <.icon name="hero-paper-airplane" class="w-5 h-5" /> <span>Penyerahan</span>
-            </.link>
-            <a
-              href="#"
-              phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-            >
-              <.icon name="hero-chat-bubble-left-right" class="w-5 h-5" /> <span>Maklumbalas</span>
-            </a>
           <% end %>
         </nav>
       </div>
@@ -774,6 +660,7 @@ defmodule SppaWeb.CoreComponents do
   defp requirement_form_value(form, tab_type, category_key, question_no, field, default) do
     params = requirement_form_params(form)
     path = [tab_type, category_key, to_string(question_no), field]
+
     case get_in(params, path) do
       nil -> default
       val -> val
@@ -788,12 +675,20 @@ defmodule SppaWeb.CoreComponents do
   defp requirement_has_data?(form, tab_type, category_key, question) do
     # Check soalan from form or question.soalan
     soalan =
-      requirement_form_value(form, tab_type, category_key, question.no, "soalan", question.soalan || "")
+      requirement_form_value(
+        form,
+        tab_type,
+        category_key,
+        question.no,
+        "soalan",
+        question.soalan || ""
+      )
       |> String.trim()
 
     # Check maklumbalas from form
-    maklumbalas_raw = requirement_form_value_raw(form, tab_type, category_key, question.no, "maklumbalas")
-    
+    maklumbalas_raw =
+      requirement_form_value_raw(form, tab_type, category_key, question.no, "maklumbalas")
+
     maklumbalas =
       cond do
         is_list(maklumbalas_raw) -> length(maklumbalas_raw) > 0
@@ -950,7 +845,16 @@ defmodule SppaWeb.CoreComponents do
                     <option
                       :for={option <- question.options || []}
                       value={option}
-                      selected={requirement_form_value(@form, @tab_type, @category_key, question.no, "maklumbalas", "") == option}
+                      selected={
+                        requirement_form_value(
+                          @form,
+                          @tab_type,
+                          @category_key,
+                          question.no,
+                          "maklumbalas",
+                          ""
+                        ) == option
+                      }
                     >
                       {option}
                     </option>
@@ -965,7 +869,13 @@ defmodule SppaWeb.CoreComponents do
                           name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas][]"}
                           value={option}
                           checked={
-                            case requirement_form_value_raw(@form, @tab_type, @category_key, question.no, "maklumbalas") do
+                            case requirement_form_value_raw(
+                                   @form,
+                                   @tab_type,
+                                   @category_key,
+                                   question.no,
+                                   "maklumbalas"
+                                 ) do
                               values when is_list(values) -> option in values
                               value when is_binary(value) -> value == option
                               _ -> false
@@ -1032,6 +942,7 @@ defmodule SppaWeb.CoreComponents do
                     <.icon name="hero-pencil" class="w-4 h-4" />
                   </button>
                 <% end %>
+                
                 <button
                   type="button"
                   phx-click="delete_question"

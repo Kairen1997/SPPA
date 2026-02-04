@@ -181,6 +181,19 @@
                 >
                   Penyerahan
                 </.link>
+                <.link
+                  patch={~p"/projek/#{@project.id}?tab=maklumbalas-pelanggan"}
+                  class={[
+                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    if(@current_tab == "Maklumbalas Pelanggan",
+                      do: "border-green-500 text-green-600",
+                      else:
+                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    )
+                  ]}
+                >
+                  Maklumbalas Pelanggan
+                </.link>
               </nav>
             </div>
           </div>
@@ -206,359 +219,397 @@
                     <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
                   </button>
                 </div>
+                
                 <div
                   id="soal-selidik-document"
                   class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 print:shadow-none print:border-0"
                 >
-              <%= if @soal_selidik_pdf_data do %>
-                <%!-- Document Header --%>
-                <div class="mb-6 text-center">
-                  <div class="flex justify-end mb-3">
-                    <span class="text-xs text-gray-600 font-bold">
-                      {@soal_selidik_pdf_data.document_id}
-                    </span>
-                  </div>
-                  
-                  <div class="flex justify-center mb-4">
-                    <img
-                      src={~p"/images/logojpkn.png"}
-                      alt="Logo JPKN"
-                      class="h-16 w-auto object-contain"
-                    />
-                  </div>
-                  
-                  <h2 class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight">
-                    Soal Selidik Kajian Keperluan Pembangunan Aplikasi
-                  </h2>
-                  
-                  <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
-                    <span>Nama Sistem :</span>
-                    <span class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded bg-gray-50">
-                      {@soal_selidik_pdf_data.nama_sistem}
-                    </span>
-                  </div>
-                </div>
-                 <%!-- Functional Requirements Section --%>
-                <div class="mb-6">
-                  <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
-                    FUNCTIONAL REQUIREMENT
-                  </h3>
-                  
-                  <div class="space-y-4">
-                    <%= for category <- @soal_selidik_pdf_data.fr_categories do %>
-                      <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-                        <div class="bg-blue-100 px-4 py-2 border-b border-gray-400">
-                          <h4 class="font-semibold text-gray-900 uppercase tracking-wide text-sm">
-                            {category.title}
-                          </h4>
-                        </div>
-                        
-                        <div class="p-2 overflow-x-auto">
-                          <table class="w-full border-collapse text-xs">
-                            <thead>
-                              <tr class="bg-gray-100 border border-gray-400">
-                                <th
-                                  class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
-                                  style="width: 6%;"
-                                >
-                                  No
-                                </th>
-                                
-                                <th
-                                  class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
-                                  style="width: 40%;"
-                                >
-                                  Soalan
-                                </th>
-                                
-                                <th
-                                  class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
-                                  style="width: 27%;"
-                                >
-                                  Maklumbalas
-                                </th>
-                                
-                                <th
-                                  class="px-3 py-2 text-left font-semibold text-gray-700"
-                                  style="width: 27%;"
-                                >
-                                  Catatan
-                                </th>
-                              </tr>
-                            </thead>
-                            
-                            <tbody class="divide-y divide-gray-300">
-                              <%= for question <- category.questions do %>
-                                <tr>
-                                  <td class="px-3 py-2 border-r border-gray-400 align-top">
-                                    <div class="px-2 py-1 text-sm font-medium text-gray-900">
-                                      {question.no}
-                                    </div>
-                                  </td>
-                                  
-                                  <td class="px-3 py-2 border-r border-gray-400 align-top">
-                                    <div class="px-2 py-1 text-sm text-gray-800">
-                                      {question_data = Map.get(@soal_selidik_pdf_data.fr_data, category.key, %{})
-                                      |> Map.get("#{question.no}", %{})
-                                      
-                                      soalan =
-                                        if is_map(question_data) do
-                                          Map.get(question_data, "soalan") ||
-                                            Map.get(question_data, :soalan) ||
-                                            ""
-                                        else
-                                          ""
-                                        end
-                                      
-                                      if soalan != "" do
-                                        soalan
-                                      else
-                                        question.soalan || ""
-                                      end}
-                                    </div>
-                                  </td>
-                                  
-                              <td class="px-3 py-2 border-r border-gray-400 align-top">
-                                <div class="px-2 py-1 text-sm text-gray-700">
-                                  {question_data = Map.get(@soal_selidik_pdf_data.fr_data, category.key, %{})
-                                  |> Map.get("#{question.no}", %{})
-                                  
-                                  cond do
-                                    is_map(question_data) ->
-                                      maklumbalas =
-                                        Map.get(question_data, "maklumbalas") ||
-                                          Map.get(question_data, :maklumbalas) ||
-                                          Map.get(question_data, "_unused_maklumbalas") ||
-                                          Map.get(question_data, :_unused_maklumbalas)
-                                      
-                                      cond do
-                                        is_list(maklumbalas) ->
-                                          Enum.join(maklumbalas, ", ")
-                                        
-                                        is_binary(maklumbalas) and maklumbalas != "" ->
-                                          maklumbalas
-                                        
-                                        true ->
-                                          ""
-                                      end
-                                    
-                                    true ->
-                                      ""
-                                  end}
-                                </div>
-                              </td>
-                              
-                              <td class="px-3 py-2 align-top">
-                                <div class="px-2 py-1 text-sm text-gray-700">
-                                  {question_data = Map.get(@soal_selidik_pdf_data.fr_data, category.key, %{})
-                                  |> Map.get("#{question.no}", %{})
-                                  
-                                  if is_map(question_data) do
-                                    catatan =
-                                      Map.get(question_data, "catatan") ||
-                                        Map.get(question_data, :catatan) ||
-                                        Map.get(question_data, "_unused_catatan") ||
-                                        Map.get(question_data, :_unused_catatan)
-
-                                    catatan || ""
-                                  else
-                                    ""
-                                  end}
-                                </div>
-                              </td>
-                                </tr>
-                              <% end %>
-                            </tbody>
-                          </table>
-                        </div>
+                  <%= if @soal_selidik_pdf_data do %>
+                    <%!-- Document Header --%>
+                    <div class="mb-6 text-center">
+                      <div class="flex justify-end mb-3">
+                        <span class="text-xs text-gray-600 font-bold">
+                          {@soal_selidik_pdf_data.document_id}
+                        </span>
                       </div>
-                    <% end %>
-                  </div>
-                </div>
-                 <%!-- Non-Functional Requirements Section --%>
-                <div class="mb-6">
-                  <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
-                    NON-FUNCTIONAL REQUIREMENT
-                  </h3>
-                  
-                  <div class="space-y-4">
-                    <%= for category <- @soal_selidik_pdf_data.nfr_categories do %>
-                      <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-                        <div class="bg-blue-100 px-4 py-2 border-b border-gray-400">
-                          <h4 class="font-semibold text-gray-900 uppercase tracking-wide text-sm">
-                            {category.title}
-                          </h4>
-                        </div>
-                        
-                        <div class="p-2 overflow-x-auto">
-                          <table class="w-full border-collapse text-xs">
-                            <thead>
-                              <tr class="bg-gray-100 border border-gray-400">
-                                <th
-                                  class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
-                                  style="width: 6%;"
-                                >
-                                  No
-                                </th>
-                                
-                                <th
-                                  class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
-                                  style="width: 40%;"
-                                >
-                                  Soalan
-                                </th>
-                                
-                                <th
-                                  class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
-                                  style="width: 27%;"
-                                >
-                                  Maklumbalas
-                                </th>
-                                
-                                <th
-                                  class="px-3 py-2 text-left font-semibold text-gray-700"
-                                  style="width: 27%;"
-                                >
-                                  Catatan
-                                </th>
-                              </tr>
-                            </thead>
+                      
+                      <div class="flex justify-center mb-4">
+                        <img
+                          src={~p"/images/logojpkn.png"}
+                          alt="Logo JPKN"
+                          class="h-16 w-auto object-contain"
+                        />
+                      </div>
+                      
+                      <h2 class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight">
+                        Soal Selidik Kajian Keperluan Pembangunan Aplikasi
+                      </h2>
+                      
+                      <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
+                        <span>Nama Sistem :</span>
+                        <span class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded bg-gray-50">
+                          {@soal_selidik_pdf_data.nama_sistem}
+                        </span>
+                      </div>
+                    </div>
+                     <%!-- Functional Requirements Section --%>
+                    <div class="mb-6">
+                      <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
+                        FUNCTIONAL REQUIREMENT
+                      </h3>
+                      
+                      <div class="space-y-4">
+                        <%= for category <- @soal_selidik_pdf_data.fr_categories do %>
+                          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+                            <div class="bg-blue-100 px-4 py-2 border-b border-gray-400">
+                              <h4 class="font-semibold text-gray-900 uppercase tracking-wide text-sm">
+                                {category.title}
+                              </h4>
+                            </div>
                             
-                            <tbody class="divide-y divide-gray-300">
-                              <%= for question <- category.questions do %>
-                                <tr>
-                                  <td class="px-3 py-2 border-r border-gray-400 align-top">
-                                    <div class="px-2 py-1 text-sm font-medium text-gray-900">
-                                      {question.no}
-                                    </div>
-                                  </td>
-                                  
-                                  <td class="px-3 py-2 border-r border-gray-400 align-top">
-                                    <div class="px-2 py-1 text-sm text-gray-800">
-                                      {question_data = Map.get(@soal_selidik_pdf_data.nfr_data, category.key, %{})
-                                      |> Map.get("#{question.no}", %{})
+                            <div class="p-2 overflow-x-auto">
+                              <table class="w-full border-collapse text-xs">
+                                <thead>
+                                  <tr class="bg-gray-100 border border-gray-400">
+                                    <th
+                                      class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                                      style="width: 6%;"
+                                    >
+                                      No
+                                    </th>
+                                    
+                                    <th
+                                      class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                                      style="width: 40%;"
+                                    >
+                                      Soalan
+                                    </th>
+                                    
+                                    <th
+                                      class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                                      style="width: 27%;"
+                                    >
+                                      Maklumbalas
+                                    </th>
+                                    
+                                    <th
+                                      class="px-3 py-2 text-left font-semibold text-gray-700"
+                                      style="width: 27%;"
+                                    >
+                                      Catatan
+                                    </th>
+                                  </tr>
+                                </thead>
+                                
+                                <tbody class="divide-y divide-gray-300">
+                                  <%= for question <- category.questions do %>
+                                    <tr>
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm font-medium text-gray-900">
+                                          {question.no}
+                                        </div>
+                                      </td>
                                       
-                                      soalan =
-                                        if is_map(question_data) do
-                                          Map.get(question_data, "soalan") ||
-                                            Map.get(question_data, :soalan) ||
-                                            ""
-                                        else
-                                          ""
-                                        end
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-800">
+                                          {question_data =
+                                            Map.get(
+                                              @soal_selidik_pdf_data.fr_data,
+                                              category.key,
+                                              %{}
+                                            )
+                                            |> Map.get("#{question.no}", %{})
+
+                                          soalan =
+                                            if is_map(question_data) do
+                                              Map.get(question_data, "soalan") ||
+                                                Map.get(question_data, :soalan) ||
+                                                ""
+                                            else
+                                              ""
+                                            end
+
+                                          if soalan != "" do
+                                            soalan
+                                          else
+                                            question.soalan || ""
+                                          end}
+                                        </div>
+                                      </td>
                                       
-                                      if soalan != "" do
-                                        soalan
-                                      else
-                                        question.soalan || ""
-                                      end}
-                                    </div>
-                                  </td>
-                                  
-                                  <td class="px-3 py-2 border-r border-gray-400 align-top">
-                                    <div class="px-2 py-1 text-sm text-gray-700">
-                                      {question_data = Map.get(@soal_selidik_pdf_data.nfr_data, category.key, %{})
-                                      |> Map.get("#{question.no}", %{})
-                                      
-                                      cond do
-                                        is_map(question_data) ->
-                                          maklumbalas =
-                                            Map.get(question_data, "maklumbalas") ||
-                                              Map.get(question_data, :maklumbalas) ||
-                                              Map.get(question_data, "_unused_maklumbalas") ||
-                                              Map.get(question_data, :_unused_maklumbalas)
-                                          
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-700">
+                                          {question_data =
+                                            Map.get(
+                                              @soal_selidik_pdf_data.fr_data,
+                                              category.key,
+                                              %{}
+                                            )
+                                            |> Map.get("#{question.no}", %{})
+
                                           cond do
-                                            is_list(maklumbalas) ->
-                                              Enum.join(maklumbalas, ", ")
-                                            
-                                            is_binary(maklumbalas) and maklumbalas != "" ->
-                                              maklumbalas
-                                            
+                                            is_map(question_data) ->
+                                              maklumbalas =
+                                                Map.get(question_data, "maklumbalas") ||
+                                                  Map.get(question_data, :maklumbalas) ||
+                                                  Map.get(question_data, "_unused_maklumbalas") ||
+                                                  Map.get(question_data, :_unused_maklumbalas)
+
+                                              cond do
+                                                is_list(maklumbalas) ->
+                                                  Enum.join(maklumbalas, ", ")
+
+                                                is_binary(maklumbalas) and maklumbalas != "" ->
+                                                  maklumbalas
+
+                                                true ->
+                                                  ""
+                                              end
+
                                             true ->
                                               ""
-                                          end
-                                        
-                                        true ->
-                                          ""
-                                      end}
-                                    </div>
-                                  </td>
-                                  
-                                  <td class="px-3 py-2 align-top">
-                                    <div class="px-2 py-1 text-sm text-gray-700">
-                                      {question_data = Map.get(@soal_selidik_pdf_data.nfr_data, category.key, %{})
-                                      |> Map.get("#{question.no}", %{})
+                                          end}
+                                        </div>
+                                      </td>
                                       
-                                      if is_map(question_data) do
-                                        catatan =
-                                          Map.get(question_data, "catatan") ||
-                                            Map.get(question_data, :catatan) ||
-                                            Map.get(question_data, "_unused_catatan") ||
-                                            Map.get(question_data, :_unused_catatan)
+                                      <td class="px-3 py-2 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-700">
+                                          {question_data =
+                                            Map.get(
+                                              @soal_selidik_pdf_data.fr_data,
+                                              category.key,
+                                              %{}
+                                            )
+                                            |> Map.get("#{question.no}", %{})
 
-                                        catatan || ""
-                                      else
-                                        ""
-                                      end}
-                                    </div>
-                                  </td>
-                                </tr>
-                              <% end %>
-                            </tbody>
-                          </table>
+                                          if is_map(question_data) do
+                                            catatan =
+                                              Map.get(question_data, "catatan") ||
+                                                Map.get(question_data, :catatan) ||
+                                                Map.get(question_data, "_unused_catatan") ||
+                                                Map.get(question_data, :_unused_catatan)
+
+                                            catatan || ""
+                                          else
+                                            ""
+                                          end}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  <% end %>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                     <%!-- Non-Functional Requirements Section --%>
+                    <div class="mb-6">
+                      <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
+                        NON-FUNCTIONAL REQUIREMENT
+                      </h3>
+                      
+                      <div class="space-y-4">
+                        <%= for category <- @soal_selidik_pdf_data.nfr_categories do %>
+                          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+                            <div class="bg-blue-100 px-4 py-2 border-b border-gray-400">
+                              <h4 class="font-semibold text-gray-900 uppercase tracking-wide text-sm">
+                                {category.title}
+                              </h4>
+                            </div>
+                            
+                            <div class="p-2 overflow-x-auto">
+                              <table class="w-full border-collapse text-xs">
+                                <thead>
+                                  <tr class="bg-gray-100 border border-gray-400">
+                                    <th
+                                      class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                                      style="width: 6%;"
+                                    >
+                                      No
+                                    </th>
+                                    
+                                    <th
+                                      class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                                      style="width: 40%;"
+                                    >
+                                      Soalan
+                                    </th>
+                                    
+                                    <th
+                                      class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                                      style="width: 27%;"
+                                    >
+                                      Maklumbalas
+                                    </th>
+                                    
+                                    <th
+                                      class="px-3 py-2 text-left font-semibold text-gray-700"
+                                      style="width: 27%;"
+                                    >
+                                      Catatan
+                                    </th>
+                                  </tr>
+                                </thead>
+                                
+                                <tbody class="divide-y divide-gray-300">
+                                  <%= for question <- category.questions do %>
+                                    <tr>
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm font-medium text-gray-900">
+                                          {question.no}
+                                        </div>
+                                      </td>
+                                      
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-800">
+                                          {question_data =
+                                            Map.get(
+                                              @soal_selidik_pdf_data.nfr_data,
+                                              category.key,
+                                              %{}
+                                            )
+                                            |> Map.get("#{question.no}", %{})
+
+                                          soalan =
+                                            if is_map(question_data) do
+                                              Map.get(question_data, "soalan") ||
+                                                Map.get(question_data, :soalan) ||
+                                                ""
+                                            else
+                                              ""
+                                            end
+
+                                          if soalan != "" do
+                                            soalan
+                                          else
+                                            question.soalan || ""
+                                          end}
+                                        </div>
+                                      </td>
+                                      
+                                      <td class="px-3 py-2 border-r border-gray-400 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-700">
+                                          {question_data =
+                                            Map.get(
+                                              @soal_selidik_pdf_data.nfr_data,
+                                              category.key,
+                                              %{}
+                                            )
+                                            |> Map.get("#{question.no}", %{})
+
+                                          cond do
+                                            is_map(question_data) ->
+                                              maklumbalas =
+                                                Map.get(question_data, "maklumbalas") ||
+                                                  Map.get(question_data, :maklumbalas) ||
+                                                  Map.get(question_data, "_unused_maklumbalas") ||
+                                                  Map.get(question_data, :_unused_maklumbalas)
+
+                                              cond do
+                                                is_list(maklumbalas) ->
+                                                  Enum.join(maklumbalas, ", ")
+
+                                                is_binary(maklumbalas) and maklumbalas != "" ->
+                                                  maklumbalas
+
+                                                true ->
+                                                  ""
+                                              end
+
+                                            true ->
+                                              ""
+                                          end}
+                                        </div>
+                                      </td>
+                                      
+                                      <td class="px-3 py-2 align-top">
+                                        <div class="px-2 py-1 text-sm text-gray-700">
+                                          {question_data =
+                                            Map.get(
+                                              @soal_selidik_pdf_data.nfr_data,
+                                              category.key,
+                                              %{}
+                                            )
+                                            |> Map.get("#{question.no}", %{})
+
+                                          if is_map(question_data) do
+                                            catatan =
+                                              Map.get(question_data, "catatan") ||
+                                                Map.get(question_data, :catatan) ||
+                                                Map.get(question_data, "_unused_catatan") ||
+                                                Map.get(question_data, :_unused_catatan)
+
+                                            catatan || ""
+                                          else
+                                            ""
+                                          end}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  <% end %>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                     <%!-- Disediakan Oleh Section --%>
+                    <div class="mb-2">
+                      <h3 class="text-lg font-bold text-gray-900 mb-4">Disediakan Oleh :</h3>
+                      
+                      <p class="text-sm text-gray-600 mb-6 italic">
+                        (Diisi oleh Pengurus Projek/Pembangun Sistem)
+                      </p>
+                      
+                      <div class="space-y-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Nama:
+                          </label>
+                          <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
+                            {Map.get(@soal_selidik_pdf_data.disediakan_oleh, :nama) ||
+                              Map.get(@soal_selidik_pdf_data.disediakan_oleh, "nama") || ""}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Jawatan:
+                          </label>
+                          <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
+                            {Map.get(@soal_selidik_pdf_data.disediakan_oleh, :jawatan) ||
+                              Map.get(@soal_selidik_pdf_data.disediakan_oleh, "jawatan") || ""}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Tarikh:
+                          </label>
+                          <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
+                            {Map.get(@soal_selidik_pdf_data.disediakan_oleh, :tarikh) ||
+                              Map.get(@soal_selidik_pdf_data.disediakan_oleh, "tarikh") || ""}
+                          </div>
                         </div>
                       </div>
-                    <% end %>
-                  </div>
-                </div>
-                 <%!-- Disediakan Oleh Section --%>
-                <div class="mb-2">
-                  <h3 class="text-lg font-bold text-gray-900 mb-4">Disediakan Oleh :</h3>
-                  
-                  <p class="text-sm text-gray-600 mb-6 italic">
-                    (Diisi oleh Pengurus Projek/Pembangun Sistem)
-                  </p>
-                  
-                  <div class="space-y-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Nama:</label>
-                      <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
-                        {Map.get(@soal_selidik_pdf_data.disediakan_oleh, :nama) ||
-                          Map.get(@soal_selidik_pdf_data.disediakan_oleh, "nama") || ""}
+                    </div>
+                  <% else %>
+                    <div class="text-center py-12">
+                      <div class="flex flex-col items-center justify-center text-gray-400">
+                        <.icon name="hero-document-text" class="w-16 h-16 mb-4" />
+                        <p class="text-sm font-medium text-gray-600 mb-2">
+                          Tiada data Soal Selidik untuk dipaparkan.
+                        </p>
+                        
+                        <p class="text-xs text-gray-500">
+                          Sila klik butang "Edit Borang" di atas untuk menambah atau mengisi soal selidik untuk projek ini.
+                        </p>
                       </div>
                     </div>
-                    
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Jawatan:</label>
-                      <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
-                        {Map.get(@soal_selidik_pdf_data.disediakan_oleh, :jawatan) ||
-                          Map.get(@soal_selidik_pdf_data.disediakan_oleh, "jawatan") || ""}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Tarikh:</label>
-                      <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
-                        {Map.get(@soal_selidik_pdf_data.disediakan_oleh, :tarikh) ||
-                          Map.get(@soal_selidik_pdf_data.disediakan_oleh, "tarikh") || ""}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              <% else %>
-                <div class="text-center py-12">
-                  <div class="flex flex-col items-center justify-center text-gray-400">
-                    <.icon name="hero-document-text" class="w-16 h-16 mb-4" />
-                    <p class="text-sm font-medium text-gray-600 mb-2">
-                      Tiada data Soal Selidik untuk dipaparkan.
-                    </p>
-                    <p class="text-xs text-gray-500">
-                      Sila klik butang "Edit Borang" di atas untuk menambah atau mengisi soal selidik untuk projek ini.
-                    </p>
-                  </div>
-                </div>
-              <% end %>
+                  <% end %>
                 </div>
               </div>
             <% @current_tab == "Analisis dan Rekabentuk" -> %>
@@ -581,6 +632,7 @@
                     <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
                   </button>
                 </div>
+                
                 <div
                   id="analisis-document"
                   class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 print:shadow-none print:border-0"
@@ -590,6 +642,7 @@
                     <div class="mb-6">
                       <div class="flex justify-between items-start mb-3">
                         <div class="flex-1"></div>
+                        
                         <div class="flex-1 flex justify-center">
                           <img
                             src={~p"/images/logojpkn.png"}
@@ -597,55 +650,105 @@
                             class="h-16 w-auto object-contain"
                           />
                         </div>
+                        
                         <div class="flex-1 flex justify-end">
                           <div class="text-gray-700 font-bold">
                             {@analisis_pdf_data.document_id}
                           </div>
                         </div>
                       </div>
+                      
                       <h2 class="text-center font-bold text-gray-900 mb-6 uppercase tracking-wide leading-tight">
                         BORANG VERIFIKASI SPESIFIKASI APLIKASI
                       </h2>
                     </div>
+                    
                     <div class="mb-6">
                       <table class="w-full border-collapse border border-gray-800">
                         <tbody>
                           <tr class="border-b border-gray-800">
-                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800" style="width: 30%;">Nama Projek</td>
-                            <td class="px-2 py-1.5 border border-gray-800 text-black">{@analisis_pdf_data.nama_projek}</td>
+                            <td
+                              class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800"
+                              style="width: 30%;"
+                            >
+                              Nama Projek
+                            </td>
+                            
+                            <td class="px-2 py-1.5 border border-gray-800 text-black">
+                              {@analisis_pdf_data.nama_projek}
+                            </td>
                           </tr>
+                          
                           <tr class="border-b border-gray-800">
-                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">Nama Agensi</td>
-                            <td class="px-2 py-1.5 border border-gray-800 text-black">{@analisis_pdf_data.nama_agensi}</td>
+                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
+                              Nama Agensi
+                            </td>
+                            
+                            <td class="px-2 py-1.5 border border-gray-800 text-black">
+                              {@analisis_pdf_data.nama_agensi}
+                            </td>
                           </tr>
+                          
                           <tr class="border-b border-gray-800">
-                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">Versi</td>
-                            <td class="px-2 py-1.5 border border-gray-800 text-black">{@analisis_pdf_data.versi}</td>
+                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
+                              Versi
+                            </td>
+                            
+                            <td class="px-2 py-1.5 border border-gray-800 text-black">
+                              {@analisis_pdf_data.versi}
+                            </td>
                           </tr>
+                          
                           <tr class="border-b border-gray-800">
-                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">Tarikh Semakan (jika ada)</td>
-                            <td class="px-2 py-1.5 border border-gray-800 text-black">{@analisis_pdf_data.tarikh_semakan}</td>
+                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
+                              Tarikh Semakan (jika ada)
+                            </td>
+                            
+                            <td class="px-2 py-1.5 border border-gray-800 text-black">
+                              {@analisis_pdf_data.tarikh_semakan}
+                            </td>
                           </tr>
+                          
                           <tr>
-                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">Rujukan Perubahan (jika ada)</td>
-                            <td class="px-2 py-1.5 border border-gray-800 text-black">{@analisis_pdf_data.rujukan_perubahan}</td>
+                            <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
+                              Rujukan Perubahan (jika ada)
+                            </td>
+                            
+                            <td class="px-2 py-1.5 border border-gray-800 text-black">
+                              {@analisis_pdf_data.rujukan_perubahan}
+                            </td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
+                    
                     <div class="mb-6">
-                      <h3 class="font-bold text-gray-900 mb-2 uppercase">SPESIFIKASI APLIKASI YANG AKAN DIBANGUNKAN</h3>
-                      <p class="text-gray-700 mb-2">Nyatakan secara terperinci spesifikasi aplikasi yang akan dibangunkan seperti bilangan modul (nyatakan modul-modul terlibat), fungsi dan sebagainya.</p>
+                      <h3 class="font-bold text-gray-900 mb-2 uppercase">
+                        SPESIFIKASI APLIKASI YANG AKAN DIBANGUNKAN
+                      </h3>
+                      
+                      <p class="text-gray-700 mb-2">
+                        Nyatakan secara terperinci spesifikasi aplikasi yang akan dibangunkan seperti bilangan modul (nyatakan modul-modul terlibat), fungsi dan sebagainya.
+                      </p>
+                      
                       <div class="space-y-4 mt-4">
                         <%= for module <- @analisis_pdf_data.modules do %>
                           <div class="mb-4">
                             <div class="mb-2">
-                              <strong class="text-gray-900 font-bold">{module.number}. {module.name}</strong>
+                              <strong class="text-gray-900 font-bold">
+                                {module.number}. {module.name}
+                              </strong>
                             </div>
+                            
                             <div class="ml-6 space-y-2">
                               <%= for {func, index} <- Enum.with_index(module.functions) do %>
                                 <div class="mb-1">
-                                  <span class="text-gray-700 font-medium">{Enum.at(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], index)}. {func.name}</span>
+                                  <span class="text-gray-700 font-medium">
+                                    {Enum.at(
+                                      ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+                                      index
+                                    )}. {func.name}
+                                  </span>
                                   <%= if length(func.sub_functions) > 0 do %>
                                     <div class="ml-4 mt-1">
                                       <%= for sub_func <- func.sub_functions do %>
@@ -659,33 +762,2130 @@
                           </div>
                         <% end %>
                       </div>
-                      <p class="text-gray-600 mt-4 italic">**spesifikasi aplikasi adalah mengikut kajian yang telah dibuat</p>
+                      
+                      <p class="text-gray-600 mt-4 italic">
+                        **spesifikasi aplikasi adalah mengikut kajian yang telah dibuat
+                      </p>
                     </div>
+                    
                     <div class="mt-8">
                       <div class="grid grid-cols-2 gap-6">
                         <div>
                           <h4 class="font-bold text-gray-900 mb-2">Dipersetujui Oleh:</h4>
+                          
                           <p class="text-gray-700 mb-3 font-semibold">Pemohon</p>
+                          
                           <div class="space-y-3">
-                            <div><p class="text-gray-600 mb-1">(Nama)</p><div class="h-8 text-black">{@analisis_pdf_data.approved_by_name}</div></div>
-                            <div><p class="text-gray-600 mb-1">Jawatan:</p><div class="h-8 text-black">{@analisis_pdf_data.approved_by_position}</div></div>
-                            <div><p class="text-gray-600 mb-1">Tarikh:</p><div class="h-8 text-black">{@analisis_pdf_data.approved_by_date}</div></div>
+                            <div>
+                              <p class="text-gray-600 mb-1">(Nama)</p>
+                              
+                              <div class="h-8 text-black">
+                                {@analisis_pdf_data.approved_by_name}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <p class="text-gray-600 mb-1">Jawatan:</p>
+                              
+                              <div class="h-8 text-black">
+                                {@analisis_pdf_data.approved_by_position}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <p class="text-gray-600 mb-1">Tarikh:</p>
+                              
+                              <div class="h-8 text-black">
+                                {@analisis_pdf_data.approved_by_date}
+                              </div>
+                            </div>
                           </div>
                         </div>
+                        
                         <div>
                           <h4 class="font-bold text-gray-900 mb-2">Disediakan Oleh:</h4>
-                          <p class="text-gray-700 mb-3 font-semibold">Pengurus Projek / Pembangun</p>
+                          
+                          <p class="text-gray-700 mb-3 font-semibold">
+                            Pengurus Projek / Pembangun
+                          </p>
+                          
                           <div class="space-y-3">
-                            <div><p class="text-gray-600 mb-1">(Nama)</p><div class="h-8 text-black" style="color: #000;">{@analisis_pdf_data.prepared_by_name}</div></div>
-                            <div><p class="text-gray-600 mb-1">Jawatan:</p><div class="h-8 text-black" style="color: #000;">{@analisis_pdf_data.prepared_by_position}</div></div>
-                            <div><p class="text-gray-600 mb-1">Tarikh:</p><div class="h-8 text-black" style="color: #000;">{@analisis_pdf_data.prepared_by_date}</div></div>
+                            <div>
+                              <p class="text-gray-600 mb-1">(Nama)</p>
+                              
+                              <div class="h-8 text-black" style="color: #000;">
+                                {@analisis_pdf_data.prepared_by_name}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <p class="text-gray-600 mb-1">Jawatan:</p>
+                              
+                              <div class="h-8 text-black" style="color: #000;">
+                                {@analisis_pdf_data.prepared_by_position}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <p class="text-gray-600 mb-1">Tarikh:</p>
+                              
+                              <div class="h-8 text-black" style="color: #000;">
+                                {@analisis_pdf_data.prepared_by_date}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   <% else %>
-                    <div class="text-sm text-gray-600">Tiada data Analisis dan Rekabentuk untuk dipaparkan.</div>
+                    <div class="text-sm text-gray-600">
+                      Tiada data Analisis dan Rekabentuk untuk dipaparkan.
+                    </div>
                   <% end %>
+                </div>
+              </div>
+            <% @current_tab == "Jadual Projek" -> %>
+              <div class="space-y-6">
+                <div class="flex justify-end gap-3 mb-4">
+                  <.link
+                    navigate={~p"/jadual-projek"}
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow"
+                  >
+                    <.icon name="hero-calendar-days" class="w-5 h-5" />
+                    <span>Halaman Jadual Projek Penuh</span>
+                  </.link>
+                </div>
+                
+                <%= if @jadual_gantt_data && length(@jadual_gantt_data.projects) > 0 do %>
+                  <%!-- Gantt Chart Section --%>
+                  <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-6">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                          <div class="w-2 h-2 rounded-full bg-blue-600"></div>
+                          
+                          <h2 class="text-xl font-bold text-gray-900">Gantt Chart Projek</h2>
+                        </div>
+                        
+                        <div class="text-sm text-gray-600">
+                          <span class="font-semibold">Tempoh:</span> {Calendar.strftime(
+                            @jadual_gantt_data.min_date,
+                            "%d/%m/%Y"
+                          )} - {Calendar.strftime(@jadual_gantt_data.max_date, "%d/%m/%Y")}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="p-6 overflow-x-auto">
+                      <div class="mb-4" style="min-width: 100%;">
+                        <div
+                          class="flex border-b-2 border-gray-300 pb-2"
+                          style="min-width: 800px;"
+                        >
+                          <div class="w-64 flex-shrink-0 font-semibold text-gray-700">
+                            Nama Projek
+                          </div>
+                          
+                          <div class="flex-1 relative">
+                            <div class="flex justify-between text-xs text-gray-600">
+                              <%= for month <- @jadual_month_labels do %>
+                                <div class="text-center" style="width: {month.width_percent}%;">
+                                  <div class="font-semibold">{month.month}</div>
+                                  
+                                  <div class="text-gray-500">{month.year}</div>
+                                </div>
+                              <% end %>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <%= for project <- @jadual_gantt_data.projects do %>
+                        <div class="flex items-center h-12" style="min-width: 800px;">
+                          <div class="w-64 flex-shrink-0 pr-4">
+                            <div class="font-medium text-gray-900 truncate" title={project.nama}>
+                              {project.nama}
+                            </div>
+                            
+                            <div class="text-xs text-gray-500">
+                              {project.fasa || "-"} • {project.status || "-"}
+                            </div>
+                          </div>
+                          
+                          <div class="flex-1 relative h-full">
+                            <div class="relative h-full">
+                              <div
+                                class="absolute h-6 rounded-md opacity-20"
+                                style={"left: #{project.start_percent}%; width: #{project.width_percent}%; background-color: #{@jadual_get_status_color.(project.status)};"}
+                              >
+                              </div>
+                              
+                              <div
+                                class="absolute h-6 rounded-md transition-all duration-300"
+                                style={[
+                                  "left: #{project.start_percent}%; width: #{project.width_percent}%;",
+                                  "background: linear-gradient(to right, #{@jadual_get_status_color.(project.status)} #{project.progress}%, #{@jadual_get_status_color.(project.status)}40 #{project.progress}%);",
+                                  "border: 2px solid #{@jadual_get_status_color.(project.status)};"
+                                ]}
+                                title={"#{project.nama} - Kemajuan: #{project.progress}%"}
+                              >
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                  <span class="text-xs font-semibold text-white drop-shadow-md px-2 truncate">
+                                    {project.progress}%
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                   <%!-- Timeline View Section --%>
+                  <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">
+                      <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-indigo-600"></div>
+                        
+                        <h2 class="text-xl font-bold text-gray-900">Timeline Projek</h2>
+                      </div>
+                    </div>
+                    
+                    <div class="p-6">
+                      <%= for project <- @jadual_gantt_data.projects do %>
+                        <div
+                          class="border-l-4 pl-6 pb-6"
+                          style={"border-color: #{@jadual_get_status_color.(project.status)};"}
+                        >
+                          <div class="flex items-start justify-between mb-2">
+                            <div class="flex-1">
+                              <h3 class="text-lg font-semibold text-gray-900 mb-1">
+                                {project.nama}
+                              </h3>
+                              
+                              <div class="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                                <span class="flex items-center gap-1">
+                                  <.icon name="hero-calendar" class="w-4 h-4" /> {Calendar.strftime(
+                                    project.tarikh_mula,
+                                    "%d %b %Y"
+                                  )} - {Calendar.strftime(project.tarikh_siap, "%d %b %Y")}
+                                </span>
+                                <%= if project.pengurus_projek do %>
+                                  <span class="flex items-center gap-1">
+                                    <.icon name="hero-user" class="w-4 h-4" /> {project.pengurus_projek}
+                                  </span>
+                                <% end %>
+                              </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                              <span class={[
+                                "px-3 py-1 rounded-full text-xs font-semibold",
+                                @jadual_get_status_badge_class.(project.status)
+                              ]}>
+                                {project.status}
+                              </span>
+                              <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                {project.fasa || "-"}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div class="mb-3">
+                            <div class="flex items-center justify-between mb-1">
+                              <span class="text-sm font-medium text-gray-700">
+                                Kemajuan Projek
+                              </span>
+                              <span class="text-sm font-bold text-gray-900">
+                                {project.progress}%
+                              </span>
+                            </div>
+                            
+                            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                              <div
+                                class="h-full rounded-full transition-all duration-500"
+                                style={"width: #{project.progress}%; background: linear-gradient(90deg, #{@jadual_get_status_color.(project.status)}, #{@jadual_get_status_color.(project.status)}dd);"}
+                              >
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span class="font-semibold text-gray-700">Tempoh:</span>
+                              <span class="text-gray-600 ml-2">{project.duration} hari</span>
+                            </div>
+                            
+                            <div>
+                              <span class="font-semibold text-gray-700">Baki:</span>
+                              <span class="text-gray-600 ml-2">
+                                {remaining_days = Date.diff(project.tarikh_siap, Date.utc_today())}
+                                <%= if remaining_days > 0 do %>
+                                  hari
+                                <% else %>
+                                  <span class="text-red-600 font-semibold">
+                                    Lewat {abs(remaining_days)} hari
+                                  </span>
+                                <% end %>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                <% else %>
+                  <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">
+                      <h2 class="text-xl font-bold text-gray-900">Jadual Projek</h2>
+                    </div>
+                    
+                    <div class="p-8">
+                      <div class="text-center py-12">
+                        <.icon
+                          name="hero-calendar-days"
+                          class="w-16 h-16 text-gray-400 mb-4 mx-auto"
+                        />
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Tiada Jadual</h3>
+                        
+                        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                          Tarikh mula dan tarikh siap projek belum ditetapkan. Sila kemaskini projek untuk menambah maklumat jadual.
+                        </p>
+                        
+                        <.link
+                          navigate={~p"/jadual-projek"}
+                          class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                        >
+                          <.icon name="hero-calendar-days" class="w-5 h-5" />
+                          <span>Pergi ke Jadual Projek</span>
+                        </.link>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% @current_tab == "Pengaturcaraan" -> %>
+              <div class="space-y-6">
+                <div class="flex items-center justify-between mb-4">
+                  <p class="text-gray-600">
+                    Senarai modul yang telah didaftarkan dalam Analisis dan Rekabentuk
+                  </p>
+                  
+                  <.link
+                    navigate={~p"/pengaturcaraan"}
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow"
+                  >
+                    <.icon name="hero-code-bracket" class="w-5 h-5" />
+                    <span>Halaman Pengaturcaraan Penuh</span>
+                  </.link>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                  <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
+                    <h2 class="text-xl font-semibold text-white">Senarai Modul</h2>
+                    
+                    <p class="text-sm text-blue-100 mt-1">{length(@modules)} Modul</p>
+                  </div>
+                  
+                  <%= if length(@modules) == 0 do %>
+                    <div class="px-6 py-12 text-center">
+                      <div class="flex flex-col items-center justify-center text-gray-400">
+                        <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
+                        <p class="text-sm font-medium">Tiada modul didaftarkan</p>
+                        
+                        <p class="text-xs mt-1">
+                          Sila daftarkan modul di halaman Analisis dan Rekabentuk
+                        </p>
+                        
+                        <.link
+                          navigate={~p"/analisis-dan-rekabentuk?project_id=#{@project.id}"}
+                          class="mt-4 text-sm font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          Pergi ke Analisis dan Rekabentuk →
+                        </.link>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
+                              Bil
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Nama Modul
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Versi
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Keutamaan
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Status
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tarikh Mula
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tarikh Jangka Siap
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Fungsi Modul
+                            </th>
+                          </tr>
+                        </thead>
+                        
+                        <tbody class="bg-white divide-y divide-gray-200">
+                          <tr
+                            :for={{module, index} <- Enum.with_index(@modules, 1)}
+                            class="hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <td class="px-3 py-2 text-center text-xs text-gray-600 font-medium">
+                              {index}
+                            </td>
+                            
+                            <td class="px-3 py-2">
+                              <div class="text-xs font-semibold text-gray-900">{module.name}</div>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap">
+                              <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 text-xs font-mono font-medium">
+                                {module.version}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap">
+                              <%= if module.priority && module.priority != "" do %>
+                                <span class={[
+                                  "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                  case module.priority do
+                                    "Sangat Tinggi" ->
+                                      "bg-red-100 text-red-800 border-red-200"
+
+                                    "Tinggi" ->
+                                      "bg-orange-100 text-orange-800 border-orange-200"
+
+                                    "Sederhana" ->
+                                      "bg-yellow-100 text-yellow-800 border-yellow-200"
+
+                                    "Rendah" ->
+                                      "bg-blue-100 text-blue-800 border-blue-200"
+
+                                    _ ->
+                                      "bg-gray-100 text-gray-800 border-gray-200"
+                                  end
+                                ]}>
+                                  {module.priority}
+                                </span>
+                              <% else %>
+                                <span class="text-xs text-gray-400">—</span>
+                              <% end %>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap">
+                              <span class={[
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                case module.status do
+                                  "Belum Mula" ->
+                                    "bg-gray-100 text-gray-700 border-gray-200"
+
+                                  "Sedang Dibangunkan" ->
+                                    "bg-blue-100 text-blue-800 border-blue-200"
+
+                                  "Selesai" ->
+                                    "bg-green-100 text-green-800 border-green-200"
+
+                                  "Dalam Ujian" ->
+                                    "bg-purple-100 text-purple-800 border-purple-200"
+
+                                  _ ->
+                                    "bg-gray-100 text-gray-700 border-gray-200"
+                                end
+                              ]}>
+                                {module.status}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap">
+                              <%= if module.tarikh_mula do %>
+                                <span class="text-xs text-gray-700">
+                                  {Calendar.strftime(module.tarikh_mula, "%d/%m/%Y")}
+                                </span>
+                              <% else %>
+                                <span class="text-xs text-gray-400">—</span>
+                              <% end %>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap">
+                              <%= if module.tarikh_jangka_siap do %>
+                                <span class="text-xs text-gray-700">
+                                  {Calendar.strftime(module.tarikh_jangka_siap, "%d/%m/%Y")}
+                                </span>
+                              <% else %>
+                                <span class="text-xs text-gray-400">—</span>
+                              <% end %>
+                            </td>
+                            
+                            <td class="px-3 py-2">
+                              <%= if length(module.functions) > 0 do %>
+                                <div class="space-y-1 max-h-24 overflow-y-auto">
+                                  <div :for={func <- module.functions} class="text-xs">
+                                    <span class="text-gray-900 font-medium">{func.name}</span>
+                                    <%= if length(func.sub_functions) > 0 do %>
+                                      <div class="ml-3 mt-0.5 space-y-0.5">
+                                        <div
+                                          :for={sub_func <- func.sub_functions}
+                                          class="text-gray-600"
+                                        >
+                                          • {sub_func.name}
+                                        </div>
+                                      </div>
+                                    <% end %>
+                                  </div>
+                                </div>
+                              <% else %>
+                                <span class="text-xs text-gray-400 italic">—</span>
+                              <% end %>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% @current_tab == "Pengurus Perubahan" -> %>
+              <div class="space-y-6">
+                <div class="flex justify-end mb-4">
+                  <.link
+                    navigate={~p"/pengurusan-perubahan"}
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                  >
+                    <span>Halaman Pengurusan Perubahan</span>
+                  </.link>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                  <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
+                    <h3 class="text-lg font-semibold text-white">Senarai Permohonan Perubahan</h3>
+                  </div>
+                  
+                  <%= if length(@perubahan) == 0 do %>
+                    <div class="px-6 py-12 text-center">
+                      <div class="flex flex-col items-center justify-center text-gray-400">
+                        <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
+                        <p class="text-sm font-medium">Tiada permohonan perubahan</p>
+                        
+                        <p class="text-xs mt-1">
+                          Klik butang "Daftar Perubahan" untuk menambah permohonan baharu
+                        </p>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-14">
+                              Bil
+                            </th>
+                            
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tajuk Perubahan
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Jenis
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Modul Terlibat
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Status
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tarikh Dibuat
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Justifikasi
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Kesan
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Catatan
+                            </th>
+                          </tr>
+                        </thead>
+                        
+                        <tbody class="bg-white divide-y divide-gray-200">
+                          <tr
+                            :for={{perubahan, bil} <- Enum.with_index(@perubahan, 1)}
+                            class="hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <td class="px-3 py-2 text-center text-gray-600 font-medium">{bil}</td>
+                            
+                            <td class="px-3 py-2">
+                              <div class="text-xs font-semibold text-gray-900">
+                                {perubahan.tajuk}
+                              </div>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap">
+                              <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-xs font-medium">
+                                {perubahan.jenis}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2">
+                              <span class="text-xs text-gray-700">
+                                {perubahan.modul_terlibat}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap">
+                              <span class={[
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                case perubahan.status do
+                                  "Dalam Semakan" ->
+                                    "bg-yellow-100 text-yellow-800 border-yellow-200"
+
+                                  "Diluluskan" ->
+                                    "bg-green-100 text-green-800 border-green-200"
+
+                                  "Ditolak" ->
+                                    "bg-red-100 text-red-800 border-red-200"
+
+                                  "Dalam Pelaksanaan" ->
+                                    "bg-blue-100 text-blue-800 border-blue-200"
+
+                                  "Selesai" ->
+                                    "bg-gray-100 text-gray-800 border-gray-200"
+
+                                  _ ->
+                                    "bg-gray-100 text-gray-800 border-gray-200"
+                                end
+                              ]}>
+                                <.icon
+                                  name={
+                                    case perubahan.status do
+                                      "Dalam Semakan" -> "hero-clock"
+                                      "Diluluskan" -> "hero-check-circle"
+                                      "Ditolak" -> "hero-x-circle"
+                                      "Dalam Pelaksanaan" -> "hero-arrow-path"
+                                      "Selesai" -> "hero-check-badge"
+                                      _ -> "hero-information-circle"
+                                    end
+                                  }
+                                  class="w-3 h-3 mr-1"
+                                /> {perubahan.status}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap">
+                              <div class="flex items-center gap-1.5 justify-center">
+                                <.icon
+                                  name="hero-calendar-days"
+                                  class="w-3.5 h-3.5 text-gray-400"
+                                />
+                                <span class="text-xs text-gray-700">
+                                  {Calendar.strftime(perubahan.tarikh_dibuat, "%d/%m/%Y")}
+                                </span>
+                              </div>
+                            </td>
+                            
+                            <td class="px-3 py-2">
+                              <%= if perubahan.justifikasi do %>
+                                <div class="max-w-xs">
+                                  <p class="text-xs text-gray-700 line-clamp-2">
+                                    {perubahan.justifikasi}
+                                  </p>
+                                </div>
+                              <% else %>
+                                <span class="text-xs text-gray-400 italic">-</span>
+                              <% end %>
+                            </td>
+                            
+                            <td class="px-3 py-2">
+                              <%= if perubahan.kesan do %>
+                                <div class="max-w-xs">
+                                  <p class="text-xs text-gray-700 line-clamp-2">
+                                    {perubahan.kesan}
+                                  </p>
+                                </div>
+                              <% else %>
+                                <span class="text-xs text-gray-400 italic">-</span>
+                              <% end %>
+                            </td>
+                            
+                            <td class="px-3 py-2">
+                              <%= if perubahan.catatan do %>
+                                <div class="max-w-xs">
+                                  <p class="text-xs text-gray-700 line-clamp-2">
+                                    {perubahan.catatan}
+                                  </p>
+                                </div>
+                              <% else %>
+                                <span class="text-xs text-gray-400 italic">-</span>
+                              <% end %>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+               <%!-- View Modal (Pengurus Perubahan tab) --%>
+              <%= if @show_view_modal && @selected_perubahan do %>
+                <div
+                  class="fixed inset-0 z-50 overflow-y-auto"
+                  phx-click="close_view_modal"
+                  phx-click-away="close_view_modal"
+                  role="dialog"
+                  aria-modal="true"
+                >
+                  <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true">
+                  </div>
+                  
+                  <div class="flex min-h-full items-center justify-center p-4">
+                    <div
+                      class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+                      phx-click-away="close_view_modal"
+                    >
+                      <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <h2 class="text-2xl font-bold text-white">
+                              Butiran Permohonan Perubahan
+                            </h2>
+                            
+                            <p class="mt-1 text-sm text-blue-100">
+                              Maklumat lengkap permohonan perubahan
+                            </p>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            phx-click="close_view_modal"
+                            class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white"
+                            aria-label="Tutup"
+                          >
+                            <.icon name="hero-x-mark" class="h-6 w-6" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+                        <div class="space-y-6">
+                          <div class="space-y-4">
+                            <div class="border-b border-gray-200 pb-2">
+                              <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">
+                                  Bilangan
+                                </label><span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">{@selected_perubahan.number}</span>
+                              </div>
+                              
+                              <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">
+                                  ID Perubahan
+                                </label>
+                                <p class="text-sm text-gray-900 font-mono">
+                                  {@selected_perubahan.id}
+                                </p>
+                              </div>
+                              
+                              <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-500 mb-1">
+                                  Tajuk Perubahan
+                                </label>
+                                <p class="text-sm text-gray-900 font-semibold">
+                                  {@selected_perubahan.tajuk}
+                                </p>
+                              </div>
+                              
+                              <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">
+                                  Jenis
+                                </label><span class="inline-flex items-center px-3 py-1 rounded-md bg-purple-100 text-purple-700 text-sm font-medium">{@selected_perubahan.jenis}</span>
+                              </div>
+                              
+                              <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">
+                                  Modul Terlibat
+                                </label>
+                                <p class="text-sm text-gray-900">
+                                  {@selected_perubahan.modul_terlibat}
+                                </p>
+                              </div>
+                              
+                              <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">
+                                  Status
+                                </label><span class={[
+                                  "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border",
+                                  case @selected_perubahan.status do
+                                    "Dalam Semakan" ->
+                                      "bg-yellow-100 text-yellow-800 border-yellow-200"
+
+                                    "Diluluskan" ->
+                                      "bg-green-100 text-green-800 border-green-200"
+
+                                    "Ditolak" ->
+                                      "bg-red-100 text-red-800 border-red-200"
+
+                                    "Dalam Pelaksanaan" ->
+                                      "bg-blue-100 text-blue-800 border-blue-200"
+
+                                    "Selesai" ->
+                                      "bg-gray-100 text-gray-800 border-gray-200"
+
+                                    _ ->
+                                      "bg-gray-100 text-gray-800 border-gray-200"
+                                  end
+                                ]}>{@selected_perubahan.status}</span>
+                              </div>
+                              
+                              <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">
+                                  Keutamaan
+                                </label><span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border bg-gray-100 text-gray-800 border-gray-200">{@selected_perubahan.keutamaan}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div class="space-y-4">
+                            <div class="border-b border-gray-200 pb-2">
+                              <h3 class="text-lg font-semibold text-gray-900">Jadual</h3>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">
+                                  Tarikh Dibuat
+                                </label><span class="text-sm text-gray-900">{Calendar.strftime(@selected_perubahan.tarikh_dibuat, "%d/%m/%Y")}</span>
+                              </div>
+                              
+                              <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">
+                                  Tarikh Dijangka Siap
+                                </label><span class="text-sm text-gray-900">{Calendar.strftime(@selected_perubahan.tarikh_dijangka_siap, "%d/%m/%Y")}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <%= if @selected_perubahan.justifikasi do %>
+                            <div class="space-y-4">
+                              <div class="border-b border-gray-200 pb-2">
+                                <h3 class="text-lg font-semibold text-gray-900">Justifikasi</h3>
+                              </div>
+                              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap">
+                                  {@selected_perubahan.justifikasi}
+                                </p>
+                              </div>
+                            </div>
+                          <% end %>
+                          
+                          <%= if @selected_perubahan.kesan do %>
+                            <div class="space-y-4">
+                              <div class="border-b border-gray-200 pb-2">
+                                <h3 class="text-lg font-semibold text-gray-900">Kesan</h3>
+                              </div>
+                              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap">
+                                  {@selected_perubahan.kesan}
+                                </p>
+                              </div>
+                            </div>
+                          <% end %>
+                          
+                          <%= if @selected_perubahan.catatan do %>
+                            <div class="space-y-4">
+                              <div class="border-b border-gray-200 pb-2">
+                                <h3 class="text-lg font-semibold text-gray-900">Catatan</h3>
+                              </div>
+                              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap">
+                                  {@selected_perubahan.catatan}
+                                </p>
+                              </div>
+                            </div>
+                          <% end %>
+                        </div>
+                      </div>
+                      
+                      <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                        <button
+                          type="button"
+                          phx-click="close_view_modal"
+                          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
+                        >
+                          Tutup
+                        </button>
+                        <button
+                          type="button"
+                          phx-click="open_edit_modal"
+                          phx-value-perubahan_id={@selected_perubahan.id}
+                          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+               <%!-- Create Modal (Pengurus Perubahan tab) --%>
+              <%= if @show_create_modal do %>
+                <div
+                  class="fixed inset-0 z-50 overflow-y-auto"
+                  phx-click="close_create_modal"
+                  phx-click-away="close_create_modal"
+                  role="dialog"
+                  aria-modal="true"
+                >
+                  <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true">
+                  </div>
+                  
+                  <div class="flex min-h-full items-center justify-center p-4">
+                    <div
+                      class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+                      phx-click-away="close_create_modal"
+                    >
+                      <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <h2 class="text-2xl font-bold text-white">
+                              Daftar Permohonan Perubahan
+                            </h2>
+                            <p class="mt-1 text-sm text-blue-100">
+                              Isi maklumat permohonan perubahan baharu
+                            </p>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            phx-click="close_create_modal"
+                            class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white"
+                            aria-label="Tutup"
+                          >
+                            <.icon name="hero-x-mark" class="h-6 w-6" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+                        <.form
+                          for={@form}
+                          phx-change="validate_perubahan"
+                          phx-submit="create_perubahan"
+                          id="create-perubahan-form-tab"
+                          class="space-y-6"
+                        >
+                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                              <.input
+                                field={@form[:tajuk]}
+                                type="text"
+                                label="Tajuk Perubahan"
+                                required
+                                placeholder="Masukkan tajuk perubahan"
+                                class="w-full"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Jenis
+                              </label><select
+                                name="perubahan[jenis]"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              ><option value="">Pilih jenis</option><option value="Perubahan Fungsian">Perubahan Fungsian</option><option value="Pembaikan Bug">Pembaikan Bug</option><option value="Penambahbaikan">Penambahbaikan</option><option value="Peningkatan Keselamatan">Peningkatan Keselamatan</option></select>
+                            </div>
+                            
+                            <div>
+                              <.input
+                                field={@form[:modul_terlibat]}
+                                type="text"
+                                label="Modul Terlibat"
+                                required
+                                placeholder="Masukkan nama modul"
+                                class="w-full"
+                              />
+                            </div>
+                            
+                            <div>
+                              <.input
+                                field={@form[:tarikh_dibuat]}
+                                type="date"
+                                label="Tarikh Dibuat"
+                                required
+                                class="w-full"
+                              />
+                            </div>
+                            
+                            <div>
+                              <.input
+                                field={@form[:tarikh_dijangka_siap]}
+                                type="date"
+                                label="Tarikh Dijangka Siap"
+                                required
+                                class="w-full"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Status
+                              </label><select
+                                name="perubahan[status]"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              ><option value="Dalam Semakan">Dalam Semakan</option><option value="Diluluskan">Diluluskan</option><option value="Ditolak">Ditolak</option><option value="Dalam Pelaksanaan">Dalam Pelaksanaan</option><option value="Selesai">Selesai</option></select>
+                            </div>
+                            
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Keutamaan
+                              </label><select
+                                name="perubahan[keutamaan]"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              ><option value="Sangat Tinggi">Sangat Tinggi</option><option value="Tinggi">Tinggi</option><option value="Sederhana">Sederhana</option><option value="Rendah">Rendah</option></select>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Justifikasi
+                              </label><textarea
+                                name="perubahan[justifikasi]"
+                                rows="3"
+                                placeholder="Masukkan justifikasi perubahan..."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                              ></textarea>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Kesan
+                              </label><textarea
+                                name="perubahan[kesan]"
+                                rows="3"
+                                placeholder="Masukkan kesan perubahan..."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                              ></textarea>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Catatan
+                              </label><textarea
+                                name="perubahan[catatan]"
+                                rows="3"
+                                placeholder="Masukkan catatan..."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                              ></textarea>
+                            </div>
+                          </div>
+                        </.form>
+                      </div>
+                      
+                      <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                        <button
+                          type="button"
+                          phx-click="close_create_modal"
+                          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          form="create-perubahan-form-tab"
+                          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                        >
+                          Daftar Perubahan
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+               <%!-- Edit Modal (Pengurus Perubahan tab) --%>
+              <%= if @show_edit_modal && @selected_perubahan do %>
+                <div
+                  class="fixed inset-0 z-50 overflow-y-auto"
+                  phx-click="close_edit_modal"
+                  phx-click-away="close_edit_modal"
+                  role="dialog"
+                  aria-modal="true"
+                >
+                  <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true">
+                  </div>
+                  
+                  <div class="flex min-h-full items-center justify-center p-4">
+                    <div
+                      class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+                      phx-click-away="close_edit_modal"
+                    >
+                      <div class="border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <h2 class="text-2xl font-bold text-white">
+                              Kemaskini Permohonan Perubahan
+                            </h2>
+                            <p class="mt-1 text-sm text-green-100">
+                              Edit maklumat permohonan perubahan
+                            </p>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            phx-click="close_edit_modal"
+                            class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white"
+                            aria-label="Tutup"
+                          >
+                            <.icon name="hero-x-mark" class="h-6 w-6" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+                        <.form
+                          for={@form}
+                          phx-change="validate_perubahan"
+                          phx-submit="update_perubahan"
+                          id="edit-perubahan-form-tab"
+                          class="space-y-6"
+                        >
+                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label class="block text-sm font-medium text-gray-500 mb-1">
+                                Bilangan
+                              </label><span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">{@selected_perubahan.number}</span>
+                            </div>
+                            
+                            <div>
+                              <label class="block text-sm font-medium text-gray-500 mb-1">
+                                ID Perubahan
+                              </label>
+                              <p class="text-sm text-gray-900 font-mono">
+                                {@selected_perubahan.id}
+                              </p>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                              <.input
+                                field={@form[:tajuk]}
+                                type="text"
+                                label="Tajuk Perubahan"
+                                required
+                                placeholder="Masukkan tajuk perubahan"
+                                class="w-full"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Jenis
+                              </label><select
+                                name="perubahan[jenis]"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              ><option value="">Pilih jenis</option><option value="Perubahan Fungsian">Perubahan Fungsian</option><option value="Pembaikan Bug">Pembaikan Bug</option><option value="Penambahbaikan">Penambahbaikan</option><option value="Peningkatan Keselamatan">Peningkatan Keselamatan</option></select>
+                            </div>
+                            
+                            <div>
+                              <.input
+                                field={@form[:modul_terlibat]}
+                                type="text"
+                                label="Modul Terlibat"
+                                required
+                                placeholder="Masukkan nama modul"
+                                class="w-full"
+                              />
+                            </div>
+                            
+                            <div>
+                              <.input
+                                field={@form[:tarikh_dibuat]}
+                                type="date"
+                                label="Tarikh Dibuat"
+                                required
+                                class="w-full"
+                              />
+                            </div>
+                            
+                            <div>
+                              <.input
+                                field={@form[:tarikh_dijangka_siap]}
+                                type="date"
+                                label="Tarikh Dijangka Siap"
+                                required
+                                class="w-full"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Status
+                              </label><select
+                                name="perubahan[status]"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              ><option value="Dalam Semakan">Dalam Semakan</option><option value="Diluluskan">Diluluskan</option><option value="Ditolak">Ditolak</option><option value="Dalam Pelaksanaan">Dalam Pelaksanaan</option><option value="Selesai">Selesai</option></select>
+                            </div>
+                            
+                            <div>
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Keutamaan
+                              </label><select
+                                name="perubahan[keutamaan]"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              ><option value="Sangat Tinggi">Sangat Tinggi</option><option value="Tinggi">Tinggi</option><option value="Sederhana">Sederhana</option><option value="Rendah">Rendah</option></select>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Justifikasi
+                              </label><textarea
+                                name="perubahan[justifikasi]"
+                                rows="3"
+                                placeholder="Masukkan justifikasi perubahan..."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 resize-none"
+                              ><%= if @form[:justifikasi] && @form[:justifikasi].value, do: @form[:justifikasi].value, else: "" %></textarea>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Kesan
+                              </label><textarea
+                                name="perubahan[kesan]"
+                                rows="3"
+                                placeholder="Masukkan kesan perubahan..."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 resize-none"
+                              ><%= if @form[:kesan] && @form[:kesan].value, do: @form[:kesan].value, else: "" %></textarea>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                              <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Catatan
+                              </label><textarea
+                                name="perubahan[catatan]"
+                                rows="3"
+                                placeholder="Masukkan catatan..."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 resize-none"
+                              ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
+                            </div>
+                          </div>
+                        </.form>
+                      </div>
+                      
+                      <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                        <button
+                          type="button"
+                          phx-click="close_edit_modal"
+                          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          form="edit-perubahan-form-tab"
+                          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                        >
+                          Simpan Perubahan
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            <% @current_tab == "UAT" -> %>
+              <div class="space-y-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Ujian Penerimaan Pengguna</h2>
+                    
+                    <p class="text-gray-600">
+                      Urus kemajuan UAT dan pastikan setiap modul melalui penilaian pengguna.
+                    </p>
+                  </div>
+                  
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm text-gray-600">
+                      <.icon name="hero-check-circle" class="w-5 h-5 text-green-500" />
+                      <span class="text-sm font-semibold">{length(@ujian)} Ujian</span>
+                    </div>
+                    
+                    <.link
+                      navigate={~p"/ujian-penerimaan-pengguna"}
+                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                    >
+                      <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
+                      <span>Halaman Ujian Penuh</span>
+                    </.link>
+                  </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                  <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
+                    <h3 class="text-lg font-semibold text-white">
+                      Senarai Ujian Penerimaan Pengguna
+                    </h3>
+                    
+                    <p class="text-sm text-blue-100">
+                      Pantau status ujian mengikut modul dan tindakan susulan.
+                    </p>
+                  </div>
+                  
+                  <%= if length(@ujian) == 0 do %>
+                    <div class="px-6 py-12 text-center">
+                      <div class="flex flex-col items-center justify-center text-gray-400">
+                        <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
+                        <p class="text-sm font-medium">Tiada ujian penerimaan pengguna</p>
+                        
+                        <p class="text-xs mt-1">
+                          Klik butang "Daftar Ujian" untuk menambah ujian baharu
+                        </p>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
+                              Bil
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Modul
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Status
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tarikh Ujian
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Penguji
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Hasil
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px] align-top">
+                              Catatan
+                            </th>
+                          </tr>
+                        </thead>
+                        
+                        <tbody class="bg-white divide-y divide-gray-200">
+                          <tr
+                            :for={{ujian, index} <- Enum.with_index(@ujian, 1)}
+                            class="hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <td class="px-3 py-2 text-center text-xs font-semibold text-gray-700">
+                              {index}
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left">
+                              <span class="text-xs text-gray-700">{ujian.modul}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap text-left">
+                              <span class={[
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                case ujian.status do
+                                  "Menunggu" ->
+                                    "bg-gray-100 text-gray-800 border-gray-200"
+
+                                  "Dalam Proses" ->
+                                    "bg-yellow-100 text-yellow-800 border-yellow-200"
+
+                                  "Selesai" ->
+                                    "bg-green-100 text-green-800 border-green-200"
+
+                                  "Dibatalkan" ->
+                                    "bg-red-100 text-red-800 border-red-200"
+
+                                  _ ->
+                                    "bg-gray-100 text-gray-800 border-gray-200"
+                                end
+                              ]}>
+                                <.icon
+                                  name={
+                                    case ujian.status do
+                                      "Menunggu" -> "hero-clock"
+                                      "Dalam Proses" -> "hero-arrow-path"
+                                      "Selesai" -> "hero-check-circle"
+                                      "Dibatalkan" -> "hero-x-circle"
+                                      _ -> "hero-information-circle"
+                                    end
+                                  }
+                                  class="w-3 h-3 mr-1"
+                                /> {ujian.status}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap text-left">
+                              <div class="flex items-center gap-1.5">
+                                <.icon
+                                  name="hero-calendar-days"
+                                  class="w-3.5 h-3.5 text-gray-400"
+                                />
+                                <span class="text-xs text-gray-700">
+                                  {Calendar.strftime(ujian.tarikh_ujian, "%d/%m/%Y")}
+                                </span>
+                              </div>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left">
+                              <span class="text-xs text-gray-700">{ujian.penguji}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap text-left">
+                              <span class={[
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                case ujian.hasil do
+                                  "Lulus" -> "bg-green-100 text-green-800 border-green-200"
+                                  "Gagal" -> "bg-red-100 text-red-800 border-red-200"
+                                  "Belum Selesai" -> "bg-gray-100 text-gray-800 border-gray-200"
+                                  _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                                end
+                              ]}>
+                                <.icon
+                                  name={
+                                    case ujian.hasil do
+                                      "Lulus" -> "hero-check-circle"
+                                      "Gagal" -> "hero-x-circle"
+                                      "Belum Selesai" -> "hero-clock"
+                                      _ -> "hero-information-circle"
+                                    end
+                                  }
+                                  class="w-3 h-3 mr-1"
+                                /> {ujian.hasil}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left align-top">
+                              <div class="text-xs text-gray-700 whitespace-pre-wrap text-left">
+                                {if Map.get(ujian, :catatan), do: ujian.catatan, else: "-"}
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% @current_tab == "Ujian Keselamatan" -> %>
+              <div class="space-y-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Ujian Keselamatan</h2>
+                    
+                    <p class="text-gray-600">
+                      Urus dan pantau ujian keselamatan untuk modul sistem.
+                    </p>
+                  </div>
+                  
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm text-gray-600">
+                      <.icon name="hero-shield-check" class="w-5 h-5 text-blue-500" />
+                      <span class="text-sm font-semibold">
+                        {length(@ujian_keselamatan)} Ujian Keselamatan
+                      </span>
+                    </div>
+                    
+                    <.link
+                      navigate={~p"/ujian-keselamatan"}
+                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                    >
+                      <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
+                      <span>Halaman Ujian Penuh</span>
+                    </.link>
+                  </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                  <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
+                    <h3 class="text-lg font-semibold text-white">Senarai Ujian Keselamatan</h3>
+                    
+                    <p class="text-sm text-blue-100">
+                      Pantau status ujian keselamatan mengikut modul dan tindakan susulan.
+                    </p>
+                  </div>
+                  
+                  <%= if length(@ujian_keselamatan) == 0 do %>
+                    <div class="px-6 py-12 text-center">
+                      <div class="flex flex-col items-center justify-center text-gray-400">
+                        <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
+                        <p class="text-sm font-medium">Tiada ujian keselamatan</p>
+                        
+                        <p class="text-xs mt-1">
+                          Klik "Halaman Ujian Penuh" untuk mendaftar ujian baharu
+                        </p>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
+                              Bil
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Modul
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Status
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tarikh Ujian
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Penguji
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Hasil
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px] align-top">
+                              Catatan
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-20">
+                              Tindakan
+                            </th>
+                          </tr>
+                        </thead>
+                        
+                        <tbody class="bg-white divide-y divide-gray-200">
+                          <tr
+                            :for={{ujian, idx} <- Enum.with_index(@ujian_keselamatan, 1)}
+                            class="hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <td class="px-3 py-2 text-center">
+                              <span class="text-xs font-medium text-gray-700">{idx}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left">
+                              <span class="text-xs text-gray-700">{ujian.modul}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap text-left">
+                              <span class={[
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                case ujian.status do
+                                  "Menunggu" ->
+                                    "bg-gray-100 text-gray-800 border-gray-200"
+
+                                  "Dalam Proses" ->
+                                    "bg-yellow-100 text-yellow-800 border-yellow-200"
+
+                                  "Selesai" ->
+                                    "bg-green-100 text-green-800 border-green-200"
+
+                                  "Dibatalkan" ->
+                                    "bg-red-100 text-red-800 border-red-200"
+
+                                  _ ->
+                                    "bg-gray-100 text-gray-800 border-gray-200"
+                                end
+                              ]}>
+                                <.icon
+                                  name={
+                                    case ujian.status do
+                                      "Menunggu" -> "hero-clock"
+                                      "Dalam Proses" -> "hero-arrow-path"
+                                      "Selesai" -> "hero-check-circle"
+                                      "Dibatalkan" -> "hero-x-circle"
+                                      _ -> "hero-information-circle"
+                                    end
+                                  }
+                                  class="w-3 h-3 mr-1"
+                                /> {ujian.status}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap text-left">
+                              <div class="flex items-center gap-1.5">
+                                <.icon
+                                  name="hero-calendar-days"
+                                  class="w-3.5 h-3.5 text-gray-400"
+                                />
+                                <span class="text-xs text-gray-700">
+                                  {Calendar.strftime(ujian.tarikh_ujian, "%d/%m/%Y")}
+                                </span>
+                              </div>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left">
+                              <span class="text-xs text-gray-700">{ujian.penguji}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 whitespace-nowrap text-left">
+                              <span class={[
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                case ujian.hasil do
+                                  "Lulus" -> "bg-green-100 text-green-800 border-green-200"
+                                  "Gagal" -> "bg-red-100 text-red-800 border-red-200"
+                                  "Belum Selesai" -> "bg-gray-100 text-gray-800 border-gray-200"
+                                  _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                                end
+                              ]}>
+                                <.icon
+                                  name={
+                                    case ujian.hasil do
+                                      "Lulus" -> "hero-check-circle"
+                                      "Gagal" -> "hero-x-circle"
+                                      "Belum Selesai" -> "hero-clock"
+                                      _ -> "hero-information-circle"
+                                    end
+                                  }
+                                  class="w-3 h-3 mr-1"
+                                /> {ujian.hasil}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left align-top">
+                              <div class="text-xs text-gray-700 whitespace-pre-wrap text-left">
+                                {if Map.get(ujian, :catatan), do: ujian.catatan, else: "-"}
+                              </div>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center align-top">
+                              <.link
+                                navigate={~p"/ujian-keselamatan/#{ujian.id}"}
+                                class="inline-flex items-center justify-center p-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
+                                title="Lihat"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke-width="1.5"
+                                  stroke="currentColor"
+                                  class="w-5 h-5"
+                                  aria-hidden="true"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+                                  />
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                  />
+                                </svg>
+                              </.link>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% @current_tab == "Penempatan" -> %>
+              <div class="space-y-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Penempatan</h2>
+                    
+                    <p class="text-gray-600">
+                      Urus dan pantau penempatan sistem ke pelbagai persekitaran
+                    </p>
+                  </div>
+                  
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm text-gray-600">
+                      <.icon name="hero-server" class="w-5 h-5 text-blue-500" />
+                      <span class="text-sm font-semibold">{length(@penempatan)} Penempatan</span>
+                    </div>
+                    
+                    <.link
+                      navigate={~p"/penempatan"}
+                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                    >
+                      <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
+                      <span>Halaman Penempatan Penuh</span>
+                    </.link>
+                  </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                  <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
+                    <h3 class="text-lg font-semibold text-white">Senarai Penempatan</h3>
+                    
+                    <p class="text-sm text-blue-100">
+                      Pantau status penempatan mengikut versi dan persekitaran.
+                    </p>
+                  </div>
+                  
+                  <%= if length(@penempatan) == 0 do %>
+                    <div class="px-6 py-12 text-center">
+                      <div class="flex flex-col items-center justify-center text-gray-400">
+                        <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
+                        <p class="text-sm font-medium">Tiada penempatan</p>
+                        
+                        <p class="text-xs mt-1">
+                          Klik "Halaman Penempatan Penuh" untuk mendaftar penempatan baharu
+                        </p>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
+                              Bil
+                            </th>
+                            
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Nama Sistem
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Versi
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Lokasi
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Jenis
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Status
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tarikh Penempatan
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tindakan
+                            </th>
+                          </tr>
+                        </thead>
+                        
+                        <tbody class="bg-white divide-y divide-gray-200">
+                          <tr
+                            :for={{penempatan, index} <- Enum.with_index(@penempatan, 1)}
+                            class="hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <td class="px-3 py-2 text-center">
+                              <span class="text-xs text-gray-600 font-medium">{index}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left">
+                              <span class="text-xs text-gray-900 font-semibold">
+                                {penempatan.nama_sistem}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <span class="text-xs text-gray-700">{penempatan.versi}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left">
+                              <span class="text-xs text-gray-700">{penempatan.lokasi}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <span class={[
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                case penempatan.jenis do
+                                  "Produksi" -> "bg-green-100 text-green-800 border-green-200"
+                                  "Staging" -> "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                  "Development" -> "bg-blue-100 text-blue-800 border-blue-200"
+                                  _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                                end
+                              ]}>
+                                {penempatan.jenis}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <span class={[
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                case penempatan.status do
+                                  "Menunggu" ->
+                                    "bg-gray-100 text-gray-800 border-gray-200"
+
+                                  "Dalam Proses" ->
+                                    "bg-yellow-100 text-yellow-800 border-yellow-200"
+
+                                  "Selesai" ->
+                                    "bg-green-100 text-green-800 border-green-200"
+
+                                  "Dibatalkan" ->
+                                    "bg-red-100 text-red-800 border-red-200"
+
+                                  _ ->
+                                    "bg-gray-100 text-gray-800 border-gray-200"
+                                end
+                              ]}>
+                                <.icon
+                                  name={
+                                    case penempatan.status do
+                                      "Menunggu" -> "hero-clock"
+                                      "Dalam Proses" -> "hero-arrow-path"
+                                      "Selesai" -> "hero-check-circle"
+                                      "Dibatalkan" -> "hero-x-circle"
+                                      _ -> "hero-information-circle"
+                                    end
+                                  }
+                                  class="w-3 h-3 mr-1"
+                                /> {penempatan.status}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <div class="flex items-center justify-center gap-1.5">
+                                <.icon
+                                  name="hero-calendar-days"
+                                  class="w-3.5 h-3.5 text-gray-400"
+                                />
+                                <span class="text-xs text-gray-700">
+                                  {Calendar.strftime(penempatan.tarikh_penempatan, "%d/%m/%Y")}
+                                </span>
+                              </div>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <div class="flex items-center justify-center gap-1.5">
+                                <.link
+                                  navigate={~p"/penempatan/#{penempatan.id}"}
+                                  class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                  title="Lihat"
+                                >
+                                  <.icon name="hero-eye" class="w-4 h-4" />
+                                </.link>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% @current_tab == "Penyerahan" -> %>
+              <div class="space-y-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Penyerahan</h2>
+                    
+                    <p class="text-gray-600">Urus dan pantau penyerahan sistem kepada penerima</p>
+                  </div>
+                  
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm text-gray-600">
+                      <.icon name="hero-paper-airplane" class="w-5 h-5 text-blue-500" />
+                      <span class="text-sm font-semibold">{length(@penyerahan)} Penyerahan</span>
+                    </div>
+                    
+                    <.link
+                      navigate={~p"/penyerahan"}
+                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                    >
+                      <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
+                      <span>Halaman Penyerahan Penuh</span>
+                    </.link>
+                  </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                  <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
+                    <h3 class="text-lg font-semibold text-white">Senarai Penyerahan</h3>
+                    
+                    <p class="text-sm text-blue-100">
+                      Pantau status penyerahan mengikut versi dan penerima.
+                    </p>
+                  </div>
+                  
+                  <%= if length(@penyerahan) == 0 do %>
+                    <div class="px-6 py-12 text-center">
+                      <div class="flex flex-col items-center justify-center text-gray-400">
+                        <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
+                        <p class="text-sm font-medium">Tiada penyerahan</p>
+                        
+                        <p class="text-xs mt-1">
+                          Klik "Halaman Penyerahan Penuh" untuk mendaftar penyerahan baharu
+                        </p>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
+                              Bil.
+                            </th>
+                            
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Nama Sistem
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Versi
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Penerima
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Pembangun/Team
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Pengurus Projek
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Status
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Manual Pengguna
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Surat Akuan
+                            </th>
+                            
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Catatan
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tarikh Penyerahan
+                            </th>
+                            
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tindakan
+                            </th>
+                          </tr>
+                        </thead>
+                        
+                        <tbody class="bg-white divide-y divide-gray-200">
+                          <tr
+                            :for={{penyerahan, idx} <- Enum.with_index(@penyerahan, 1)}
+                            class="hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <td class="px-3 py-2 text-center">
+                              <span class="text-xs text-gray-600 font-medium">{idx}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left">
+                              <span class="text-xs text-gray-900 font-semibold">
+                                {penyerahan.nama_sistem}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <span class="text-xs text-gray-700">{penyerahan.versi}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left">
+                              <span class="text-xs text-gray-700">{penyerahan.penerima}</span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <span class="text-xs text-gray-700">
+                                <%= if penyerahan.pembangun_team do %>
+                                  {penyerahan.pembangun_team}
+                                <% else %>
+                                  <span class="text-gray-400">-</span>
+                                <% end %>
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <span class="text-xs text-gray-700">
+                                <%= if penyerahan.pengurus_projek do %>
+                                  {penyerahan.pengurus_projek}
+                                <% else %>
+                                  <span class="text-gray-400">-</span>
+                                <% end %>
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <span class={[
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                                case penyerahan.status do
+                                  "Menunggu" ->
+                                    "bg-gray-100 text-gray-800 border-gray-200"
+
+                                  "Dalam Proses" ->
+                                    "bg-yellow-100 text-yellow-800 border-yellow-200"
+
+                                  "Selesai" ->
+                                    "bg-green-100 text-green-800 border-green-200"
+
+                                  "Dibatalkan" ->
+                                    "bg-red-100 text-red-800 border-red-200"
+
+                                  _ ->
+                                    "bg-gray-100 text-gray-800 border-gray-200"
+                                end
+                              ]}>
+                                <.icon
+                                  name={
+                                    case penyerahan.status do
+                                      "Menunggu" -> "hero-clock"
+                                      "Dalam Proses" -> "hero-arrow-path"
+                                      "Selesai" -> "hero-check-circle"
+                                      "Dibatalkan" -> "hero-x-circle"
+                                      _ -> "hero-information-circle"
+                                    end
+                                  }
+                                  class="w-3 h-3 mr-1"
+                                /> {penyerahan.status}
+                              </span>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <%= if penyerahan.manual_pengguna_bahagian_a do %>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                                  <.icon name="hero-document-check" class="w-3 h-3 mr-1" />
+                                  <span>Ada</span>
+                                </span>
+                              <% else %>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                  <.icon name="hero-minus-circle" class="w-3 h-3 mr-1" />
+                                  <span>Belum Ada</span>
+                                </span>
+                              <% end %>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <%= if penyerahan.surat_akuan_penerimaan do %>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                                  <.icon name="hero-document-check" class="w-3 h-3 mr-1" />
+                                  <span>Ada</span>
+                                </span>
+                              <% else %>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                  <.icon name="hero-minus-circle" class="w-3 h-3 mr-1" />
+                                  <span>Belum Ada</span>
+                                </span>
+                              <% end %>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-left">
+                              <%= if penyerahan.catatan do %>
+                                <span class="text-xs text-gray-700 line-clamp-2">
+                                  {penyerahan.catatan}
+                                </span>
+                              <% else %>
+                                <span class="text-xs text-gray-400">-</span>
+                              <% end %>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <div class="flex items-center justify-center gap-1.5">
+                                <.icon
+                                  name="hero-calendar-days"
+                                  class="w-3.5 h-3.5 text-gray-400"
+                                />
+                                <span class="text-xs text-gray-700">
+                                  <%= if penyerahan.tarikh_penyerahan do %>
+                                    {Calendar.strftime(penyerahan.tarikh_penyerahan, "%d/%m/%Y")}
+                                  <% else %>
+                                    <span class="text-gray-400">-</span>
+                                  <% end %>
+                                </span>
+                              </div>
+                            </td>
+                            
+                            <td class="px-3 py-2 text-center">
+                              <div class="flex items-center justify-center gap-1.5">
+                                <.link
+                                  navigate={~p"/penyerahan/#{penyerahan.id}"}
+                                  class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                  title="Lihat"
+                                >
+                                  <.icon name="hero-eye" class="w-4 h-4" />
+                                </.link>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% @current_tab == "Maklumbalas Pelanggan" -> %>
+              <div class="space-y-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Maklumbalas Pelanggan</h2>
+                    
+                    <p class="text-gray-600">
+                      Urus dan pantau maklumbalas daripada pelanggan selepas penyerahan
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                  <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
+                    <h3 class="text-lg font-semibold text-white">Maklumbalas Pelanggan</h3>
+                    
+                    <p class="text-sm text-blue-100">
+                      Pantau maklumbalas, aduan dan cadangan penambahbaikan daripada pelanggan.
+                    </p>
+                  </div>
+                  
+                  <div class="px-6 py-12 text-center">
+                    <div class="flex flex-col items-center justify-center text-gray-400">
+                      <.icon name="hero-chat-bubble-left-right" class="w-12 h-12 mb-3" />
+                      <p class="text-sm font-medium">Tiada maklumbalas</p>
+                      
+                      <p class="text-xs mt-1">
+                        Kandungan maklumbalas pelanggan akan dipaparkan di sini
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             <% true -> %>

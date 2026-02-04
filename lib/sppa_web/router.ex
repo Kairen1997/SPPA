@@ -83,7 +83,7 @@ defmodule SppaWeb.Router do
       live "/penempatan/:id", PenempatanLive, :show
       live "/penyerahan", PenyerahanLive, :index
       live "/penyerahan/:id", PenyerahanLive, :show
-      live "/pembangunan", PembangunanLive, :index
+      live "/pengaturcaraan", PembangunanLive, :index
     end
 
     live_session :require_authenticated_user,
