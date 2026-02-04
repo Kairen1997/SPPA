@@ -9,39 +9,42 @@
       phx-click="close_sidebar"
     >
     </div>
-    <%!-- Sidebar --%>
+     <%!-- Sidebar --%>
     <.dashboard_sidebar
       sidebar_open={@sidebar_open}
       dashboard_path={~p"/dashboard"}
       logo_src={~p"/images/logojpkn.png"}
       current_scope={@current_scope}
       current_path="/penyerahan"
-    />
-    <%!-- Main Content --%>
+    /> <%!-- Main Content --%>
     <div class="flex-1 flex flex-col overflow-hidden">
       <%!-- Header --%>
-      <header class="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 border-b border-blue-800/50 px-6 py-4 flex items-center justify-between shadow-xl relative">
-        <.system_title />
-        <div class="flex items-center gap-4">
+      <header class="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 border-b border-blue-800/50 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-xl relative gap-2 sm:gap-4">
+        <div
+          class="flex items-center gap-2 sm:gap-4 flex-shrink-0"
+          style="max-width: min(30%, 200px);"
+        >
           <button
             phx-click="toggle_sidebar"
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
           >
-            <.icon name="hero-bars-3" class="w-6 h-6" />
-          </button>
-          <.header_logos />
+            <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
+          </button> <.header_logos />
         </div>
         
-        <.header_actions
-          notifications_open={@notifications_open}
-          notifications_count={@notifications_count}
-          activities={@activities}
-          profile_menu_open={@profile_menu_open}
-          current_scope={@current_scope}
-        />
+        <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
+        
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <.header_actions
+            notifications_open={@notifications_open}
+            notifications_count={@notifications_count}
+            activities={@activities}
+            profile_menu_open={@profile_menu_open}
+            current_scope={@current_scope}
+          />
+        </div>
       </header>
-
-      <%!-- Main Content Area --%>
+       <%!-- Main Content Area --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100">
         <div class="max-w-7xl mx-auto px-6 py-8">
           <%= if assigns[:selected_penyerahan] do %>
@@ -57,31 +60,43 @@
                 </.link>
               </div>
               
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">{@selected_penyerahan.nama_sistem}</h1>
+              <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                {@selected_penyerahan.nama_sistem}
+              </h1>
+              
               <p class="text-gray-600">Butiran lengkap penyerahan sistem</p>
             </div>
-
-            <%!-- Maklumat Penyerahan Card --%>
+             <%!-- Maklumat Penyerahan Card --%>
             <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
               <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                 <h2 class="text-xl font-semibold text-white">Maklumat Penyerahan</h2>
               </div>
+              
               <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Nama Sistem</label>
-                    <p class="text-base text-gray-900 font-semibold">{@selected_penyerahan.nama_sistem}</p>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                      Nama Sistem
+                    </label>
+                    <p class="text-base text-gray-900 font-semibold">
+                      {@selected_penyerahan.nama_sistem}
+                    </p>
                   </div>
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Versi</label>
                     <p class="text-base text-gray-900">{@selected_penyerahan.versi}</p>
                   </div>
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Penerima</label>
                     <p class="text-base text-gray-900">{@selected_penyerahan.penerima}</p>
                   </div>
+                  
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Pembangun/Team</label>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                      Pembangun/Team
+                    </label>
                     <p class="text-base text-gray-900">
                       <%= if @selected_penyerahan.pembangun_team do %>
                         {@selected_penyerahan.pembangun_team}
@@ -90,8 +105,11 @@
                       <% end %>
                     </p>
                   </div>
+                  
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Pengurus Projek</label>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                      Pengurus Projek
+                    </label>
                     <p class="text-base text-gray-900">
                       <%= if @selected_penyerahan.pengurus_projek do %>
                         {@selected_penyerahan.pengurus_projek}
@@ -100,10 +118,12 @@
                       <% end %>
                     </p>
                   </div>
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Lokasi</label>
                     <p class="text-base text-gray-900">{@selected_penyerahan.lokasi}</p>
                   </div>
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Status</label>
                     <span class={[
@@ -117,40 +137,50 @@
                       end
                     ]}>
                       <.icon
-                        name={case @selected_penyerahan.status do
-                          "Menunggu" -> "hero-clock"
-                          "Dalam Proses" -> "hero-arrow-path"
-                          "Selesai" -> "hero-check-circle"
-                          "Dibatalkan" -> "hero-x-circle"
-                          _ -> "hero-information-circle"
-                        end}
+                        name={
+                          case @selected_penyerahan.status do
+                            "Menunggu" -> "hero-clock"
+                            "Dalam Proses" -> "hero-arrow-path"
+                            "Selesai" -> "hero-check-circle"
+                            "Dibatalkan" -> "hero-x-circle"
+                            _ -> "hero-information-circle"
+                          end
+                        }
                         class="w-4 h-4 mr-1"
-                      />
-                      {@selected_penyerahan.status}
+                      /> {@selected_penyerahan.status}
                     </span>
                   </div>
+                  
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Tarikh Dijangka</label>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                      Tarikh Dijangka
+                    </label>
                     <p class="text-base text-gray-900">
                       <%= if @selected_penyerahan.tarikh_dijangka do %>
-                        <%= Calendar.strftime(@selected_penyerahan.tarikh_dijangka, "%d/%m/%Y") %>
+                        {Calendar.strftime(@selected_penyerahan.tarikh_dijangka, "%d/%m/%Y")}
                       <% else %>
                         <span class="text-gray-400">Tiada tarikh</span>
                       <% end %>
                     </p>
                   </div>
+                  
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Tarikh Penyerahan</label>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                      Tarikh Penyerahan
+                    </label>
                     <p class="text-base text-gray-900">
                       <%= if @selected_penyerahan.tarikh_penyerahan do %>
-                        <%= Calendar.strftime(@selected_penyerahan.tarikh_penyerahan, "%d/%m/%Y") %>
+                        {Calendar.strftime(@selected_penyerahan.tarikh_penyerahan, "%d/%m/%Y")}
                       <% else %>
                         <span class="text-gray-400">Belum diserahkan</span>
                       <% end %>
                     </p>
                   </div>
+                  
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Diserahkan Oleh</label>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                      Diserahkan Oleh
+                    </label>
                     <p class="text-base text-gray-900">
                       <%= if @selected_penyerahan.diserahkan_oleh do %>
                         {@selected_penyerahan.diserahkan_oleh}
@@ -159,8 +189,11 @@
                       <% end %>
                     </p>
                   </div>
+                  
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Diterima Oleh</label>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                      Diterima Oleh
+                    </label>
                     <p class="text-base text-gray-900">
                       <%= if @selected_penyerahan.diterima_oleh do %>
                         {@selected_penyerahan.diterima_oleh}
@@ -169,16 +202,20 @@
                       <% end %>
                     </p>
                   </div>
+                  
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Tarikh Diterima</label>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                      Tarikh Diterima
+                    </label>
                     <p class="text-base text-gray-900">
                       <%= if @selected_penyerahan.tarikh_diterima do %>
-                        <%= Calendar.strftime(@selected_penyerahan.tarikh_diterima, "%d/%m/%Y") %>
+                        {Calendar.strftime(@selected_penyerahan.tarikh_diterima, "%d/%m/%Y")}
                       <% else %>
                         <span class="text-gray-400">Belum diterima</span>
                       <% end %>
                     </p>
                   </div>
+                  
                   <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-500 mb-1">Catatan</label>
                     <p class="text-base text-gray-900">
@@ -197,38 +234,36 @@
             <div class="mb-8 flex items-center justify-between">
               <div>
                 <h1 class="text-4xl font-bold text-gray-900 mb-2">Penyerahan</h1>
+                
                 <p class="text-gray-600">Urus dan pantau penyerahan sistem kepada penerima</p>
               </div>
+              
               <button
                 phx-click="open_create_modal"
                 class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
               >
-                <.icon name="hero-plus-circle" class="w-5 h-5" />
-                <span>Penyerahan Baharu</span>
+                <.icon name="hero-plus-circle" class="w-5 h-5" /> <span>Penyerahan Baharu</span>
               </button>
             </div>
-
-            <%!-- Count --%>
+             <%!-- Count --%>
             <div class="mb-6 flex items-center justify-end">
               <div class="flex items-center gap-2 text-gray-600">
                 <.icon name="hero-paper-airplane" class="w-5 h-5" />
-                <span class="text-sm font-medium">
-                  {length(@penyerahan)} Penyerahan
-                </span>
+                <span class="text-sm font-medium">{length(@penyerahan)} Penyerahan</span>
               </div>
             </div>
-
-            <%!-- Penyerahan Container --%>
+             <%!-- Penyerahan Container --%>
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
               <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                 <h2 class="text-xl font-semibold text-white">Senarai Penyerahan</h2>
               </div>
-
+              
               <%= if length(@penyerahan) == 0 do %>
                 <div class="px-6 py-12 text-center">
                   <div class="flex flex-col items-center justify-center text-gray-400">
                     <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                     <p class="text-sm font-medium">Tiada penyerahan</p>
+                    
                     <p class="text-xs mt-1">Tiada rekod penyerahan pada masa ini</p>
                   </div>
                 </div>
@@ -241,38 +276,49 @@
                         <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Nama Sistem
                         </th>
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Versi
                         </th>
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Penerima
                         </th>
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Pembangun/Team
                         </th>
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Pengurus Projek
                         </th>
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Status
                         </th>
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Manual Pengguna
                         </th>
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Surat Akuan
                         </th>
+                        
                         <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Catatan
                         </th>
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Tarikh Penyerahan
                         </th>
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Tindakan
                         </th>
                       </tr>
                     </thead>
+                    
                     <tbody class="bg-white divide-y divide-gray-200">
                       <tr
                         :for={penyerahan <- @penyerahan}
@@ -283,16 +329,15 @@
                             {penyerahan.nama_sistem}
                           </span>
                         </td>
+                        
                         <td class="px-3 py-2 text-center">
-                          <span class="text-xs text-gray-700">
-                            {penyerahan.versi}
-                          </span>
+                          <span class="text-xs text-gray-700">{penyerahan.versi}</span>
                         </td>
+                        
                         <td class="px-3 py-2 text-left">
-                          <span class="text-xs text-gray-700">
-                            {penyerahan.penerima}
-                          </span>
+                          <span class="text-xs text-gray-700">{penyerahan.penerima}</span>
                         </td>
+                        
                         <td class="px-3 py-2 text-center">
                           <span class="text-xs text-gray-700">
                             <%= if penyerahan.pembangun_team do %>
@@ -302,6 +347,7 @@
                             <% end %>
                           </span>
                         </td>
+                        
                         <td class="px-3 py-2 text-center">
                           <span class="text-xs text-gray-700">
                             <%= if penyerahan.pengurus_projek do %>
@@ -311,6 +357,7 @@
                             <% end %>
                           </span>
                         </td>
+                        
                         <td class="px-3 py-2 text-center">
                           <span class={[
                             "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -323,18 +370,20 @@
                             end
                           ]}>
                             <.icon
-                              name={case penyerahan.status do
-                                "Menunggu" -> "hero-clock"
-                                "Dalam Proses" -> "hero-arrow-path"
-                                "Selesai" -> "hero-check-circle"
-                                "Dibatalkan" -> "hero-x-circle"
-                                _ -> "hero-information-circle"
-                              end}
+                              name={
+                                case penyerahan.status do
+                                  "Menunggu" -> "hero-clock"
+                                  "Dalam Proses" -> "hero-arrow-path"
+                                  "Selesai" -> "hero-check-circle"
+                                  "Dibatalkan" -> "hero-x-circle"
+                                  _ -> "hero-information-circle"
+                                end
+                              }
                               class="w-3 h-3 mr-1"
-                            />
-                            {penyerahan.status}
+                            /> {penyerahan.status}
                           </span>
                         </td>
+                        
                         <td class="px-3 py-2 text-center">
                           <%= if penyerahan.manual_pengguna_bahagian_a do %>
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
@@ -348,6 +397,7 @@
                             </span>
                           <% end %>
                         </td>
+                        
                         <td class="px-3 py-2 text-center">
                           <%= if penyerahan.surat_akuan_penerimaan do %>
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
@@ -361,12 +411,15 @@
                             </span>
                           <% end %>
                         </td>
+                        
                         <td class="px-3 py-2 text-left">
                           <%= if penyerahan.catatan do %>
-                            <% is_expanded = MapSet.member?(assigns[:expanded_catatan] || MapSet.new(), penyerahan.id) %>
-                            <% catatan_length = String.length(penyerahan.catatan) %>
-                            <% should_truncate = catatan_length > 50 %>
-                            
+                            <% is_expanded =
+                              MapSet.member?(
+                                assigns[:expanded_catatan] || MapSet.new(),
+                                penyerahan.id
+                              ) %> <% catatan_length = String.length(penyerahan.catatan) %> <% should_truncate =
+                              catatan_length > 50 %>
                             <div class="text-xs text-gray-700">
                               <%= if should_truncate do %>
                                 <div>
@@ -394,18 +447,20 @@
                             <span class="text-xs text-gray-400">-</span>
                           <% end %>
                         </td>
+                        
                         <td class="px-3 py-2 text-center">
                           <div class="flex items-center justify-center gap-1.5">
                             <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400" />
                             <span class="text-xs text-gray-700">
                               <%= if penyerahan.tarikh_penyerahan do %>
-                                <%= Calendar.strftime(penyerahan.tarikh_penyerahan, "%d/%m/%Y") %>
+                                {Calendar.strftime(penyerahan.tarikh_penyerahan, "%d/%m/%Y")}
                               <% else %>
                                 <span class="text-gray-400">-</span>
                               <% end %>
                             </span>
                           </div>
                         </td>
+                        
                         <td class="px-3 py-2 text-center">
                           <div class="flex items-center justify-center gap-1.5">
                             <button
@@ -439,8 +494,7 @@
       </main>
     </div>
   </div>
-
-  <%!-- Create Modal --%>
+   <%!-- Create Modal --%>
   <%= if @show_create_modal do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
@@ -451,7 +505,7 @@
     >
       <%!-- Backdrop --%>
       <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-      <%!-- Modal container --%>
+       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
           class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -462,10 +516,10 @@
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Penyerahan Baharu</h2>
-                <p class="mt-1 text-sm text-blue-100">
-                  Isi maklumat penyerahan baharu
-                </p>
+                
+                <p class="mt-1 text-sm text-blue-100">Isi maklumat penyerahan baharu</p>
               </div>
+              
               <button
                 type="button"
                 phx-click="close_create_modal"
@@ -476,7 +530,7 @@
               </button>
             </div>
           </div>
-          <%!-- Modal body --%>
+           <%!-- Modal body --%>
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@form}
@@ -496,6 +550,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:versi]}
@@ -505,6 +560,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:penerima]}
@@ -515,6 +571,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:pembangun_team]}
@@ -524,6 +581,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:pengurus_projek]}
@@ -533,6 +591,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:lokasi]}
@@ -543,20 +602,31 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                   <select
                     name="penyerahan[status]"
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   >
-                    <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>Menunggu</option>
-                    <option value="Dalam Proses" selected={@form[:status].value == "Dalam Proses"}>Dalam Proses</option>
-                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>Selesai</option>
-                    <option value="Dibatalkan" selected={@form[:status].value == "Dibatalkan"}>Dibatalkan</option>
+                    <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>
+                      Menunggu
+                    </option>
+                    
+                    <option value="Dalam Proses" selected={@form[:status].value == "Dalam Proses"}>
+                      Dalam Proses
+                    </option>
+                    
+                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>
+                      Selesai
+                    </option>
+                    
+                    <option value="Dibatalkan" selected={@form[:status].value == "Dibatalkan"}>
+                      Dibatalkan
+                    </option>
                   </select>
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:tarikh_dijangka]}
@@ -565,6 +635,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:tarikh_penyerahan]}
@@ -573,6 +644,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:diserahkan_oleh]}
@@ -582,6 +654,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:diterima_oleh]}
@@ -591,11 +664,9 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Catatan
-                  </label>
-                  <textarea
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label> <textarea
                     name="penyerahan[catatan]"
                     rows="4"
                     placeholder="Masukkan catatan..."
@@ -603,7 +674,7 @@
                   ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
                 </div>
               </div>
-              <%!-- Form Actions --%>
+               <%!-- Form Actions --%>
               <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
                 <button
                   type="button"
@@ -625,8 +696,7 @@
       </div>
     </div>
   <% end %>
-
-  <%!-- Edit Modal --%>
+   <%!-- Edit Modal --%>
   <%= if @show_edit_modal do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
@@ -637,7 +707,7 @@
     >
       <%!-- Backdrop --%>
       <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-      <%!-- Modal container --%>
+       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
           class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -648,10 +718,10 @@
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Penyerahan</h2>
-                <p class="mt-1 text-sm text-yellow-100">
-                  Kemaskini maklumat penyerahan
-                </p>
+                
+                <p class="mt-1 text-sm text-yellow-100">Kemaskini maklumat penyerahan</p>
               </div>
+              
               <button
                 type="button"
                 phx-click="close_edit_modal"
@@ -662,7 +732,7 @@
               </button>
             </div>
           </div>
-          <%!-- Modal body --%>
+           <%!-- Modal body --%>
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@form}
@@ -682,6 +752,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:versi]}
@@ -691,6 +762,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:penerima]}
@@ -701,6 +773,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:pembangun_team]}
@@ -710,6 +783,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:pengurus_projek]}
@@ -719,6 +793,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:lokasi]}
@@ -729,20 +804,31 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                   <select
                     name="penyerahan[status]"
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200"
                   >
-                    <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>Menunggu</option>
-                    <option value="Dalam Proses" selected={@form[:status].value == "Dalam Proses"}>Dalam Proses</option>
-                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>Selesai</option>
-                    <option value="Dibatalkan" selected={@form[:status].value == "Dibatalkan"}>Dibatalkan</option>
+                    <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>
+                      Menunggu
+                    </option>
+                    
+                    <option value="Dalam Proses" selected={@form[:status].value == "Dalam Proses"}>
+                      Dalam Proses
+                    </option>
+                    
+                    <option value="Selesai" selected={@form[:status].value == "Selesai"}>
+                      Selesai
+                    </option>
+                    
+                    <option value="Dibatalkan" selected={@form[:status].value == "Dibatalkan"}>
+                      Dibatalkan
+                    </option>
                   </select>
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:tarikh_dijangka]}
@@ -751,6 +837,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:tarikh_penyerahan]}
@@ -759,6 +846,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:diserahkan_oleh]}
@@ -768,6 +856,7 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div>
                   <.input
                     field={@form[:diterima_oleh]}
@@ -777,11 +866,9 @@
                     class="w-full"
                   />
                 </div>
+                
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Catatan
-                  </label>
-                  <textarea
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label> <textarea
                     name="penyerahan[catatan]"
                     rows="4"
                     placeholder="Masukkan catatan..."
@@ -789,7 +876,7 @@
                   ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
                 </div>
               </div>
-              <%!-- Form Actions --%>
+               <%!-- Form Actions --%>
               <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
                 <button
                   type="button"
@@ -811,8 +898,7 @@
       </div>
     </div>
   <% end %>
-
-  <%!-- Upload Modal --%>
+   <%!-- Upload Modal --%>
   <%= if @show_upload_modal do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
@@ -823,7 +909,7 @@
     >
       <%!-- Backdrop --%>
       <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-      <%!-- Modal container --%>
+       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
           class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -834,10 +920,12 @@
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Muat Naik Dokumen</h2>
+                
                 <p class="mt-1 text-sm text-green-100">
                   Muat naik Manual Pengguna Bahagian A dan Surat Akuan Penerimaan Aplikasi
                 </p>
               </div>
+              
               <button
                 type="button"
                 phx-click="close_upload_modal"
@@ -848,24 +936,34 @@
               </button>
             </div>
           </div>
-          <%!-- Modal body --%>
+           <%!-- Modal body --%>
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <%!-- Manual Pengguna Bahagian A Upload --%>
               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Manual Pengguna Bahagian A</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                  Manual Pengguna Bahagian A
+                </h3>
+                
                 <%= if assigns[:uploading_penyerahan] && assigns[:uploading_penyerahan].manual_pengguna_bahagian_a do %>
                   <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div class="flex items-center gap-2">
                       <.icon name="hero-document-check" class="w-5 h-5 text-green-600" />
                       <div class="flex-1">
                         <p class="text-sm font-medium text-green-900">Dokumen sedia ada</p>
-                        <p class="text-xs text-green-700 mt-1">{assigns[:uploading_penyerahan].manual_pengguna_bahagian_a}</p>
-                        <p class="text-xs text-green-600 mt-1 italic">Muat naik dokumen baharu akan menggantikan dokumen sedia ada</p>
+                        
+                        <p class="text-xs text-green-700 mt-1">
+                          {assigns[:uploading_penyerahan].manual_pengguna_bahagian_a}
+                        </p>
+                        
+                        <p class="text-xs text-green-600 mt-1 italic">
+                          Muat naik dokumen baharu akan menggantikan dokumen sedia ada
+                        </p>
                       </div>
                     </div>
                   </div>
                 <% end %>
+                
                 <.form
                   for={@upload_manual_form}
                   phx-change="validate_upload_manual"
@@ -874,12 +972,13 @@
                   multipart={true}
                   class="space-y-4"
                 >
-                  <input type="hidden" name="upload_manual[penyerahan_id]" value={@uploading_penyerahan_id} />
-                  
+                  <input
+                    type="hidden"
+                    name="upload_manual[penyerahan_id]"
+                    value={@uploading_penyerahan_id}
+                  />
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Pilih Fail
-                    </label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Fail</label>
                     <div class="mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-4 transition hover:border-green-600 hover:bg-gray-50">
                       <div class="text-center">
                         <.icon
@@ -909,32 +1008,40 @@
                       </div>
                     </div>
                   </div>
-
+                  
                   <button
                     type="submit"
                     class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
                   >
-                    <.icon name="hero-arrow-up-tray" class="w-5 h-5" />
-                    <span>Muat Naik</span>
+                    <.icon name="hero-arrow-up-tray" class="w-5 h-5" /> <span>Muat Naik</span>
                   </button>
                 </.form>
               </div>
-
-              <%!-- Surat Akuan Penerimaan Aplikasi Upload --%>
+               <%!-- Surat Akuan Penerimaan Aplikasi Upload --%>
               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Surat Akuan Penerimaan Aplikasi</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                  Surat Akuan Penerimaan Aplikasi
+                </h3>
+                
                 <%= if assigns[:uploading_penyerahan] && assigns[:uploading_penyerahan].surat_akuan_penerimaan do %>
                   <div class="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
                     <div class="flex items-center gap-2">
                       <.icon name="hero-document-check" class="w-5 h-5 text-purple-600" />
                       <div class="flex-1">
                         <p class="text-sm font-medium text-purple-900">Dokumen sedia ada</p>
-                        <p class="text-xs text-purple-700 mt-1">{assigns[:uploading_penyerahan].surat_akuan_penerimaan}</p>
-                        <p class="text-xs text-purple-600 mt-1 italic">Muat naik dokumen baharu akan menggantikan dokumen sedia ada</p>
+                        
+                        <p class="text-xs text-purple-700 mt-1">
+                          {assigns[:uploading_penyerahan].surat_akuan_penerimaan}
+                        </p>
+                        
+                        <p class="text-xs text-purple-600 mt-1 italic">
+                          Muat naik dokumen baharu akan menggantikan dokumen sedia ada
+                        </p>
                       </div>
                     </div>
                   </div>
                 <% end %>
+                
                 <.form
                   for={@upload_surat_form}
                   phx-change="validate_upload_surat"
@@ -943,12 +1050,13 @@
                   multipart={true}
                   class="space-y-4"
                 >
-                  <input type="hidden" name="upload_surat[penyerahan_id]" value={@uploading_penyerahan_id} />
-                  
+                  <input
+                    type="hidden"
+                    name="upload_surat[penyerahan_id]"
+                    value={@uploading_penyerahan_id}
+                  />
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Pilih Fail
-                    </label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Fail</label>
                     <div class="mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-4 transition hover:border-purple-600 hover:bg-gray-50">
                       <div class="text-center">
                         <.icon
@@ -978,18 +1086,17 @@
                       </div>
                     </div>
                   </div>
-
+                  
                   <button
                     type="submit"
                     class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
                   >
-                    <.icon name="hero-arrow-up-tray" class="w-5 h-5" />
-                    <span>Muat Naik</span>
+                    <.icon name="hero-arrow-up-tray" class="w-5 h-5" /> <span>Muat Naik</span>
                   </button>
                 </.form>
               </div>
             </div>
-            <%!-- Modal Actions --%>
+             <%!-- Modal Actions --%>
             <div class="mt-6 flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
               <button
                 type="button"
@@ -1005,4 +1112,3 @@
     </div>
   <% end %>
 </Layouts.app>
-

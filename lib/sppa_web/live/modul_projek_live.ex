@@ -126,6 +126,7 @@ defmodule SppaWeb.ModulProjekLive do
   def handle_event("open_new_task_modal", _params, socket) do
     # Pre-fill project_id in the form
     form_data = %{"project_id" => Integer.to_string(socket.assigns.project_id)}
+
     {:noreply,
      socket
      |> assign(:show_new_task_modal, true)
@@ -149,7 +150,8 @@ defmodule SppaWeb.ModulProjekLive do
       form_data = %{
         "title" => task.title,
         "description" => task.description || "",
-        "developer_id" => if(task.developer_id, do: Integer.to_string(task.developer_id), else: ""),
+        "developer_id" =>
+          if(task.developer_id, do: Integer.to_string(task.developer_id), else: ""),
         "priority" => task.priority || "medium",
         "status" => task.status || "in_progress",
         "fasa" => task.fasa || "",

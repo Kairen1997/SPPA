@@ -787,6 +787,154 @@ const UpdateSectionCategory = {
   }
 }
 
+// Auto Resize Textarea Hook
+const AutoResize = {
+  mounted() {
+    this.resize()
+    this.el.addEventListener("input", () => this.resize())
+  },
+  
+  updated() {
+    this.resize()
+  },
+  
+  resize() {
+    // Reset height to auto to get the correct scrollHeight
+    this.el.style.height = "auto"
+    // Set height to scrollHeight, but respect max-height
+    const maxHeight = parseInt(this.el.style.maxHeight) || 320 // 20rem = 320px
+    const scrollHeight = this.el.scrollHeight
+    this.el.style.height = `${Math.min(scrollHeight, maxHeight)}px`
+    // Enable scrolling if content exceeds max height
+    this.el.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden"
+  }
+}
+
+// Auto Resize Textarea with Save on Blur Hook - combines auto-resize and save functionality
+const AutoResizeTextarea = {
+  mounted() {
+    this.resize()
+    this.el.addEventListener("input", () => this.resize())
+    
+    // Handle blur event to save field
+    this.handleBlur = (e) => {
+      const input = this.el
+      const value = input.value || ""
+      const tabType = input.getAttribute("phx-value-tab_type")
+      const categoryKey = input.getAttribute("phx-value-category_key")
+      const questionNo = input.getAttribute("phx-value-question_no")
+      const field = input.getAttribute("phx-value-field")
+      
+      if (tabType && categoryKey && questionNo && field && typeof this.pushEvent === 'function') {
+        // Push event with the field value
+        this.pushEvent("save_field", {
+          tab_type: tabType,
+          category_key: categoryKey,
+          question_no: questionNo,
+          field: field,
+          value: value
+        })
+      }
+    }
+    
+    this.el.addEventListener("blur", this.handleBlur)
+  },
+  
+  updated() {
+    this.resize()
+    
+    // Re-attach blur listener if needed
+    if (!this.handleBlurAttached) {
+      this.el.addEventListener("blur", this.handleBlur)
+      this.handleBlurAttached = true
+    }
+  },
+  
+  resize() {
+    // Reset height to auto to get the correct scrollHeight
+    this.el.style.height = "auto"
+    
+    // Get max-height from computed style (converts rem/em to px automatically)
+    const computedStyle = window.getComputedStyle(this.el)
+    let maxHeight = 320 // Default to 20rem = 320px
+    
+    const maxHeightStr = computedStyle.maxHeight
+    if (maxHeightStr && maxHeightStr !== 'none') {
+      maxHeight = parseInt(maxHeightStr) || 320
+    }
+    
+    // Get min-height from computed style
+    let minHeight = 40 // Default to 2.5rem = 40px
+    const minHeightStr = computedStyle.minHeight
+    if (minHeightStr && minHeightStr !== 'none' && minHeightStr !== '0px') {
+      minHeight = parseInt(minHeightStr) || 40
+    }
+    
+    const scrollHeight = this.el.scrollHeight
+    
+    // Set height to scrollHeight, but respect min and max height
+    const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight))
+    this.el.style.height = `${newHeight}px`
+    
+    // Enable scrolling if content exceeds max height
+    this.el.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden"
+  },
+  
+  destroyed() {
+    if (this.handleBlur) {
+      this.el.removeEventListener("blur", this.handleBlur)
+    }
+  }
+}
+
+// Toggle Options Field Hook
+const ToggleOptionsField = {
+  mounted() {
+    this.toggleField()
+    this.el.addEventListener("change", () => this.toggleField())
+  },
+  
+  updated() {
+    this.toggleField()
+  },
+  
+  toggleField() {
+    const optionsField = document.getElementById("options-field")
+    if (optionsField) {
+      const selectedType = this.el.value
+      if (selectedType === "select" || selectedType === "checkbox") {
+        optionsField.classList.remove("hidden")
+        optionsField.classList.add("block")
+      } else {
+        optionsField.classList.remove("block")
+        optionsField.classList.add("hidden")
+      }
+    }
+  }
+}
+
+// Preserve Details Open State Hook
+const PreserveDetailsOpen = {
+  mounted() {
+    // Store initial open state
+    this.wasOpen = this.el.hasAttribute("open")
+  },
+  
+  updated() {
+    // Restore open state if it was open before
+    if (this.wasOpen && !this.el.hasAttribute("open")) {
+      this.el.setAttribute("open", "")
+    }
+    // Update stored state
+    this.wasOpen = this.el.hasAttribute("open")
+  },
+  
+  beforeUpdate() {
+    // Store current open state before update
+    this.wasOpen = this.el.hasAttribute("open")
+  }
+}
+
 // Notification Toggle Hook
 const NotificationToggle = {
   mounted() {
@@ -904,6 +1052,9 @@ const liveSocket = new LiveSocket("/live", Socket, {
   params: {_csrf_token: csrfToken},
   hooks: {
     ...colocatedHooks,
+    SingleClick,
+    PreventEnterSubmit,
+    OpenDatePicker,
     PrintDocument,
     UpdateSectionCategory,
     GeneratePDF,
@@ -963,4 +1114,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-

@@ -19,29 +19,32 @@
     /> <%!-- Main Content --%>
     <div class="flex-1 flex flex-col overflow-hidden">
       <%!-- Header --%>
-      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
-        <.system_title />
-        <div class="flex items-center gap-4">
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-md relative gap-2 sm:gap-4">
+        <div
+          class="flex items-center gap-2 sm:gap-4 flex-shrink-0"
+          style="max-width: min(30%, 200px);"
+        >
           <button
             phx-click="toggle_sidebar"
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
           >
-            <.icon name="hero-bars-3" class="w-6 h-6" />
-          </button>
-          <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+            <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
+          </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
         </div>
-
-        <div class="flex items-center gap-3">
+        
+        <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
+        
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <.link
             navigate={~p"/users/settings"}
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200"
           >
-            <.icon name="hero-user-circle" class="w-6 h-6" />
+            <.icon name="hero-user-circle" class="w-5 h-5 sm:w-6 sm:h-6" />
           </.link>
           <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
             <button
               type="submit"
-              class="text-white hover:text-red-100 hover:bg-red-500/30 p-2 rounded-lg transition-all duration-200"
+              class="text-white hover:text-red-100 hover:bg-red-500/30 p-1.5 sm:p-2 rounded-lg transition-all duration-200"
             >
               <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5" />
             </button>
@@ -61,8 +64,7 @@
               <span>Kembali ke Senarai Projek Diluluskan</span>
             </.link>
           </div>
-          
-          <%!-- Page Header Section --%>
+           <%!-- Page Header Section --%>
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
             <%= if @project do %>
               <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -133,39 +135,51 @@
             <%!-- Statistics Cards --%>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
               <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-                  <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-xs font-medium text-blue-700 uppercase tracking-wide">Jumlah Tugasan</p>
+                    <p class="text-xs font-medium text-blue-700 uppercase tracking-wide">
+                      Jumlah Tugasan
+                    </p>
+                    
                     <p class="text-2xl font-bold text-blue-900 mt-1">{length(@tasks)}</p>
-                    </div>
+                  </div>
+                  
                   <div class="p-3 bg-blue-200 rounded-lg">
                     <.icon name="hero-clipboard-document-list" class="w-6 h-6 text-blue-700" />
                   </div>
                 </div>
-                      </div>
-                      
+              </div>
+              
               <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-xs font-medium text-green-700 uppercase tracking-wide">Selesai</p>
+                    <p class="text-xs font-medium text-green-700 uppercase tracking-wide">
+                      Selesai
+                    </p>
+                    
                     <p class="text-2xl font-bold text-green-900 mt-1">
                       {length(Enum.filter(@tasks, fn t -> t.status == "done" end))}
                     </p>
-                      </div>
+                  </div>
+                  
                   <div class="p-3 bg-green-200 rounded-lg">
                     <.icon name="hero-check-circle" class="w-6 h-6 text-green-700" />
+                  </div>
                 </div>
               </div>
-            </div>
-            
+              
               <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-4 border border-amber-200">
-                  <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-xs font-medium text-amber-700 uppercase tracking-wide">Dalam Proses</p>
+                    <p class="text-xs font-medium text-amber-700 uppercase tracking-wide">
+                      Dalam Proses
+                    </p>
+                    
                     <p class="text-2xl font-bold text-amber-900 mt-1">
                       {length(Enum.filter(@tasks, fn t -> t.status == "in_progress" end))}
                     </p>
                   </div>
+                  
                   <div class="p-3 bg-amber-200 rounded-lg">
                     <.icon name="hero-arrow-path" class="w-6 h-6 text-amber-700" />
                   </div>
@@ -262,9 +276,14 @@
                       <td colspan="7" class="px-6 py-10 text-center">
                         <div class="flex flex-col items-center justify-center space-y-3">
                           <.icon name="hero-clipboard-document" class="w-12 h-12 text-gray-300" />
-                          <p class="text-sm font-medium text-gray-500">Tiada tugasan pada masa ini</p>
-                          <p class="text-xs text-gray-400">Klik butang "Modul Baru" untuk menambah modul pertama</p>
-                  </div>
+                          <p class="text-sm font-medium text-gray-500">
+                            Tiada tugasan pada masa ini
+                          </p>
+                          
+                          <p class="text-xs text-gray-400">
+                            Klik butang "Modul Baru" untuk menambah modul pertama
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   <% else %>
@@ -288,28 +307,32 @@
                         </button>
                       </div>
                         </td>
+                        
                         <td class="px-6 py-4 border-r border-gray-200 text-center">
                           <span class="inline-flex items-center justify-center w-8 h-8 text-sm font-semibold text-gray-700 bg-gray-100 rounded-md">
                             {task.fasa || "-"}
                           </span>
                         </td>
+                        
                         <td class="px-6 py-4 border-r border-gray-200 text-center">
                           <span class="inline-flex items-center justify-center w-8 h-8 text-sm font-semibold text-gray-700 bg-gray-100 rounded-md">
                             {task.versi || "-"}
                           </span>
                         </td>
+                        
                         <td class="px-6 py-4 border-r border-gray-200 text-center">
                           <%= if task.status do %>
-                        <span class={[
+                            <span class={[
                               "inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold shadow-sm",
                               status_color(task.status)
                             ]}>
                               {status_label(task.status)}
-                        </span>
+                            </span>
                           <% else %>
                             <span class="text-xs text-gray-400">-</span>
                           <% end %>
                         </td>
+                        
                         <td class="px-6 py-4 border-r border-gray-200 text-center">
                           <%= if task.priority do %>
                             <span class={[
@@ -320,8 +343,9 @@
                             </span>
                           <% else %>
                             <span class="text-xs text-gray-400">-</span>
-                        <% end %>
+                          <% end %>
                         </td>
+                        
                         <td class="px-6 py-4 border-r border-gray-200">
                           <div class="flex items-center gap-2">
                             <%= if task.developer do %>
@@ -343,37 +367,39 @@
                         <button
                               type="button"
                               class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
-                          onclick="event.stopPropagation();"
+                              onclick="event.stopPropagation();"
                               title="Tukar pembangun"
-                        >
+                            >
                               <.icon name="hero-chevron-down" class="w-4 h-4" />
-                        </button>
-                      </div>
+                            </button>
+                          </div>
                         </td>
+                        
                         <td class="px-6 py-4">
-                        <div class="flex items-center gap-2">
-                        <%= if task.due_date do %>
+                          <div class="flex items-center gap-2">
+                            <%= if task.due_date do %>
                               <div class="flex items-center gap-2">
                                 <.icon name="hero-calendar" class="w-4 h-4 text-gray-400" />
                                 <span class="text-sm font-medium text-gray-700">
-                              {Calendar.strftime(task.due_date, "%d/%m/%Y")}
-                            </span>
-                          </div>
+                                  {Calendar.strftime(task.due_date, "%d/%m/%Y")}
+                                </span>
+                              </div>
                             <% else %>
                               <span class="text-sm text-gray-400 italic">Tiada tarikh</span>
-                        <% end %>
+                            <% end %>
+                            
                             <button
                               type="button"
                               class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100 ml-auto"
-                          onclick="event.stopPropagation();"
+                              onclick="event.stopPropagation();"
                               title="Pilih tarikh sasaran"
                             >
                               <.icon name="hero-calendar-days" class="w-4 h-4" />
                             </button>
-                      </div>
+                          </div>
                         </td>
                       </tr>
-                  <% end %>
+                    <% end %>
                   <% end %>
                 </tbody>
               </table>
@@ -383,8 +409,7 @@
       </main>
     </div>
   </div>
-  
-  <%!-- New Task Modal --%>
+   <%!-- New Task Modal --%>
   <div
     :if={@show_new_task_modal}
     class="fixed inset-0 z-50 overflow-y-auto"
@@ -392,11 +417,12 @@
     aria-modal="true"
   >
     <%!-- Backdrop --%>
-    <div 
-      class="fixed inset-0 bg-black/60 transition-opacity" 
+    <div
+      class="fixed inset-0 bg-black/60 transition-opacity"
       aria-hidden="true"
       phx-click="close_new_task_modal"
-    ></div>
+    >
+    </div>
      <%!-- Modal container --%>
     <div class="flex min-h-full items-center justify-center p-4">
       <div
@@ -434,7 +460,6 @@
           >
             <%!-- Hidden project_id field --%>
             <input type="hidden" name="task[project_id]" value={@project_id} />
-            
             <%!-- Task Title --%>
             <div>
               <.input
@@ -446,21 +471,16 @@
                 class="w-full"
               />
             </div>
-            
-            <%!-- Task Description --%>
+             <%!-- Task Description --%>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Penerangan
-              </label>
-              <textarea
+              <label class="block text-sm font-medium text-gray-700 mb-2">Penerangan</label> <textarea
                 name="task[description]"
                 rows="4"
                 placeholder="Masukkan penerangan tugasan..."
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
               ><%= if @form[:description] && @form[:description].value, do: @form[:description].value, else: "" %></textarea>
             </div>
-            
-            <%!-- Fasa and Versi --%>
+             <%!-- Fasa and Versi --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
               <%!-- Fasa --%>
               <div>
@@ -472,8 +492,7 @@
                   class="w-full"
                 />
               </div>
-              
-              <%!-- Versi --%>
+               <%!-- Versi --%>
               <div>
                 <.input
                   field={@form[:versi]}
@@ -484,8 +503,7 @@
                 />
               </div>
             </div>
-            
-            <%!-- Task Assignment and Priority --%>
+             <%!-- Task Assignment and Priority --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
               <%!-- Assign to Developer --%>
               <div>
@@ -502,8 +520,7 @@
                   class="w-full"
                 />
               </div>
-              
-              <%!-- Priority --%>
+               <%!-- Priority --%>
               <div>
                 <.input
                   field={@form[:priority]}
@@ -518,8 +535,7 @@
                 />
               </div>
             </div>
-            
-            <%!-- Due Date and Status --%>
+             <%!-- Due Date and Status --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
               <%!-- Due Date --%>
               <div>
@@ -530,8 +546,7 @@
                   class="w-full"
                 />
               </div>
-              
-              <%!-- Status --%>
+               <%!-- Status --%>
               <div>
                 <.input
                   field={@form[:status]}
@@ -545,7 +560,6 @@
                 />
               </div>
             </div>
-            
              <%!-- Form Actions --%>
             <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
               <button
@@ -567,8 +581,7 @@
       </div>
     </div>
   </div>
-  
-  <%!-- Edit Task Modal --%>
+   <%!-- Edit Task Modal --%>
   <div
     :if={@show_edit_task_modal && @selected_task}
     class="fixed inset-0 z-50 overflow-y-auto"
@@ -576,11 +589,12 @@
     aria-modal="true"
   >
     <%!-- Backdrop --%>
-    <div 
-      class="fixed inset-0 bg-black/60 transition-opacity" 
+    <div
+      class="fixed inset-0 bg-black/60 transition-opacity"
       aria-hidden="true"
       phx-click="close_edit_task_modal"
-    ></div>
+    >
+    </div>
      <%!-- Modal container --%>
     <div class="flex min-h-full items-center justify-center p-4">
       <div
@@ -594,9 +608,7 @@
             <div>
               <h2 class="text-2xl font-bold text-white">Kemaskini Modul</h2>
               
-              <p class="mt-1 text-sm text-blue-100">
-                Kemaskini maklumat tugasan
-              </p>
+              <p class="mt-1 text-sm text-blue-100">Kemaskini maklumat tugasan</p>
             </div>
             
             <button
@@ -620,7 +632,6 @@
           >
             <%!-- Hidden project_id field --%>
             <input type="hidden" name="task[project_id]" value={@project_id} />
-            
             <%!-- Task Title --%>
             <div>
               <.input
@@ -632,21 +643,16 @@
                 class="w-full"
               />
             </div>
-            
-            <%!-- Task Description --%>
+             <%!-- Task Description --%>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Penerangan
-              </label>
-              <textarea
+              <label class="block text-sm font-medium text-gray-700 mb-2">Penerangan</label> <textarea
                 name="task[description]"
                 rows="4"
                 placeholder="Masukkan penerangan tugasan..."
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
               ><%= if @form[:description] && @form[:description].value, do: @form[:description].value, else: "" %></textarea>
             </div>
-            
-            <%!-- Fasa and Versi --%>
+             <%!-- Fasa and Versi --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
               <%!-- Fasa --%>
               <div>
@@ -658,8 +664,7 @@
                   class="w-full"
                 />
               </div>
-              
-              <%!-- Versi --%>
+               <%!-- Versi --%>
               <div>
                 <.input
                   field={@form[:versi]}
@@ -670,8 +675,7 @@
                 />
               </div>
             </div>
-            
-            <%!-- Task Assignment and Priority --%>
+             <%!-- Task Assignment and Priority --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
               <%!-- Assign to Developer --%>
               <div>
@@ -688,8 +692,7 @@
                   class="w-full"
                 />
               </div>
-              
-              <%!-- Priority --%>
+               <%!-- Priority --%>
               <div>
                 <.input
                   field={@form[:priority]}
@@ -704,8 +707,7 @@
                 />
               </div>
             </div>
-            
-            <%!-- Due Date and Status --%>
+             <%!-- Due Date and Status --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
               <%!-- Due Date --%>
               <div>
@@ -716,8 +718,7 @@
                   class="w-full"
                 />
               </div>
-              
-              <%!-- Status --%>
+               <%!-- Status --%>
               <div>
                 <.input
                   field={@form[:status]}
@@ -731,7 +732,6 @@
                 />
               </div>
             </div>
-            
              <%!-- Form Actions --%>
             <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
               <button
@@ -754,4 +754,3 @@
     </div>
   </div>
 </Layouts.app>
-

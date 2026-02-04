@@ -33,25 +33,78 @@
       }
     }
 
-    @media screen {
-      .a4-page {
-        width: 297mm;
-        min-height: 210mm;
-        max-height: 210mm;
-        padding: 15mm 20mm;
-        margin-bottom: 20mm;
-        background: white;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-direction: column;
-        position: relative;
-      }
-      
-      .a4-content {
-        flex: 1;
-        overflow-y: auto;
-        overflow-x: hidden;
-      }
+    /* Prevent text selection on details summary elements */
+    details summary {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    /* Prevent unwanted focus outline on summary */
+    details summary:focus {
+      outline: none;
+    }
+
+    /* Prevent text selection when clicking on details */
+    details.select-none {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    /* Allow text selection inside content area */
+    details.select-none .select-text {
+      user-select: text;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+    }
+
+    /* Date input placeholder color */
+    input[type="date"]::-webkit-datetime-edit-text,
+    input[type="date"]::-webkit-datetime-edit-month-field,
+    input[type="date"]::-webkit-datetime-edit-day-field,
+    input[type="date"]::-webkit-datetime-edit-year-field {
+      color: #111827;
+    }
+
+    input[type="date"]:invalid::-webkit-datetime-edit-text,
+    input[type="date"]:invalid::-webkit-datetime-edit-month-field,
+    input[type="date"]:invalid::-webkit-datetime-edit-day-field,
+    input[type="date"]:invalid::-webkit-datetime-edit-year-field {
+      color: #111827;
+    }
+
+    input[type="date"]::placeholder {
+      color: #111827;
+    }
+
+    /* Ensure date picker calendar icon is visible and clickable - Black color */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 1;
+      width: 20px;
+      height: 20px;
+      margin-left: 5px;
+      filter: brightness(0) saturate(100%);
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 0.8;
+      filter: brightness(0) saturate(100%);
+    }
+
+    /* For Firefox */
+    input[type="date"] {
+      position: relative;
+    }
+
+    input[type="date"]::-moz-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 1;
+      filter: brightness(0) saturate(100%);
     }
   </style>
   
@@ -59,344 +112,327 @@
     <%!-- Overlay --%>
     <div
       class={[
-        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
-        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+        "fixed inset-0 bg-blue-900/60 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100 z-[55]", else: "opacity-0 pointer-events-none z-0")
       ]}
       phx-click="close_sidebar"
     >
     </div>
-    
-    <%!-- Sidebar --%>
+     <%!-- Sidebar --%>
     <.dashboard_sidebar
       sidebar_open={@sidebar_open}
       dashboard_path={~p"/dashboard"}
       logo_src={~p"/images/logojpkn.png"}
       current_scope={@current_scope}
-    />
-    
-    <%!-- Main Content --%>
-    <div class="flex-1 flex flex-col overflow-hidden">
+    /> <%!-- Main Content --%>
+    <div class="flex-1 flex flex-col overflow-hidden relative z-50">
       <%!-- Header --%>
-      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
-        <.system_title />
-        <div class="flex items-center gap-4">
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-md relative z-50 gap-2 sm:gap-4">
+        <div
+          class="flex items-center gap-2 sm:gap-4 flex-shrink-0"
+          style="max-width: min(30%, 200px);"
+        >
           <button
             phx-click="toggle_sidebar"
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 relative z-50 flex-shrink-0"
           >
-            <.icon name="hero-bars-3" class="w-6 h-6" />
-          </button>
-          <.header_logos />
+            <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
+          </button> <.header_logos />
         </div>
         
-        <.header_actions
-          notifications_open={@notifications_open}
-          notifications_count={@notifications_count}
-          activities={@activities}
-          profile_menu_open={@profile_menu_open}
-          current_scope={@current_scope}
-        />
+        <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
+        
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <.header_actions
+            notifications_open={@notifications_open}
+            notifications_count={@notifications_count}
+            activities={@activities}
+            profile_menu_open={@profile_menu_open}
+            current_scope={@current_scope}
+          />
+        </div>
       </header>
-      
-      <%!-- TAJUK SOAL SELIDIK --%>
+       <%!-- TAJUK SOAL SELIDIK --%>
       <div class="bg-white px-6 py-4 border-b border-gray-200">
         <div class="max-w-7xl mx-auto">
           <h1 class="text-2xl font-bold text-gray-900">Soal Selidik</h1>
-          <p class="text-gray-600 mt-1">
-            Soal Selidik Kajian Keperluan Pembangunan Aplikasi
-          </p>
+          
+          <p class="text-gray-600 mt-1">Soal Selidik Kajian Keperluan Pembangunan Aplikasi</p>
         </div>
       </div>
-      
-      <%!-- Form Content --%>
+       <%!-- Form Content --%>
       <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6" id="main-content">
         <div class="mx-auto max-w-7xl">
-          <%!-- A4 Paper Container (Landscape) --%>
+          <%!-- Form Container --%>
           <div
             id="pdf-content"
-            class="a4-page bg-white shadow-lg"
-            style="font-family: Arial, sans-serif; font-size: 11pt;"
+            class="bg-white shadow-lg rounded-lg p-6 md:p-8"
           >
-            <div class="a4-content">
-              <%!-- Document Header --%>
-              <div class="mb-6 text-center avoid-break">
-                <div class="flex justify-end mb-3">
-                  <span class="text-xs text-gray-600 font-bold">{@document_id}</span>
-                </div>
-                
-                <div class="flex justify-center mb-4">
-                  <img
-                    src={~p"/images/logojpkn.png"}
-                    alt="Logo JPKN"
-                    class="h-16 w-auto object-contain"
-                  />
-                </div>
-                
-                <h1
-                  class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight"
-                  style="font-size: 11pt;"
-                >
-                  Template Soal Selidik Kajian Keperluan Pembangunan Aplikasi
-                </h1>
-                
-                <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
-                  <span>Nama Sistem :</span>
-                  <input
-                    type="text"
-                    name="soal_selidik[nama_sistem]"
-                    value={Phoenix.HTML.Form.input_value(@form, :nama_sistem) || @system_name}
-                    class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Masukkan Nama Sistem"
-                  />
+            <%!-- Document Header --%>
+            <div class="mb-6 text-center">
+              <div class="flex justify-end mb-3">
+                <span class="text-xs text-gray-600 font-bold">{@document_id}</span>
+              </div>
+               <%!-- Nama Sistem --%>
+              <div :if={@system_name && @system_name != ""} class="mb-4">
+                <div class="text-base font-semibold text-gray-800 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                  <span class="text-gray-600">Nama Sistem:</span>
+                  <span class="ml-2 text-blue-700">{@system_name}</span>
                 </div>
               </div>
-              
-              <%!-- Tabs --%>
-              <div class="mb-6">
-                <div class="border-b border-gray-300">
-                  <div class="flex items-center justify-between mb-2">
-                    <nav class="-mb-px flex space-x-8 flex-1" aria-label="Tabs">
-                      <button
-                        :for={tab <- @tabs}
-                        phx-click="switch_tab"
-                        phx-value-tab={tab.id}
-                        class={[
-                          "group relative whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center gap-2",
-                          @active_tab == tab.id &&
-                            "border-blue-500 text-blue-600",
-                          @active_tab != tab.id &&
-                            "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                        ]}
-                      >
-                        <span>{tab.label}</span>
-                        <button
-                          :if={tab.removable}
-                          phx-click="remove_tab"
-                          phx-value-tab_id={tab.id}
-                          class="opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-red-500 hover:text-red-700"
-                          title="Buang tab"
-                          onclick="event.stopPropagation(); return false;"
-                        >
-                          <.icon name="hero-x-mark" class="w-4 h-4" />
-                        </button>
-                      </button>
-                    </nav>
-                    <button
-                      phx-click="show_add_tab_modal"
-                      class="ml-4 px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200 flex items-center gap-2"
-                      title="Tambah tab baru"
-                    >
-                      <.icon name="hero-plus" class="w-4 h-4" />
-                      <span>Tambah Tab</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <%!-- Form --%>
-              <.form
-                for={@form}
-                phx-change="validate"
-                phx-submit="save"
-                id="soal-selidik-form"
-                class="space-y-6"
-              >
-                <%!-- Functional Requirements Tab --%>
-                <div class={["space-y-4", if(@active_tab != "fr", do: "hidden")]}>
-                  <details
-                    :for={category <- @fr_categories}
-                    class="group border border-gray-300 rounded-lg overflow-hidden"
-                  >
-                    <summary class="bg-blue-100 px-4 py-3 cursor-pointer hover:bg-blue-200 transition-colors duration-200 font-semibold text-gray-900 uppercase tracking-wide text-sm">
-                      {category.title}
-                    </summary>
-                    
-                    <div class="p-4 bg-white">
-                      <.requirement_table
-                        id={category.key}
-                        title={category.title}
-                        questions={category.questions}
-                        form={@form}
-                        tab_type="fr"
-                        category_key={category.key}
-                      />
-                    </div>
-                  </details>
-                </div>
-                
-                <%!-- Non-Functional Requirements Tab --%>
-                <div class={["space-y-4", if(@active_tab != "nfr", do: "hidden")]}>
-                  <details
-                    :for={category <- @nfr_categories}
-                    class="group border border-gray-300 rounded-lg overflow-hidden"
-                  >
-                    <summary class="bg-blue-100 px-4 py-3 cursor-pointer hover:bg-blue-200 transition-colors duration-200 font-semibold text-gray-900 uppercase tracking-wide text-sm">
-                      {category.title}
-                    </summary>
-                    
-                    <div class="p-4 bg-white">
-                      <.requirement_table
-                        id={category.key}
-                        title={category.title}
-                        questions={category.questions}
-                        form={@form}
-                        tab_type="nfr"
-                        category_key={category.key}
-                      />
-                    </div>
-                  </details>
-                </div>
-                
-                <%!-- Disediakan Oleh Tab --%>
-                <div class={["space-y-4", if(@active_tab != "disediakan_oleh", do: "hidden")]}>
-                  <div class="border border-gray-300 rounded-lg overflow-hidden p-6 bg-white">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6">
-                      Disediakan Oleh :
-                    </h2>
-                    
-                    <p class="text-sm text-gray-600 mb-8 italic">
-                      (Diisi oleh Pengurus Projek/Pembangun Sistem)
-                    </p>
-                    
-                    <div class="mb-12 border-2 border-dashed border-gray-300 rounded-lg p-8 flex items-center justify-center" style="min-height: 120px;">
-                      <p class="text-gray-400 text-sm">Ruang untuk tandatangan</p>
-                    </div>
-                    
-                    <div class="space-y-4">
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama:</label>
-                        <input
-                          type="text"
-                          name="soal_selidik[disediakan_oleh][nama]"
-                          value={Phoenix.HTML.Form.input_value(@form, "disediakan_oleh.nama") || ""}
-                          class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Masukkan nama"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Jawatan:</label>
-                        <input
-                          type="text"
-                          name="soal_selidik[disediakan_oleh][jawatan]"
-                          value={Phoenix.HTML.Form.input_value(@form, "disediakan_oleh.jawatan") || ""}
-                          class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Masukkan jawatan"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tarikh:</label>
-                        <input
-                          type="date"
-                          name="soal_selidik[disediakan_oleh][tarikh]"
-                          value={Phoenix.HTML.Form.input_value(@form, "disediakan_oleh.tarikh") || ""}
-                          class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-                    
-                    <%!-- Action Buttons for Disediakan Oleh Tab --%>
-                    <div class="flex justify-between items-center gap-3 pt-6 mt-6 border-t border-gray-300">
-                      <button
-                        id="generate-pdf-btn"
-                        type="button"
-                        phx-click="generate_pdf"
-                        class="px-4 py-2 bg-green-600 text-white rounded font-medium hover:bg-green-700 shadow transition-all duration-200 text-sm flex items-center gap-2"
-                      >
-                        <.icon name="hero-document-arrow-down" class="w-5 h-5" />
-                        <span>Jana PDF</span>
-                      </button>
-                      
-                      <div class="flex gap-3">
-                        <button
-                          type="button"
-                          class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
-                        >
-                          Batal
-                        </button>
-                        <button
-                          type="submit"
-                          class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
-                        >
-                          Simpan Soal Selidik
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <%!-- Custom Tabs Content --%>
-                <div
-                  :for={tab <- @tabs}
-                  class={["space-y-4", if(@active_tab != tab.id or tab.type != :custom, do: "hidden")]}
-                >
-                  <div class="border border-gray-300 rounded-lg overflow-hidden p-6 bg-white">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6">
-                      {tab.label}
-                    </h2>
-                    
-                    <div class="space-y-4">
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Kandungan:</label>
-                        <textarea
-                          name={"soal_selidik[custom_tabs][#{tab.id}][content]"}
-                          rows="10"
-                          class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Masukkan kandungan untuk tab ini..."
-                        ></textarea>
-                      </div>
-                    </div>
-                    
-                    <%!-- Action Buttons for Custom Tabs --%>
-                    <div class="flex justify-end items-center gap-3 pt-6 mt-6 border-t border-gray-300">
-                      <div class="flex gap-3">
-                        <button
-                          type="button"
-                          class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
-                        >
-                          Batal
-                        </button>
-                        <button
-                          type="submit"
-                          class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
-                        >
-                          Simpan Soal Selidik
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <%!-- Action Buttons for other tabs --%>
-                <div :if={@active_tab != "disediakan_oleh"} class="flex justify-end items-center gap-3 pt-4 avoid-break border-t border-gray-300 mt-6">
-                  <div class="flex gap-3">
-                    <button
-                      type="button"
-                      class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      type="submit"
-                      class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
-                    >
-                      Simpan Soal Selidik
-                    </button>
-                  </div>
-                </div>
-              </.form>
             </div>
+             <%!-- Tabs --%>
+            <div class="mb-6">
+              <div class="border-b border-gray-300">
+                <div class="flex items-center justify-between mb-2">
+                  <nav class="-mb-px flex space-x-8 flex-1" aria-label="Tabs">
+                    <button
+                      :for={tab <- @tabs}
+                      phx-click="switch_tab"
+                      phx-value-tab={tab.id}
+                      class={[
+                        "group relative whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center gap-2",
+                        @active_tab == tab.id &&
+                          "border-blue-500 text-blue-600",
+                        @active_tab != tab.id &&
+                          "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      ]}
+                    >
+                      <span>{tab.label}</span>
+                      <button
+                        :if={tab.removable}
+                        phx-click="remove_tab"
+                        phx-value-tab_id={tab.id}
+                        class="opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-red-500 hover:text-red-700"
+                        title="Buang tab"
+                        onclick="event.stopPropagation(); return false;"
+                      >
+                        <.icon name="hero-x-mark" class="w-4 h-4" />
+                      </button>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+             <%!-- Form --%>
+            <.form
+              for={@form}
+              phx-change="validate"
+              phx-debounce="1000"
+              phx-submit="save"
+              id="soal-selidik-form"
+              phx-hook="PreserveFormData"
+              class="space-y-6"
+            >
+              <%!-- Hidden project_id so it's always submitted (Edit Borang flow) --%>
+              <%= if @project do %>
+                <input type="hidden" name="soal_selidik[project_id]" value={@project.id} />
+              <% end %>
+               <%!-- Functional Requirements Tab --%>
+              <div class={["space-y-4", if(@active_tab != "fr", do: "hidden")]}>
+                <details
+                  :for={category <- @fr_categories}
+                  id={"category-#{category.key}"}
+                  phx-hook="PreserveDetailsOpen"
+                  class="group border border-gray-300 rounded-lg overflow-hidden select-none"
+                >
+                  <summary class="bg-blue-100 px-4 py-3 cursor-pointer hover:bg-blue-200 transition-colors duration-200 font-semibold text-gray-900 uppercase tracking-wide text-sm focus:outline-none focus:ring-0">
+                    {category.title}
+                  </summary>
+                  
+                  <div class="p-4 bg-white select-text">
+                    <.requirement_table
+                      id={category.key}
+                      title={category.title}
+                      questions={category.questions}
+                      form={@form}
+                      tab_type="fr"
+                      category_key={category.key}
+                    />
+                  </div>
+                </details>
+              </div>
+               <%!-- Non-Functional Requirements Tab --%>
+              <div class={["space-y-4", if(@active_tab != "nfr", do: "hidden")]}>
+                <details
+                  :for={category <- @nfr_categories}
+                  id={"category-#{category.key}"}
+                  phx-hook="PreserveDetailsOpen"
+                  class="group border border-gray-300 rounded-lg overflow-hidden select-none"
+                >
+                  <summary class="bg-blue-100 px-4 py-3 cursor-pointer hover:bg-blue-200 transition-colors duration-200 font-semibold text-gray-900 uppercase tracking-wide text-sm focus:outline-none focus:ring-0">
+                    {category.title}
+                  </summary>
+                  
+                  <div class="p-4 bg-white select-text">
+                    <.requirement_table
+                      id={category.key}
+                      title={category.title}
+                      questions={category.questions}
+                      form={@form}
+                      tab_type="nfr"
+                      category_key={category.key}
+                    />
+                  </div>
+                </details>
+              </div>
+               <%!-- Disediakan Oleh Tab --%>
+              <div class={["space-y-4", if(@active_tab != "disediakan_oleh", do: "hidden")]}>
+                <div class="border border-gray-300 rounded-lg overflow-hidden p-6 bg-white">
+                  <h2 class="text-lg font-bold text-gray-900 mb-6">Disediakan Oleh :</h2>
+                  
+                  <p class="text-sm text-gray-600 mb-8 italic">
+                    (Diisi oleh Pengurus Projek/Pembangun Sistem)
+                  </p>
+                  
+                  <div class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Nama:</label>
+                      <input
+                        type="text"
+                        name="soal_selidik[disediakan_oleh][nama]"
+                        value={
+                          (@form.source["disediakan_oleh"] || %{})
+                          |> Map.get("nama", "")
+                        }
+                        phx-debounce="1000"
+                        class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-900 text-gray-900"
+                        style="color: #111827;"
+                        placeholder="Masukkan nama"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Jawatan:</label>
+                      <input
+                        type="text"
+                        name="soal_selidik[disediakan_oleh][jawatan]"
+                        value={
+                          (@form.source["disediakan_oleh"] || %{})
+                          |> Map.get("jawatan", "")
+                        }
+                        phx-debounce="1000"
+                        class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-900 text-gray-900"
+                        style="color: #111827;"
+                        placeholder="Masukkan jawatan"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Tarikh:</label>
+                      <input
+                        type="date"
+                        name="soal_selidik[disediakan_oleh][tarikh]"
+                        value={
+                          (@form.source["disediakan_oleh"] || %{})
+                          |> Map.get("tarikh", "")
+                        }
+                        phx-debounce="1000"
+                        class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-900 cursor-pointer"
+                        style="color: #111827;"
+                      />
+                    </div>
+                  </div>
+                   <%!-- Action Buttons for Disediakan Oleh Tab --%>
+                  <div class="flex justify-between items-center gap-3 pt-6 mt-6 border-t border-gray-300">
+                    <button
+                      id="generate-pdf-btn"
+                      type="button"
+                      phx-click="generate_pdf"
+                      class="px-4 py-2 bg-green-600 text-white rounded font-medium hover:bg-green-700 shadow transition-all duration-200 text-sm flex items-center gap-2"
+                    >
+                      <.icon name="hero-document-arrow-down" class="w-5 h-5" />
+                      <span>Jana PDF</span>
+                    </button>
+                    <div class="flex gap-3">
+                      <button
+                        type="button"
+                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
+                      >
+                        Simpan Soal Selidik
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+               <%!-- Custom Tabs Content --%>
+              <div
+                :for={tab <- @tabs}
+                class={[
+                  "space-y-4",
+                  if(@active_tab != tab.id or tab.type != :custom, do: "hidden")
+                ]}
+              >
+                <div class="border border-gray-300 rounded-lg overflow-hidden p-6 bg-white">
+                  <h2 class="text-lg font-bold text-gray-900 mb-6">{tab.label}</h2>
+                  
+                  <div class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Kandungan:
+                      </label> <textarea
+                        name={"soal_selidik[custom_tabs][#{tab.id}][content]"}
+                        rows="10"
+                        class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Masukkan kandungan untuk tab ini..."
+                      ></textarea>
+                    </div>
+                  </div>
+                   <%!-- Action Buttons for Custom Tabs --%>
+                  <div class="flex justify-end items-center gap-3 pt-6 mt-6 border-t border-gray-300">
+                    <div class="flex gap-3">
+                      <button
+                        type="button"
+                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
+                      >
+                        Simpan Soal Selidik
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+               <%!-- Action Buttons for other tabs --%>
+              <div
+                :if={@active_tab != "disediakan_oleh"}
+                class="flex justify-end items-center gap-3 pt-4 border-t border-gray-300 mt-6"
+              >
+                <div class="flex gap-3">
+                  <button
+                    type="button"
+                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors duration-200 text-sm"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow transition-all duration-200 text-sm"
+                  >
+                    Simpan Soal Selidik
+                  </button>
+                </div>
+              </div>
+            </.form>
           </div>
         </div>
       </main>
     </div>
   </div>
-
-  <%!-- PDF Modal --%>
+   <%!-- PDF Modal --%>
   <%= if @show_pdf_modal && @pdf_data do %>
     <div
-      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
+      class="fixed inset-0 bg-opacity-50 z-[60] flex items-center justify-center p-4"
       phx-click="close_pdf_modal"
       phx-key="escape"
       phx-window-keydown="close_pdf_modal"
@@ -407,7 +443,10 @@
       >
         <%!-- Modal Header --%>
         <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-          <h2 class="text-xl font-bold text-gray-900">Pratonton PDF - Soal Selidik Kajian Keperluan Pembangunan Aplikasi</h2>
+          <h2 class="text-xl font-bold text-gray-900">
+            Pratonton PDF - Soal Selidik Kajian Keperluan Pembangunan Aplikasi
+          </h2>
+          
           <button
             phx-click="close_pdf_modal"
             class="text-gray-400 hover:text-gray-600 transition-colors"
@@ -415,37 +454,31 @@
             <.icon name="hero-x-mark" class="w-6 h-6" />
           </button>
         </div>
-
-        <%!-- PDF Content --%>
-        <div class="flex-1 overflow-y-auto p-6" id="pdf-preview-content" style="font-family: Arial, sans-serif; font-size: 11pt;">
+         <%!-- PDF Content --%>
+        <div
+          class="flex-1 overflow-y-auto p-6"
+          id="pdf-preview-content"
+          style="font-family: Arial, sans-serif; font-size: 11pt;"
+        >
           <div class="mx-auto" style="width: 297mm; max-width: 297mm;">
             <%!-- Document Header --%>
             <div class="mb-6 text-center">
               <div class="flex justify-end mb-3">
-                <span class="text-xs text-gray-600 font-bold"><%= @pdf_data.document_id %></span>
-              </div>
-              
-              <div class="flex justify-center mb-4">
-                <img
-                  src={~p"/images/logojpkn.png"}
-                  alt="Logo JPKN"
-                  class="h-16 w-auto object-contain"
-                />
+                <span class="text-xs text-gray-600 font-bold">{@pdf_data.document_id}</span>
               </div>
               
               <h1 class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight">
-                Template Soal Selidik Kajian Keperluan Pembangunan Aplikasi
+                Soal Selidik Kajian Keperluan Pembangunan Aplikasi
               </h1>
               
               <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
                 <span>Nama Sistem :</span>
                 <span class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded bg-gray-50">
-                  <%= @pdf_data.nama_sistem %>
+                  {@pdf_data.nama_sistem}
                 </span>
               </div>
             </div>
-
-            <%!-- Functional Requirements Section --%>
+             <%!-- Functional Requirements Section --%>
             <div class="mb-6">
               <h2 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
                 FUNCTIONAL REQUIREMENT
@@ -456,7 +489,7 @@
                   <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
                     <div class="bg-blue-100 px-4 py-2 border-b border-gray-400">
                       <h3 class="font-semibold text-gray-900 uppercase tracking-wide text-sm">
-                        <%= category.title %>
+                        {category.title}
                       </h3>
                     </div>
                     
@@ -464,48 +497,72 @@
                       <table class="w-full border-collapse text-xs">
                         <thead>
                           <tr class="bg-gray-100 border border-gray-400">
-                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">
+                            <th
+                              class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                              style="width: 6%;"
+                            >
                               No
                             </th>
-                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 40%;">
+                            
+                            <th
+                              class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                              style="width: 40%;"
+                            >
                               Soalan
                             </th>
-                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 27%;">
+                            
+                            <th
+                              class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                              style="width: 27%;"
+                            >
                               Maklumbalas
                             </th>
-                            <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 27%;">
+                            
+                            <th
+                              class="px-3 py-2 text-left font-semibold text-gray-700"
+                              style="width: 27%;"
+                            >
                               Catatan
                             </th>
                           </tr>
                         </thead>
+                        
                         <tbody class="divide-y divide-gray-300">
                           <%= for question <- category.questions do %>
                             <tr>
                               <td class="px-3 py-2 border-r border-gray-400 align-top">
                                 <div class="px-2 py-1 text-sm font-medium text-gray-900">
-                                  <%= question.no %>
+                                  {question.no}
                                 </div>
                               </td>
+                              
                               <td class="px-3 py-2 border-r border-gray-400 align-top">
                                 <div class="px-2 py-1 text-sm text-gray-800">
-                                  <%= question.soalan %>
+                                  {question.soalan}
                                 </div>
                               </td>
+                              
                               <td class="px-3 py-2 border-r border-gray-400 align-top">
                                 <div class="px-2 py-1 text-sm text-gray-700">
-                                  <%= case Map.get(@pdf_data.fr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) do
+                                  {case Map.get(@pdf_data.fr_data, category.key, %{})
+                                        |> Map.get("#{question.no}", %{}) do
                                     %{maklumbalas: value} when is_list(value) ->
                                       Enum.join(value, ", ")
+
                                     %{maklumbalas: value} ->
                                       value
+
                                     _ ->
-                                      "-"
-                                  end %>
+                                      ""
+                                  end}
                                 </div>
                               </td>
+                              
                               <td class="px-3 py-2 align-top">
                                 <div class="px-2 py-1 text-sm text-gray-700">
-                                  <%= Map.get(@pdf_data.fr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) |> Map.get(:catatan, "-") %>
+                                  {Map.get(@pdf_data.fr_data, category.key, %{})
+                                  |> Map.get("#{question.no}", %{})
+                                  |> Map.get(:catatan, "")}
                                 </div>
                               </td>
                             </tr>
@@ -517,8 +574,7 @@
                 <% end %>
               </div>
             </div>
-
-            <%!-- Non-Functional Requirements Section --%>
+             <%!-- Non-Functional Requirements Section --%>
             <div class="mb-6" style="page-break-before: always;">
               <h2 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
                 NON-FUNCTIONAL REQUIREMENT
@@ -529,7 +585,7 @@
                   <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
                     <div class="bg-blue-100 px-4 py-2 border-b border-gray-400">
                       <h3 class="font-semibold text-gray-900 uppercase tracking-wide text-sm">
-                        <%= category.title %>
+                        {category.title}
                       </h3>
                     </div>
                     
@@ -537,48 +593,72 @@
                       <table class="w-full border-collapse text-xs">
                         <thead>
                           <tr class="bg-gray-100 border border-gray-400">
-                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 6%;">
+                            <th
+                              class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                              style="width: 6%;"
+                            >
                               No
                             </th>
-                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 40%;">
+                            
+                            <th
+                              class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                              style="width: 40%;"
+                            >
                               Soalan
                             </th>
-                            <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400" style="width: 27%;">
+                            
+                            <th
+                              class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
+                              style="width: 27%;"
+                            >
                               Maklumbalas
                             </th>
-                            <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 27%;">
+                            
+                            <th
+                              class="px-3 py-2 text-left font-semibold text-gray-700"
+                              style="width: 27%;"
+                            >
                               Catatan
                             </th>
                           </tr>
                         </thead>
+                        
                         <tbody class="divide-y divide-gray-300">
                           <%= for question <- category.questions do %>
                             <tr>
                               <td class="px-3 py-2 border-r border-gray-400 align-top">
                                 <div class="px-2 py-1 text-sm font-medium text-gray-900">
-                                  <%= question.no %>
+                                  {question.no}
                                 </div>
                               </td>
+                              
                               <td class="px-3 py-2 border-r border-gray-400 align-top">
                                 <div class="px-2 py-1 text-sm text-gray-800">
-                                  <%= question.soalan %>
+                                  {question.soalan}
                                 </div>
                               </td>
+                              
                               <td class="px-3 py-2 border-r border-gray-400 align-top">
                                 <div class="px-2 py-1 text-sm text-gray-700">
-                                  <%= case Map.get(@pdf_data.nfr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) do
+                                  {case Map.get(@pdf_data.nfr_data, category.key, %{})
+                                        |> Map.get("#{question.no}", %{}) do
                                     %{maklumbalas: value} when is_list(value) ->
                                       Enum.join(value, ", ")
+
                                     %{maklumbalas: value} ->
                                       value
+
                                     _ ->
-                                      "-"
-                                  end %>
+                                      ""
+                                  end}
                                 </div>
                               </td>
+                              
                               <td class="px-3 py-2 align-top">
                                 <div class="px-2 py-1 text-sm text-gray-700">
-                                  <%= Map.get(@pdf_data.nfr_data, category.key, %{}) |> Map.get("#{question.no}", %{}) |> Map.get(:catatan, "-") %>
+                                  {Map.get(@pdf_data.nfr_data, category.key, %{})
+                                  |> Map.get("#{question.no}", %{})
+                                  |> Map.get(:catatan, "")}
                                 </div>
                               </td>
                             </tr>
@@ -590,48 +670,40 @@
                 <% end %>
               </div>
             </div>
-
-            <%!-- Disediakan Oleh Section --%>
+             <%!-- Disediakan Oleh Section --%>
             <div class="mb-6" style="page-break-before: always;">
-              <h2 class="text-lg font-bold text-gray-900 mb-6">
-                Disediakan Oleh :
-              </h2>
+              <h2 class="text-lg font-bold text-gray-900 mb-6">Disediakan Oleh :</h2>
               
               <p class="text-sm text-gray-600 mb-8 italic">
                 (Diisi oleh Pengurus Projek/Pembangun Sistem)
               </p>
               
-              <div class="mb-12 border-2 border-dashed border-gray-300 rounded-lg p-8 flex items-center justify-center" style="min-height: 120px;">
-                <p class="text-gray-400 text-sm">Ruang untuk tandatangan</p>
-              </div>
-              
               <div class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Nama:</label>
                   <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
-                    <%= @pdf_data.disediakan_oleh.nama %>
+                    {@pdf_data.disediakan_oleh.nama}
                   </div>
                 </div>
                 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Jawatan:</label>
                   <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
-                    <%= @pdf_data.disediakan_oleh.jawatan %>
+                    {@pdf_data.disediakan_oleh.jawatan}
                   </div>
                 </div>
                 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Tarikh:</label>
                   <div class="px-3 py-2 border border-gray-400 rounded bg-gray-50 text-sm text-gray-900 min-h-[40px]">
-                    <%= @pdf_data.disediakan_oleh.tarikh %>
+                    {@pdf_data.disediakan_oleh.tarikh}
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <%!-- Modal Footer --%>
+         <%!-- Modal Footer --%>
         <div class="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
           <button
             phx-click="close_pdf_modal"
@@ -649,70 +721,81 @@
       </div>
     </div>
   <% end %>
-
-  <%!-- Add Tab Modal --%>
-  <%= if @show_add_tab_modal do %>
+   <%!-- Edit Question Modal --%>
+  <%= if @show_edit_question_modal && @selected_question do %>
     <div
-      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
-      phx-click="close_add_tab_modal"
-      phx-key="escape"
-      phx-window-keydown="close_add_tab_modal"
+      class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+      id="edit-question-modal-overlay"
     >
       <div
-        class="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
-        phx-click-away="close_add_tab_modal"
+        class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6"
       >
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Tambah Tab Baru</h2>
+          <h2 class="text-xl font-bold text-gray-900">Edit Soalan</h2>
+          
           <button
-            phx-click="close_add_tab_modal"
+            type="button"
+            phx-click="close_edit_question_modal"
             class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
             title="Tutup"
+            aria-label="Tutup"
           >
             <.icon name="hero-x-mark" class="w-6 h-6" />
           </button>
         </div>
-
+        
         <.form
-          for={@new_tab_form}
-          phx-change="validate_new_tab"
-          phx-submit="add_tab"
-          id="add-tab-form"
+          for={@edit_question_form}
+          phx-change="validate_edit_question"
+          phx-submit="save_edit_question"
+          id="edit-question-form"
           class="space-y-5"
         >
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Label Tab <span class="text-red-500">*</span>
-            </label>
-            <.input
-              field={@new_tab_form[:label]}
-              type="text"
-              placeholder="Contoh: Tab Baru"
-              required
-            />
-            <p :if={@new_tab_form[:label].errors != []} class="mt-1 text-xs text-red-600">
-              <%= Enum.at(@new_tab_form[:label].errors, 0) %>
+              Soalan
+            </label> <textarea
+              name="edit_question[soalan]"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-900"
+              style="color: #111827;"
+              placeholder="Masukkan soalan..."
+            >{Phoenix.HTML.Form.input_value(@edit_question_form, :soalan) || ""}</textarea>
+            <p :if={@edit_question_form[:soalan].errors != []} class="mt-1 text-xs text-red-600">
+              {Enum.at(@edit_question_form[:soalan].errors, 0)}
             </p>
           </div>
-
+          
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              ID Tab (Opsional)
+              Maklumbalas
             </label>
-            <.input
-              field={@new_tab_form[:id]}
-              type="text"
-              placeholder="Akan dijana secara automatik jika kosong"
-            />
-            <p class="mt-1 text-xs text-gray-500">
-              ID akan digunakan untuk mengenal pasti tab. Jika kosong, ID akan dijana dari label.
-            </p>
+            <textarea
+              name="edit_question[maklumbalas]"
+              rows="4"
+              class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-900"
+              style="color: #111827;"
+              placeholder="Masukkan maklumbalas..."
+            >{Phoenix.HTML.Form.input_value(@edit_question_form, :maklumbalas) || ""}</textarea>
           </div>
-
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Catatan
+            </label>
+            <textarea
+              name="edit_question[catatan]"
+              rows="4"
+              class="w-full px-3 py-2 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-900"
+              style="color: #111827;"
+              placeholder="Masukkan catatan..."
+            >{Phoenix.HTML.Form.input_value(@edit_question_form, :catatan) || ""}</textarea>
+          </div>
+          
           <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
-              phx-click="close_add_tab_modal"
+              phx-click="close_edit_question_modal"
               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
             >
               Batal
@@ -721,7 +804,7 @@
               type="submit"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow transition-all duration-200"
             >
-              Tambah Tab
+              Simpan Perubahan
             </button>
           </div>
         </.form>

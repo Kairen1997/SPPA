@@ -19,10 +19,12 @@ defmodule Sppa.ApprovedProjects do
       {:ok, %ApprovedProject{id: nil}} ->
         # Duplicate detected (on_conflict returned struct without ID)
         {:ok, nil}
+
       {:ok, project} ->
         # Broadcast new project for live dashboard updates
         Phoenix.PubSub.broadcast(Sppa.PubSub, "approved_projects", {:created, project})
         {:ok, project}
+
       {:error, error_changeset} ->
         # Validation or other error
         {:error, error_changeset}
