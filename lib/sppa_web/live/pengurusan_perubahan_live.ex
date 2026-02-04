@@ -6,7 +6,7 @@ defmodule SppaWeb.PengurusanPerubahanLive do
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     # Verify user has required role (defense in depth - router already checks this)
     user_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
@@ -16,6 +16,18 @@ defmodule SppaWeb.PengurusanPerubahanLive do
       # Get change requests (perubahan)
       perubahan = get_perubahan()
 
+      project_id =
+        case Map.get(params, "project_id") do
+          nil ->
+            nil
+
+          id when is_binary(id) ->
+            case Integer.parse(id) do
+              {int, _rest} -> int
+              :error -> nil
+            end
+        end
+
       socket =
         socket
         |> assign(:hide_root_header, true)
@@ -24,6 +36,7 @@ defmodule SppaWeb.PengurusanPerubahanLive do
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/pengurusan-perubahan")
+        |> assign(:project_id, project_id)
         |> assign(:perubahan, perubahan)
         |> assign(:show_view_modal, false)
         |> assign(:show_edit_modal, false)
