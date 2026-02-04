@@ -129,10 +129,12 @@
                   
                   <tbody class="bg-white divide-y divide-gray-200">
                     <tr
-                      :for={{perubahan, bil} <- Enum.with_index(@perubahan, 1)}
+                      :for={{perubahan, idx} <- Enum.with_index(@paginated_perubahan, 0)}
                       class="hover:bg-gray-50 transition-colors duration-150"
                     >
-                      <td class="px-3 py-2 text-center text-gray-600 font-medium">{bil}</td>
+                      <td class="px-3 py-2 text-center text-gray-600 font-medium">
+                        {@per_page * (@page - 1) + idx + 1}
+                      </td>
                       
                       <td class="px-3 py-2">
                         <div class="text-xs font-semibold text-gray-900">{perubahan.tajuk}</div>
@@ -240,6 +242,71 @@
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
+                <div class="text-xs text-gray-600">
+                  <%= if @perubahan_total > 0 do %>
+                    <span>
+                      Menunjukkan
+                      {@per_page * (@page - 1) + 1}
+                      -
+                      {Enum.min([@page * @per_page, @perubahan_total])}
+                      daripada
+                      {@perubahan_total}
+                      permohonan
+                    </span>
+                  <% else %>
+                    <span>Tiada permohonan untuk dipaparkan</span>
+                  <% end %>
+                </div>
+
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    phx-click="prev_page"
+                    class={[
+                      "inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium bg-white text-gray-700 hover:bg-gray-100 transition-colors duration-150",
+                      if(@page == 1, do: "opacity-60 cursor-not-allowed", else: "")
+                    ]}
+                    disabled={@page == 1}
+                  >
+                    <.icon name="hero-chevron-left" class="w-3 h-3 mr-1" /> Sebelumnya
+                  </button>
+
+                  <div class="flex items-center gap-1">
+                    <button
+                      :for={page <- 1..@total_pages}
+                      type="button"
+                      phx-click="go_to_page"
+                      phx-value-page={page}
+                      class={[
+                        "min-w-[32px] px-2 py-1.5 border text-xs font-medium rounded-md transition-colors duration-150",
+                        if(page == @page,
+                          do: "bg-blue-600 text-white border-blue-600",
+                          else: "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                        )
+                      ]}
+                    >
+                      {page}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    phx-click="next_page"
+                    class={[
+                      "inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium bg-white text-gray-700 hover:bg-gray-100 transition-colors duration-150",
+                      if(@page == @total_pages or @perubahan_total == 0,
+                        do: "opacity-60 cursor-not-allowed",
+                        else: ""
+                      )
+                    ]}
+                    disabled={@page == @total_pages or @perubahan_total == 0}
+                  >
+                    Seterusnya <.icon name="hero-chevron-right" class="w-3 h-3 ml-1" />
+                  </button>
+                </div>
               </div>
             <% end %>
           </div>

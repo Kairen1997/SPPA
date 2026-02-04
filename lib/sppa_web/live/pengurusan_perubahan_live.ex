@@ -16,6 +16,12 @@ defmodule SppaWeb.PengurusanPerubahanLive do
       # Get change requests (perubahan)
       perubahan = get_perubahan()
 
+      per_page = 5
+      total = length(perubahan)
+      total_pages = total_pages(total, per_page)
+      page = 1
+      paginated_perubahan = paginate(perubahan, page, per_page)
+
       project_id =
         case Map.get(params, "project_id") do
           nil ->
@@ -38,6 +44,11 @@ defmodule SppaWeb.PengurusanPerubahanLive do
         |> assign(:current_path, "/pengurusan-perubahan")
         |> assign(:project_id, project_id)
         |> assign(:perubahan, perubahan)
+        |> assign(:paginated_perubahan, paginated_perubahan)
+        |> assign(:perubahan_total, total)
+        |> assign(:page, page)
+        |> assign(:per_page, per_page)
+        |> assign(:total_pages, total_pages)
         |> assign(:show_view_modal, false)
         |> assign(:show_edit_modal, false)
         |> assign(:show_create_modal, false)
@@ -138,6 +149,51 @@ defmodule SppaWeb.PengurusanPerubahanLive do
   @impl true
   def handle_event("toggle_sidebar", _params, socket) do
     {:noreply, update(socket, :sidebar_open, &(!&1))}
+  end
+
+  @impl true
+  def handle_event("next_page", _params, socket) do
+    %{page: page, total_pages: total_pages, per_page: per_page, perubahan: perubahan} =
+      socket.assigns
+
+    new_page = min(page + 1, total_pages)
+    paginated = paginate(perubahan, new_page, per_page)
+
+    {:noreply,
+     socket
+     |> assign(:page, new_page)
+     |> assign(:paginated_perubahan, paginated)}
+  end
+
+  @impl true
+  def handle_event("prev_page", _params, socket) do
+    %{page: page, per_page: per_page, perubahan: perubahan} = socket.assigns
+
+    new_page = max(page - 1, 1)
+    paginated = paginate(perubahan, new_page, per_page)
+
+    {:noreply,
+     socket
+     |> assign(:page, new_page)
+     |> assign(:paginated_perubahan, paginated)}
+  end
+
+  @impl true
+  def handle_event("go_to_page", %{"page" => page_param}, socket) do
+    %{total_pages: total_pages, per_page: per_page, perubahan: perubahan} = socket.assigns
+
+    new_page =
+      case Integer.parse(page_param) do
+        {int, _} when int >= 1 and int <= total_pages -> int
+        _ -> socket.assigns.page
+      end
+
+    paginated = paginate(perubahan, new_page, per_page)
+
+    {:noreply,
+     socket
+     |> assign(:page, new_page)
+     |> assign(:paginated_perubahan, paginated)}
   end
 
   @impl true
@@ -296,10 +352,19 @@ defmodule SppaWeb.PengurusanPerubahanLive do
     }
 
     updated_perubahan = [new_perubahan | socket.assigns.perubahan]
+    per_page = socket.assigns.per_page
+    total = length(updated_perubahan)
+    total_pages = total_pages(total, per_page)
+    page = 1
+    paginated_perubahan = paginate(updated_perubahan, page, per_page)
 
     {:noreply,
      socket
      |> assign(:perubahan, updated_perubahan)
+     |> assign(:paginated_perubahan, paginated_perubahan)
+     |> assign(:perubahan_total, total)
+     |> assign(:page, page)
+     |> assign(:total_pages, total_pages)
      |> assign(:show_create_modal, false)
      |> assign(:form, to_form(%{}, as: :perubahan))
      |> put_flash(:info, "Permohonan perubahan berjaya didaftarkan")}
@@ -353,12 +418,34 @@ defmodule SppaWeb.PengurusanPerubahanLive do
         end
       end)
 
+    per_page = socket.assigns.per_page
+    total = length(updated_perubahan)
+    total_pages = total_pages(total, per_page)
+    page = min(socket.assigns.page, total_pages)
+    paginated_perubahan = paginate(updated_perubahan, page, per_page)
+
     {:noreply,
      socket
      |> assign(:perubahan, updated_perubahan)
+     |> assign(:paginated_perubahan, paginated_perubahan)
+     |> assign(:perubahan_total, total)
+     |> assign(:page, page)
+     |> assign(:total_pages, total_pages)
      |> assign(:show_edit_modal, false)
      |> assign(:selected_perubahan, nil)
      |> assign(:form, to_form(%{}, as: :perubahan))
      |> put_flash(:info, "Perubahan berjaya dikemaskini")}
+  end
+
+  defp paginate(perubahan, page, per_page) do
+    start_index = (page - 1) * per_page
+    Enum.slice(perubahan, start_index, per_page)
+  end
+
+  defp total_pages(0, _per_page), do: 1
+
+  defp total_pages(total, per_page) do
+    pages = div(total, per_page)
+    if rem(total, per_page) == 0, do: pages, else: pages + 1
   end
 end
