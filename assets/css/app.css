@@ -126,87 +126,127 @@
   }
 }
 
-/* Custom styling for date inputs so we can use our own calendar icon */
-input[type="date"] {
-  /* Hide the native calendar icon in most modern browsers */
-  color-scheme: light;
-}
-
-/* WebKit browsers (Chrome, Edge, Safari) */
-input[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  display: block;
-}
-
-/* Firefox */
-input[type="date"]::-moz-focus-inner {
-  border: 0;
-}
-
-/* Input and textarea text color - black for readability */
-input:not([type="checkbox"]):not([type="radio"]),
-textarea {
-  color: #000;
-}
-
-/* Disediakan Oleh section (Analisis dan Rekabentuk) - force input text black */
-.disediakan-oleh-section input,
-.disediakan-oleh-section input::placeholder {
-  color: #000 !important;
-}
-
-/* Placeholder text color - black for all input and textarea */
-input::placeholder,
-textarea::placeholder {
-  color: #000 !important;
-}
-
-/* Select dropdown text color - black (e.g. Status, Fasa filter) */
-select,
-select option {
-  color: #000 !important;
-}
-
-/* Print styles for Soal Selidik Document */
+/* Print styles */
 @media print {
+  /* Force physical page sizing */
   @page {
     size: A4;
-    margin: 1cm;
+    margin: 10mm;
   }
 
-  /* Landscape orientation for specific documents */
-  /* Landscape page rule will be injected via JavaScript */
-
-  /* Hide everything by default */
-  body * {
-    visibility: hidden;
+  /* Disable ALL transforms globally */
+  * {
+    transform: none !important;
+    filter: none !important;
+    perspective: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  /* Show only the target document and all its contents */
-  #soal-selidik-document,
-  #soal-selidik-document *,
-  #senarai-projek-document,
-  #senarai-projek-document *,
-  #modul-projek-document,
-  #modul-projek-document *,
-  #pelan-modul-document,
-  #pelan-modul-document * {
-    visibility: visible;
+  /* Force document flow */
+  html {
+    width: 210mm !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  /* Position the document at the top-left of the page */
+  body {
+    width: 210mm !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide global topbar/header/navigation in all generated PDFs */
+  header,
+  header *,
+  nav,
+  nav *,
+  [class*="topbar"],
+  [class*="Topbar"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Landscape orientation for specific documents is controlled via .print-landscape on body */
+
+  /* Ensure parent containers of documents don't constrain content */
+  body,
+  html,
+  body > div,
+  body > div > div,
+  main,
+  main > div {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Position the document properly for pagination - MUST use static, not absolute! */
+  /* Applies in print mode, not on screen – scoped by body[data-print-target] */
   #soal-selidik-document,
   #senarai-projek-document,
   #modul-projek-document,
   #pelan-modul-document {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+    position: static !important;  /* Changed from absolute - allows multi-page flow */
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;  /* Remove any height constraints */
+    max-height: none !important;  /* Allow content to expand */
+    overflow: visible !important;  /* Allow content to flow */
     display: block !important;
     background: white !important;
     box-shadow: none !important;
     border: none !important;
+    padding: 10mm !important;  /* Add some padding for professional look */
+    margin: 0 !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  /* CRITICAL: Remove fixed/overflow only for printed target ancestors */
+  body.printing div[class*="fixed"],
+  body.printing div[class*="inset-0"],
+  body.printing div[class*="h-screen"],
+  body.printing div[class*="overflow-hidden"],
+  body.printing div[class*="overflow-x-auto"],
+  body.printing div[class*="overflow-y-auto"] {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    width: 100% !important;
+  }
+
+  /* CRITICAL: Remove all constraints from document parent containers */
+  #modul-projek-document,
+  #pelan-modul-document,
+  #modul-projek-document ~ *,
+  #pelan-modul-document ~ * {
+    position: static !important;
+  }
+
+  /* Remove ALL constraints from parent containers of document containers */
+  main:has(#senarai-projek-document),
+  main:has(#modul-projek-document),
+  main:has(#pelan-modul-document),
+  div:has(#senarai-projek-document),
+  div:has(#modul-projek-document),
+  div:has(#pelan-modul-document) {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
     padding: 0 !important;
     margin: 0 !important;
   }
@@ -219,19 +259,97 @@ select option {
     margin: 0 auto 1rem auto;
   }
 
-  /* Prevent page breaks inside table rows */
-  #soal-selidik-document table tr,
-  #senarai-projek-document table tr,
-  #modul-projek-document table tr {
-    page-break-inside: avoid;
+  /* Page break behavior - allow content to fragment naturally */
+  .printing * {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
   }
 
-  /* Ensure table borders are visible when printing */
-  #soal-selidik-document table,
-  #senarai-projek-document table,
+  /* Tables - allow breaking, but keep rows together */
+  .printing table {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+    table-layout: auto !important;
+    display: table !important;
+  }
+
+  .printing tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .printing thead {
+    display: table-header-group !important;
+  }
+
+  /* CRITICAL: Ensure table wrapper divs don't constrain tables - OVERRIDE ALL TAILWIND */
+  #modul-projek-document > div,
+  #modul-projek-document > div > div,
+  #modul-projek-document > div > div[class*="overflow"],
+  #modul-projek-document > div > div[class*="overflow-hidden"],
+  #modul-projek-document > div > div[class*="overflow-x-auto"],
+  #modul-projek-document table,
+  #modul-projek-document tbody,
+  #modul-projek-document tbody tr {
+    display: table !important;
+    display: table-row-group !important;
+    display: table-row !important;
+    width: 100% !important;
+    table-layout: auto !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* CRITICAL: Ensure table wrapper divs don't constrain tables */
+  #modul-projek-document > div > div[class*="overflow"],
   #modul-projek-document table {
-    border-collapse: collapse;
-    width: 100%;
+    display: table !important;
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+
+  /* Repeat table headers on each new page */
+  #soal-selidik-document table thead,
+  #senarai-projek-document table thead,
+  #modul-projek-document table thead,
+  .print-table-header {
+    display: table-header-group !important;  /* Headers repeat on each page */
+  }
+
+  /* Ensure tbody displays properly */
+  #soal-selidik-document table tbody,
+  #senarai-projek-document table tbody,
+  #modul-projek-document table tbody,
+  .print-table-body {
+    display: table-row-group !important;
+  }
+
+  /* Avoid breaking table rows when possible, but allow if table is too long */
+  #soal-selidik-document table tr,
+  #senarai-projek-document table tr,
+  #modul-projek-document table tr,
+  .print-table-row {
+    page-break-inside: avoid !important;  /* Keep rows together when possible */
+    break-inside: avoid !important;
+    display: table-row !important;
+  }
+
+  /* If a row is too tall for one page, allow it to break */
+  #senarai-projek-document table tr[style*="height"],
+  #modul-projek-document table tr[style*="height"] {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+  
+  /* Allow breaking inside cells if content is very long */
+  #soal-selidik-document table td,
+  #senarai-projek-document table td,
+  #modul-projek-document table td {
+    page-break-inside: auto;
+    break-inside: auto;
   }
 
   #soal-selidik-document table th,
@@ -251,8 +369,200 @@ select option {
     color: #000 !important;
   }
 
-  /* Hide Tindakan column in senarai-projek-document when printing */
-  #senarai-projek-document .no-print-tindakan {
+  /* Remove ALL overflow constraints on document containers and their children - CRITICAL FOR MULTI-PAGE */
+  /* Override ALL Tailwind overflow classes */
+  #senarai-projek-document,
+  #senarai-projek-document *,
+  #modul-projek-document,
+  #modul-projek-document *,
+  #pelan-modul-document,
+  #pelan-modul-document *,
+  [id*="modul-projek-document"] *,
+  [id*="pelan-modul-document"] * {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    clip: auto !important;
+    clip-path: none !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    position: static !important;
+  }
+
+  /* CRITICAL: Override Tailwind overflow classes specifically */
+  #modul-projek-document [class*="overflow-hidden"],
+  #modul-projek-document [class*="overflow-x-auto"],
+  #modul-projek-document [class*="overflow-y-auto"],
+  #pelan-modul-document [class*="overflow-hidden"],
+  #pelan-modul-document [class*="overflow-x-auto"],
+  #pelan-modul-document [class*="overflow-y-auto"] {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+
+  /* Ensure all wrapper divs don't constrain content */
+  #senarai-projek-document > div,
+  #modul-projek-document > div,
+  #pelan-modul-document > div,
+  #senarai-projek-document div,
+  #modul-projek-document div,
+  #pelan-modul-document div {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+
+  /* Specifically target table wrapper divs - CRITICAL FOR MODUL PROJEK - MAXIMUM SPECIFICITY */
+  #senarai-projek-document .overflow-hidden,
+  #modul-projek-document .overflow-hidden,
+  #senarai-projek-document .overflow-x-auto,
+  #modul-projek-document .overflow-x-auto,
+  #modul-projek-document div[class*="overflow"],
+  #modul-projek-document div[class*="overflow-hidden"],
+  #modul-projek-document div[class*="overflow-x-auto"],
+  #modul-projek-document div[class*="overflow-y-auto"],
+  #pelan-modul-document div[class*="overflow"],
+  #pelan-modul-document div[class*="overflow-hidden"],
+  #pelan-modul-document div[class*="overflow-x-auto"],
+  #pelan-modul-document div[class*="overflow-y-auto"],
+  #pelan-modul-document .overflow-hidden,
+  #pelan-modul-document .overflow-x-auto,
+  #modul-projek-document > div,
+  #modul-projek-document > div > div,
+  #pelan-modul-document > div,
+  #pelan-modul-document > div > div {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    position: static !important;
+    display: block !important;
+  }
+
+  /* CRITICAL: Remove min-width constraints that prevent wrapping - including inline styles */
+  #modul-projek-document div[style*="min-width"],
+  #pelan-modul-document div[style*="min-width"],
+  #modul-projek-document div[style*="minWidth"],
+  #pelan-modul-document div[style*="minWidth"] {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Remove ALL height constraints on all nested containers - CRITICAL FOR MULTI-PAGE */
+  #senarai-projek-document,
+  #senarai-projek-document *,
+  #modul-projek-document,
+  #modul-projek-document *,
+  #pelan-modul-document,
+  #pelan-modul-document * {
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+  }
+
+  /* Remove ALL width constraints that might limit content */
+  #senarai-projek-document,
+  #senarai-projek-document *,
+  #modul-projek-document,
+  #modul-projek-document *,
+  #pelan-modul-document,
+  #pelan-modul-document * {
+    max-width: none !important;
+    min-width: auto !important;
+  }
+
+  /* Gantt / Absolute element fixes - convert to static flow */
+  #pelan-modul-document,
+  #pelan-modul-document *,
+  #pelan-modul-document [class*="relative"],
+  #pelan-modul-document [class*="absolute"],
+  #pelan-modul-document [style*="position: absolute"],
+  #pelan-modul-document [style*="position: relative"] {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+  }
+
+  /* Prevent gantt bars from breaking across pages */
+  #pelan-modul-document .print-gantt-phase,
+  #pelan-modul-document .print-gantt-module {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+
+  /* Allow table containers to expand - remove ALL constraints */
+  #senarai-projek-document .overflow-hidden,
+  #senarai-projek-document .overflow-x-auto,
+  #modul-projek-document .overflow-hidden,
+  #modul-projek-document .overflow-x-auto {
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  /* Professional table formatting */
+  #senarai-projek-document table,
+  #modul-projek-document table {
+    border: 1px solid #000 !important;
+    border-collapse: collapse !important;
+  }
+
+  #senarai-projek-document table th,
+  #senarai-projek-document table td,
+  #modul-projek-document table th,
+  #modul-projek-document table td {
+    border: 1px solid #000 !important;
+    padding: 8px !important;
+    text-align: left !important;
+    vertical-align: top !important;
+  }
+
+  #senarai-projek-document table th,
+  #modul-projek-document table th {
+    background-color: #f3f4f6 !important;
+    font-weight: bold !important;
+  }
+
+  /* Professional Gantt chart formatting */
+  #pelan-modul-document {
+    font-size: 10pt !important;
+  }
+
+  #pelan-modul-document table,
+  #pelan-modul-document table th,
+  #pelan-modul-document table td {
+    border: 1px solid #000 !important;
+  }
+
+  /* Hide interactive elements during print */
+  #senarai-projek-document button,
+  #modul-projek-document button,
+  #pelan-modul-document button,
+  #senarai-projek-document .print\\:hidden,
+  #modul-projek-document .print\\:hidden,
+  #pelan-modul-document .print\\:hidden,
+  #senarai-projek-document nav,
+  #modul-projek-document nav,
+  #pelan-modul-document nav,
+  #senarai-projek-document a[href],
+  #modul-projek-document a[href],
+  #pelan-modul-document a[href] {
     display: none !important;
   }
 

@@ -26,49 +26,42 @@ import {hooks as colocatedHooks} from "phoenix-colocated/sppa"
 import topbar from "../vendor/topbar"
 import html2pdf from "html2pdf.js"
 
-// Print Document Hook
+// Print Document Hook (simple, print main content only via CSS)
 const PrintDocument = {
   mounted() {
     this.el.addEventListener("click", (e) => {
       e.preventDefault()
       const targetId = this.el.dataset.target
-      
-      if (targetId) {
-        // Add a class to body to indicate printing mode
-        document.body.classList.add("printing")
-        
-        // Check if this is a landscape document (senarai-projek, modul-projek, or pelan-modul)
-        const landscapeDocuments = ["senarai-projek-document", "modul-projek-document", "pelan-modul-document"]
-        let landscapeStyle = null
-        
-        if (landscapeDocuments.includes(targetId)) {
-          document.body.classList.add("print-landscape")
-          
-          // Inject landscape @page rule via style tag
-          landscapeStyle = document.createElement("style")
-          landscapeStyle.id = "print-landscape-style"
-          landscapeStyle.textContent = `
-            @media print {
-              @page {
-                size: A4 landscape;
-                margin: 1cm;
-              }
-            }
-          `
-          document.head.appendChild(landscapeStyle)
-        }
-        
-        // Trigger print dialog
-        window.print()
-        
-        // Remove printing classes and style after print dialog closes
-        setTimeout(() => {
-          document.body.classList.remove("printing", "print-landscape")
-          if (landscapeStyle && landscapeStyle.parentNode) {
-            landscapeStyle.parentNode.removeChild(landscapeStyle)
-          }
-        }, 100)
+      if (!targetId) return
+
+      const targetElement = document.getElementById(targetId)
+      if (!targetElement) {
+        console.error("Print target element not found:", targetId)
+        return
       }
+
+      // Mark body with the current print target – CSS will handle hiding everything else
+      document.body.dataset.printTarget = targetId
+      document.body.classList.add("printing")
+
+      // Optional: landscape for specific documents (handled by CSS @page via class)
+      const landscapeDocuments = ["senarai-projek-document", "modul-projek-document", "pelan-modul-document"]
+      if (landscapeDocuments.includes(targetId)) {
+        document.body.classList.add("print-landscape")
+      }
+
+      // Let layout settle, then trigger print
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.print()
+
+          // Cleanup after print dialog closes
+          setTimeout(() => {
+            document.body.classList.remove("printing", "print-landscape")
+            delete document.body.dataset.printTarget
+          }, 100)
+        })
+      })
     })
   }
 }
@@ -264,6 +257,470 @@ const GeneratePDF = {
           alert("Ralat semasa menjana PDF. Sila cuba lagi.")
         })
     })
+  }
+}
+
+// Generate Modul Projek PDF Hook - Only generates the laporan modul projek section
+const GenerateModulProjekPDF = {
+  mounted() {
+    this.handleClick = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      e.stopImmediatePropagation()
+      
+      // Return early if button is disabled
+      if (this.el.disabled) {
+        return
+      }
+      
+      const targetId = this.el.dataset.target || "modul-projek-document"
+      const element = document.getElementById(targetId)
+      
+      if (!element) {
+        console.error("PDF target element not found:", targetId)
+        return
+      }
+      
+      // Show loading state
+      const originalText = this.el.innerHTML
+      this.el.disabled = true
+      this.el.innerHTML = '<span class="flex items-center gap-2"><svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Menjana PDF...</span>'
+      
+      // Clone only the laporan modul projek section
+      const clonedElement = element.cloneNode(true)
+      
+      // Clean up the cloned element for professional PDF display
+      // Remove all buttons and interactive elements
+      clonedElement.querySelectorAll("button").forEach(button => {
+        button.remove()
+      })
+      
+      // Remove icons and SVG elements
+      clonedElement.querySelectorAll("svg, .icon").forEach(icon => {
+        icon.remove()
+      })
+      
+      // Remove any print:hidden elements
+      clonedElement.querySelectorAll(".print\\:hidden, [class*='print:hidden']").forEach(el => {
+        el.remove()
+      })
+      
+      // Clean up developer info - remove icon containers, keep only text
+      clonedElement.querySelectorAll("td").forEach(td => {
+        // Remove icon containers in developer column
+        td.querySelectorAll("div[class*='rounded-full'], div[class*='w-8'][class*='h-8']").forEach(iconContainer => {
+          iconContainer.remove()
+        })
+        
+        // Remove button containers
+        td.querySelectorAll("button").forEach(btn => btn.remove())
+        
+        // Clean up flex containers - convert to simple text
+        td.querySelectorAll("div.flex.items-center").forEach(flexDiv => {
+          const textContent = flexDiv.textContent.trim()
+          if (textContent) {
+            const textNode = document.createTextNode(textContent)
+            flexDiv.parentNode.replaceChild(textNode, flexDiv)
+          }
+        })
+      })
+      
+      // Clean up task title - remove delete button wrapper
+      clonedElement.querySelectorAll("td").forEach(td => {
+        const flexDiv = td.querySelector("div.flex.items-center.justify-between")
+        if (flexDiv) {
+          const titleSpan = flexDiv.querySelector("span")
+          if (titleSpan) {
+            const textContent = titleSpan.textContent.trim()
+            td.innerHTML = textContent
+          }
+        }
+      })
+      
+      // Ensure table cells have proper text content
+      clonedElement.querySelectorAll("td").forEach(td => {
+        // If cell only contains icons/buttons, set to "-"
+        const hasText = td.textContent.trim() && 
+                       !td.querySelector("svg") && 
+                       !td.querySelector("button")
+        if (!hasText && td.textContent.trim() === "") {
+          td.textContent = "-"
+        }
+      })
+      
+      // Create a temporary container for PDF generation
+      const tempContainer = document.createElement("div")
+      tempContainer.style.cssText = "position: absolute; left: -9999px; width: 297mm; background: #ffffff; padding: 10mm; color: #000000;"
+      
+      // Add a style element for temporary container (will be overridden in onclone)
+      const styleOverride = document.createElement("style")
+      styleOverride.textContent = `
+        * {
+          color: #000000 !important;
+        }
+      `
+      tempContainer.appendChild(styleOverride)
+      tempContainer.appendChild(clonedElement)
+      document.body.appendChild(tempContainer)
+      
+      // Get project name for filename from the document
+      let projectName = "Modul_Projek"
+      const namaSistemElements = Array.from(element.querySelectorAll("p, span, div"))
+      for (const el of namaSistemElements) {
+        const text = el.textContent || ""
+        if (text.includes("Nama Sistem:")) {
+          const match = text.match(/Nama Sistem:\s*(.+?)(?:\n|$)/)
+          if (match && match[1]) {
+            projectName = match[1].trim().replace(/[^a-zA-Z0-9]/g, "_")
+            break
+          }
+        }
+      }
+      
+      const filename = `Laporan_Modul_Projek_${projectName}.pdf`
+      
+      // Temporarily remove all link stylesheets to avoid oklch parsing
+      const originalStylesheets = []
+      Array.from(document.querySelectorAll("link[rel='stylesheet']")).forEach(link => {
+        originalStylesheets.push(link)
+        link.style.display = "none"
+      })
+      
+      // Configure PDF options for A4 landscape with professional formatting
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: filename,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          letterRendering: true,
+          backgroundColor: "#ffffff",
+          windowWidth: 1400,
+          width: 1400,
+          height: clonedElement.scrollHeight || 1000,
+          foreignObjectRendering: false,
+          ignoreElements: (element) => {
+            // Ignore link elements to avoid stylesheet loading
+            return element.tagName === "LINK" && element.rel === "stylesheet"
+          },
+          onclone: (clonedDoc, element) => {
+            // Remove all link stylesheets from cloned document
+            const links = clonedDoc.querySelectorAll("link[rel='stylesheet']")
+            links.forEach(link => link.remove())
+            
+            // Remove all style elements that might contain oklch
+            const styles = clonedDoc.querySelectorAll("style")
+            styles.forEach(style => {
+              if (style.textContent && style.textContent.includes("oklch")) {
+                style.remove()
+              }
+            })
+            
+            // Add comprehensive professional styling for PDF
+            const style = clonedDoc.createElement("style")
+            style.textContent = `
+              * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                color: #000000 !important;
+                font-family: 'Arial', 'Helvetica', sans-serif !important;
+              }
+              
+              body, html {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-size: 10pt !important;
+                line-height: 1.4 !important;
+              }
+              
+              /* Header Section */
+              #modul-projek-document {
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+              }
+              
+              #modul-projek-document > div:first-child {
+                background: #f5f5f5 !important;
+                border-bottom: 2px solid #333333 !important;
+                padding: 15px 20px !important;
+                margin-bottom: 0 !important;
+              }
+              
+              #modul-projek-document h2 {
+                font-size: 18pt !important;
+                font-weight: bold !important;
+                color: #000000 !important;
+                margin-bottom: 5px !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+              }
+              
+              #modul-projek-document p {
+                font-size: 9pt !important;
+                color: #333333 !important;
+                margin: 2px 0 !important;
+              }
+              
+              /* Project Info Section */
+              #modul-projek-document .grid {
+                margin-top: 10px !important;
+                padding-top: 10px !important;
+                border-top: 1px solid #cccccc !important;
+              }
+              
+              #modul-projek-document .grid p {
+                font-size: 9pt !important;
+                margin: 3px 0 !important;
+              }
+              
+              /* Table Styling */
+              table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin: 0 !important;
+                font-size: 9pt !important;
+                border: 2px solid #333333 !important;
+              }
+              
+              thead {
+                background-color: #333333 !important;
+                color: #ffffff !important;
+              }
+              
+              thead th {
+                padding: 12px 8px !important;
+                text-align: left !important;
+                font-weight: bold !important;
+                font-size: 9pt !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.3px !important;
+                border-right: 1px solid #666666 !important;
+                border-bottom: 2px solid #333333 !important;
+                color: #ffffff !important;
+                background-color: #333333 !important;
+              }
+              
+              thead th:last-child {
+                border-right: none !important;
+              }
+              
+              tbody tr {
+                border-bottom: 1px solid #cccccc !important;
+                background-color: #ffffff !important;
+              }
+              
+              tbody tr:nth-child(even) {
+                background-color: #f9f9f9 !important;
+              }
+              
+              tbody td {
+                padding: 10px 8px !important;
+                font-size: 9pt !important;
+                color: #000000 !important;
+                border-right: 1px solid #e0e0e0 !important;
+                vertical-align: middle !important;
+              }
+              
+              tbody td:last-child {
+                border-right: none !important;
+              }
+              
+              /* Status and Priority Badges */
+              tbody td span[class*="inline-flex"] {
+                display: inline-block !important;
+                padding: 4px 8px !important;
+                border-radius: 3px !important;
+                font-size: 8pt !important;
+                font-weight: 600 !important;
+                text-align: center !important;
+                border: 1px solid !important;
+              }
+              
+              /* Status colors */
+              .bg-blue-100 {
+                background-color: #dbeafe !important;
+                color: #1e40af !important;
+                border-color: #93c5fd !important;
+              }
+              
+              .bg-green-100 {
+                background-color: #d1fae5 !important;
+                color: #065f46 !important;
+                border-color: #6ee7b7 !important;
+              }
+              
+              /* Priority colors */
+              .bg-orange-100 {
+                background-color: #fed7aa !important;
+                color: #9a3412 !important;
+                border-color: #fdba74 !important;
+              }
+              
+              .bg-amber-100 {
+                background-color: #fde68a !important;
+                color: #78350f !important;
+                border-color: #fcd34d !important;
+              }
+              
+              .bg-pink-100 {
+                background-color: #fce7f3 !important;
+                color: #831843 !important;
+                border-color: #f9a8d4 !important;
+              }
+              
+              /* Phase and Version badges */
+              tbody td span[class*="inline-flex"][class*="w-8"] {
+                display: inline-block !important;
+                width: auto !important;
+                min-width: 30px !important;
+                padding: 4px 8px !important;
+                background-color: #f0f0f0 !important;
+                color: #000000 !important;
+                border: 1px solid #cccccc !important;
+                border-radius: 3px !important;
+                font-weight: 600 !important;
+              }
+              
+              /* Text alignment */
+              tbody td[class*="text-center"] {
+                text-align: center !important;
+              }
+              
+              tbody td[class*="text-left"] {
+                text-align: left !important;
+              }
+              
+              /* Hide icons and buttons */
+              svg, button, .icon {
+                display: none !important;
+              }
+              
+              /* Developer info */
+              tbody td div[class*="flex"] {
+                display: block !important;
+              }
+              
+              tbody td div[class*="flex"] span {
+                display: inline !important;
+              }
+              
+              /* Date formatting */
+              tbody td .flex.items-center {
+                display: inline !important;
+              }
+              
+              /* Remove all background gradients */
+              [class*="bg-gradient"] {
+                background: #f5f5f5 !important;
+              }
+              
+              /* Ensure proper spacing */
+              #modul-projek-document > div {
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+              
+              /* Print date section */
+              #modul-projek-document > div:first-child > div > div:last-child {
+                margin-top: 10px !important;
+                padding-top: 10px !important;
+                border-top: 1px solid #cccccc !important;
+              }
+              
+              /* Ensure proper text display */
+              span {
+                display: inline !important;
+              }
+              
+              /* Remove empty cells styling */
+              tbody td:empty::before {
+                content: "-" !important;
+                color: #999999 !important;
+              }
+              
+              /* Better spacing for table */
+              tbody tr:first-child td {
+                padding-top: 12px !important;
+              }
+              
+              tbody tr:last-child td {
+                padding-bottom: 12px !important;
+              }
+              
+              /* Font weight adjustments */
+              tbody td {
+                font-weight: normal !important;
+              }
+              
+              tbody td span[class*="font-medium"],
+              tbody td span[class*="font-semibold"] {
+                font-weight: 600 !important;
+              }
+              
+              /* Ensure table fits properly */
+              .overflow-x-auto {
+                overflow: visible !important;
+              }
+            `
+            clonedDoc.head.appendChild(style)
+          }
+        },
+        jsPDF: { 
+          unit: "mm", 
+          format: "a4", 
+          orientation: "landscape",
+          compress: true
+        },
+        pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+      }
+      
+      // Generate PDF
+      html2pdf()
+        .set(opt)
+        .from(clonedElement)
+        .save()
+        .then(() => {
+          // Restore stylesheets
+          originalStylesheets.forEach(link => {
+            link.style.display = ""
+          })
+          
+          // Clean up
+          if (tempContainer.parentNode) {
+            document.body.removeChild(tempContainer)
+          }
+          this.el.disabled = false
+          this.el.innerHTML = originalText
+        })
+        .catch((error) => {
+          console.error("PDF generation error:", error)
+          
+          // Restore stylesheets even on error
+          originalStylesheets.forEach(link => {
+            link.style.display = ""
+          })
+          
+          if (tempContainer.parentNode) {
+            document.body.removeChild(tempContainer)
+          }
+          this.el.disabled = false
+          this.el.innerHTML = originalText
+          alert("Ralat semasa menjana PDF. Sila cuba lagi.")
+        })
+    }
+    
+    this.el.addEventListener("click", this.handleClick, true) // Use capture phase
+  },
+  
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick, true)
+    }
   }
 }
 
@@ -546,609 +1003,45 @@ const NotificationToggle = {
   }
 }
 
-// Profile Menu Toggle Hook
-const ProfileMenuToggle = {
+// Print Gantt Chart Hook - Opens PDF in hidden popup, triggers print, then closes
+const PrintGanttChart = {
   mounted() {
-    const dropdown = document.getElementById("profile-menu-dropdown")
-    const container = document.getElementById("profile-menu-container")
-    
-    if (!dropdown || !container) return
-    
+    console.log("PrintGanttChart hook mounted", this.el)
     this.handleClick = (e) => {
+      e.preventDefault()
       e.stopPropagation()
-      // Toggle dropdown visibility
-      const isOpen = dropdown.classList.contains("opacity-100")
       
-      if (isOpen) {
-        dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
-        dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
-        this.el.setAttribute("aria-expanded", "false")
-      } else {
-        dropdown.classList.remove("opacity-0", "scale-95", "pointer-events-none")
-        dropdown.classList.add("opacity-100", "scale-100", "pointer-events-auto")
-        this.el.setAttribute("aria-expanded", "true")
+      const pdfUrl = this.el.dataset.pdfUrl
+      console.log("Print button clicked, PDF URL:", pdfUrl)
+      
+      if (!pdfUrl) {
+        console.error("PDF URL not found")
+        alert("URL PDF tidak ditemui")
+        return
       }
       
-      // Try to push event to LiveView if available
-      if (this.pushEvent) {
-        this.pushEvent("toggle_profile_menu", {})
+      // Open a hidden popup window (not a tab)
+      const printWindow = window.open(
+        pdfUrl,
+        'printWindow',
+        'width=1,height=1,left=-1000,top=-1000,menubar=no,toolbar=no,location=no,status=no'
+      )
+      
+      if (!printWindow) {
+        alert("Pop-up telah disekat. Sila benarkan pop-up untuk laman web ini.")
+        return
       }
-    }
-    
-    this.handleClickAway = (e) => {
-      if (!container.contains(e.target)) {
-        dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
-        dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
-        this.el.setAttribute("aria-expanded", "false")
-        
-        if (this.pushEvent) {
-          this.pushEvent("close_profile_menu", {})
-        }
-      }
+      
+      console.log("Print window opened successfully")
     }
     
     this.el.addEventListener("click", this.handleClick)
-    document.addEventListener("click", this.handleClickAway)
-  },
-  
-  updated() {
-    // Re-sync with LiveView state if available
-    const dropdown = document.getElementById("profile-menu-dropdown")
-    if (dropdown && this.el.dataset.profileMenuOpen === "true") {
-      dropdown.classList.remove("opacity-0", "scale-95", "pointer-events-none")
-      dropdown.classList.add("opacity-100", "scale-100", "pointer-events-auto")
-      this.el.setAttribute("aria-expanded", "true")
-    } else if (dropdown) {
-      dropdown.classList.remove("opacity-100", "scale-100", "pointer-events-auto")
-      dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none")
-      this.el.setAttribute("aria-expanded", "false")
-    }
+    console.log("Event listener attached to button")
   },
   
   destroyed() {
     if (this.handleClick) {
       this.el.removeEventListener("click", this.handleClick)
-    }
-    if (this.handleClickAway) {
-      document.removeEventListener("click", this.handleClickAway)
-    }
-  }
-}
-
-// Open Date Picker Hook - when icon/button is clicked, programmatically click the date input to open native picker
-const OpenDatePicker = {
-  mounted() {
-    this.el.addEventListener("click", (e) => {
-      e.preventDefault()
-      const inputId = this.el.dataset.dateInputId || this.el.getAttribute("for")
-      if (inputId) {
-        const input = document.getElementById(inputId)
-        if (input && input.type === "date") {
-          input.focus()
-          input.showPicker ? input.showPicker() : input.click()
-        }
-      }
-    })
-  }
-}
-
-// Set Input Value Hook - ensures input value is set after mount/update
-const SetInputValue = {
-  mounted() {
-    const initialValue = this.el.dataset.initialValue
-    if (initialValue && initialValue !== "") {
-      this.el.value = initialValue
-    }
-  },
-  updated() {
-    const initialValue = this.el.dataset.initialValue
-    if (initialValue && initialValue !== "") {
-      this.el.value = initialValue
-    }
-  }
-}
-
-// Preserve Form Data Hook - ensures all form data is sent on phx-change
-const PreserveFormData = {
-  mounted() {
-    const form = this.el
-    if (!form) return
-    
-    // Function to get all form data - CRITICAL: This must capture ALL fields with CURRENT values
-    const getAllFormData = () => {
-      const formParams = { soal_selidik: {} }
-      
-      // Get all inputs, textareas, and selects from the form
-      const allInputs = form.querySelectorAll('input, textarea, select')
-      
-      allInputs.forEach(input => {
-        // Skip if not part of soal_selidik or if it's a button
-        const name = input.name || input.getAttribute('name')
-        if (!name || !name.startsWith('soal_selidik[') || input.type === 'button' || input.type === 'submit' || input.type === 'hidden') {
-          return
-        }
-        
-        // Get current value from DOM - CRITICAL: Read directly from input element
-        let value = ''
-        if (input.type === 'checkbox') {
-          value = input.checked ? (input.value || 'true') : ''
-        } else if (input.type === 'radio') {
-          if (input.checked) {
-            value = input.value || ''
-          } else {
-            return // Skip unchecked radio buttons
-          }
-        } else {
-          // For text, textarea, select - read value directly
-          // CRITICAL: Always read from input.value as it's the most reliable
-          // Don't use textContent or innerText as they may not reflect the actual value
-          value = input.value || ''
-          
-          // For date inputs, ensure we get the value even if it's empty
-          if (input.type === 'date' && !value) {
-            value = ''
-          }
-          
-          // Log if we're getting empty values for non-empty looking inputs (for debugging)
-          if (!value && input.offsetHeight > 0 && input.offsetWidth > 0 && name.includes('disediakan_oleh')) {
-            console.debug(`PreserveFormData: Empty value for visible input: ${name}, input.value: "${input.value}"`)
-          }
-        }
-        
-        // Skip if no value and not a checkbox (empty strings are valid for text inputs)
-        // Actually, we should include empty strings too, as they represent user clearing the field
-        
-        // Parse nested structure from name attribute
-        // Example: "soal_selidik[fr][pengurusan_data][1][soalan]"
-        const keys = name
-          .replace(/^soal_selidik\[/, '')
-          .replace(/\]$/, '')
-          .split(/[\[\]]+/)
-          .filter(k => k !== '')
-        
-        if (keys.length === 0) {
-          return // Invalid name format
-        }
-        
-        // Navigate/create nested structure
-        let current = formParams.soal_selidik
-        for (let i = 0; i < keys.length - 1; i++) {
-          const k = keys[i]
-          if (!current[k]) {
-            current[k] = {}
-          }
-          current = current[k]
-        }
-        
-        const lastKey = keys[keys.length - 1]
-        
-        // Handle array values (for checkboxes with [] notation)
-        if (name.endsWith('[]')) {
-          if (!current[lastKey]) {
-            current[lastKey] = []
-          }
-          if (Array.isArray(current[lastKey]) && value) {
-            // Check if value already exists to avoid duplicates
-            if (!current[lastKey].includes(value)) {
-              current[lastKey].push(value)
-            }
-          }
-        } else {
-          // For non-array values, always use the current DOM value
-          // This ensures we capture the latest user input
-          // CRITICAL: For disediakan_oleh fields, always include even if empty
-          // to ensure all fields are sent together
-          if (name.includes('disediakan_oleh')) {
-            // Always include disediakan_oleh fields, even if empty
-            current[lastKey] = value
-            console.debug(`PreserveFormData: Captured disediakan_oleh.${lastKey} = "${value}"`)
-          } else {
-            current[lastKey] = value
-          }
-        }
-      })
-      
-      return formParams.soal_selidik
-    }
-    
-    // Intercept phx-change events BEFORE they are sent to server
-    this.handlePhxChange = (e) => {
-      // Only process if this is our form
-      if (e.target.closest('form') !== form && e.target !== form) {
-        return
-      }
-      
-      // Get the changed input's current value directly
-      const changedInput = e.target
-      const changedValue = changedInput.type === 'checkbox' 
-        ? (changedInput.checked ? (changedInput.value || 'true') : '')
-        : (changedInput.value || '')
-      
-      console.log("PreserveFormData: phx-change triggered for:", changedInput.name, "=", changedValue)
-      
-      // Get ALL form data - read directly from DOM elements
-      const allFormData = getAllFormData()
-      
-      // Log for debugging
-      console.log("PreserveFormData: All form data keys:", Object.keys(allFormData))
-      
-      // Log sample data to verify values are captured
-      if (allFormData.fr && Object.keys(allFormData.fr).length > 0) {
-        const firstCategory = Object.keys(allFormData.fr)[0]
-        if (allFormData.fr[firstCategory]) {
-          const firstQuestion = Object.keys(allFormData.fr[firstCategory])[0]
-          if (allFormData.fr[firstCategory][firstQuestion]) {
-            const qData = allFormData.fr[firstCategory][firstQuestion]
-            console.log(`PreserveFormData: Sample data [fr][${firstCategory}][${firstQuestion}]:`, {
-              soalan: qData.soalan || '(empty)',
-              maklumbalas: qData.maklumbalas || '(empty)',
-              catatan: qData.catatan || '(empty)'
-            })
-          }
-        }
-      }
-      
-      // Log disediakan_oleh specifically
-      if (allFormData.disediakan_oleh) {
-        console.log("PreserveFormData: disediakan_oleh data:", {
-          nama: allFormData.disediakan_oleh.nama || '(empty)',
-          jawatan: allFormData.disediakan_oleh.jawatan || '(empty)',
-          tarikh: allFormData.disediakan_oleh.tarikh || '(empty)'
-        })
-        
-        // Also log the actual DOM values for debugging
-        const namaInput = form.querySelector('input[name="soal_selidik[disediakan_oleh][nama]"]')
-        const jawatanInput = form.querySelector('input[name="soal_selidik[disediakan_oleh][jawatan]"]')
-        const tarikhInput = form.querySelector('input[name="soal_selidik[disediakan_oleh][tarikh]"]')
-        
-        console.log("PreserveFormData: DOM values for disediakan_oleh:", {
-          nama_DOM: namaInput ? namaInput.value : 'input not found',
-          jawatan_DOM: jawatanInput ? jawatanInput.value : 'input not found',
-          tarikh_DOM: tarikhInput ? tarikhInput.value : 'input not found'
-        })
-      } else {
-        console.log("PreserveFormData: disediakan_oleh not found in form data")
-      }
-      
-      // CRITICAL: Modify the event detail to include ALL form data
-      // This must be done synchronously before LiveView processes the event
-      if (!e.detail) {
-        e.detail = {}
-      }
-      
-      // Replace the detail with our complete form data
-      e.detail.soal_selidik = allFormData
-      
-      console.log("PreserveFormData: Event detail updated")
-    }
-    
-    // Helper function to deep merge objects
-    const deepMergeObjects = (target, source) => {
-      const result = { ...target }
-      
-      for (const key in source) {
-        if (source.hasOwnProperty(key)) {
-          if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
-            // Recursively merge nested objects
-            result[key] = deepMergeObjects(result[key] || {}, source[key])
-          } else {
-            // For leaf values, prefer source (new input) if it's not empty
-            // Otherwise keep target (existing data)
-            if (source[key] !== "" && source[key] !== null && source[key] !== undefined) {
-              result[key] = source[key]
-            } else if (result[key] === undefined || result[key] === null) {
-              result[key] = source[key]
-            }
-            // If source is empty but target has value, keep target
-          }
-        }
-      }
-      
-      return result
-    }
-    
-    // Listen for phx-change events with capture phase to intercept early
-    form.addEventListener("phx-change", this.handlePhxChange, true)
-    
-    // Also handle input/change events to ensure data is captured
-    this.handleInput = (e) => {
-      if (e.target.closest('form') === form) {
-        // Clear existing debounce timer
-        if (this.debounceTimer) {
-          clearTimeout(this.debounceTimer)
-        }
-        
-        // Debounce to avoid too many updates
-        this.debounceTimer = setTimeout(() => {
-          // Use requestAnimationFrame to ensure input value is in DOM
-          requestAnimationFrame(() => {
-            // Get all form data
-            const allFormData = getAllFormData()
-            
-            console.log("PreserveFormData: Pushing all form data via validate event", Object.keys(allFormData))
-            
-            // Push all form data to LiveView
-            if (typeof this.pushEvent === 'function') {
-              this.pushEvent("validate", { soal_selidik: allFormData })
-            }
-          })
-        }, 300) // 300ms debounce for better performance
-      }
-    }
-    
-    // Attach listeners for input/change events
-    form.addEventListener("input", this.handleInput, true)
-    form.addEventListener("change", this.handleInput, true)
-  },
-  
-  updated() {
-    // Re-attach listeners if needed
-    const form = this.el
-    if (form && !this.handleInputAttached) {
-      if (this.handlePhxChange) {
-        form.addEventListener("phx-change", this.handlePhxChange, true)
-      }
-      if (this.handleInput) {
-        form.addEventListener("input", this.handleInput, true)
-        form.addEventListener("change", this.handleInput, true)
-      }
-      this.handleInputAttached = true
-    }
-  },
-  
-  destroyed() {
-    const form = this.el
-    if (form) {
-      if (this.debounceTimer) {
-        clearTimeout(this.debounceTimer)
-      }
-      if (this.handlePhxChange) {
-        form.removeEventListener("phx-change", this.handlePhxChange, true)
-      }
-      if (this.handleInput) {
-        form.removeEventListener("input", this.handleInput, true)
-        form.removeEventListener("change", this.handleInput, true)
-      }
-    }
-  }
-}
-
-// Save Row Data Hook
-const SaveRowData = {
-  mounted() {
-    const handleClick = (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      
-      const formId = this.el.dataset.formId || "soal-selidik-form"
-      const form = document.getElementById(formId)
-      
-      if (!form) {
-        console.error("Form not found:", formId)
-        return
-      }
-      
-      // Get phx-value attributes
-      const tabType = this.el.getAttribute("phx-value-tab_type")
-      const categoryKey = this.el.getAttribute("phx-value-category_key")
-      const questionNo = this.el.getAttribute("phx-value-question_no")
-      
-      // Get form data
-      const formData = new FormData(form)
-      const formParams = {}
-      
-      // Convert FormData to nested object structure
-      for (let [key, value] of formData.entries()) {
-        // Handle array notation like "soal_selidik[fr][category][1][maklumbalas][]"
-        const keys = key.split(/[\[\]]+/).filter(k => k !== "")
-        let current = formParams
-        
-        for (let i = 0; i < keys.length - 1; i++) {
-          const k = keys[i]
-          if (!current[k]) {
-            current[k] = {}
-          }
-          current = current[k]
-        }
-        
-        const lastKey = keys[keys.length - 1]
-        // Handle array values (for checkboxes)
-        if (key.endsWith("[]")) {
-          if (!current[lastKey]) {
-            current[lastKey] = []
-          }
-          if (Array.isArray(current[lastKey])) {
-            current[lastKey].push(value)
-          }
-        } else {
-          if (current[lastKey] && Array.isArray(current[lastKey])) {
-            current[lastKey].push(value)
-          } else if (current[lastKey]) {
-            current[lastKey] = [current[lastKey], value]
-          } else {
-            current[lastKey] = value
-          }
-        }
-      }
-      
-      // Push event with form data
-      const eventData = {
-        tab_type: tabType,
-        category_key: categoryKey,
-        question_no: questionNo,
-        soal_selidik: formParams.soal_selidik || {}
-      }
-      
-      console.log("SaveRowData: Pushing event with data:", eventData)
-      console.log("SaveRowData: Hook context:", {
-        hasPushEvent: typeof this.pushEvent === 'function',
-        hasPushEventTo: typeof this.pushEventTo === 'function',
-        el: this.el
-      })
-      
-      // Use pushEvent if available (standard LiveView hook method)
-      if (typeof this.pushEvent === 'function') {
-        try {
-          this.pushEvent("save_row", eventData)
-          console.log("SaveRowData: Event pushed successfully")
-        } catch (error) {
-          console.error("SaveRowData: Error pushing event:", error)
-        }
-      } else {
-        console.error("pushEvent not available in hook context")
-        // Fallback: try to dispatch a custom event that LiveView can catch
-        const customEvent = new CustomEvent("phx:save-row", {
-          detail: eventData,
-          bubbles: true,
-          cancelable: true
-        })
-        this.el.dispatchEvent(customEvent)
-      }
-    }
-    
-    this.handleClick = handleClick
-    this.el.addEventListener("click", handleClick, true)
-  },
-  
-  destroyed() {
-    if (this.handleClick) {
-      this.el.removeEventListener("click", this.handleClick, true)
-    }
-  }
-}
-
-// Function name: push value on blur so server always receives the typed name (same pattern as SubFunctionInputBlur)
-const FunctionInputBlur = {
-  mounted() {
-    const input = this.el
-    if (!input || input.tagName !== "INPUT") return
-
-    this.handleBlur = () => {
-      const value = input.value !== null && input.value !== undefined ? input.value : ""
-      const moduleId = input.getAttribute("phx-value-module_id")
-      const funcId = input.getAttribute("phx-value-func_id")
-      if (moduleId && funcId && typeof this.pushEvent === "function") {
-        this.pushEvent("update_function_name", {
-          module_id: moduleId,
-          func_id: funcId,
-          value: value
-        })
-      }
-    }
-    input.addEventListener("blur", this.handleBlur)
-  },
-  destroyed() {
-    if (this.el && this.handleBlur) {
-      this.el.removeEventListener("blur", this.handleBlur)
-    }
-  }
-}
-
-// Sub-function name: push value on blur so server always receives the typed name
-const SubFunctionInputBlur = {
-  mounted() {
-    const input = this.el
-    if (!input || input.tagName !== "INPUT") return
-
-    this.handleBlur = () => {
-      const value = input.value !== null && input.value !== undefined ? input.value : ""
-      const moduleId = input.getAttribute("phx-value-module_id")
-      const funcId = input.getAttribute("phx-value-func_id")
-      const subFuncId = input.getAttribute("phx-value-sub_func_id")
-      if (moduleId && funcId && subFuncId && typeof this.pushEvent === "function") {
-        this.pushEvent("update_sub_function_name", {
-          module_id: moduleId,
-          func_id: funcId,
-          sub_func_id: subFuncId,
-          value: value
-        })
-      }
-    }
-    input.addEventListener("blur", this.handleBlur)
-  },
-  destroyed() {
-    if (this.el && this.handleBlur) {
-      this.el.removeEventListener("blur", this.handleBlur)
-    }
-  }
-}
-
-// Save Field on Blur Hook - saves field value to database when user leaves the field
-const SaveFieldOnBlur = {
-  mounted() {
-    const input = this.el
-    if (!input) return
-    
-    this.handleBlur = (e) => {
-      const value = input.value || ""
-      const tabType = input.getAttribute("phx-value-tab_type")
-      const categoryKey = input.getAttribute("phx-value-category_key")
-      const questionNo = input.getAttribute("phx-value-question_no")
-      const field = input.getAttribute("phx-value-field")
-      
-      if (tabType && categoryKey && questionNo && field && typeof this.pushEvent === 'function') {
-        // Push event with the field value
-        this.pushEvent("save_field", {
-          tab_type: tabType,
-          category_key: categoryKey,
-          question_no: questionNo,
-          field: field,
-          value: value
-        })
-      }
-    }
-    
-    input.addEventListener("blur", this.handleBlur)
-  },
-  
-  updated() {
-    // Re-attach listener if needed
-    const input = this.el
-    if (input && !this.handleBlurAttached) {
-      input.addEventListener("blur", this.handleBlur)
-      this.handleBlurAttached = true
-    }
-  },
-  
-  destroyed() {
-    const input = this.el
-    if (input && this.handleBlur) {
-      input.removeEventListener("blur", this.handleBlur)
-    }
-  }
-}
-
-// Prevents Enter key in an input from submitting the parent form (e.g. module name field)
-const PreventEnterSubmit = {
-  mounted() {
-    this.el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") e.preventDefault()
-    })
-  }
-}
-
-// Prevents double-click / duplicate phx-click: only one click is forwarded within the cooldown window
-const SingleClick = {
-  mounted() {
-    this.lastClickTime = 0
-    this.cooldownMs = parseInt(this.el.dataset.singleClickMs || "600", 10)
-
-    this.handleClick = (e) => {
-      const now = Date.now()
-      if (now - this.lastClickTime < this.cooldownMs) {
-        e.preventDefault()
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-        return
-      }
-      this.lastClickTime = now
-    }
-
-    this.el.addEventListener("click", this.handleClick, true)
-  },
-  destroyed() {
-    if (this.handleClick) {
-      this.el.removeEventListener("click", this.handleClick, true)
     }
   }
 }
@@ -1165,18 +1058,9 @@ const liveSocket = new LiveSocket("/live", Socket, {
     PrintDocument,
     UpdateSectionCategory,
     GeneratePDF,
-    NotificationToggle,
-    ProfileMenuToggle,
-    AutoResize,
-    AutoResizeTextarea,
-    ToggleOptionsField,
-    PreserveDetailsOpen,
-    PreserveFormData,
-    SaveFieldOnBlur,
-    FunctionInputBlur,
-    SubFunctionInputBlur,
-    SaveRowData,
-    SetInputValue
+    GenerateModulProjekPDF,
+    PrintGanttChart,
+    NotificationToggle
   },
 })
 
@@ -1193,6 +1077,7 @@ liveSocket.connect()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
+
 
 
 // The lines below enable quality of life phoenix_live_reload

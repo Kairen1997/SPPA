@@ -20,6 +20,7 @@ defmodule Sppa.ApprovedProjects.ApprovedProject do
     field :implikasi, :string
 
     field :kertas_kerja_path, :string
+    field :external_updated_at, :utc_datetime
 
     has_one :project, Sppa.Projects.Project
 

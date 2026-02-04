@@ -599,11 +599,11 @@ defmodule SppaWeb.CoreComponents do
                 <span class="font-medium">Dashboard</span>
               </.link>
               <.link
-                navigate={~p"/senarai-projek"}
+                navigate={~p"/senarai-projek-diluluskan"}
                 phx-click="close_sidebar"
                 class={[
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                  if(@current_path == "/senarai-projek",
+                  if(@current_path == "/senarai-projek-diluluskan",
                     do: "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md",
                     else: "text-gray-200 hover:text-white hover:bg-gray-700/70"
                   )

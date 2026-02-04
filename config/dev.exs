@@ -14,9 +14,8 @@ config :sppa, Sppa.Repo,
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
-# config :sppa, :system_a,
-config :sppa, :system_permohonan_aplikasi,
-  base_url: "http://10.71.67.195:4000/api/requests?status=Diluluskan"
+#config :sppa, :system_a,
+config :sppa, :system_permohonan_aplikasi, base_url: "http://10.71.67.159:4000/api/requests?status=Diluluskan"
 
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
@@ -90,4 +89,93 @@ config :phoenix_live_view,
   enable_expensive_runtime_checks: true
 
 # Disable swoosh api client as it is only required for production adapters.
+config :swoosh, :api_client, false
+
+
+#       port: 4001,
+
+#       cipher_suite: :strong,
+
+#       keyfile: "priv/cert/selfsigned_key.pem",
+
+#       certfile: "priv/cert/selfsigned.pem"
+
+#     ],
+
+#
+
+# If desired, both `http:` and `https:` keys can be
+
+# configured to run both http and https servers on
+
+# different ports.
+
+
+
+# Watch static and templates for browser reloading.
+
+config :sppa, SppaWeb.Endpoint,
+
+  live_reload: [
+
+    web_console_logger: true,
+
+    patterns: [
+
+      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
+
+      ~r"priv/gettext/.*(po)$",
+
+      ~r"lib/sppa_web/(?:controllers|live|components|router)/?.*\.(ex|heex)$"
+
+    ]
+
+  ]
+
+
+
+# Enable dev routes for dashboard and mailbox
+
+config :sppa, dev_routes: true
+
+
+
+# Do not include metadata nor timestamps in development logs
+
+config :logger, :default_formatter, format: "[$level] $message\n"
+
+
+
+# Set a higher stacktrace during development. Avoid configuring such
+
+# in production as building large stacktraces may be expensive.
+
+config :phoenix, :stacktrace_depth, 20
+
+
+
+# Initialize plugs at runtime for faster development compilation
+
+config :phoenix, :plug_init_mode, :runtime
+
+
+
+config :phoenix_live_view,
+
+  # Include debug annotations and locations in rendered markup.
+
+  # Changing this configuration will require mix clean and a full recompile.
+
+  debug_heex_annotations: true,
+
+  debug_attributes: true,
+
+  # Enable helpful, but potentially expensive runtime checks
+
+  enable_expensive_runtime_checks: true
+
+
+
+# Disable swoosh api client as it is only required for production adapters.
+
 config :swoosh, :api_client, false

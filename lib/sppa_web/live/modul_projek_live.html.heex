@@ -52,71 +52,87 @@
         </div>
       </header>
        <%!-- Content --%>
-      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10">
-        <div class="max-w-[1800px] mx-auto space-y-6">
+      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10 print:overflow-visible print:p-0 print:bg-white">
+        <div class="max-w-[1800px] mx-auto space-y-6 print:max-w-none print:mx-0 print:space-y-0">
           <%!-- Back Button --%>
-          <div class="mb-2">
+          <div class="mb-2 print:hidden">
             <.link
-              navigate={~p"/senarai-projek"}
+              navigate={~p"/senarai-projek-diluluskan"}
               class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 group"
             >
-              <.icon
-                name="hero-arrow-left"
-                class="w-4 h-4 group-hover:-translate-x-1 transition-transform"
-              /> <span>Kembali ke Senarai Projek</span>
+              <.icon name="hero-arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span>Kembali ke Senarai Projek Diluluskan</span>
             </.link>
           </div>
            <%!-- Page Header Section --%>
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <div class="space-y-2">
+            <%= if @project do %>
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <div class="space-y-2">
+                  <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                      <.icon name="hero-folder" class="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
+                        Modul Projek
+                      </h1>
+                      <p class="text-sm text-gray-500 mt-1">Pengurusan Tugasan dan Modul</p>
+                    </div>
+                  </div>
+                  <div class="ml-12 space-y-1">
+                    <h2 class="text-lg font-semibold text-gray-800">{@project.nama}</h2>
+                    <%= if @project.jabatan do %>
+                      <p class="text-sm text-gray-600 flex items-center gap-2">
+                        <.icon name="hero-building-office" class="w-4 h-4" />
+                        {@project.jabatan}
+                      </p>
+                    <% end %>
+                  </div>
+                </div>
+              
+                <%!-- Action Buttons --%>
+                <div class="flex items-center gap-3">
+                  <.link
+                    href={~p"/projek/#{@project_id}/modul/pdf"}
+                    target="_blank"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg print:hidden"
+                  >
+                    <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak</span>
+                  </.link>
+                  <.link
+                    navigate={~p"/projek/#{@project_id}/pelan-modul"}
+                    class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                  >
+                    <.icon name="hero-chart-bar" class="w-5 h-5" />
+                    <span>Pelan Modul</span>
+                  </.link>
+                  <button
+                    phx-click="open_new_task_modal"
+                    class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                  >
+                    <.icon name="hero-plus-circle" class="w-5 h-5" />
+                    <span>Modul Baru</span>
+                  </button>
+                </div>
+              </div>
+            <% else %>
+              <div class="flex flex-col items-start gap-3">
                 <div class="flex items-center gap-3">
                   <div class="p-2 bg-blue-100 rounded-lg">
                     <.icon name="hero-folder" class="w-6 h-6 text-blue-600" />
                   </div>
-                  
                   <div>
-                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Modul Projek</h1>
-                    
-                    <p class="text-sm text-gray-500 mt-1">Pengurusan Tugasan dan Modul</p>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
+                      Modul Projek
+                    </h1>
+                    <p class="text-sm text-gray-500 mt-1">Memuatkan maklumat projek...</p>
                   </div>
                 </div>
-                
-                <div class="ml-12 space-y-1">
-                  <h2 class="text-lg font-semibold text-gray-800">{@project.nama}</h2>
-                  
-                  <%= if @project.jabatan do %>
-                    <p class="text-sm text-gray-600 flex items-center gap-2">
-                      <.icon name="hero-building-office" class="w-4 h-4" /> {@project.jabatan}
-                    </p>
-                  <% end %>
-                </div>
               </div>
-               <%!-- Action Buttons --%>
-              <div class="flex items-center gap-3">
-                <button
-                  id="print-modul-projek-btn"
-                  phx-hook="PrintDocument"
-                  data-target="modul-projek-document"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg print:hidden"
-                >
-                  <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak</span>
-                </button>
-                <.link
-                  navigate={~p"/projek/#{@project_id}/pelan-modul"}
-                  class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-                >
-                  <.icon name="hero-chart-bar" class="w-5 h-5" /> <span>Pelan Modul</span>
-                </.link>
-                <button
-                  phx-click="open_new_task_modal"
-                  class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-                >
-                  <.icon name="hero-plus-circle" class="w-5 h-5" /> <span>Modul Baru</span>
-                </button>
-              </div>
-            </div>
-             <%!-- Statistics Cards --%>
+            <% end %>
+          
+            <%!-- Statistics Cards --%>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
               <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
                 <div class="flex items-center justify-between">
@@ -168,58 +184,96 @@
                     <.icon name="hero-arrow-path" class="w-6 h-6 text-amber-700" />
                   </div>
                 </div>
+                </div>
               </div>
             </div>
-          </div>
-           <%!-- Tasks Table Section --%>
+            
+          <%!-- Tasks Table Section --%>
           <div
             id="modul-projek-document"
-            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0"
+            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0 print:overflow-visible"
           >
-            <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-              <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <.icon name="hero-table-cells" class="w-5 h-5 text-gray-600" /> Senarai Tugasan
-              </h2>
+            <div class="px-6 py-5 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 print:bg-gray-100 print:border-b print:border-gray-400 print:px-4 print:py-3">
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between gap-4 print:flex-col print:items-start print:gap-2">
+                  <div class="flex items-center gap-2 print:w-full">
+                    <.icon name="hero-table-cells" class="w-6 h-6 text-gray-700 print:hidden" />
+                    <div class="print:w-full">
+                      <h2 class="text-base font-semibold text-gray-900 tracking-wide print:text-lg print:font-bold print:text-black print:mb-1">
+                        Laporan Modul Projek
+                      </h2>
+                      <p class="text-xs text-gray-600 print:text-sm print:text-gray-800">
+                        Senarai tugasan modul bagi projek yang sedang dibangunkan
+                      </p>
+                    </div>
+                  </div>
+                  <div class="text-right text-xs text-gray-600 print:text-left print:text-sm print:text-gray-800 print:w-full print:border-t print:border-gray-400 print:pt-2 print:mt-2">
+                    <p>
+                      <span class="font-semibold">Tarikh Cetakan:</span>
+                      <span class="ml-1">
+                        {Calendar.strftime(Date.utc_today(), "%d/%m/%Y")}
+                      </span>
+                    </p>
+                    <%= if @current_scope && @current_scope.user do %>
+                      <p>
+                        <span class="font-semibold">Dicetak oleh:</span>
+                        <span class="ml-1">
+                          <%= if @current_scope.user.no_kp && @current_scope.user.no_kp != "" do %>
+                            {@current_scope.user.no_kp}
+                          <% else %>
+                            {@current_scope.user.email || "N/A"}
+                          <% end %>
+                        </span>
+                      </p>
+                    <% end %>
+                  </div>
+                </div>
+
+                <%= if @project do %>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-gray-700 mt-1">
+                    <p>
+                      <span class="font-semibold">Nama Sistem:</span>
+                      <span class="ml-1">{@project.nama}</span>
+                    </p>
+                    <p>
+                      <span class="font-semibold">Kementerian / Jabatan:</span>
+                      <span class="ml-1">{@project.jabatan || "-"}</span>
+                    </p>
+                  </div>
+                <% end %>
+              </div>
             </div>
-            
-            <div class="overflow-x-auto">
-              <table class="w-full border-collapse">
-                <thead>
+            <div class="overflow-x-auto print:overflow-visible">
+              <table class="w-full border-collapse text-xs print-table">
+                <thead class="print-table-header">
                   <tr class="bg-gray-50 border-b-2 border-gray-300">
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                    <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
                       Tugasan
                     </th>
-                    
-                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-20">
+                    <th class="px-6 py-3 text-center font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-20">
                       Fasa
                     </th>
-                    
-                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-20">
+                    <th class="px-6 py-3 text-center font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-20">
                       Versi
                     </th>
-                    
-                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-32">
+                    <th class="px-6 py-3 text-center font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-32">
                       Status
                     </th>
-                    
-                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-32">
+                    <th class="px-6 py-3 text-center font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-32">
                       Keutamaan
                     </th>
-                    
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                    <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
                       Ditugaskan kepada
                     </th>
-                    
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">
                       Sasaran
                     </th>
                   </tr>
                 </thead>
-                
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-gray-200 print-table-body">
                   <%= if Enum.empty?(@tasks) do %>
-                    <tr>
-                      <td colspan="7" class="px-6 py-12 text-center">
+                    <tr class="print-table-row">
+                      <td colspan="7" class="px-6 py-10 text-center">
                         <div class="flex flex-col items-center justify-center space-y-3">
                           <.icon name="hero-clipboard-document" class="w-12 h-12 text-gray-300" />
                           <p class="text-sm font-medium text-gray-500">
@@ -235,25 +289,23 @@
                   <% else %>
                     <%= for task <- @tasks do %>
                       <tr
-                        class="hover:bg-blue-50/50 transition-colors duration-150 cursor-pointer group border-b border-gray-200"
+                        class="hover:bg-blue-50/50 transition-colors duration-150 cursor-pointer group border-b border-gray-200 print-table-row"
                         phx-click="open_edit_task_modal"
                         phx-value-task_id={task.id}
                       >
                         <td class="px-6 py-4 border-r border-gray-200">
                           <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-900">
-                              {task.title || ""}
-                            </span>
-                            <button
-                              phx-click="delete_task"
-                              phx-value-task_id={task.id}
-                              class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all duration-200 ml-3 p-1 rounded hover:bg-red-50"
-                              onclick="event.stopPropagation();"
-                              title="Padam tugasan"
-                            >
-                              <.icon name="hero-trash" class="w-4 h-4" />
-                            </button>
-                          </div>
+                            <span class="text-sm font-medium text-gray-900">{task.title || ""}</span>
+                        <button
+                          phx-click="delete_task"
+                          phx-value-task_id={task.id}
+                          phx-stop-propagation
+                          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all duration-200 ml-3 p-1 rounded hover:bg-red-50"
+                          title="Padam tugasan"
+                        >
+                          <.icon name="hero-trash" class="w-4 h-4" />
+                        </button>
+                      </div>
                         </td>
                         
                         <td class="px-6 py-4 border-r border-gray-200 text-center">
@@ -296,21 +348,23 @@
                         
                         <td class="px-6 py-4 border-r border-gray-200">
                           <div class="flex items-center gap-2">
-                            <%= if task.developer_name do %>
+                            <%= if task.developer do %>
                               <div class="flex items-center gap-2 flex-1">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                                   <.icon name="hero-user" class="w-4 h-4 text-blue-600" />
                                 </div>
-                                
                                 <span class="text-sm font-medium text-gray-700">
-                                  {task.developer_name}
+                                  <%= if task.developer.email && task.developer.email != "" do %>
+                                    {task.developer.email}
+                                  <% else %>
+                                    {task.developer.no_kp || "N/A"}
+                                  <% end %>
                                 </span>
                               </div>
                             <% else %>
                               <span class="text-sm text-gray-400 italic">Tiada pembangun</span>
                             <% end %>
-                            
-                            <button
+                        <button
                               type="button"
                               class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
                               onclick="event.stopPropagation();"
@@ -373,8 +427,6 @@
     <div class="flex min-h-full items-center justify-center p-4">
       <div
         class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-        onclick="event.stopPropagation()"
-        phx-click-away="close_new_task_modal"
       >
         <%!-- Modal header --%>
         <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
