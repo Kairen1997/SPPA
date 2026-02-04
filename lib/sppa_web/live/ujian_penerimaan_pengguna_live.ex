@@ -142,7 +142,6 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
     end
   end
 
-
   @impl true
   def handle_event("toggle_sidebar", _params, socket) do
     {:noreply, update(socket, :sidebar_open, &(!&1))}

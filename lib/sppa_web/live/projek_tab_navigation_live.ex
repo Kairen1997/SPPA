@@ -111,6 +111,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         modules =
           AnalisisDanRekabentuk.list_modules_for_project(project_id, socket.assigns.current_scope)
 
+        {jadual_gantt_data, jadual_month_labels} = prepare_jadual_data_for_project(project)
+
         perubahan = get_perubahan()
         penempatan = get_penempatan()
         penyerahan = get_penyerahan()
@@ -128,6 +130,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:soal_selidik_pdf_data, soal_selidik_pdf_data)
          |> assign(:analisis_pdf_data, analisis_pdf_data)
          |> assign(:modules, modules)
+         |> assign(:jadual_gantt_data, jadual_gantt_data)
+         |> assign(:jadual_month_labels, jadual_month_labels)
+         |> assign(:jadual_get_status_color, &jadual_status_color/1)
+         |> assign(:jadual_get_status_badge_class, &jadual_status_badge_class/1)
          |> assign(:perubahan, perubahan)
          |> assign(:penempatan, penempatan)
          |> assign(:penyerahan, penyerahan)
@@ -623,6 +629,134 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         dibina_oleh: nil
       }
     ]
+  end
+
+  # Prepare jadual (Gantt) data for a single project
+  defp prepare_jadual_data_for_project(project) do
+    today = Date.utc_today()
+    tarikh_mula = project.tarikh_mula || today
+    tarikh_siap = project.tarikh_siap || today
+
+    projects =
+      if project.tarikh_mula && project.tarikh_siap do
+        min_date = Date.add(tarikh_mula, -30)
+        max_date = Date.add(tarikh_siap, 30)
+        total_days = Date.diff(max_date, min_date)
+
+        start_offset = Date.diff(tarikh_mula, min_date)
+        duration = Date.diff(tarikh_siap, tarikh_mula)
+
+        progress =
+          if project.status == "Selesai" do
+            100
+          else
+            cond do
+              duration <= 0 -> 0
+              Date.diff(today, tarikh_mula) < 0 -> 0
+              Date.diff(today, tarikh_mula) >= duration -> 95
+              true -> div(Date.diff(today, tarikh_mula) * 100, duration)
+            end
+          end
+
+        project_with_positions =
+          Map.merge(project, %{
+            start_offset: start_offset,
+            duration: duration,
+            progress: progress,
+            start_percent: if(total_days > 0, do: start_offset / total_days * 100, else: 0),
+            width_percent: if(total_days > 0, do: duration / total_days * 100, else: 0),
+            isu: Map.get(project, :isu, "Tiada"),
+            tindakan: Map.get(project, :tindakan, "-")
+          })
+
+        gantt_data = %{
+          projects: [project_with_positions],
+          min_date: min_date,
+          max_date: max_date,
+          total_days: total_days,
+          today_offset: Date.diff(today, min_date),
+          today_percent:
+            if(total_days > 0, do: Date.diff(today, min_date) / total_days * 100, else: 0)
+        }
+
+        month_labels = generate_jadual_month_labels(min_date, max_date)
+        {gantt_data, month_labels}
+      else
+        {%{projects: [], min_date: today, max_date: today, total_days: 0, today_percent: 0}, []}
+      end
+
+    projects
+  end
+
+  defp generate_jadual_month_labels(min_date, max_date) do
+    current = %Date{year: min_date.year, month: min_date.month, day: 1}
+    end_date = %Date{year: max_date.year, month: max_date.month, day: 1}
+    total_days = Date.diff(max_date, min_date)
+    generate_jadual_month_labels_recursive(current, end_date, total_days, [])
+  end
+
+  defp generate_jadual_month_labels_recursive(current, end_date, total_days, acc) do
+    if Date.compare(current, end_date) != :gt do
+      month_name =
+        case current.month do
+          1 -> "Jan"
+          2 -> "Feb"
+          3 -> "Mac"
+          4 -> "Apr"
+          5 -> "Mei"
+          6 -> "Jun"
+          7 -> "Jul"
+          8 -> "Ogs"
+          9 -> "Sep"
+          10 -> "Okt"
+          11 -> "Nov"
+          12 -> "Dis"
+          _ -> "?"
+        end
+
+      days_in_month = Date.days_in_month(current)
+      width_percent = if total_days > 0, do: days_in_month / total_days * 100, else: 0
+
+      month_data = %{month: month_name, year: current.year, width_percent: width_percent}
+
+      next_month =
+        if current.month == 12 do
+          %Date{year: current.year + 1, month: 1, day: 1}
+        else
+          %Date{year: current.year, month: current.month + 1, day: 1}
+        end
+
+      generate_jadual_month_labels_recursive(
+        next_month,
+        end_date,
+        total_days,
+        acc ++ [month_data]
+      )
+    else
+      acc
+    end
+  end
+
+  defp jadual_status_color(status) do
+    case status do
+      "Selesai" -> "#10b981"
+      "Dalam Pembangunan" -> "#3b82f6"
+      "Ujian Penerimaan Pengguna" -> "#8b5cf6"
+      "Ditangguhkan" -> "#f59e0b"
+      "Pengurusan Perubahan" -> "#ec4899"
+      _ -> "#6b7280"
+    end
+  end
+
+  defp jadual_status_badge_class(status) do
+    case status do
+      "Selesai" -> "bg-green-100 text-green-800"
+      "Dalam Pembangunan" -> "bg-blue-100 text-blue-800"
+      "Ujian Penerimaan Pengguna" -> "bg-purple-100 text-purple-800"
+      "Ditangguhkan" -> "bg-amber-100 text-amber-800"
+      "Pengurusan Perubahan" -> "bg-pink-100 text-pink-800"
+      _ -> "bg-gray-100 text-gray-800"
+    end
   end
 
   # Get a single project by ID from database
