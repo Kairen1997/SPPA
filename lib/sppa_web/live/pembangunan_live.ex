@@ -138,8 +138,8 @@ defmodule SppaWeb.PembangunanLive do
     # Try to find module in full modules list first, then in paginated_modules as fallback
     # Convert both to string for comparison to handle any type mismatches
     module_id_str = to_string(module_id)
-    
-    module = 
+
+    module =
       Enum.find(socket.assigns.modules, fn m -> to_string(m.id) == module_id_str end) ||
       Enum.find(socket.assigns.paginated_modules || [], fn m -> to_string(m.id) == module_id_str end)
 
@@ -165,9 +165,9 @@ defmodule SppaWeb.PembangunanLive do
   def handle_event("open_edit_modal", params, socket) do
     require Logger
     Logger.info("open_edit_modal called with params: #{inspect(params)}")
-    
+
     module_id = Map.get(params, "module_id")
-    
+
     if is_nil(module_id) do
       Logger.error("module_id is nil in params: #{inspect(params)}")
       {:noreply, socket |> put_flash(:error, "Module ID tidak ditemui dalam parameter.")}
@@ -175,12 +175,12 @@ defmodule SppaWeb.PembangunanLive do
       # Try to find module in full modules list first, then in paginated_modules as fallback
       # Convert both to string for comparison to handle any type mismatches
       module_id_str = to_string(module_id)
-      
+
       Logger.info("Looking for module with ID: #{module_id_str}")
       Logger.info("Total modules: #{length(socket.assigns.modules)}")
       Logger.info("Total paginated modules: #{length(socket.assigns.paginated_modules || [])}")
-      
-      module = 
+
+      module =
         Enum.find(socket.assigns.modules, fn m -> to_string(m.id) == module_id_str end) ||
         Enum.find(socket.assigns.paginated_modules || [], fn m -> to_string(m.id) == module_id_str end)
 
