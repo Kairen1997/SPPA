@@ -333,13 +333,13 @@ defmodule SppaWeb.ProjectListLive do
             />
           </header>
            <%!-- Content --%>
-          <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
+          <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8 print:overflow-visible print:p-0 print:bg-white">
             <%!-- Projek List Content --%>
-            <div id="senarai-projek-document" class="max-w-7xl mx-auto">
-              <div class="mb-8 flex items-center justify-between">
-                <div>
-                  <h1 class="text-3xl font-bold text-gray-900 mb-2">Senarai Projek Diluluskan</h1>
-                  <p class="text-gray-600">Senarai lengkap semua projek yang diluluskan</p>
+            <div class="max-w-7xl mx-auto print:max-w-none print:mx-0">
+              <div class="mb-8 flex items-center justify-between print:mb-4">
+                <div class="print:w-full">
+                  <h1 class="text-3xl font-bold text-gray-900 mb-2 print:text-2xl print:mb-1 print:text-black">Senarai Projek Diluluskan</h1>
+                  <p class="text-gray-600 print:text-gray-800 print:text-sm">Senarai lengkap semua projek yang diluluskan</p>
                 </div>
                 <%!-- Print Button --%>
                 <div class="print:hidden">
@@ -406,13 +406,16 @@ defmodule SppaWeb.ProjectListLive do
                 </.form>
               </div>
 
-               <%!-- Projects table --%>
-              <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0">
-                <table class="w-full">
-                  <thead class="bg-gray-50">
+               <%!-- Projects table (main printable content) --%>
+              <div
+                id="senarai-projek-document"
+                class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0 print:overflow-visible"
+              >
+                <table class="w-full print-table">
+                  <thead class="bg-gray-50 print-table-header">
                     <tr>
-                      <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 print:hidden">
-                        Nama
+                      <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Nama Projek
                       </th>
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -427,14 +430,14 @@ defmodule SppaWeb.ProjectListLive do
                         Tarikh
                       </th>
 
-                      <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 print:hidden">
                         Tindakan
                       </th>
                     </tr>
                   </thead>
 
-                  <tbody class="divide-y divide-gray-200 bg-white">
-                    <tr :for={project <- @projects} class="hover:bg-gray-50">
+                  <tbody class="divide-y divide-gray-200 bg-white print-table-body">
+                    <tr :for={project <- @projects} class="hover:bg-gray-50 print-table-row">
                       <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                         {project.nama_projek}
                       </td>

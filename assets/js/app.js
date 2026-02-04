@@ -26,49 +26,42 @@ import {hooks as colocatedHooks} from "phoenix-colocated/sppa"
 import topbar from "../vendor/topbar"
 import html2pdf from "html2pdf.js"
 
-// Print Document Hook
+// Print Document Hook (simple, print main content only via CSS)
 const PrintDocument = {
   mounted() {
     this.el.addEventListener("click", (e) => {
       e.preventDefault()
       const targetId = this.el.dataset.target
-      
-      if (targetId) {
-        // Add a class to body to indicate printing mode
-        document.body.classList.add("printing")
-        
-        // Check if this is a landscape document (senarai-projek, modul-projek, or pelan-modul)
-        const landscapeDocuments = ["senarai-projek-document", "modul-projek-document", "pelan-modul-document"]
-        let landscapeStyle = null
-        
-        if (landscapeDocuments.includes(targetId)) {
-          document.body.classList.add("print-landscape")
-          
-          // Inject landscape @page rule via style tag
-          landscapeStyle = document.createElement("style")
-          landscapeStyle.id = "print-landscape-style"
-          landscapeStyle.textContent = `
-            @media print {
-              @page {
-                size: A4 landscape;
-                margin: 1cm;
-              }
-            }
-          `
-          document.head.appendChild(landscapeStyle)
-        }
-        
-        // Trigger print dialog
-        window.print()
-        
-        // Remove printing classes and style after print dialog closes
-        setTimeout(() => {
-          document.body.classList.remove("printing", "print-landscape")
-          if (landscapeStyle && landscapeStyle.parentNode) {
-            landscapeStyle.parentNode.removeChild(landscapeStyle)
-          }
-        }, 100)
+      if (!targetId) return
+
+      const targetElement = document.getElementById(targetId)
+      if (!targetElement) {
+        console.error("Print target element not found:", targetId)
+        return
       }
+
+      // Mark body with the current print target – CSS will handle hiding everything else
+      document.body.dataset.printTarget = targetId
+      document.body.classList.add("printing")
+
+      // Optional: landscape for specific documents (handled by CSS @page via class)
+      const landscapeDocuments = ["senarai-projek-document", "modul-projek-document", "pelan-modul-document"]
+      if (landscapeDocuments.includes(targetId)) {
+        document.body.classList.add("print-landscape")
+      }
+
+      // Let layout settle, then trigger print
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.print()
+
+          // Cleanup after print dialog closes
+          setTimeout(() => {
+            document.body.classList.remove("printing", "print-landscape")
+            delete document.body.dataset.printTarget
+          }, 100)
+        })
+      })
     })
   }
 }
@@ -267,6 +260,470 @@ const GeneratePDF = {
   }
 }
 
+// Generate Modul Projek PDF Hook - Only generates the laporan modul projek section
+const GenerateModulProjekPDF = {
+  mounted() {
+    this.handleClick = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      e.stopImmediatePropagation()
+      
+      // Return early if button is disabled
+      if (this.el.disabled) {
+        return
+      }
+      
+      const targetId = this.el.dataset.target || "modul-projek-document"
+      const element = document.getElementById(targetId)
+      
+      if (!element) {
+        console.error("PDF target element not found:", targetId)
+        return
+      }
+      
+      // Show loading state
+      const originalText = this.el.innerHTML
+      this.el.disabled = true
+      this.el.innerHTML = '<span class="flex items-center gap-2"><svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Menjana PDF...</span>'
+      
+      // Clone only the laporan modul projek section
+      const clonedElement = element.cloneNode(true)
+      
+      // Clean up the cloned element for professional PDF display
+      // Remove all buttons and interactive elements
+      clonedElement.querySelectorAll("button").forEach(button => {
+        button.remove()
+      })
+      
+      // Remove icons and SVG elements
+      clonedElement.querySelectorAll("svg, .icon").forEach(icon => {
+        icon.remove()
+      })
+      
+      // Remove any print:hidden elements
+      clonedElement.querySelectorAll(".print\\:hidden, [class*='print:hidden']").forEach(el => {
+        el.remove()
+      })
+      
+      // Clean up developer info - remove icon containers, keep only text
+      clonedElement.querySelectorAll("td").forEach(td => {
+        // Remove icon containers in developer column
+        td.querySelectorAll("div[class*='rounded-full'], div[class*='w-8'][class*='h-8']").forEach(iconContainer => {
+          iconContainer.remove()
+        })
+        
+        // Remove button containers
+        td.querySelectorAll("button").forEach(btn => btn.remove())
+        
+        // Clean up flex containers - convert to simple text
+        td.querySelectorAll("div.flex.items-center").forEach(flexDiv => {
+          const textContent = flexDiv.textContent.trim()
+          if (textContent) {
+            const textNode = document.createTextNode(textContent)
+            flexDiv.parentNode.replaceChild(textNode, flexDiv)
+          }
+        })
+      })
+      
+      // Clean up task title - remove delete button wrapper
+      clonedElement.querySelectorAll("td").forEach(td => {
+        const flexDiv = td.querySelector("div.flex.items-center.justify-between")
+        if (flexDiv) {
+          const titleSpan = flexDiv.querySelector("span")
+          if (titleSpan) {
+            const textContent = titleSpan.textContent.trim()
+            td.innerHTML = textContent
+          }
+        }
+      })
+      
+      // Ensure table cells have proper text content
+      clonedElement.querySelectorAll("td").forEach(td => {
+        // If cell only contains icons/buttons, set to "-"
+        const hasText = td.textContent.trim() && 
+                       !td.querySelector("svg") && 
+                       !td.querySelector("button")
+        if (!hasText && td.textContent.trim() === "") {
+          td.textContent = "-"
+        }
+      })
+      
+      // Create a temporary container for PDF generation
+      const tempContainer = document.createElement("div")
+      tempContainer.style.cssText = "position: absolute; left: -9999px; width: 297mm; background: #ffffff; padding: 10mm; color: #000000;"
+      
+      // Add a style element for temporary container (will be overridden in onclone)
+      const styleOverride = document.createElement("style")
+      styleOverride.textContent = `
+        * {
+          color: #000000 !important;
+        }
+      `
+      tempContainer.appendChild(styleOverride)
+      tempContainer.appendChild(clonedElement)
+      document.body.appendChild(tempContainer)
+      
+      // Get project name for filename from the document
+      let projectName = "Modul_Projek"
+      const namaSistemElements = Array.from(element.querySelectorAll("p, span, div"))
+      for (const el of namaSistemElements) {
+        const text = el.textContent || ""
+        if (text.includes("Nama Sistem:")) {
+          const match = text.match(/Nama Sistem:\s*(.+?)(?:\n|$)/)
+          if (match && match[1]) {
+            projectName = match[1].trim().replace(/[^a-zA-Z0-9]/g, "_")
+            break
+          }
+        }
+      }
+      
+      const filename = `Laporan_Modul_Projek_${projectName}.pdf`
+      
+      // Temporarily remove all link stylesheets to avoid oklch parsing
+      const originalStylesheets = []
+      Array.from(document.querySelectorAll("link[rel='stylesheet']")).forEach(link => {
+        originalStylesheets.push(link)
+        link.style.display = "none"
+      })
+      
+      // Configure PDF options for A4 landscape with professional formatting
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: filename,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          letterRendering: true,
+          backgroundColor: "#ffffff",
+          windowWidth: 1400,
+          width: 1400,
+          height: clonedElement.scrollHeight || 1000,
+          foreignObjectRendering: false,
+          ignoreElements: (element) => {
+            // Ignore link elements to avoid stylesheet loading
+            return element.tagName === "LINK" && element.rel === "stylesheet"
+          },
+          onclone: (clonedDoc, element) => {
+            // Remove all link stylesheets from cloned document
+            const links = clonedDoc.querySelectorAll("link[rel='stylesheet']")
+            links.forEach(link => link.remove())
+            
+            // Remove all style elements that might contain oklch
+            const styles = clonedDoc.querySelectorAll("style")
+            styles.forEach(style => {
+              if (style.textContent && style.textContent.includes("oklch")) {
+                style.remove()
+              }
+            })
+            
+            // Add comprehensive professional styling for PDF
+            const style = clonedDoc.createElement("style")
+            style.textContent = `
+              * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                color: #000000 !important;
+                font-family: 'Arial', 'Helvetica', sans-serif !important;
+              }
+              
+              body, html {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-size: 10pt !important;
+                line-height: 1.4 !important;
+              }
+              
+              /* Header Section */
+              #modul-projek-document {
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+              }
+              
+              #modul-projek-document > div:first-child {
+                background: #f5f5f5 !important;
+                border-bottom: 2px solid #333333 !important;
+                padding: 15px 20px !important;
+                margin-bottom: 0 !important;
+              }
+              
+              #modul-projek-document h2 {
+                font-size: 18pt !important;
+                font-weight: bold !important;
+                color: #000000 !important;
+                margin-bottom: 5px !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+              }
+              
+              #modul-projek-document p {
+                font-size: 9pt !important;
+                color: #333333 !important;
+                margin: 2px 0 !important;
+              }
+              
+              /* Project Info Section */
+              #modul-projek-document .grid {
+                margin-top: 10px !important;
+                padding-top: 10px !important;
+                border-top: 1px solid #cccccc !important;
+              }
+              
+              #modul-projek-document .grid p {
+                font-size: 9pt !important;
+                margin: 3px 0 !important;
+              }
+              
+              /* Table Styling */
+              table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin: 0 !important;
+                font-size: 9pt !important;
+                border: 2px solid #333333 !important;
+              }
+              
+              thead {
+                background-color: #333333 !important;
+                color: #ffffff !important;
+              }
+              
+              thead th {
+                padding: 12px 8px !important;
+                text-align: left !important;
+                font-weight: bold !important;
+                font-size: 9pt !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.3px !important;
+                border-right: 1px solid #666666 !important;
+                border-bottom: 2px solid #333333 !important;
+                color: #ffffff !important;
+                background-color: #333333 !important;
+              }
+              
+              thead th:last-child {
+                border-right: none !important;
+              }
+              
+              tbody tr {
+                border-bottom: 1px solid #cccccc !important;
+                background-color: #ffffff !important;
+              }
+              
+              tbody tr:nth-child(even) {
+                background-color: #f9f9f9 !important;
+              }
+              
+              tbody td {
+                padding: 10px 8px !important;
+                font-size: 9pt !important;
+                color: #000000 !important;
+                border-right: 1px solid #e0e0e0 !important;
+                vertical-align: middle !important;
+              }
+              
+              tbody td:last-child {
+                border-right: none !important;
+              }
+              
+              /* Status and Priority Badges */
+              tbody td span[class*="inline-flex"] {
+                display: inline-block !important;
+                padding: 4px 8px !important;
+                border-radius: 3px !important;
+                font-size: 8pt !important;
+                font-weight: 600 !important;
+                text-align: center !important;
+                border: 1px solid !important;
+              }
+              
+              /* Status colors */
+              .bg-blue-100 {
+                background-color: #dbeafe !important;
+                color: #1e40af !important;
+                border-color: #93c5fd !important;
+              }
+              
+              .bg-green-100 {
+                background-color: #d1fae5 !important;
+                color: #065f46 !important;
+                border-color: #6ee7b7 !important;
+              }
+              
+              /* Priority colors */
+              .bg-orange-100 {
+                background-color: #fed7aa !important;
+                color: #9a3412 !important;
+                border-color: #fdba74 !important;
+              }
+              
+              .bg-amber-100 {
+                background-color: #fde68a !important;
+                color: #78350f !important;
+                border-color: #fcd34d !important;
+              }
+              
+              .bg-pink-100 {
+                background-color: #fce7f3 !important;
+                color: #831843 !important;
+                border-color: #f9a8d4 !important;
+              }
+              
+              /* Phase and Version badges */
+              tbody td span[class*="inline-flex"][class*="w-8"] {
+                display: inline-block !important;
+                width: auto !important;
+                min-width: 30px !important;
+                padding: 4px 8px !important;
+                background-color: #f0f0f0 !important;
+                color: #000000 !important;
+                border: 1px solid #cccccc !important;
+                border-radius: 3px !important;
+                font-weight: 600 !important;
+              }
+              
+              /* Text alignment */
+              tbody td[class*="text-center"] {
+                text-align: center !important;
+              }
+              
+              tbody td[class*="text-left"] {
+                text-align: left !important;
+              }
+              
+              /* Hide icons and buttons */
+              svg, button, .icon {
+                display: none !important;
+              }
+              
+              /* Developer info */
+              tbody td div[class*="flex"] {
+                display: block !important;
+              }
+              
+              tbody td div[class*="flex"] span {
+                display: inline !important;
+              }
+              
+              /* Date formatting */
+              tbody td .flex.items-center {
+                display: inline !important;
+              }
+              
+              /* Remove all background gradients */
+              [class*="bg-gradient"] {
+                background: #f5f5f5 !important;
+              }
+              
+              /* Ensure proper spacing */
+              #modul-projek-document > div {
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+              
+              /* Print date section */
+              #modul-projek-document > div:first-child > div > div:last-child {
+                margin-top: 10px !important;
+                padding-top: 10px !important;
+                border-top: 1px solid #cccccc !important;
+              }
+              
+              /* Ensure proper text display */
+              span {
+                display: inline !important;
+              }
+              
+              /* Remove empty cells styling */
+              tbody td:empty::before {
+                content: "-" !important;
+                color: #999999 !important;
+              }
+              
+              /* Better spacing for table */
+              tbody tr:first-child td {
+                padding-top: 12px !important;
+              }
+              
+              tbody tr:last-child td {
+                padding-bottom: 12px !important;
+              }
+              
+              /* Font weight adjustments */
+              tbody td {
+                font-weight: normal !important;
+              }
+              
+              tbody td span[class*="font-medium"],
+              tbody td span[class*="font-semibold"] {
+                font-weight: 600 !important;
+              }
+              
+              /* Ensure table fits properly */
+              .overflow-x-auto {
+                overflow: visible !important;
+              }
+            `
+            clonedDoc.head.appendChild(style)
+          }
+        },
+        jsPDF: { 
+          unit: "mm", 
+          format: "a4", 
+          orientation: "landscape",
+          compress: true
+        },
+        pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+      }
+      
+      // Generate PDF
+      html2pdf()
+        .set(opt)
+        .from(clonedElement)
+        .save()
+        .then(() => {
+          // Restore stylesheets
+          originalStylesheets.forEach(link => {
+            link.style.display = ""
+          })
+          
+          // Clean up
+          if (tempContainer.parentNode) {
+            document.body.removeChild(tempContainer)
+          }
+          this.el.disabled = false
+          this.el.innerHTML = originalText
+        })
+        .catch((error) => {
+          console.error("PDF generation error:", error)
+          
+          // Restore stylesheets even on error
+          originalStylesheets.forEach(link => {
+            link.style.display = ""
+          })
+          
+          if (tempContainer.parentNode) {
+            document.body.removeChild(tempContainer)
+          }
+          this.el.disabled = false
+          this.el.innerHTML = originalText
+          alert("Ralat semasa menjana PDF. Sila cuba lagi.")
+        })
+    }
+    
+    this.el.addEventListener("click", this.handleClick, true) // Use capture phase
+  },
+  
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick, true)
+    }
+  }
+}
+
 // Update Section Category Hook
 const UpdateSectionCategory = {
   mounted() {
@@ -398,6 +855,49 @@ const NotificationToggle = {
   }
 }
 
+// Print Gantt Chart Hook - Opens PDF in hidden popup, triggers print, then closes
+const PrintGanttChart = {
+  mounted() {
+    console.log("PrintGanttChart hook mounted", this.el)
+    this.handleClick = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      
+      const pdfUrl = this.el.dataset.pdfUrl
+      console.log("Print button clicked, PDF URL:", pdfUrl)
+      
+      if (!pdfUrl) {
+        console.error("PDF URL not found")
+        alert("URL PDF tidak ditemui")
+        return
+      }
+      
+      // Open a hidden popup window (not a tab)
+      const printWindow = window.open(
+        pdfUrl,
+        'printWindow',
+        'width=1,height=1,left=-1000,top=-1000,menubar=no,toolbar=no,location=no,status=no'
+      )
+      
+      if (!printWindow) {
+        alert("Pop-up telah disekat. Sila benarkan pop-up untuk laman web ini.")
+        return
+      }
+      
+      console.log("Print window opened successfully")
+    }
+    
+    this.el.addEventListener("click", this.handleClick)
+    console.log("Event listener attached to button")
+  },
+  
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick)
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
@@ -407,6 +907,8 @@ const liveSocket = new LiveSocket("/live", Socket, {
     PrintDocument,
     UpdateSectionCategory,
     GeneratePDF,
+    GenerateModulProjekPDF,
+    PrintGanttChart,
     NotificationToggle
   },
 })
@@ -424,6 +926,7 @@ liveSocket.connect()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
+
 
 
 // The lines below enable quality of life phoenix_live_reload

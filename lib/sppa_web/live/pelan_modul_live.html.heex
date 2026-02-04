@@ -49,10 +49,10 @@
         </div>
       </header>
        <%!-- Content --%>
-      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10">
-        <div class="max-w-[1800px] mx-auto space-y-6">
+      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10 print:overflow-visible print:p-0 print:bg-white">
+        <div class="max-w-[1800px] mx-auto space-y-6 print:max-w-none print:mx-0 print:space-y-0">
           <%!-- Back Button --%>
-          <div class="mb-2">
+          <div class="mb-2 print:hidden">
             <.link
               navigate={~p"/projek/#{@project_id}/modul"}
               class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 group"
@@ -94,20 +94,19 @@
               </div>
               <%!-- Print Button --%>
               <div class="print:hidden">
-                <button
-                  id="print-pelan-modul-btn"
-                  phx-hook="PrintDocument"
-                  data-target="pelan-modul-document"
+                <.link
+                  href={~p"/pelan-modul/#{@project_id}/pdf"}
+                  target="_blank"
                   class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                 >
                   <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
-                </button>
+                </.link>
               </div>
             </div>
           </div>
           
           <%!-- Gantt Chart Section --%>
-          <div id="pelan-modul-document" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0">
+          <div id="pelan-modul-document" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0 print:overflow-visible">
             <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
               <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <.icon name="hero-calendar-days" class="w-5 h-5 text-gray-600" />
@@ -125,10 +124,10 @@
               </div>
             <% else %>
               <% %{project: project, modules: modules, start_date: proj_start, end_date: proj_end} = @gantt_data %>
-              <div class="overflow-x-auto p-6">
+              <div class="overflow-x-auto p-6 print:overflow-visible print:p-4">
                 <%!-- Gantt Chart Timeline --%>
-                <div class="min-w-full">
-                  <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <div class="min-w-full print:min-w-0 print:w-full">
+                  <div class="border border-gray-200 rounded-lg overflow-hidden print:overflow-visible print:border print:border-gray-400">
                       <%!-- Project Header --%>
                       <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-gray-200">
                         <div class="flex items-center justify-between">
@@ -156,15 +155,15 @@
                         %>
                         
                         <%!-- Month Headers --%>
-                        <div class="border-b border-gray-200 bg-gray-50">
-                          <div class="flex" style="min-width: {max(800, total_days * 4)}px;">
+                        <div class="border-b border-gray-200 bg-gray-50 print:bg-gray-100 print:border-b print:border-gray-400">
+                          <div class="flex print:w-full print:flex-wrap" style="min-width: {max(800, total_days * 4)}px;">
                             <%= for month_offset <- 0..(div(total_days, 30) + 1) do %>
                               <% 
                                 month_date = Date.add(timeline_start, month_offset * 30)
                                 month_name = Calendar.strftime(month_date, "%b %Y")
                               %>
-                              <div class="flex-1 border-r border-gray-200 px-2 py-2 text-center">
-                                <p class="text-xs font-medium text-gray-700">{month_name}</p>
+                              <div class="flex-1 border-r border-gray-200 px-2 py-2 text-center print:border-r print:border-gray-400 print:min-w-[100px] print:flex-shrink-0">
+                                <p class="text-xs font-medium text-gray-700 print:text-black print:font-bold">{month_name}</p>
                               </div>
                             <% end %>
                           </div>
@@ -183,7 +182,7 @@
                         <% end %>
                         
                         <%!-- Modules Timeline --%>
-                        <div class="p-4 space-y-3">
+                        <div class="p-4 space-y-3 print:space-y-3 print:p-3">
                           <%= for {module, index} <- Enum.with_index(modules) do %>
                             <% 
                               module_days = days_between(module.start_date, module.end_date)
@@ -200,9 +199,9 @@
                             <%= if is_new_phase do %>
                               <%!-- Phase Header Separator --%>
                               <div class={[
-                                "pt-4",
+                                "pt-4 print-gantt-phase",
                                 if(index > 0, do: "border-t border-gray-300 mt-4", else: "")
-                              ]}>
+                              ]} style="page-break-inside: avoid; break-inside: avoid;">
                                 <div class="mb-3 flex items-center gap-2">
                                   <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
                                   <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
@@ -212,9 +211,9 @@
                                 </div>
                               </div>
                             <% end %>
-                            <div class="flex items-center gap-4 min-h-[60px]">
+                            <div class="flex items-center gap-4 min-h-[60px] print-gantt-module" style="page-break-inside: avoid; break-inside: avoid;">
                               <%!-- Module Info --%>
-                              <div class="w-64 flex-shrink-0">
+                              <div class="w-64 flex-shrink-0 print:w-auto print:flex-1">
                                 <div class="flex items-center gap-2 mb-1">
                                   <h4 class="text-sm font-semibold text-gray-900">{module.title}</h4>
                                 </div>
@@ -242,18 +241,18 @@
                               </div>
                               
                               <%!-- Gantt Bar --%>
-                              <div class="flex-1 relative h-12 bg-gray-100 rounded border border-gray-200 overflow-hidden">
+                              <div class="flex-1 relative h-12 bg-gray-100 rounded border border-gray-200 overflow-hidden print:overflow-visible print:h-auto print:bg-gray-200 print:border-gray-400 print:min-h-[50px] print:flex print:items-center">
                                 <div
                                   class={[
-                                    "absolute h-full rounded transition-all duration-200 flex items-center justify-center",
-                                    if(module.status == "done", do: "bg-green-500", else: "bg-blue-500"),
-                                    if(is_past && module.status != "done", do: "bg-red-400"),
-                                    if(is_current, do: "ring-2 ring-blue-300 ring-offset-1")
+                                    "absolute h-full rounded transition-all duration-200 flex items-center justify-center print:relative print:static print:h-auto print:py-2 print:px-3 print:rounded-none print:border print:border-gray-600 print:min-h-[40px] print:w-full print:flex print:items-center print:justify-center",
+                                    if(module.status == "done", do: "bg-green-500 print:bg-green-600 print:text-white", else: "bg-blue-500 print:bg-blue-600 print:text-white"),
+                                    if(is_past && module.status != "done", do: "bg-red-400 print:bg-red-500 print:text-white"),
+                                    if(is_current, do: "ring-2 ring-blue-300 ring-offset-1 print:ring-0")
                                   ]}
                                   style={"left: #{offset_percent}%; width: #{width_percent}%;"}
                                   title={"#{module.title} - #{Calendar.strftime(module.start_date, "%d/%m/%Y")} hingga #{Calendar.strftime(module.end_date, "%d/%m/%Y")}"}
                                 >
-                                  <span class="text-xs font-medium text-white px-2 truncate">
+                                  <span class="text-xs font-medium text-white px-2 truncate print:text-white print:font-semibold print:whitespace-normal print:text-sm print:px-3">
                                     {module.title}
                                   </span>
                                 </div>

@@ -61,7 +61,9 @@ defmodule SppaWeb.Router do
       live "/senarai-projek-diluluskan", ProjectListLive, :index
       live "/senarai-projek-diluluskan/:id", ApprovedProjectLive, :show
       live "/projek/:project_id/modul", ModulProjekLive, :index
+      get "/projek/:project_id/modul/pdf", ModulProjekPdfController, :show
       live "/projek/:project_id/pelan-modul", PelanModulLive, :index
+      get "/pelan-modul/:project_id/pdf", PelanModulPdfController, :show
       live "/analisis-dan-rekabentuk", AnalisisDanRekabentukLive, :index
 
       # Dashboard modules referenced by the sidebar (must exist for VerifiedRoutes ~p)

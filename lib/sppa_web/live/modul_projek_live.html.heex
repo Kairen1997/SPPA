@@ -49,10 +49,10 @@
         </div>
       </header>
        <%!-- Content --%>
-      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10">
-        <div class="max-w-[1800px] mx-auto space-y-6">
+      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10 print:overflow-visible print:p-0 print:bg-white">
+        <div class="max-w-[1800px] mx-auto space-y-6 print:max-w-none print:mx-0 print:space-y-0">
           <%!-- Back Button --%>
-          <div class="mb-2">
+          <div class="mb-2 print:hidden">
             <.link
               navigate={~p"/senarai-projek-diluluskan"}
               class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 group"
@@ -91,14 +91,13 @@
               
                 <%!-- Action Buttons --%>
                 <div class="flex items-center gap-3">
-                  <button
-                    id="print-modul-projek-btn"
-                    phx-hook="PrintDocument"
-                    data-target="modul-projek-document"
+                  <.link
+                    href={~p"/projek/#{@project_id}/modul/pdf"}
+                    target="_blank"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg print:hidden"
                   >
                     <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak</span>
-                  </button>
+                  </.link>
                   <.link
                     navigate={~p"/projek/#{@project_id}/pelan-modul"}
                     class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
@@ -175,26 +174,26 @@
               </div>
             </div>
             
-          <%!-- Tasks Table Section (used for printing as well) --%>
+          <%!-- Tasks Table Section --%>
           <div
             id="modul-projek-document"
-            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0"
+            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0 print:overflow-visible"
           >
-            <div class="px-6 py-5 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+            <div class="px-6 py-5 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 print:bg-gray-100 print:border-b print:border-gray-400 print:px-4 print:py-3">
               <div class="flex flex-col gap-2">
-                <div class="flex items-center justify-between gap-4">
-                  <div class="flex items-center gap-2">
-                    <.icon name="hero-table-cells" class="w-6 h-6 text-gray-700" />
-                    <div>
-                      <h2 class="text-base font-semibold text-gray-900 tracking-wide">
+                <div class="flex items-center justify-between gap-4 print:flex-col print:items-start print:gap-2">
+                  <div class="flex items-center gap-2 print:w-full">
+                    <.icon name="hero-table-cells" class="w-6 h-6 text-gray-700 print:hidden" />
+                    <div class="print:w-full">
+                      <h2 class="text-base font-semibold text-gray-900 tracking-wide print:text-lg print:font-bold print:text-black print:mb-1">
                         Laporan Modul Projek
                       </h2>
-                      <p class="text-xs text-gray-600">
+                      <p class="text-xs text-gray-600 print:text-sm print:text-gray-800">
                         Senarai tugasan modul bagi projek yang sedang dibangunkan
                       </p>
                     </div>
                   </div>
-                  <div class="text-right text-xs text-gray-600">
+                  <div class="text-right text-xs text-gray-600 print:text-left print:text-sm print:text-gray-800 print:w-full print:border-t print:border-gray-400 print:pt-2 print:mt-2">
                     <p>
                       <span class="font-semibold">Tarikh Cetakan:</span>
                       <span class="ml-1">
@@ -230,9 +229,9 @@
                 <% end %>
               </div>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full border-collapse text-xs">
-                <thead>
+            <div class="overflow-x-auto print:overflow-visible">
+              <table class="w-full border-collapse text-xs print-table">
+                <thead class="print-table-header">
                   <tr class="bg-gray-50 border-b-2 border-gray-300">
                     <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
                       Tugasan
@@ -257,9 +256,9 @@
                     </th>
                   </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-gray-200 print-table-body">
                   <%= if Enum.empty?(@tasks) do %>
-                    <tr>
+                    <tr class="print-table-row">
                       <td colspan="7" class="px-6 py-10 text-center">
                         <div class="flex flex-col items-center justify-center space-y-3">
                           <.icon name="hero-clipboard-document" class="w-12 h-12 text-gray-300" />
@@ -271,7 +270,7 @@
                   <% else %>
                     <%= for task <- @tasks do %>
                       <tr
-                        class="hover:bg-blue-50/50 transition-colors duration-150 cursor-pointer group border-b border-gray-200"
+                        class="hover:bg-blue-50/50 transition-colors duration-150 cursor-pointer group border-b border-gray-200 print-table-row"
                         phx-click="open_edit_task_modal"
                         phx-value-task_id={task.id}
                       >
