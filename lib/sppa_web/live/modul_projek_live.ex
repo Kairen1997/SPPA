@@ -28,50 +28,40 @@ defmodule SppaWeb.ModulProjekLive do
         |> assign(:form, to_form(%{}, as: :task))
         |> assign(:project_id, project_id)
 
-      if connected?(socket) do
-        # Get project details from database for this user scope
-        project =
-          try do
-            Projects.get_project!(project_id, socket.assigns.current_scope)
-          rescue
-            Ecto.NoResultsError -> nil
-          end
-
-        if project do
-          # Get all users for task assignment
-          users = Accounts.list_users()
-          developers = Enum.filter(users, fn user -> user.role == "pembangun sistem" end)
-
-          # Get tasks (modules) from database for this project and sort by phase and version
-          tasks =
-            ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
-
-          sorted_tasks = sort_tasks_by_phase_and_version(tasks)
-
-          {:ok,
-           socket
-           |> assign(:project, project)
-           |> assign(:tasks, sorted_tasks)
-           |> assign(:users, users)
-           |> assign(:developers, developers)}
-        else
-          socket =
-            socket
-            |> Phoenix.LiveView.put_flash(
-              :error,
-              "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk mengakses projek ini."
-            )
-            |> Phoenix.LiveView.redirect(to: ~p"/senarai-projek-diluluskan")
-
-          {:ok, socket}
+      # Always load project + tasks immediately so the page shows the
+      # correct data and action buttons even before the LV socket connects.
+      project =
+        try do
+          Projects.get_project!(project_id, socket.assigns.current_scope)
+        rescue
+          Ecto.NoResultsError -> nil
         end
-      else
+
+      if project do
+        users = Accounts.list_users()
+        developers = Enum.filter(users, fn user -> user.role == "pembangun sistem" end)
+
+        tasks =
+          ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
+
+        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+
         {:ok,
          socket
-         |> assign(:project, nil)
-         |> assign(:tasks, [])
-         |> assign(:users, [])
-         |> assign(:developers, [])}
+         |> assign(:project, project)
+         |> assign(:tasks, sorted_tasks)
+         |> assign(:users, users)
+         |> assign(:developers, developers)}
+      else
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(
+            :error,
+            "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk mengakses projek ini."
+          )
+          |> Phoenix.LiveView.redirect(to: ~p"/senarai-projek-diluluskan")
+
+        {:ok, socket}
       end
     else
       socket =

@@ -21,19 +21,18 @@ defmodule SppaWeb.ApprovedProjectLive do
         |> assign(:notifications_count, 0)
         |> assign(:activities, [])
 
-      if connected?(socket) do
-        with {approved_id, _} <- Integer.parse(id),
-             approved_project when not is_nil(approved_project) <-
-               ApprovedProjects.get_approved_project!(approved_id) do
-          # Get all developers for the dropdown
+      case Integer.parse(id) do
+        {approved_id, _} ->
+          # Load the approved project and all supporting data immediately,
+          # so the page renders full information even before the LV socket connects.
+          approved_project = ApprovedProjects.get_approved_project!(approved_id)
+
           all_users = Accounts.list_users()
           all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
 
-          # Parse pembangun_sistem from string (comma-separated) to list of names
           stored_names = parse_pembangun_sistem(approved_project.pembangun_sistem)
           selected_developers = stored_names
 
-          # Get available developers (not already selected)
           available_developers =
             all_developers
             |> Enum.filter(fn dev -> dev.no_kp not in selected_developers end)
@@ -45,20 +44,12 @@ defmodule SppaWeb.ApprovedProjectLive do
            |> assign(:available_developers, available_developers)
            |> assign(:selected_developers, selected_developers)
            |> assign(:form_pembangun, to_form(%{"pembangun_sistem" => selected_developers}, as: :project))}
-        else
-          _ ->
-            {:ok,
-             socket
-             |> put_flash(:error, "Projek diluluskan tidak ditemui.")
-             |> push_navigate(to: ~p"/senarai-projek-diluluskan")}
-        end
-      else
-        {:ok,
-         socket
-         |> assign(:approved_project, nil)
-         |> assign(:developers, [])
-         |> assign(:available_developers, [])
-         |> assign(:selected_developers, [])}
+
+        :error ->
+          {:ok,
+           socket
+           |> put_flash(:error, "ID projek diluluskan tidak sah.")
+           |> push_navigate(to: ~p"/senarai-projek-diluluskan")}
       end
     else
       {:ok,

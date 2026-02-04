@@ -11,53 +11,70 @@
       box-sizing: border-box;
     }
     
+    html, body {
+      background: #ffffff !important;
+      background-image: none !important;
+      background-color: #ffffff !important;
+    }
+    
     body {
-      font-family: 'Times New Roman', serif;
-      background: white;
-      color: #000;
-      padding: 8mm;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      background: #ffffff !important;
+      background-image: none !important;
+      color: #000000;
+      padding: 6mm;
       font-size: 10pt;
-      line-height: 1.3;
+      line-height: 1.2;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     
     /* Document Header */
     .document-header {
-      border-bottom: 2px solid #000;
-      padding-bottom: 5px;
-      margin-bottom: 8px;
+      border-bottom: 2px solid #1e40af;
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+      background: #ffffff;
     }
     
     .document-header .agency {
       text-align: center;
       font-size: 12pt;
       font-weight: bold;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
+      color: #1e3a8a;
     }
     
     .document-header .title {
       text-align: center;
       font-size: 14pt;
       font-weight: bold;
-      margin-top: 5px;
+      margin-top: 2px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
+      color: #000000;
     }
     
     .document-header .subtitle {
       text-align: center;
-      font-size: 10pt;
-      margin-top: 3px;
-      font-weight: normal;
+      font-size: 11pt;
+      margin-top: 2px;
+      font-weight: 600;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
     }
     
     /* Project Information Section */
     .project-section {
-      border: 1px solid #000;
+      border: 1px solid #1e40af;
+      border-radius: 3px;
       padding: 6px;
-      margin-bottom: 8px;
-      background: #f9f9f9;
+      margin-bottom: 6px;
+      background: #f8fafc;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
     
     .project-section table {
@@ -73,37 +90,41 @@
     
     .project-section table td:first-child {
       font-weight: bold;
-      width: 25%;
-      border-right: 1px solid #ccc;
+      width: 30%;
+      border-right: 1px solid #cbd5e1;
+      color: #1e40af;
     }
     
     .project-section table td:last-child {
-      width: 75%;
+      width: 70%;
+      color: #000000;
     }
     
     /* Gantt Chart Section */
     .gantt-section {
-      margin-top: 8px;
+      margin-top: 6px;
     }
     
     .gantt-section-title {
       font-size: 11pt;
       font-weight: bold;
       text-align: center;
-      margin-bottom: 6px;
+      margin-bottom: 3px;
       padding: 4px;
-      background: #e0e0e0;
-      border: 1px solid #000;
+      background: #1e40af;
+      color: #ffffff;
+      border: 1px solid #1e3a8a;
       text-transform: uppercase;
+      letter-spacing: 0.4px;
     }
     
     /* Timeline Header */
     .timeline-header {
-      background: #d0d0d0;
-      border: 1px solid #000;
-      border-bottom: 2px solid #000;
-      padding: 4px 0;
-      margin-bottom: 4px;
+      background: #334155;
+      border: 1px solid #1e293b;
+      border-bottom: 2px solid #1e293b;
+      padding: 3px 0;
+      margin-bottom: 2px;
     }
     
     .timeline-header .months {
@@ -115,10 +136,12 @@
       flex: 1;
       min-width: 70px;
       text-align: center;
-      padding: 3px 5px;
-      border-right: 1px solid #000;
+      padding: 2px 4px;
+      border-right: 1px solid #475569;
       font-size: 8pt;
       font-weight: bold;
+      color: #ffffff;
+      text-transform: uppercase;
     }
     
     .timeline-header .month:last-child {
@@ -129,19 +152,20 @@
     .module-row {
       display: flex;
       align-items: stretch;
-      min-height: 45px;
-      margin-bottom: 3px;
-      border: 1px solid #000;
+      min-height: 36px;
+      margin-bottom: 2px;
+      border: 1px solid #1e40af;
       page-break-inside: avoid;
+      background: #ffffff;
     }
     
     .module-info {
       min-width: 180px;
-      max-width: 220px;
+      max-width: 200px;
       flex-shrink: 0;
       padding: 4px 6px;
-      border-right: 1px solid #000;
-      background: #f5f5f5;
+      border-right: 1px solid #1e40af;
+      background: #f8fafc;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -150,15 +174,15 @@
     .module-info .module-title {
       font-size: 9pt;
       font-weight: bold;
-      margin-bottom: 3px;
-      color: #000;
+      margin-bottom: 2px;
+      color: #000000;
       line-height: 1.2;
     }
     
     .module-info .module-details {
       font-size: 7pt;
-      color: #333;
-      line-height: 1.3;
+      color: #475569;
+      line-height: 1.2;
     }
     
     .module-info .module-details span {
@@ -166,78 +190,89 @@
       margin: 1px 0;
     }
     
+    .module-info .module-details strong {
+      color: #1e40af;
+      font-weight: 600;
+    }
+    
     .gantt-bar-container {
       position: relative;
       flex: 1;
-      min-height: 45px;
-      background: #e8e8e8;
-      border-right: 1px solid #000;
+      min-height: 36px;
+      background: #f1f5f9;
+      border-right: 1px solid #1e40af;
       overflow: visible;
     }
     
     .gantt-bar {
       position: absolute;
-      top: 0;
-      height: 100%;
-      min-height: 45px;
-      border: 1px solid #000;
+      top: 2px;
+      bottom: 2px;
+      min-height: 32px;
+      border: 1px solid #ffffff;
+      border-radius: 2px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      color: #ffffff;
       font-weight: bold;
       font-size: 8pt;
-      padding: 3px 5px;
+      padding: 2px 6px;
       text-align: center;
       box-sizing: border-box;
       text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
     }
     
     .gantt-bar.bg-blue-500 {
-      background-color: #2563eb;
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      border-color: #1e3a8a;
     }
     
     .gantt-bar.bg-green-500 {
-      background-color: #059669;
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      border-color: #065f46;
     }
     
     .gantt-bar.bg-red-400,
     .gantt-bar.bg-red-500 {
-      background-color: #dc2626;
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      border-color: #991b1b;
     }
     
     .date-info {
       min-width: 100px;
-      max-width: 120px;
+      max-width: 115px;
       flex-shrink: 0;
       padding: 4px 6px;
       text-align: center;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      background: #f9f9f9;
+      background: #f8fafc;
+      border-left: 1px solid #cbd5e1;
     }
     
     .date-info .start-date {
       font-size: 8pt;
       font-weight: bold;
-      margin-bottom: 2px;
-      color: #000;
+      margin-bottom: 1px;
+      color: #1e40af;
     }
     
     .date-info .end-date {
       font-size: 7pt;
-      color: #333;
+      color: #475569;
       line-height: 1.2;
     }
     
     /* Phase Header */
     .phase-header {
-      margin-top: 6px;
-      margin-bottom: 4px;
-      padding: 4px;
-      background: #c0c0c0;
-      border: 1px solid #000;
+      margin-top: 4px;
+      margin-bottom: 2px;
+      padding: 3px;
+      background: #64748b;
+      border: 1px solid #475569;
       text-align: center;
       page-break-inside: avoid;
     }
@@ -246,42 +281,62 @@
       font-size: 9pt;
       font-weight: bold;
       text-transform: uppercase;
-      color: #000;
+      color: #ffffff;
+      letter-spacing: 0.4px;
     }
     
     /* Footer */
     .document-footer {
-      margin-top: 12px;
+      margin-top: 8px;
       padding-top: 6px;
-      border-top: 1px solid #000;
+      border-top: 1px solid #1e40af;
       font-size: 8pt;
       text-align: center;
-      color: #666;
+      color: #475569;
+      background: #ffffff;
     }
     
     .document-footer .generated-date {
-      margin-top: 3px;
+      margin-top: 2px;
+      font-weight: 500;
+      color: #64748b;
     }
     
     @media print {
       @page {
         size: A4 landscape;
-        margin: 8mm;
+        margin: 6mm;
+      }
+      
+      html, body {
+        background: #ffffff !important;
+        background-image: none !important;
+        background-color: #ffffff !important;
       }
       
       body {
         padding: 0;
+        background: #ffffff !important;
+        background-image: none !important;
+      }
+      
+      .document-header,
+      .project-section,
+      .gantt-section,
+      .document-footer {
+        background: #ffffff !important;
+        background-image: none !important;
       }
       
       .module-row {
         page-break-inside: avoid;
-        margin-bottom: 2px;
+        margin-bottom: 1px;
       }
       
       .phase-header {
         page-break-after: avoid;
-        margin-top: 4px;
-        margin-bottom: 2px;
+        margin-top: 3px;
+        margin-bottom: 1px;
       }
       
       .gantt-section {
@@ -290,7 +345,7 @@
     }
   </style>
 </head>
-<body onload="window.print()">
+<body style="background: #ffffff !important; background-image: none !important;">
   <!-- Document Header -->
   <div class="document-header">
     <div class="agency">SISTEM PENGURUSAN PROJEK APLIKASI</div>
@@ -307,7 +362,7 @@
       </tr>
       <tr>
         <td>Jabatan:</td>
-        <td><%= @project.jabatan %></td>
+        <td><%= @project.jabatan || "-" %></td>
       </tr>
       <tr>
         <td>Tempoh Projek:</td>
@@ -360,11 +415,15 @@
         previous_module = if index > 0, do: Enum.at(@gantt_data.modules, index - 1), else: nil
         is_new_phase = previous_module == nil || previous_module.fasa != module.fasa
         
-        # Determine bar color based on status
-        bar_color_class = case module.status do
-          "done" -> "bg-green-500"
-          "in_progress" -> "bg-blue-500"
-          _ -> "bg-blue-500"
+        # Check if task is overdue (in_progress and past due date)
+        today = Date.utc_today()
+        is_overdue = module.status == "in_progress" && Date.compare(module.end_date, today) == :lt
+        
+        # Determine bar color based on status and overdue status
+        bar_color_class = cond do
+          module.status == "done" -> "bg-green-500"
+          is_overdue -> "bg-red-500"
+          true -> "bg-blue-500"
         end
       %>
       
@@ -414,9 +473,22 @@
   </div>
   
   <script>
-    // Auto-print when page loads
+    // Ensure no background images are applied
+    document.documentElement.style.background = '#ffffff';
+    document.documentElement.style.backgroundImage = 'none';
+    document.body.style.background = '#ffffff';
+    document.body.style.backgroundImage = 'none';
+    
     window.onload = function() {
-      window.print();
+      // Double-check background is white before printing
+      document.documentElement.style.background = '#ffffff';
+      document.documentElement.style.backgroundImage = 'none';
+      document.body.style.background = '#ffffff';
+      document.body.style.backgroundImage = 'none';
+      
+      setTimeout(function() {
+        window.print();
+      }, 100);
     };
   </script>
 </body>

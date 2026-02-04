@@ -196,8 +196,15 @@
                               offset_days = days_between(timeline_start, module.start_date)
                               offset_percent = (offset_days / total_days) * 100
                               width_percent = (module_days / total_days) * 100
-                              is_past = Date.compare(module.end_date, today) == :lt
+                              is_overdue = module.status == "in_progress" && Date.compare(module.end_date, today) == :lt
                               is_current = Date.compare(module.start_date, today) != :gt && Date.compare(module.end_date, today) != :lt
+                              
+                              # Determine bar color based on status
+                              bar_color_class = cond do
+                                module.status == "done" -> "bg-green-500 print:bg-green-600 print:text-white"
+                                is_overdue -> "bg-red-400 print:bg-red-500 print:text-white"
+                                true -> "bg-blue-500 print:bg-blue-600 print:text-white"
+                              end
                               
                               # Check if this is the first module of a new phase
                               previous_module = if index > 0, do: Enum.at(modules, index - 1), else: nil
@@ -252,8 +259,7 @@
                                 <div
                                   class={[
                                     "absolute h-full rounded transition-all duration-200 flex items-center justify-center print:relative print:static print:h-auto print:py-2 print:px-3 print:rounded-none print:border print:border-gray-600 print:min-h-[40px] print:w-full print:flex print:items-center print:justify-center",
-                                    if(module.status == "done", do: "bg-green-500 print:bg-green-600 print:text-white", else: "bg-blue-500 print:bg-blue-600 print:text-white"),
-                                    if(is_past && module.status != "done", do: "bg-red-400 print:bg-red-500 print:text-white"),
+                                    bar_color_class,
                                     if(is_current, do: "ring-2 ring-blue-300 ring-offset-1 print:ring-0")
                                   ]}
                                   style={"left: #{offset_percent}%; width: #{width_percent}%;"}

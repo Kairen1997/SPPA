@@ -34,23 +34,17 @@ defmodule SppaWeb.ProjectListLive do
         |> assign(:show_modal, false)
         |> assign(:form, to_form(%{}, as: :project))
 
-      if connected?(socket) do
-        projects = list_projects(socket)
-        total_pages = calculate_total_pages(socket)
-        users = Accounts.list_users()
+      # Always load projects and users so the page is populated immediately,
+      # even before the LiveView JS socket connects.
+      projects = list_projects(socket)
+      total_pages = calculate_total_pages(socket)
+      users = Accounts.list_users()
 
-        {:ok,
-         socket
-         |> assign(:projects, projects)
-         |> assign(:total_pages, total_pages)
-         |> assign(:users, users)}
-      else
-        {:ok,
-         socket
-         |> assign(:projects, [])
-         |> assign(:total_pages, 1)
-         |> assign(:users, [])}
-      end
+      {:ok,
+       socket
+       |> assign(:projects, projects)
+       |> assign(:total_pages, total_pages)
+       |> assign(:users, users)}
     else
       socket =
         socket

@@ -887,6 +887,101 @@ const AutoResizeTextarea = {
   }
 }
 
+// Prevent double-click / rapid re-click actions on buttons and links
+const SingleClick = {
+  mounted() {
+    this.handleClick = (e) => {
+      const button = e.currentTarget
+
+      // Only guard actual clickable controls
+      if (!(button instanceof HTMLButtonElement) && button.tagName !== "A") {
+        return
+      }
+
+      // Allow other hooks to run first
+      if (button.dataset.singleClickHandled === "true") {
+        return
+      }
+
+      button.dataset.singleClickHandled = "true"
+
+      const delay = parseInt(button.dataset.singleClickMs || "700", 10)
+
+      button.disabled = true
+
+      setTimeout(() => {
+        button.disabled = false
+        delete button.dataset.singleClickHandled
+      }, delay)
+    }
+
+    this.el.addEventListener("click", this.handleClick)
+  },
+
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick)
+    }
+  }
+}
+
+// Prevent form submit when pressing Enter in inputs that should not submit
+const PreventEnterSubmit = {
+  mounted() {
+    this.handleKeyDown = (e) => {
+      if (e.key === "Enter") {
+        // Allow explicit submit buttons
+        const tag = e.target.tagName
+        const type = e.target.type
+
+        if (tag === "TEXTAREA") return
+        if (tag === "BUTTON" && type === "submit") return
+
+        e.preventDefault()
+      }
+    }
+
+    this.el.addEventListener("keydown", this.handleKeyDown)
+  },
+
+  destroyed() {
+    if (this.handleKeyDown) {
+      this.el.removeEventListener("keydown", this.handleKeyDown)
+    }
+  }
+}
+
+// Open native date picker when clicking on the icon/wrapper (for inputs[type=date])
+const OpenDatePicker = {
+  mounted() {
+    this.handleClick = (e) => {
+      const input =
+        this.el.tagName === "INPUT" ? this.el : this.el.querySelector("input[type='date']")
+
+      if (!input) {
+        return
+      }
+
+      // Prefer the browser's showPicker API when available
+      if (typeof input.showPicker === "function") {
+        e.preventDefault()
+        input.showPicker()
+      } else {
+        // Fallback: focus the input so the browser opens its picker
+        input.focus()
+      }
+    }
+
+    this.el.addEventListener("click", this.handleClick)
+  },
+
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick)
+    }
+  }
+}
+
 // Toggle Options Field Hook
 const ToggleOptionsField = {
   mounted() {
