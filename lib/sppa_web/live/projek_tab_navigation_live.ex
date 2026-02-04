@@ -112,6 +112,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           AnalisisDanRekabentuk.list_modules_for_project(project_id, socket.assigns.current_scope)
 
         perubahan = get_perubahan()
+        penempatan = get_penempatan()
         ujian = UjianPenerimaanPengguna.list_ujian()
         ujian_keselamatan = UjianKeselamatan.list_ujian()
 
@@ -127,6 +128,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:analisis_pdf_data, analisis_pdf_data)
          |> assign(:modules, modules)
          |> assign(:perubahan, perubahan)
+         |> assign(:penempatan, penempatan)
          |> assign(:ujian, ujian)
          |> assign(:ujian_keselamatan, ujian_keselamatan)
          |> assign(:show_view_modal, false)
@@ -500,6 +502,57 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         justifikasi: "Perlu integrasi dengan sistem e-Sabah untuk pertukaran data",
         kesan: "Akan memudahkan pertukaran data tetapi memerlukan koordinasi dengan pihak lain",
         catatan: "Menunggu maklumbalas dari pihak e-Sabah"
+      }
+    ]
+  end
+
+  # Penempatan (deployment) - same data as PenempatanLive for tab display
+  defp get_penempatan do
+    [
+      %{
+        id: "penempatan_1",
+        number: 1,
+        nama_sistem: "Sistem Pengurusan Permohonan",
+        versi: "1.0.0",
+        lokasi: "Server Produksi - JPKN",
+        tarikh_penempatan: ~D[2024-12-15],
+        tarikh_dijangka: ~D[2024-12-10],
+        status: "Selesai",
+        jenis: "Produksi",
+        persekitaran: "Produksi",
+        url: "https://sppa.jpkn.gov.my",
+        catatan: "Penempatan pertama untuk sistem pengurusan permohonan",
+        dibina_oleh: "Ahmad bin Abdullah"
+      },
+      %{
+        id: "penempatan_2",
+        number: 2,
+        nama_sistem: "Sistem Pengurusan Permohonan",
+        versi: "1.1.0",
+        lokasi: "Server Staging - JPKN",
+        tarikh_penempatan: ~D[2024-12-20],
+        tarikh_dijangka: ~D[2024-12-18],
+        status: "Dalam Proses",
+        jenis: "Staging",
+        persekitaran: "Staging",
+        url: "https://staging-sppa.jpkn.gov.my",
+        catatan: "Penempatan untuk ujian staging sebelum produksi",
+        dibina_oleh: "Ahmad bin Abdullah"
+      },
+      %{
+        id: "penempatan_3",
+        number: 3,
+        nama_sistem: "Sistem Pengurusan Permohonan",
+        versi: "1.2.0",
+        lokasi: "Server Development - JPKN",
+        tarikh_penempatan: ~D[2024-12-25],
+        tarikh_dijangka: ~D[2024-12-22],
+        status: "Menunggu",
+        jenis: "Development",
+        persekitaran: "Development",
+        url: "https://dev-sppa.jpkn.gov.my",
+        catatan: "Penempatan untuk persekitaran pembangunan",
+        dibina_oleh: nil
       }
     ]
   end
