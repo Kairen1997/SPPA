@@ -113,6 +113,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
         perubahan = get_perubahan()
         penempatan = get_penempatan()
+        penyerahan = get_penyerahan()
         ujian = UjianPenerimaanPengguna.list_ujian()
         ujian_keselamatan = UjianKeselamatan.list_ujian()
 
@@ -129,6 +130,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:modules, modules)
          |> assign(:perubahan, perubahan)
          |> assign(:penempatan, penempatan)
+         |> assign(:penyerahan, penyerahan)
          |> assign(:ujian, ujian)
          |> assign(:ujian_keselamatan, ujian_keselamatan)
          |> assign(:show_view_modal, false)
@@ -502,6 +504,72 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         justifikasi: "Perlu integrasi dengan sistem e-Sabah untuk pertukaran data",
         kesan: "Akan memudahkan pertukaran data tetapi memerlukan koordinasi dengan pihak lain",
         catatan: "Menunggu maklumbalas dari pihak e-Sabah"
+      }
+    ]
+  end
+
+  # Penyerahan (delivery) - same data as PenyerahanLive for tab display
+  defp get_penyerahan do
+    [
+      %{
+        id: "penyerahan_1",
+        number: 1,
+        nama_sistem: "Sistem Pengurusan Permohonan",
+        versi: "1.0.0",
+        tarikh_penyerahan: ~D[2024-12-20],
+        tarikh_dijangka: ~D[2024-12-18],
+        status: "Selesai",
+        penerima: "Jabatan Teknologi Maklumat",
+        pembangun_team: "Team Alpha",
+        pengurus_projek: "Siti binti Hassan",
+        lokasi: "Pejabat Utama JPKN",
+        catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
+        manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
+        surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
+        diserahkan_oleh: "Ahmad bin Abdullah",
+        diterima_oleh: "Siti binti Hassan",
+        tarikh_diserahkan: ~D[2024-12-20],
+        tarikh_diterima: ~D[2024-12-20]
+      },
+      %{
+        id: "penyerahan_2",
+        number: 2,
+        nama_sistem: "Sistem Pengurusan Permohonan",
+        versi: "1.1.0",
+        tarikh_penyerahan: ~D[2024-12-25],
+        tarikh_dijangka: ~D[2024-12-22],
+        status: "Dalam Proses",
+        penerima: "Jabatan Teknologi Maklumat",
+        pembangun_team: "Team Beta",
+        pengurus_projek: "Ahmad bin Abdullah",
+        lokasi: "Pejabat Utama JPKN",
+        catatan: "Penyerahan untuk versi 1.1.0",
+        manual_pengguna_bahagian_a: nil,
+        surat_akuan_penerimaan: nil,
+        diserahkan_oleh: "Ahmad bin Abdullah",
+        diterima_oleh: nil,
+        tarikh_diserahkan: ~D[2024-12-25],
+        tarikh_diterima: nil
+      },
+      %{
+        id: "penyerahan_3",
+        number: 3,
+        nama_sistem: "Sistem Pengurusan Permohonan",
+        versi: "1.2.0",
+        tarikh_penyerahan: nil,
+        tarikh_dijangka: ~D[2024-12-28],
+        status: "Menunggu",
+        penerima: "Jabatan Teknologi Maklumat",
+        pembangun_team: nil,
+        pengurus_projek: nil,
+        lokasi: "Pejabat Utama JPKN",
+        catatan: "Penyerahan untuk versi 1.2.0",
+        manual_pengguna_bahagian_a: nil,
+        surat_akuan_penerimaan: nil,
+        diserahkan_oleh: nil,
+        diterima_oleh: nil,
+        tarikh_diserahkan: nil,
+        tarikh_diterima: nil
       }
     ]
   end
