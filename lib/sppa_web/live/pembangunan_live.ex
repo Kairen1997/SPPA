@@ -3,6 +3,7 @@ defmodule SppaWeb.PembangunanLive do
 
   alias Sppa.Projects
   alias Sppa.AnalisisDanRekabentuk
+  alias Sppa.ModulPengaturcaraan
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
@@ -169,52 +170,68 @@ defmodule SppaWeb.PembangunanLive do
 
   @impl true
   def handle_event("update_module", %{"module" => module_params}, socket) do
-    # TODO: In the future, this should update the database
-    # For now, we'll update the in-memory list
-    module_id = socket.assigns.selected_module.id
+    selected = socket.assigns.selected_module
+    module_id_str = selected.id
+    project_id = selected.project_id
 
-    updated_modules =
-      Enum.map(socket.assigns.modules, fn module ->
-        if module.id == module_id do
-          tarikh_mula =
-            if module_params["tarikh_mula"] && module_params["tarikh_mula"] != "" do
-              case Date.from_iso8601(module_params["tarikh_mula"]) do
-                {:ok, date} -> date
-                _ -> module.tarikh_mula
-              end
-            else
-              nil
-            end
+    analisis_module_id =
+      case module_id_str do
+        "module_" <> id_str -> String.to_integer(id_str)
+        _ -> nil
+      end
 
-          tarikh_jangka_siap =
-            if module_params["tarikh_jangka_siap"] && module_params["tarikh_jangka_siap"] != "" do
-              case Date.from_iso8601(module_params["tarikh_jangka_siap"]) do
-                {:ok, date} -> date
-                _ -> module.tarikh_jangka_siap
-              end
-            else
-              nil
-            end
-
-          %{
-            module
-            | priority: module_params["priority"],
-              status: module_params["status"] || "Belum Mula",
-              tarikh_mula: tarikh_mula,
-              tarikh_jangka_siap: tarikh_jangka_siap,
-              catatan: if(module_params["catatan"] == "", do: nil, else: module_params["catatan"])
-          }
+    if is_nil(project_id) or is_nil(analisis_module_id) do
+      {:noreply,
+       socket
+       |> put_flash(:error, "Projek atau modul tidak sah.")
+       |> assign(:show_edit_modal, false)
+       |> assign(:selected_module, nil)}
+    else
+      tarikh_mula =
+        if module_params["tarikh_mula"] && module_params["tarikh_mula"] != "" do
+          case Date.from_iso8601(module_params["tarikh_mula"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
         else
-          module
+          nil
         end
-      end)
 
-    {:noreply,
-     socket
-     |> assign(:modules, updated_modules)
-     |> assign(:show_edit_modal, false)
-     |> assign(:selected_module, nil)
-     |> assign(:form, to_form(%{}, as: :module))
-     |> put_flash(:info, "Modul berjaya dikemaskini")}
+      tarikh_jangka_siap =
+        if module_params["tarikh_jangka_siap"] && module_params["tarikh_jangka_siap"] != "" do
+          case Date.from_iso8601(module_params["tarikh_jangka_siap"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
+        end
+
+      attrs = %{
+        keutamaan: module_params["priority"] || nil,
+        status: module_params["status"] || "Belum Mula",
+        tarikh_mula: tarikh_mula,
+        tarikh_jangka_siap: tarikh_jangka_siap,
+        catatan: if(module_params["catatan"] == "", do: nil, else: module_params["catatan"])
+      }
+
+      case ModulPengaturcaraan.upsert(project_id, analisis_module_id, attrs) do
+        {:ok, _} ->
+          modules = AnalisisDanRekabentuk.list_modules_for_pembangunan(socket.assigns.current_scope)
+
+          {:noreply,
+           socket
+           |> assign(:modules, modules)
+           |> assign(:show_edit_modal, false)
+           |> assign(:selected_module, nil)
+           |> assign(:form, to_form(%{}, as: :module))
+           |> put_flash(:info, "Modul berjaya dikemaskini")}
+
+        {:error, _changeset} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Gagal mengemaskini modul. Sila cuba lagi.")}
+      end
+    end
   end
 end

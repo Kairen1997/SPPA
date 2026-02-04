@@ -9,6 +9,7 @@ defmodule Sppa.AnalisisDanRekabentuk do
   alias Sppa.AnalisisDanRekabentuk.Module
   alias Sppa.AnalisisDanRekabentuk.Function
   alias Sppa.AnalisisDanRekabentuk.SubFunction
+  alias Sppa.ModulPengaturcaraan
 
   @doc """
   Returns the list of analisis_dan_rekabentuk for a user scope.
@@ -97,6 +98,8 @@ defmodule Sppa.AnalisisDanRekabentuk do
 
     if analisis do
       versi = analisis.versi || "1.0.0"
+      project_id = analisis.project_id
+      pengaturcaraan_by_module = if project_id, do: ModulPengaturcaraan.list_by_project(project_id), else: %{}
 
       analisis.modules
       |> Enum.sort_by(& &1.number)
@@ -115,7 +118,9 @@ defmodule Sppa.AnalisisDanRekabentuk do
             }
           end)
 
-        %{
+        pengaturcaraan = Map.get(pengaturcaraan_by_module, module.id)
+
+        base = %{
           id: "module_#{module.id}",
           number: module.number,
           name: module.name || "",
@@ -125,8 +130,22 @@ defmodule Sppa.AnalisisDanRekabentuk do
           tarikh_mula: nil,
           tarikh_jangka_siap: nil,
           catatan: nil,
-          functions: functions
+          functions: functions,
+          project_id: project_id
         }
+
+        if pengaturcaraan do
+          %{
+            base
+            | priority: pengaturcaraan.keutamaan,
+              status: pengaturcaraan.status || "Belum Mula",
+              tarikh_mula: pengaturcaraan.tarikh_mula,
+              tarikh_jangka_siap: pengaturcaraan.tarikh_jangka_siap,
+              catatan: pengaturcaraan.catatan
+          }
+        else
+          base
+        end
       end)
     else
       []
@@ -145,6 +164,7 @@ defmodule Sppa.AnalisisDanRekabentuk do
 
     if analisis do
       versi = analisis.versi || "1.0.0"
+      pengaturcaraan_by_module = ModulPengaturcaraan.list_by_project(project_id)
 
       analisis.modules
       |> Enum.sort_by(& &1.number)
@@ -163,7 +183,9 @@ defmodule Sppa.AnalisisDanRekabentuk do
             }
           end)
 
-        %{
+        pengaturcaraan = Map.get(pengaturcaraan_by_module, module.id)
+
+        base = %{
           id: "module_#{module.id}",
           number: module.number,
           name: module.name || "",
@@ -173,8 +195,22 @@ defmodule Sppa.AnalisisDanRekabentuk do
           tarikh_mula: nil,
           tarikh_jangka_siap: nil,
           catatan: nil,
-          functions: functions
+          functions: functions,
+          project_id: project_id
         }
+
+        if pengaturcaraan do
+          %{
+            base
+            | priority: pengaturcaraan.keutamaan,
+              status: pengaturcaraan.status || "Belum Mula",
+              tarikh_mula: pengaturcaraan.tarikh_mula,
+              tarikh_jangka_siap: pengaturcaraan.tarikh_jangka_siap,
+              catatan: pengaturcaraan.catatan
+          }
+        else
+          base
+        end
       end)
     else
       []
