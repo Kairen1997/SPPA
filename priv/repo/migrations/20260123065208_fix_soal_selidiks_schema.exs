@@ -6,23 +6,38 @@ defmodule Sppa.Repo.Migrations.FixSoalSelidiksSchema do
     execute "ALTER TABLE soal_selidiks DROP CONSTRAINT IF EXISTS soal_selidiks_project_id_fkey"
     execute "ALTER TABLE soal_selidiks DROP CONSTRAINT IF EXISTS soal_selidiks_user_id_fkey"
 
-    # Remove old disediakan_oleh columns
-    alter table(:soal_selidiks) do
-      remove :disediakan_oleh_nama
-      remove :disediakan_oleh_jawatan
-      remove :disediakan_oleh_tarikh
-    end
+    # Remove old disediakan_oleh columns if they exist
+    execute "ALTER TABLE soal_selidiks DROP COLUMN IF EXISTS disediakan_oleh_nama"
+    execute "ALTER TABLE soal_selidiks DROP COLUMN IF EXISTS disediakan_oleh_jawatan"
+    execute "ALTER TABLE soal_selidiks DROP COLUMN IF EXISTS disediakan_oleh_tarikh"
 
-    # Add missing map columns
-    alter table(:soal_selidiks) do
-      add :fr_categories, :map, default: %{}
-      add :nfr_categories, :map, default: %{}
-      add :fr_data, :map, default: %{}
-      add :nfr_data, :map, default: %{}
-      add :disediakan_oleh, :map, default: %{}
-      add :custom_tabs, :map, default: %{}
-      add :tabs, :map, default: %{}
-    end
+    # Add missing map columns (only if they don't exist)
+    execute """
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'soal_selidiks' AND column_name = 'fr_categories') THEN
+        ALTER TABLE soal_selidiks ADD COLUMN fr_categories jsonb DEFAULT '{}'::jsonb;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'soal_selidiks' AND column_name = 'nfr_categories') THEN
+        ALTER TABLE soal_selidiks ADD COLUMN nfr_categories jsonb DEFAULT '{}'::jsonb;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'soal_selidiks' AND column_name = 'fr_data') THEN
+        ALTER TABLE soal_selidiks ADD COLUMN fr_data jsonb DEFAULT '{}'::jsonb;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'soal_selidiks' AND column_name = 'nfr_data') THEN
+        ALTER TABLE soal_selidiks ADD COLUMN nfr_data jsonb DEFAULT '{}'::jsonb;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'soal_selidiks' AND column_name = 'disediakan_oleh') THEN
+        ALTER TABLE soal_selidiks ADD COLUMN disediakan_oleh jsonb DEFAULT '{}'::jsonb;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'soal_selidiks' AND column_name = 'custom_tabs') THEN
+        ALTER TABLE soal_selidiks ADD COLUMN custom_tabs jsonb DEFAULT '{}'::jsonb;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'soal_selidiks' AND column_name = 'tabs') THEN
+        ALTER TABLE soal_selidiks ADD COLUMN tabs jsonb DEFAULT '{}'::jsonb;
+      END IF;
+    END $$;
+    """
 
     # Recreate foreign keys with correct delete rules
     execute """
