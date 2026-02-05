@@ -3,6 +3,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
 
   alias Sppa.Projects
   alias Sppa.UjianPenerimaanPengguna
+  alias Sppa.AnalisisDanRekabentuk
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
@@ -39,10 +40,12 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
         |> assign(:show_edit_modal, false)
         |> assign(:show_create_modal, false)
         |> assign(:show_edit_kes_modal, false)
+        |> assign(:show_add_kes_modal, false)
         |> assign(:selected_ujian, nil)
         |> assign(:selected_kes, nil)
         |> assign(:form, to_form(%{}, as: :ujian))
         |> assign(:kes_form, to_form(%{}, as: :kes))
+        |> assign(:senarai_nama_modul, AnalisisDanRekabentuk.list_module_names(socket.assigns.current_scope))
 
       if connected?(socket) do
         activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
@@ -101,9 +104,11 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
            |> assign(:show_edit_modal, false)
            |> assign(:show_create_modal, false)
            |> assign(:show_edit_kes_modal, false)
+           |> assign(:show_add_kes_modal, false)
            |> assign(:selected_kes, nil)
            |> assign(:form, to_form(%{}, as: :ujian))
            |> assign(:kes_form, to_form(%{}, as: :kes))
+           |> assign(:senarai_nama_modul, AnalisisDanRekabentuk.list_module_names(socket.assigns.current_scope))
            |> assign(:activities, activities)
            |> assign(:notifications_count, notifications_count)}
         else
@@ -127,9 +132,11 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
          |> assign(:show_edit_modal, false)
          |> assign(:show_create_modal, false)
          |> assign(:show_edit_kes_modal, false)
+         |> assign(:show_add_kes_modal, false)
          |> assign(:selected_kes, nil)
          |> assign(:form, to_form(%{}, as: :ujian))
          |> assign(:kes_form, to_form(%{}, as: :kes))
+         |> assign(:senarai_nama_modul, AnalisisDanRekabentuk.list_module_names(socket.assigns.current_scope))
          |> assign(:activities, [])
          |> assign(:notifications_count, 0)}
       end
@@ -383,7 +390,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
           "penguji" => Map.get(kes, :penguji, "") || "",
           "tarikh_ujian" =>
             if(kes.tarikh_ujian, do: Calendar.strftime(kes.tarikh_ujian, "%Y-%m-%d"), else: ""),
-          "disahkan" => if(Map.get(kes, :disahkan, false), do: "true", else: ""),
+          "disahkan_oleh" => Map.get(kes, :disahkan_oleh, "") || "",
           "tarikh_pengesahan" =>
             if(kes.tarikh_pengesahan,
               do: Calendar.strftime(kes.tarikh_pengesahan, "%Y-%m-%d"),
@@ -459,7 +466,8 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
         hasil: if(kes_params["hasil"] == "", do: nil, else: kes_params["hasil"]),
         penguji: if(kes_params["penguji"] == "", do: nil, else: kes_params["penguji"]),
         tarikh_ujian: tarikh_ujian,
-        disahkan: kes_params["disahkan"] == "true",
+        disahkan_oleh: if(kes_params["disahkan_oleh"] == "", do: nil, else: kes_params["disahkan_oleh"]),
+        disahkan: (kes_params["disahkan_oleh"] || "") != "",
         tarikh_pengesahan: tarikh_pengesahan
     }
 
@@ -506,16 +514,48 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
   end
 
   @impl true
-  def handle_event("add_new_kes", _params, socket) do
-    if socket.assigns[:selected_ujian] && socket.assigns.selected_ujian.senarai_kes_ujian do
-      # Generate new ID based on existing kes
-      existing_ids =
-        Enum.map(socket.assigns.selected_ujian.senarai_kes_ujian, fn kes -> kes.id end)
+  def handle_event("open_add_kes_modal", _params, socket) do
+    default_kes = %{
+      "senario" => "",
+      "langkah" => "",
+      "keputusan_dijangka" => "",
+      "keputusan_sebenar" => "",
+      "hasil" => "",
+      "penguji" => "",
+      "tarikh_ujian" => "",
+      "disahkan_oleh" => "",
+      "tarikh_pengesahan" => ""
+    }
+
+    {:noreply,
+     socket
+     |> assign(:show_add_kes_modal, true)
+     |> assign(:kes_form, to_form(default_kes, as: :kes))}
+  end
+
+  @impl true
+  def handle_event("close_add_kes_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_add_kes_modal, false)
+     |> assign(:kes_form, to_form(%{}, as: :kes))}
+  end
+
+  @impl true
+  def handle_event("validate_add_kes", %{"kes" => kes_params}, socket) do
+    form = to_form(kes_params, as: :kes)
+    {:noreply, assign(socket, :kes_form, form)}
+  end
+
+  @impl true
+  def handle_event("create_kes", %{"kes" => kes_params}, socket) do
+    if socket.assigns[:selected_ujian] do
+      senarai = socket.assigns.selected_ujian.senarai_kes_ujian || []
 
       new_number =
-        existing_ids
-        |> Enum.map(fn id ->
-          case Regex.run(~r/REG-(\d+)/, id) do
+        senarai
+        |> Enum.map(fn k ->
+          case Regex.run(~r/REG-(\d+)/, k.id) do
             [_, num_str] -> String.to_integer(num_str)
             _ -> 0
           end
@@ -525,30 +565,54 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
 
       new_id = "REG-#{String.pad_leading(Integer.to_string(new_number), 3, "0")}"
 
+      tarikh_ujian =
+        if kes_params["tarikh_ujian"] && kes_params["tarikh_ujian"] != "" do
+          case Date.from_iso8601(kes_params["tarikh_ujian"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
+        end
+
+      tarikh_pengesahan =
+        if kes_params["tarikh_pengesahan"] && kes_params["tarikh_pengesahan"] != "" do
+          case Date.from_iso8601(kes_params["tarikh_pengesahan"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
+        end
+
       new_kes = %{
         id: new_id,
-        senario: "",
-        langkah: "",
-        keputusan_dijangka: "",
-        keputusan_sebenar: nil,
-        hasil: nil,
-        penguji: nil,
-        tarikh_ujian: nil,
-        disahkan: false,
-        tarikh_pengesahan: nil
+        senario: kes_params["senario"] || "",
+        langkah: kes_params["langkah"] || "",
+        keputusan_dijangka: kes_params["keputusan_dijangka"] || "",
+        keputusan_sebenar:
+          if(kes_params["keputusan_sebenar"] == "", do: nil, else: kes_params["keputusan_sebenar"]),
+        hasil: if(kes_params["hasil"] == "", do: nil, else: kes_params["hasil"]),
+        penguji: if(kes_params["penguji"] == "", do: nil, else: kes_params["penguji"]),
+        tarikh_ujian: tarikh_ujian,
+        disahkan_oleh: if(kes_params["disahkan_oleh"] == "", do: nil, else: kes_params["disahkan_oleh"]),
+        disahkan: (kes_params["disahkan_oleh"] || "") != "",
+        tarikh_pengesahan: tarikh_pengesahan
       }
 
-      updated_senarai_kes_ujian = [new_kes | socket.assigns.selected_ujian.senarai_kes_ujian]
+      updated_senarai = [new_kes | senarai]
 
       updated_ujian = %{
         socket.assigns.selected_ujian
-        | senarai_kes_ujian: updated_senarai_kes_ujian
+        | senarai_kes_ujian: updated_senarai
       }
 
       {:noreply,
        socket
        |> assign(:selected_ujian, updated_ujian)
-       |> put_flash(:info, "Kes ujian baru berjaya ditambah")}
+       |> assign(:show_add_kes_modal, false)
+       |> assign(:kes_form, to_form(%{}, as: :kes))
+       |> put_flash(:info, "Kes ujian berjaya ditambah")}
     else
       {:noreply, socket}
     end

@@ -79,6 +79,26 @@ defmodule Sppa.AnalisisDanRekabentuk do
   end
 
   @doc """
+  Returns a list of unique module names (nama modul) from Analisis dan Rekabentuk
+  for the current user. Used e.g. for dropdowns in Ujian Penerimaan Pengguna.
+
+  Collects module names from all analisis documents belonging to the user,
+  deduplicates and sorts. Returns [] if scope is nil or no modules exist.
+  """
+  def list_module_names(nil), do: []
+
+  def list_module_names(current_scope) do
+    AnalisisDanRekabentuk
+    |> where([a], a.user_id == ^current_scope.user.id)
+    |> preload(:modules)
+    |> Repo.all()
+    |> Enum.flat_map(fn a -> Enum.map(a.modules || [], & &1.name) end)
+    |> Enum.reject(&(is_nil(&1) or &1 == ""))
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+
+  @doc """
   Returns modules (nama modul, versi, fungsi modul) from Analisis dan Rekabentuk
   for use on the Pembangunan (Pengaturcaraan) page.
 
