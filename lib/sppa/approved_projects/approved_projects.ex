@@ -57,6 +57,7 @@ defmodule Sppa.ApprovedProjects do
         # Broadcast update for live dashboard updates
         Phoenix.PubSub.broadcast(Sppa.PubSub, "approved_projects", {:updated, updated_project})
         {:ok, updated_project}
+
       error ->
         error
     end

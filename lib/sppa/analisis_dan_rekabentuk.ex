@@ -99,7 +99,9 @@ defmodule Sppa.AnalisisDanRekabentuk do
     if analisis do
       versi = analisis.versi || "1.0.0"
       project_id = analisis.project_id
-      pengaturcaraan_by_module = if project_id, do: ModulPengaturcaraan.list_by_project(project_id), else: %{}
+
+      pengaturcaraan_by_module =
+        if project_id, do: ModulPengaturcaraan.list_by_project(project_id), else: %{}
 
       analisis.modules
       |> Enum.sort_by(& &1.number)

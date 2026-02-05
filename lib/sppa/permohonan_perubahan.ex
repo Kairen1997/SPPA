@@ -13,7 +13,7 @@ defmodule Sppa.PermohonanPerubahan do
   def list_by_project(project_id) do
     PermohonanPerubahan
     |> where([p], p.project_id == ^project_id)
-    |> order_by([p], [asc: p.inserted_at])
+    |> order_by([p], asc: p.inserted_at)
     |> Repo.all()
   end
 

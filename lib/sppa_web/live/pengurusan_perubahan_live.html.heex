@@ -243,24 +243,21 @@
                   </tbody>
                 </table>
               </div>
-
+              
               <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
                 <div class="text-xs text-gray-600">
                   <%= if @perubahan_total > 0 do %>
                     <span>
-                      Menunjukkan
-                      {@per_page * (@page - 1) + 1}
-                      -
-                      {Enum.min([@page * @per_page, @perubahan_total])}
-                      daripada
-                      {@perubahan_total}
-                      permohonan
+                      Menunjukkan {@per_page * (@page - 1) + 1} - {Enum.min([
+                        @page * @per_page,
+                        @perubahan_total
+                      ])} daripada {@perubahan_total} permohonan
                     </span>
                   <% else %>
                     <span>Tiada permohonan untuk dipaparkan</span>
                   <% end %>
                 </div>
-
+                
                 <div class="flex items-center gap-1">
                   <button
                     type="button"
@@ -273,7 +270,6 @@
                   >
                     <.icon name="hero-chevron-left" class="w-3 h-3 mr-1" /> Sebelumnya
                   </button>
-
                   <div class="flex items-center gap-1">
                     <button
                       :for={page <- 1..@total_pages}
@@ -291,7 +287,7 @@
                       {page}
                     </button>
                   </div>
-
+                  
                   <button
                     type="button"
                     phx-click="next_page"
@@ -330,9 +326,7 @@
       </div>
        <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
       <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
-        <div
-          class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto"
-        >
+        <div class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
           <%!-- Modal header --%>
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
@@ -558,9 +552,7 @@
       </div>
        <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
       <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
-        <div
-          class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto"
-        >
+        <div class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
           <%!-- Modal header --%>
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
@@ -658,7 +650,10 @@
                 </div>
                 
                 <div class="fieldset mb-2">
-                  <label for={@form[:tarikh_dibuat].id} class="block text-sm font-medium text-gray-800 mb-1">
+                  <label
+                    for={@form[:tarikh_dibuat].id}
+                    class="block text-sm font-medium text-gray-800 mb-1"
+                  >
                     Tarikh Dibuat
                   </label>
                   <div class="relative">
@@ -666,7 +661,9 @@
                       type="date"
                       id={@form[:tarikh_dibuat].id}
                       name="perubahan[tarikh_dibuat]"
-                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dibuat].value)}
+                      value={
+                        Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dibuat].value)
+                      }
                       required
                       class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                     />
@@ -682,6 +679,7 @@
                       <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
+                  
                   <%= for msg <- @form[:tarikh_dibuat].errors do %>
                     <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                       <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
@@ -690,7 +688,10 @@
                 </div>
                 
                 <div class="fieldset mb-2">
-                  <label for={@form[:tarikh_dijangka_siap].id} class="block text-sm font-medium text-gray-800 mb-1">
+                  <label
+                    for={@form[:tarikh_dijangka_siap].id}
+                    class="block text-sm font-medium text-gray-800 mb-1"
+                  >
                     Tarikh Dijangka Siap
                   </label>
                   <div class="relative">
@@ -698,7 +699,12 @@
                       type="date"
                       id={@form[:tarikh_dijangka_siap].id}
                       name="perubahan[tarikh_dijangka_siap]"
-                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dijangka_siap].value)}
+                      value={
+                        Phoenix.HTML.Form.normalize_value(
+                          "date",
+                          @form[:tarikh_dijangka_siap].value
+                        )
+                      }
                       required
                       class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                     />
@@ -714,6 +720,7 @@
                       <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
+                  
                   <%= for msg <- @form[:tarikh_dijangka_siap].errors do %>
                     <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                       <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
@@ -848,9 +855,7 @@
       </div>
        <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
       <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
-        <div
-          class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto"
-        >
+        <div class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
           <%!-- Modal header --%>
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
@@ -948,7 +953,10 @@
                 </div>
                 
                 <div class="fieldset mb-2">
-                  <label for={@form[:tarikh_dibuat].id} class="block text-sm font-medium text-gray-800 mb-1">
+                  <label
+                    for={@form[:tarikh_dibuat].id}
+                    class="block text-sm font-medium text-gray-800 mb-1"
+                  >
                     Tarikh Dibuat
                   </label>
                   <div class="relative">
@@ -956,7 +964,9 @@
                       type="date"
                       id={@form[:tarikh_dibuat].id}
                       name="perubahan[tarikh_dibuat]"
-                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dibuat].value)}
+                      value={
+                        Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dibuat].value)
+                      }
                       required
                       class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                     />
@@ -972,6 +982,7 @@
                       <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
+                  
                   <%= for msg <- @form[:tarikh_dibuat].errors do %>
                     <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                       <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
@@ -980,7 +991,10 @@
                 </div>
                 
                 <div class="fieldset mb-2">
-                  <label for={@form[:tarikh_dijangka_siap].id} class="block text-sm font-medium text-gray-800 mb-1">
+                  <label
+                    for={@form[:tarikh_dijangka_siap].id}
+                    class="block text-sm font-medium text-gray-800 mb-1"
+                  >
                     Tarikh Dijangka Siap
                   </label>
                   <div class="relative">
@@ -988,7 +1002,12 @@
                       type="date"
                       id={@form[:tarikh_dijangka_siap].id}
                       name="perubahan[tarikh_dijangka_siap]"
-                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dijangka_siap].value)}
+                      value={
+                        Phoenix.HTML.Form.normalize_value(
+                          "date",
+                          @form[:tarikh_dijangka_siap].value
+                        )
+                      }
                       required
                       class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                     />
@@ -1004,6 +1023,7 @@
                       <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
+                  
                   <%= for msg <- @form[:tarikh_dijangka_siap].errors do %>
                     <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                       <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}

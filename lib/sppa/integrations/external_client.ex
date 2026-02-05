@@ -22,7 +22,6 @@ defmodule Sppa.Integrations.ExternalClient do
       {:ok, %{status_code: 200, body: body}} ->
         Logger.info("Received response with body length: #{String.length(body)}")
 
-
         case Jason.decode(body) do
           {:ok, decoded} ->
             Logger.info(
@@ -34,7 +33,6 @@ defmodule Sppa.Integrations.ExternalClient do
             )
 
             {:ok, decoded}
-
 
           {:error, reason} ->
             Logger.error("Failed to decode JSON: #{inspect(reason)}")

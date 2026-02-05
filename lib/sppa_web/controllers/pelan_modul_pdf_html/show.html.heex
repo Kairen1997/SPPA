@@ -1,423 +1,430 @@
 <!DOCTYPE html>
 <html lang="ms">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pelan Modul Projek - <%= @project.nama %></title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pelan Modul Projek - {@project.nama}</title>
     
-    body {
-      font-family: 'Times New Roman', serif;
-      background: white;
-      color: #000;
-      padding: 8mm;
-      font-size: 10pt;
-      line-height: 1.3;
-    }
-    
-    /* Document Header */
-    .document-header {
-      border-bottom: 2px solid #000;
-      padding-bottom: 5px;
-      margin-bottom: 8px;
-    }
-    
-    .document-header .agency {
-      text-align: center;
-      font-size: 12pt;
-      font-weight: bold;
-      margin-bottom: 3px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .document-header .title {
-      text-align: center;
-      font-size: 14pt;
-      font-weight: bold;
-      margin-top: 5px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .document-header .subtitle {
-      text-align: center;
-      font-size: 10pt;
-      margin-top: 3px;
-      font-weight: normal;
-    }
-    
-    /* Project Information Section */
-    .project-section {
-      border: 1px solid #000;
-      padding: 6px;
-      margin-bottom: 8px;
-      background: #f9f9f9;
-    }
-    
-    .project-section table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    
-    .project-section table td {
-      padding: 3px 8px;
-      font-size: 9pt;
-      vertical-align: top;
-    }
-    
-    .project-section table td:first-child {
-      font-weight: bold;
-      width: 25%;
-      border-right: 1px solid #ccc;
-    }
-    
-    .project-section table td:last-child {
-      width: 75%;
-    }
-    
-    /* Gantt Chart Section */
-    .gantt-section {
-      margin-top: 8px;
-    }
-    
-    .gantt-section-title {
-      font-size: 11pt;
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 6px;
-      padding: 4px;
-      background: #e0e0e0;
-      border: 1px solid #000;
-      text-transform: uppercase;
-    }
-    
-    /* Timeline Header */
-    .timeline-header {
-      background: #d0d0d0;
-      border: 1px solid #000;
-      border-bottom: 2px solid #000;
-      padding: 4px 0;
-      margin-bottom: 4px;
-    }
-    
-    .timeline-header .months {
-      display: flex;
-      flex-wrap: wrap;
-    }
-    
-    .timeline-header .month {
-      flex: 1;
-      min-width: 70px;
-      text-align: center;
-      padding: 3px 5px;
-      border-right: 1px solid #000;
-      font-size: 8pt;
-      font-weight: bold;
-    }
-    
-    .timeline-header .month:last-child {
-      border-right: none;
-    }
-    
-    /* Module Rows */
-    .module-row {
-      display: flex;
-      align-items: stretch;
-      min-height: 45px;
-      margin-bottom: 3px;
-      border: 1px solid #000;
-      page-break-inside: avoid;
-    }
-    
-    .module-info {
-      min-width: 180px;
-      max-width: 220px;
-      flex-shrink: 0;
-      padding: 4px 6px;
-      border-right: 1px solid #000;
-      background: #f5f5f5;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    
-    .module-info .module-title {
-      font-size: 9pt;
-      font-weight: bold;
-      margin-bottom: 3px;
-      color: #000;
-      line-height: 1.2;
-    }
-    
-    .module-info .module-details {
-      font-size: 7pt;
-      color: #333;
-      line-height: 1.3;
-    }
-    
-    .module-info .module-details span {
-      display: block;
-      margin: 1px 0;
-    }
-    
-    .gantt-bar-container {
-      position: relative;
-      flex: 1;
-      min-height: 45px;
-      background: #e8e8e8;
-      border-right: 1px solid #000;
-      overflow: visible;
-    }
-    
-    .gantt-bar {
-      position: absolute;
-      top: 0;
-      height: 100%;
-      min-height: 45px;
-      border: 1px solid #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-weight: bold;
-      font-size: 8pt;
-      padding: 3px 5px;
-      text-align: center;
-      box-sizing: border-box;
-      text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
-    }
-    
-    .gantt-bar.bg-blue-500 {
-      background-color: #2563eb;
-    }
-    
-    .gantt-bar.bg-green-500 {
-      background-color: #059669;
-    }
-    
-    .gantt-bar.bg-red-400,
-    .gantt-bar.bg-red-500 {
-      background-color: #dc2626;
-    }
-    
-    .date-info {
-      min-width: 100px;
-      max-width: 120px;
-      flex-shrink: 0;
-      padding: 4px 6px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      background: #f9f9f9;
-    }
-    
-    .date-info .start-date {
-      font-size: 8pt;
-      font-weight: bold;
-      margin-bottom: 2px;
-      color: #000;
-    }
-    
-    .date-info .end-date {
-      font-size: 7pt;
-      color: #333;
-      line-height: 1.2;
-    }
-    
-    /* Phase Header */
-    .phase-header {
-      margin-top: 6px;
-      margin-bottom: 4px;
-      padding: 4px;
-      background: #c0c0c0;
-      border: 1px solid #000;
-      text-align: center;
-      page-break-inside: avoid;
-    }
-    
-    .phase-header .phase-label {
-      font-size: 9pt;
-      font-weight: bold;
-      text-transform: uppercase;
-      color: #000;
-    }
-    
-    /* Footer */
-    .document-footer {
-      margin-top: 12px;
-      padding-top: 6px;
-      border-top: 1px solid #000;
-      font-size: 8pt;
-      text-align: center;
-      color: #666;
-    }
-    
-    .document-footer .generated-date {
-      margin-top: 3px;
-    }
-    
-    @media print {
-      @page {
-        size: A4 landscape;
-        margin: 8mm;
-      }
-      
-      body {
+    <style>
+      * {
+        margin: 0;
         padding: 0;
+        box-sizing: border-box;
       }
-      
-      .module-row {
-        page-break-inside: avoid;
-        margin-bottom: 2px;
+
+      body {
+        font-family: 'Times New Roman', serif;
+        background: white;
+        color: #000;
+        padding: 8mm;
+        font-size: 10pt;
+        line-height: 1.3;
       }
-      
-      .phase-header {
-        page-break-after: avoid;
-        margin-top: 4px;
-        margin-bottom: 2px;
+
+      /* Document Header */
+      .document-header {
+        border-bottom: 2px solid #000;
+        padding-bottom: 5px;
+        margin-bottom: 8px;
       }
-      
+
+      .document-header .agency {
+        text-align: center;
+        font-size: 12pt;
+        font-weight: bold;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .document-header .title {
+        text-align: center;
+        font-size: 14pt;
+        font-weight: bold;
+        margin-top: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .document-header .subtitle {
+        text-align: center;
+        font-size: 10pt;
+        margin-top: 3px;
+        font-weight: normal;
+      }
+
+      /* Project Information Section */
+      .project-section {
+        border: 1px solid #000;
+        padding: 6px;
+        margin-bottom: 8px;
+        background: #f9f9f9;
+      }
+
+      .project-section table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .project-section table td {
+        padding: 3px 8px;
+        font-size: 9pt;
+        vertical-align: top;
+      }
+
+      .project-section table td:first-child {
+        font-weight: bold;
+        width: 25%;
+        border-right: 1px solid #ccc;
+      }
+
+      .project-section table td:last-child {
+        width: 75%;
+      }
+
+      /* Gantt Chart Section */
       .gantt-section {
-        margin-top: 4px;
+        margin-top: 8px;
       }
-    }
-  </style>
-</head>
-<body onload="window.print()">
-  <!-- Document Header -->
-  <div class="document-header">
-    <div class="agency">SISTEM PENGURUSAN PROJEK APLIKASI</div>
-    <div class="title">PELAN MODUL PROJEK</div>
-    <div class="subtitle">CARTA GANTT MODUL</div>
-  </div>
+
+      .gantt-section-title {
+        font-size: 11pt;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 6px;
+        padding: 4px;
+        background: #e0e0e0;
+        border: 1px solid #000;
+        text-transform: uppercase;
+      }
+
+      /* Timeline Header */
+      .timeline-header {
+        background: #d0d0d0;
+        border: 1px solid #000;
+        border-bottom: 2px solid #000;
+        padding: 4px 0;
+        margin-bottom: 4px;
+      }
+
+      .timeline-header .months {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .timeline-header .month {
+        flex: 1;
+        min-width: 70px;
+        text-align: center;
+        padding: 3px 5px;
+        border-right: 1px solid #000;
+        font-size: 8pt;
+        font-weight: bold;
+      }
+
+      .timeline-header .month:last-child {
+        border-right: none;
+      }
+
+      /* Module Rows */
+      .module-row {
+        display: flex;
+        align-items: stretch;
+        min-height: 45px;
+        margin-bottom: 3px;
+        border: 1px solid #000;
+        page-break-inside: avoid;
+      }
+
+      .module-info {
+        min-width: 180px;
+        max-width: 220px;
+        flex-shrink: 0;
+        padding: 4px 6px;
+        border-right: 1px solid #000;
+        background: #f5f5f5;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .module-info .module-title {
+        font-size: 9pt;
+        font-weight: bold;
+        margin-bottom: 3px;
+        color: #000;
+        line-height: 1.2;
+      }
+
+      .module-info .module-details {
+        font-size: 7pt;
+        color: #333;
+        line-height: 1.3;
+      }
+
+      .module-info .module-details span {
+        display: block;
+        margin: 1px 0;
+      }
+
+      .gantt-bar-container {
+        position: relative;
+        flex: 1;
+        min-height: 45px;
+        background: #e8e8e8;
+        border-right: 1px solid #000;
+        overflow: visible;
+      }
+
+      .gantt-bar {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        min-height: 45px;
+        border: 1px solid #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: bold;
+        font-size: 8pt;
+        padding: 3px 5px;
+        text-align: center;
+        box-sizing: border-box;
+        text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+      }
+
+      .gantt-bar.bg-blue-500 {
+        background-color: #2563eb;
+      }
+
+      .gantt-bar.bg-green-500 {
+        background-color: #059669;
+      }
+
+      .gantt-bar.bg-red-400,
+      .gantt-bar.bg-red-500 {
+        background-color: #dc2626;
+      }
+
+      .date-info {
+        min-width: 100px;
+        max-width: 120px;
+        flex-shrink: 0;
+        padding: 4px 6px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background: #f9f9f9;
+      }
+
+      .date-info .start-date {
+        font-size: 8pt;
+        font-weight: bold;
+        margin-bottom: 2px;
+        color: #000;
+      }
+
+      .date-info .end-date {
+        font-size: 7pt;
+        color: #333;
+        line-height: 1.2;
+      }
+
+      /* Phase Header */
+      .phase-header {
+        margin-top: 6px;
+        margin-bottom: 4px;
+        padding: 4px;
+        background: #c0c0c0;
+        border: 1px solid #000;
+        text-align: center;
+        page-break-inside: avoid;
+      }
+
+      .phase-header .phase-label {
+        font-size: 9pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #000;
+      }
+
+      /* Footer */
+      .document-footer {
+        margin-top: 12px;
+        padding-top: 6px;
+        border-top: 1px solid #000;
+        font-size: 8pt;
+        text-align: center;
+        color: #666;
+      }
+
+      .document-footer .generated-date {
+        margin-top: 3px;
+      }
+
+      @media print {
+        @page {
+          size: A4 landscape;
+          margin: 8mm;
+        }
+        
+        body {
+          padding: 0;
+        }
+        
+        .module-row {
+          page-break-inside: avoid;
+          margin-bottom: 2px;
+        }
+        
+        .phase-header {
+          page-break-after: avoid;
+          margin-top: 4px;
+          margin-bottom: 2px;
+        }
+        
+        .gantt-section {
+          margin-top: 4px;
+        }
+      }
+    </style>
+  </head>
   
-  <!-- Project Information -->
-  <div class="project-section">
-    <table>
-      <tr>
-        <td>Nama Projek:</td>
-        <td><strong><%= @project.nama %></strong></td>
-      </tr>
-      <tr>
-        <td>Jabatan:</td>
-        <td><%= @project.jabatan %></td>
-      </tr>
-      <tr>
-        <td>Tempoh Projek:</td>
-        <td>
-          <strong>
-            <%= Calendar.strftime(@gantt_data.start_date, "%d/%m/%Y") %> 
-            hingga 
-            <%= Calendar.strftime(@gantt_data.end_date, "%d/%m/%Y") %>
-          </strong>
-        </td>
-      </tr>
-      <tr>
-        <td>Bilangan Modul:</td>
-        <td><strong><%= length(@gantt_data.modules) %> modul</strong></td>
-      </tr>
-      <tr>
-        <td>Tarikh Dijana:</td>
-        <td><strong><%= Calendar.strftime(Date.utc_today(), "%d/%m/%Y") %></strong></td>
-      </tr>
-    </table>
-  </div>
-  
-  <!-- Gantt Chart Section -->
-  <div class="gantt-section">
-    <div class="gantt-section-title">Carta Gantt Modul</div>
-    
-    <!-- Timeline Header -->
-    <div class="timeline-header">
-      <div class="months">
-        <%= for month_offset <- 0..(div(Date.diff(@gantt_data.end_date, @gantt_data.start_date) + 1, 30) + 1) do %>
-          <% 
-            month_date = Date.add(@gantt_data.start_date, month_offset * 30)
-            month_name = Calendar.strftime(month_date, "%b %Y")
-          %>
-          <div class="month"><%= month_name %></div>
-        <% end %>
-      </div>
+  <body onload="window.print()">
+    <!-- Document Header -->
+    <div class="document-header">
+      <div class="agency">SISTEM PENGURUSAN PROJEK APLIKASI</div>
+      
+      <div class="title">PELAN MODUL PROJEK</div>
+      
+      <div class="subtitle">CARTA GANTT MODUL</div>
     </div>
-    
-    <!-- Module Rows -->
-    <%= for {module, index} <- Enum.with_index(@gantt_data.modules) do %>
-      <% 
-        module_days = Date.diff(module.end_date, module.start_date) + 1
+    <!-- Project Information -->
+    <div class="project-section">
+      <table>
+        <tr>
+          <td>Nama Projek:</td>
+          
+          <td><strong>{@project.nama}</strong></td>
+        </tr>
+        
+        <tr>
+          <td>Jabatan:</td>
+          
+          <td>{@project.jabatan}</td>
+        </tr>
+        
+        <tr>
+          <td>Tempoh Projek:</td>
+          
+          <td>
+            <strong>
+              {Calendar.strftime(@gantt_data.start_date, "%d/%m/%Y")} hingga {Calendar.strftime(
+                @gantt_data.end_date,
+                "%d/%m/%Y"
+              )}
+            </strong>
+          </td>
+        </tr>
+        
+        <tr>
+          <td>Bilangan Modul:</td>
+          
+          <td><strong>{length(@gantt_data.modules)} modul</strong></td>
+        </tr>
+        
+        <tr>
+          <td>Tarikh Dijana:</td>
+          
+          <td><strong>{Calendar.strftime(Date.utc_today(), "%d/%m/%Y")}</strong></td>
+        </tr>
+      </table>
+    </div>
+    <!-- Gantt Chart Section -->
+    <div class="gantt-section">
+      <div class="gantt-section-title">Carta Gantt Modul</div>
+      <!-- Timeline Header -->
+      <div class="timeline-header">
+        <div class="months">
+          <%= for month_offset <- 0..(div(Date.diff(@gantt_data.end_date, @gantt_data.start_date) + 1, 30) + 1) do %>
+            <% month_date = Date.add(@gantt_data.start_date, month_offset * 30)
+            month_name = Calendar.strftime(month_date, "%b %Y") %>
+            <div class="month">{month_name}</div>
+          <% end %>
+        </div>
+      </div>
+      <!-- Module Rows -->
+      <%= for {module, index} <- Enum.with_index(@gantt_data.modules) do %>
+        <% module_days = Date.diff(module.end_date, module.start_date) + 1
         offset_days = Date.diff(module.start_date, @gantt_data.start_date)
         total_days = Date.diff(@gantt_data.end_date, @gantt_data.start_date) + 1
-        offset_percent = if total_days > 0, do: (offset_days / total_days) * 100, else: 0
-        width_percent = if total_days > 0, do: (module_days / total_days) * 100, else: 10
-        
+        offset_percent = if total_days > 0, do: offset_days / total_days * 100, else: 0
+        width_percent = if total_days > 0, do: module_days / total_days * 100, else: 10
+
         # Check if this is the first module of a new phase
         previous_module = if index > 0, do: Enum.at(@gantt_data.modules, index - 1), else: nil
         is_new_phase = previous_module == nil || previous_module.fasa != module.fasa
-        
+
         # Determine bar color based on status
-        bar_color_class = case module.status do
-          "done" -> "bg-green-500"
-          "in_progress" -> "bg-blue-500"
-          _ -> "bg-blue-500"
-        end
-      %>
-      
-      <%= if is_new_phase do %>
-        <div class="phase-header">
-          <div class="phase-label">Fasa <%= module.fasa %></div>
+        bar_color_class =
+          case module.status do
+            "done" -> "bg-green-500"
+            "in_progress" -> "bg-blue-500"
+            _ -> "bg-blue-500"
+          end %>
+        <%= if is_new_phase do %>
+          <div class="phase-header">
+            <div class="phase-label">Fasa {module.fasa}</div>
+          </div>
+        <% end %>
+        
+        <div class="module-row">
+          <div class="module-info">
+            <div class="module-title">{module.title}</div>
+            
+            <div class="module-details">
+              <span><strong>Fasa:</strong> {module.fasa}</span>
+              <span><strong>Versi:</strong> {module.versi}</span>
+              <span><strong>Status:</strong> {@status_label.(module.status)}</span>
+              <span><strong>Keutamaan:</strong> {@priority_label.(module.priority)}</span>
+            </div>
+          </div>
+          
+          <div class="gantt-bar-container">
+            <div
+              class={"gantt-bar #{bar_color_class}"}
+              style={"left: #{offset_percent}%; width: #{width_percent}%;"}
+            >
+              {module.title}
+            </div>
+          </div>
+          
+          <div class="date-info">
+            <div class="start-date">{Calendar.strftime(module.start_date, "%d/%m/%Y")}</div>
+            
+            <div class="end-date">
+              hingga<br /> {Calendar.strftime(module.end_date, "%d/%m/%Y")}
+            </div>
+          </div>
         </div>
       <% end %>
+    </div>
+    <!-- Document Footer -->
+    <div class="document-footer">
+      <div>Dokumen ini dijana secara automatik oleh Sistem Pengurusan Projek Aplikasi</div>
       
-      <div class="module-row">
-        <div class="module-info">
-          <div class="module-title"><%= module.title %></div>
-          <div class="module-details">
-            <span><strong>Fasa:</strong> <%= module.fasa %></span>
-            <span><strong>Versi:</strong> <%= module.versi %></span>
-            <span><strong>Status:</strong> <%= @status_label.(module.status) %></span>
-            <span><strong>Keutamaan:</strong> <%= @priority_label.(module.priority) %></span>
-          </div>
-        </div>
-        
-        <div class="gantt-bar-container">
-          <div 
-            class={"gantt-bar #{bar_color_class}"}
-            style={"left: #{offset_percent}%; width: #{width_percent}%;"}
-          >
-            <%= module.title %>
-          </div>
-        </div>
-        
-        <div class="date-info">
-          <div class="start-date">
-            <%= Calendar.strftime(module.start_date, "%d/%m/%Y") %>
-          </div>
-          <div class="end-date">
-            hingga<br>
-            <%= Calendar.strftime(module.end_date, "%d/%m/%Y") %>
-          </div>
-        </div>
+      <div class="generated-date">
+        Tarikh Dijana: {Calendar.strftime(Date.utc_today(), "%d %B %Y")}
       </div>
-    <% end %>
-  </div>
-  
-  <!-- Document Footer -->
-  <div class="document-footer">
-    <div>Dokumen ini dijana secara automatik oleh Sistem Pengurusan Projek Aplikasi</div>
-    <div class="generated-date">Tarikh Dijana: <%= Calendar.strftime(Date.utc_today(), "%d %B %Y") %></div>
-  </div>
-  
-  <script>
-    // Auto-print when page loads
-    window.onload = function() {
-      window.print();
-    };
-  </script>
-</body>
+    </div>
+    
+    <script>
+      // Auto-print when page loads
+      window.onload = function() {
+        window.print();
+      };
+    </script>
+  </body>
 </html>

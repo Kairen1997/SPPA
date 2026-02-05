@@ -1484,9 +1484,7 @@
                   </div>
                   
                   <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
-                    <div
-                      class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto"
-                    >
+                    <div class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
                       <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
                         <div class="flex items-center justify-between">
                           <div>
@@ -1623,6 +1621,7 @@
                               <div class="border-b border-gray-200 pb-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Justifikasi</h3>
                               </div>
+                              
                               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <p class="text-sm text-gray-700 whitespace-pre-wrap">
                                   {@selected_perubahan.justifikasi}
@@ -1636,6 +1635,7 @@
                               <div class="border-b border-gray-200 pb-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Kesan</h3>
                               </div>
+                              
                               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <p class="text-sm text-gray-700 whitespace-pre-wrap">
                                   {@selected_perubahan.kesan}
@@ -1649,6 +1649,7 @@
                               <div class="border-b border-gray-200 pb-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Catatan</h3>
                               </div>
+                              
                               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <p class="text-sm text-gray-700 whitespace-pre-wrap">
                                   {@selected_perubahan.catatan}
@@ -1674,29 +1675,14 @@
               <% end %>
             <% @current_tab == "UAT" -> %>
               <div class="space-y-6">
-                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h2 class="text-2xl font-bold text-gray-900">Ujian Penerimaan Pengguna</h2>
-                    
-                    <p class="text-gray-600">
-                      Urus kemajuan UAT dan pastikan setiap modul melalui penilaian pengguna.
-                    </p>
-                  </div>
-                  
-                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm text-gray-600">
-                      <.icon name="hero-check-circle" class="w-5 h-5 text-green-500" />
-                      <span class="text-sm font-semibold">{length(@ujian)} Ujian</span>
-                    </div>
-                    
-                    <.link
-                      navigate={~p"/ujian-penerimaan-pengguna"}
-                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
-                    >
-                      <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
-                      <span>Halaman Ujian Penuh</span>
-                    </.link>
-                  </div>
+                <div class="flex justify-end">
+                  <.link
+                    navigate={~p"/ujian-penerimaan-pengguna"}
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                  >
+                    <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
+                    <span>Halaman Ujian Penuh</span>
+                  </.link>
                 </div>
                 
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">

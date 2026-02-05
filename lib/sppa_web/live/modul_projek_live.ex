@@ -223,7 +223,10 @@ defmodule SppaWeb.ModulProjekLive do
     case ProjectModules.create_module(attrs) do
       {:ok, _module} ->
         tasks =
-          ProjectModules.list_modules_for_project(socket.assigns.current_scope, socket.assigns.project_id)
+          ProjectModules.list_modules_for_project(
+            socket.assigns.current_scope,
+            socket.assigns.project_id
+          )
 
         sorted_tasks = sort_tasks_by_phase_and_version(tasks)
 
@@ -293,7 +296,10 @@ defmodule SppaWeb.ModulProjekLive do
     case ProjectModules.get_module!(task_id) |> ProjectModules.update_module(attrs) do
       {:ok, _module} ->
         tasks =
-          ProjectModules.list_modules_for_project(socket.assigns.current_scope, socket.assigns.project_id)
+          ProjectModules.list_modules_for_project(
+            socket.assigns.current_scope,
+            socket.assigns.project_id
+          )
 
         sorted_tasks = sort_tasks_by_phase_and_version(tasks)
 
@@ -334,7 +340,10 @@ defmodule SppaWeb.ModulProjekLive do
     case ProjectModules.delete_module(module) do
       {:ok, _} ->
         tasks =
-          ProjectModules.list_modules_for_project(socket.assigns.current_scope, socket.assigns.project_id)
+          ProjectModules.list_modules_for_project(
+            socket.assigns.current_scope,
+            socket.assigns.project_id
+          )
 
         sorted_tasks = sort_tasks_by_phase_and_version(tasks)
 
@@ -356,10 +365,14 @@ defmodule SppaWeb.ModulProjekLive do
     # phx-change sends the select value as "status" when name="status"
     status = Map.get(params, "status", "in_progress")
 
-    case ProjectModules.get_module!(task_id) |> ProjectModules.update_module(%{"status" => status}) do
+    case ProjectModules.get_module!(task_id)
+         |> ProjectModules.update_module(%{"status" => status}) do
       {:ok, _module} ->
         tasks =
-          ProjectModules.list_modules_for_project(socket.assigns.current_scope, socket.assigns.project_id)
+          ProjectModules.list_modules_for_project(
+            socket.assigns.current_scope,
+            socket.assigns.project_id
+          )
 
         sorted_tasks = sort_tasks_by_phase_and_version(tasks)
 
@@ -434,8 +447,8 @@ defmodule SppaWeb.ModulProjekLive do
         project.tarikh_siap
 
       Map.has_key?(project, :approved_project) &&
-          project.approved_project &&
-          Map.has_key?(project.approved_project, :tarikh_jangkaan_siap) &&
+        project.approved_project &&
+        Map.has_key?(project.approved_project, :tarikh_jangkaan_siap) &&
           project.approved_project.tarikh_jangkaan_siap ->
         project.approved_project.tarikh_jangkaan_siap
 

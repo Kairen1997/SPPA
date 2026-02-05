@@ -118,16 +118,20 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
           {:ok, socket}
         end
       else
+        ujian = UjianPenerimaanPengguna.get_ujian(ujian_id)
+
         {:ok,
          socket
-         |> assign(:selected_ujian, nil)
+         |> assign(:selected_ujian, ujian)
          |> assign(:ujian, [])
          |> assign(:show_edit_modal, false)
          |> assign(:show_create_modal, false)
          |> assign(:show_edit_kes_modal, false)
          |> assign(:selected_kes, nil)
          |> assign(:form, to_form(%{}, as: :ujian))
-         |> assign(:kes_form, to_form(%{}, as: :kes))}
+         |> assign(:kes_form, to_form(%{}, as: :kes))
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
       end
     else
       socket =
@@ -477,6 +481,28 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
      |> assign(:show_edit_kes_modal, false)
      |> assign(:kes_form, to_form(%{}, as: :kes))
      |> put_flash(:info, "Kes ujian berjaya dikemaskini")}
+  end
+
+  @impl true
+  def handle_event("delete_kes_ujian", %{"kes_id" => kes_id}, socket) do
+    if socket.assigns[:selected_ujian] && socket.assigns.selected_ujian.senarai_kes_ujian do
+      updated_senarai_kes_ujian =
+        Enum.reject(socket.assigns.selected_ujian.senarai_kes_ujian, fn k -> k.id == kes_id end)
+
+      updated_ujian = %{
+        socket.assigns.selected_ujian
+        | senarai_kes_ujian: updated_senarai_kes_ujian
+      }
+
+      {:noreply,
+       socket
+       |> assign(:selected_ujian, updated_ujian)
+       |> assign(:selected_kes, nil)
+       |> assign(:show_edit_kes_modal, false)
+       |> put_flash(:info, "Kes ujian berjaya dipadam")}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true

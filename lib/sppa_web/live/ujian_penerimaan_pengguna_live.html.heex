@@ -251,6 +251,15 @@
                             >
                               <.icon name="hero-pencil" class="w-4 h-4" />
                             </button>
+                            <button
+                              phx-click="delete_kes_ujian"
+                              phx-value-kes_id={kes.id}
+                              data-confirm="Padam kes ujian ini?"
+                              class="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors duration-200"
+                              title="Padam"
+                            >
+                              <.icon name="hero-trash" class="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -316,7 +325,7 @@
                         </th>
                         
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Modul
+                          Nama Modul
                         </th>
                         
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -513,7 +522,7 @@
                     label="Modul"
                     required
                     placeholder="Masukkan nama modul"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
@@ -523,28 +532,80 @@
                     type="text"
                     label="Penguji"
                     placeholder="Masukkan nama penguji"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
-                <div>
-                  <.input
-                    field={@form[:tarikh_ujian]}
-                    type="date"
-                    label="Tarikh Ujian"
-                    required
-                    class="w-full"
-                  />
+                <div class="fieldset mb-2">
+                  <label
+                    for={@form[:tarikh_ujian].id}
+                    class="block text-sm font-medium text-gray-800 mb-1"
+                  >
+                    Tarikh Ujian
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      id={@form[:tarikh_ujian].id}
+                      name={@form[:tarikh_ujian].name}
+                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_ujian].value)}
+                      required
+                      phx-debounce="blur"
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div
+                      id={"trigger-#{@form[:tarikh_ujian].id}"}
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for={@form[:tarikh_ujian].id}
+                      class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      aria-label="Pilih tarikh"
+                      tabindex="0"
+                    >
+                      <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <%= for msg <- Enum.map(@form[:tarikh_ujian].errors || [], &translate_error/1) do %>
+                    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
+                      <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
+                    </p>
+                  <% end %>
                 </div>
                 
-                <div>
-                  <.input
-                    field={@form[:tarikh_dijangka_siap]}
-                    type="date"
-                    label="Tarikh Dijangka Siap"
-                    required
-                    class="w-full"
-                  />
+                <div class="fieldset mb-2">
+                  <label
+                    for={@form[:tarikh_dijangka_siap].id}
+                    class="block text-sm font-medium text-gray-800 mb-1"
+                  >
+                    Tarikh Dijangka Siap
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      id={@form[:tarikh_dijangka_siap].id}
+                      name={@form[:tarikh_dijangka_siap].name}
+                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dijangka_siap].value)}
+                      required
+                      phx-debounce="blur"
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div
+                      id={"trigger-#{@form[:tarikh_dijangka_siap].id}"}
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for={@form[:tarikh_dijangka_siap].id}
+                      class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      aria-label="Pilih tarikh"
+                      tabindex="0"
+                    >
+                      <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <%= for msg <- Enum.map(@form[:tarikh_dijangka_siap].errors || [], &translate_error/1) do %>
+                    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
+                      <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
+                    </p>
+                  <% end %>
                 </div>
                 
                 <div>
@@ -553,7 +614,7 @@
                     type="select"
                     label="Status"
                     options={["Menunggu", "Dalam Proses", "Selesai", "Dibatalkan"]}
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
@@ -563,7 +624,7 @@
                     type="select"
                     label="Hasil"
                     options={["Belum Selesai", "Lulus", "Gagal"]}
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
@@ -574,7 +635,7 @@
                     label="Catatan"
                     rows="3"
                     placeholder="Masukkan catatan..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
               </div>
@@ -619,12 +680,12 @@
           phx-click-away="close_edit_modal"
         >
           <%!-- Modal header --%>
-          <div class="border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
+          <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Ujian Penerimaan Pengguna</h2>
                 
-                <p class="mt-1 text-sm text-green-100">Edit maklumat ujian penerimaan pengguna</p>
+                <p class="mt-1 text-sm text-blue-100">Edit maklumat ujian penerimaan pengguna</p>
               </div>
               
               <button
@@ -654,7 +715,7 @@
                     label="Modul"
                     required
                     placeholder="Masukkan nama modul"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
@@ -664,28 +725,80 @@
                     type="text"
                     label="Penguji"
                     placeholder="Masukkan nama penguji"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
-                <div>
-                  <.input
-                    field={@form[:tarikh_ujian]}
-                    type="date"
-                    label="Tarikh Ujian"
-                    required
-                    class="w-full"
-                  />
+                <div class="fieldset mb-2">
+                  <label
+                    for={@form[:tarikh_ujian].id}
+                    class="block text-sm font-medium text-gray-800 mb-1"
+                  >
+                    Tarikh Ujian
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      id={@form[:tarikh_ujian].id}
+                      name={@form[:tarikh_ujian].name}
+                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_ujian].value)}
+                      required
+                      phx-debounce="blur"
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div
+                      id={"trigger-edit-#{@form[:tarikh_ujian].id}"}
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for={@form[:tarikh_ujian].id}
+                      class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      aria-label="Pilih tarikh"
+                      tabindex="0"
+                    >
+                      <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <%= for msg <- Enum.map(@form[:tarikh_ujian].errors || [], &translate_error/1) do %>
+                    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
+                      <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
+                    </p>
+                  <% end %>
                 </div>
                 
-                <div>
-                  <.input
-                    field={@form[:tarikh_dijangka_siap]}
-                    type="date"
-                    label="Tarikh Dijangka Siap"
-                    required
-                    class="w-full"
-                  />
+                <div class="fieldset mb-2">
+                  <label
+                    for={@form[:tarikh_dijangka_siap].id}
+                    class="block text-sm font-medium text-gray-800 mb-1"
+                  >
+                    Tarikh Dijangka Siap
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      id={@form[:tarikh_dijangka_siap].id}
+                      name={@form[:tarikh_dijangka_siap].name}
+                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dijangka_siap].value)}
+                      required
+                      phx-debounce="blur"
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div
+                      id={"trigger-edit-#{@form[:tarikh_dijangka_siap].id}"}
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for={@form[:tarikh_dijangka_siap].id}
+                      class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      aria-label="Pilih tarikh"
+                      tabindex="0"
+                    >
+                      <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <%= for msg <- Enum.map(@form[:tarikh_dijangka_siap].errors || [], &translate_error/1) do %>
+                    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
+                      <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
+                    </p>
+                  <% end %>
                 </div>
                 
                 <div>
@@ -694,7 +807,7 @@
                     type="select"
                     label="Status"
                     options={["Menunggu", "Dalam Proses", "Selesai", "Dibatalkan"]}
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
@@ -704,7 +817,7 @@
                     type="select"
                     label="Hasil"
                     options={["Belum Selesai", "Lulus", "Gagal"]}
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
@@ -715,7 +828,7 @@
                     label="Catatan"
                     rows="3"
                     placeholder="Masukkan catatan..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
               </div>
@@ -733,7 +846,7 @@
             <button
               type="submit"
               form="edit-ujian-form"
-              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
             >
               Simpan Perubahan
             </button>
@@ -760,12 +873,12 @@
           phx-click-away="close_edit_kes_modal"
         >
           <%!-- Modal header --%>
-          <div class="border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
+          <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Kes Ujian</h2>
                 
-                <p class="mt-1 text-sm text-green-100">
+                <p class="mt-1 text-sm text-blue-100">
                   Edit maklumat kes ujian: {@selected_kes.id}
                 </p>
               </div>
@@ -803,7 +916,7 @@
                     label="Senario Ujian"
                     required
                     placeholder="Masukkan senario ujian"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
@@ -814,7 +927,7 @@
                     label="Langkah Ujian"
                     rows="4"
                     placeholder="Masukkan langkah ujian..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
                 
@@ -825,7 +938,7 @@
                     label="Keputusan Dijangka"
                     rows="3"
                     placeholder="Masukkan keputusan dijangka..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
                 
@@ -836,7 +949,7 @@
                     label="Keputusan Sebenar"
                     rows="3"
                     placeholder="Masukkan keputusan sebenar..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
                 
@@ -847,7 +960,7 @@
                     label="Hasil"
                     prompt="-"
                     options={["Lulus", "Gagal"]}
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
@@ -857,17 +970,43 @@
                     type="text"
                     label="Penguji"
                     placeholder="Masukkan nama penguji"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
-                <div>
-                  <.input
-                    field={@kes_form[:tarikh_ujian]}
-                    type="date"
-                    label="Tarikh Ujian"
-                    class="w-full"
-                  />
+                <div class="fieldset mb-2">
+                  <label
+                    for={@kes_form[:tarikh_ujian].id}
+                    class="block text-sm font-medium text-gray-800 mb-1"
+                  >
+                    Tarikh Ujian
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      id={@kes_form[:tarikh_ujian].id}
+                      name={@kes_form[:tarikh_ujian].name}
+                      value={Phoenix.HTML.Form.normalize_value("date", @kes_form[:tarikh_ujian].value)}
+                      phx-debounce="blur"
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div
+                      id={"trigger-kes-#{@kes_form[:tarikh_ujian].id}"}
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for={@kes_form[:tarikh_ujian].id}
+                      class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      aria-label="Pilih tarikh"
+                      tabindex="0"
+                    >
+                      <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <%= for msg <- Enum.map(@kes_form[:tarikh_ujian].errors || [], &translate_error/1) do %>
+                    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
+                      <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
+                    </p>
+                  <% end %>
                 </div>
                 
                 <div>
@@ -878,13 +1017,39 @@
                   />
                 </div>
                 
-                <div>
-                  <.input
-                    field={@kes_form[:tarikh_pengesahan]}
-                    type="date"
-                    label="Tarikh Pengesahan"
-                    class="w-full"
-                  />
+                <div class="fieldset mb-2">
+                  <label
+                    for={@kes_form[:tarikh_pengesahan].id}
+                    class="block text-sm font-medium text-gray-800 mb-1"
+                  >
+                    Tarikh Pengesahan
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      id={@kes_form[:tarikh_pengesahan].id}
+                      name={@kes_form[:tarikh_pengesahan].name}
+                      value={Phoenix.HTML.Form.normalize_value("date", @kes_form[:tarikh_pengesahan].value)}
+                      phx-debounce="blur"
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div
+                      id={"trigger-kes-#{@kes_form[:tarikh_pengesahan].id}"}
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for={@kes_form[:tarikh_pengesahan].id}
+                      class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      aria-label="Pilih tarikh"
+                      tabindex="0"
+                    >
+                      <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <%= for msg <- Enum.map(@kes_form[:tarikh_pengesahan].errors || [], &translate_error/1) do %>
+                    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
+                      <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
+                    </p>
+                  <% end %>
                 </div>
               </div>
             </.form>
@@ -901,7 +1066,7 @@
             <button
               type="submit"
               form="edit-kes-form"
-              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
             >
               Simpan Perubahan
             </button>

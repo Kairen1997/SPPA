@@ -20,13 +20,16 @@ defmodule SppaWeb.PembangunanLive do
       {modules, project_id} =
         case params["project_id"] do
           nil ->
-            {AnalisisDanRekabentuk.list_modules_for_pembangunan(socket.assigns.current_scope), nil}
+            {AnalisisDanRekabentuk.list_modules_for_pembangunan(socket.assigns.current_scope),
+             nil}
 
           id when is_binary(id) ->
             case Integer.parse(id) do
               {pid, ""} ->
-                {AnalisisDanRekabentuk.list_modules_for_project(pid, socket.assigns.current_scope),
-                 pid}
+                {AnalisisDanRekabentuk.list_modules_for_project(
+                   pid,
+                   socket.assigns.current_scope
+                 ), pid}
 
               _ ->
                 {AnalisisDanRekabentuk.list_modules_for_pembangunan(socket.assigns.current_scope),
@@ -122,14 +125,17 @@ defmodule SppaWeb.PembangunanLive do
 
   @impl true
   def handle_event("go_to_page", %{"page" => page_str}, socket) do
-    page = case Integer.parse(page_str) do
-      {p, ""} -> p
-      _ -> socket.assigns.page
-    end
+    page =
+      case Integer.parse(page_str) do
+        {p, ""} -> p
+        _ -> socket.assigns.page
+      end
+
     socket =
       socket
       |> assign(:page, page)
       |> put_pagination_assigns()
+
     {:noreply, socket}
   end
 
@@ -141,7 +147,9 @@ defmodule SppaWeb.PembangunanLive do
 
     module =
       Enum.find(socket.assigns.modules, fn m -> to_string(m.id) == module_id_str end) ||
-      Enum.find(socket.assigns.paginated_modules || [], fn m -> to_string(m.id) == module_id_str end)
+        Enum.find(socket.assigns.paginated_modules || [], fn m ->
+          to_string(m.id) == module_id_str
+        end)
 
     if module do
       {:noreply,
@@ -182,13 +190,16 @@ defmodule SppaWeb.PembangunanLive do
 
       module =
         Enum.find(socket.assigns.modules, fn m -> to_string(m.id) == module_id_str end) ||
-        Enum.find(socket.assigns.paginated_modules || [], fn m -> to_string(m.id) == module_id_str end)
+          Enum.find(socket.assigns.paginated_modules || [], fn m ->
+            to_string(m.id) == module_id_str
+          end)
 
       Logger.info("Module found: #{inspect(not is_nil(module))}")
 
       cond do
         is_nil(module) ->
           Logger.error("Module not found for ID: #{inspect(module_id)}")
+
           {:noreply,
            socket
            |> put_flash(:error, "Modul tidak ditemui. ID: #{inspect(module_id)}")}
@@ -198,7 +209,10 @@ defmodule SppaWeb.PembangunanLive do
             "priority" => module.priority || "",
             "status" => module.status || "Belum Mula",
             "tarikh_mula" =>
-              if(module.tarikh_mula, do: Calendar.strftime(module.tarikh_mula, "%Y-%m-%d"), else: ""),
+              if(module.tarikh_mula,
+                do: Calendar.strftime(module.tarikh_mula, "%Y-%m-%d"),
+                else: ""
+              ),
             "tarikh_jangka_siap" =>
               if(module.tarikh_jangka_siap,
                 do: Calendar.strftime(module.tarikh_jangka_siap, "%Y-%m-%d"),
@@ -322,6 +336,7 @@ defmodule SppaWeb.PembangunanLive do
     start = (page - 1) * page_size
     paginated = Enum.slice(modules, start, page_size)
     page_numbers = page_numbers_for_pagination(page, total_pages)
+
     socket
     |> assign(:page, page)
     |> assign(:total_pages, total_pages)
@@ -336,9 +351,14 @@ defmodule SppaWeb.PembangunanLive do
 
   defp page_numbers_for_pagination(current, total_pages) do
     cond do
-      current <= 3 -> [1, 2, 3, 4, :ellipsis, total_pages]
-      current >= total_pages - 2 -> [1, :ellipsis, total_pages - 3, total_pages - 2, total_pages - 1, total_pages]
-      true -> [1, :ellipsis, current - 1, current, current + 1, :ellipsis, total_pages]
+      current <= 3 ->
+        [1, 2, 3, 4, :ellipsis, total_pages]
+
+      current >= total_pages - 2 ->
+        [1, :ellipsis, total_pages - 3, total_pages - 2, total_pages - 1, total_pages]
+
+      true ->
+        [1, :ellipsis, current - 1, current, current + 1, :ellipsis, total_pages]
     end
   end
 end

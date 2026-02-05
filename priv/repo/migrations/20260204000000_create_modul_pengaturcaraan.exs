@@ -10,6 +10,7 @@ defmodule Sppa.Repo.Migrations.CreateModulPengaturcaraan do
       add :catatan, :text
 
       add :project_id, references(:projects, on_delete: :delete_all), null: false
+
       add :analisis_dan_rekabentuk_module_id,
           references(:analisis_dan_rekabentuk_modules, on_delete: :delete_all),
           null: false
@@ -19,6 +20,7 @@ defmodule Sppa.Repo.Migrations.CreateModulPengaturcaraan do
 
     create index(:modul_pengaturcaraan, [:project_id])
     create index(:modul_pengaturcaraan, [:analisis_dan_rekabentuk_module_id])
+
     create unique_index(:modul_pengaturcaraan, [:project_id, :analisis_dan_rekabentuk_module_id],
              name: :modul_pengaturcaraan_project_module_index
            )

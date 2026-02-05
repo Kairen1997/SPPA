@@ -16,7 +16,9 @@ defmodule SppaWeb.PengurusanPerubahanLive do
     if user_role && user_role in @allowed_roles do
       project_id =
         case Map.get(params, "project_id") do
-          nil -> nil
+          nil ->
+            nil
+
           id when is_binary(id) ->
             case Integer.parse(id) do
               {int, _rest} -> int
@@ -84,7 +86,9 @@ defmodule SppaWeb.PengurusanPerubahanLive do
     # Sentiasa baca project_id dari URL dan muat semula dari DB sahaja
     project_id =
       case Map.get(params, "project_id") do
-        nil -> nil
+        nil ->
+          nil
+
         id when is_binary(id) ->
           case Integer.parse(id) do
             {int, _rest} -> int
@@ -325,7 +329,8 @@ defmodule SppaWeb.PengurusanPerubahanLive do
         end
 
       tarikh_dijangka_siap =
-        if perubahan_params["tarikh_dijangka_siap"] && perubahan_params["tarikh_dijangka_siap"] != "" do
+        if perubahan_params["tarikh_dijangka_siap"] &&
+             perubahan_params["tarikh_dijangka_siap"] != "" do
           case Date.from_iso8601(perubahan_params["tarikh_dijangka_siap"]) do
             {:ok, date} -> date
             _ -> nil
@@ -370,6 +375,7 @@ defmodule SppaWeb.PengurusanPerubahanLive do
 
         {:error, changeset} ->
           form = to_form(changeset, as: :perubahan)
+
           {:noreply,
            socket
            |> assign(:form, form)
@@ -394,7 +400,8 @@ defmodule SppaWeb.PengurusanPerubahanLive do
       end
 
     tarikh_dijangka_siap =
-      if perubahan_params["tarikh_dijangka_siap"] && perubahan_params["tarikh_dijangka_siap"] != "" do
+      if perubahan_params["tarikh_dijangka_siap"] &&
+           perubahan_params["tarikh_dijangka_siap"] != "" do
         case Date.from_iso8601(perubahan_params["tarikh_dijangka_siap"]) do
           {:ok, date} -> date
           _ -> selected.tarikh_dijangka_siap
@@ -439,6 +446,7 @@ defmodule SppaWeb.PengurusanPerubahanLive do
 
       {:error, changeset} ->
         form = to_form(changeset, as: :perubahan)
+
         {:noreply,
          socket
          |> assign(:form, form)
