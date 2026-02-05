@@ -534,15 +534,13 @@
   </div>
   <%!-- Create Modal --%>
   <%= if @show_create_modal do %>
-    <div
-      class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_create_modal"
-      phx-click-away="close_create_modal"
-      role="dialog"
-      aria-modal="true"
-    >
+    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       <%!-- Backdrop --%>
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="close_create_modal"
+      ></div>
       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
@@ -737,15 +735,13 @@
   <% end %>
   <%!-- Edit Ujian Modal --%>
   <%= if assigns[:show_edit_modal] && assigns[:editing_ujian] do %>
-    <div
-      class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_edit_modal"
-      phx-click-away="close_edit_modal"
-      role="dialog"
-      aria-modal="true"
-    >
+    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       <%!-- Backdrop --%>
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="close_edit_modal"
+      ></div>
       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
@@ -929,7 +925,7 @@
               form="edit-ujian-form"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
             >
-              Simpan Perubahan
+              Simpan
             </button>
           </div>
         </div>
@@ -938,14 +934,12 @@
   <% end %>
   <%!-- Tambah Kes Ujian Modal --%>
   <%= if @show_add_kes_modal do %>
-    <div
-      class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_add_kes_modal"
-      phx-click-away="close_add_kes_modal"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="close_add_kes_modal"
+      ></div>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
           class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -1134,15 +1128,13 @@
   <% end %>
   <%!-- Edit Kes Ujian Modal --%>
   <%= if assigns[:show_edit_kes_modal] && assigns[:selected_kes] do %>
-    <div
-      class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_edit_kes_modal"
-      phx-click-away="close_edit_kes_modal"
-      role="dialog"
-      aria-modal="true"
-    >
+    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       <%!-- Backdrop --%>
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="close_edit_kes_modal"
+      ></div>
       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div

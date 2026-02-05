@@ -509,7 +509,10 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
 
     if editing_ujian do
       attrs = %{
-        tajuk: ujian_params["tajuk"],
+        # Tajuk tidak boleh kosong kerana schema memerlukannya.
+        # Dalam borang kemaskini, tajuk tidak boleh diubah dan tidak dihantar semula,
+        # jadi kita kekalkan nilai sedia ada daripada rekod yang sedang diedit.
+        tajuk: ujian_params["tajuk"] || editing_ujian.tajuk,
         modul: ujian_params["modul"],
         tarikh_ujian: parse_date(ujian_params["tarikh_ujian"], editing_ujian.tarikh_ujian),
         tarikh_dijangka_siap:
