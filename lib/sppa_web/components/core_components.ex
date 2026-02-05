@@ -190,7 +190,7 @@ defmodule SppaWeb.CoreComponents do
     <div class="fieldset mb-2">
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
-        <span class="label">
+        <span class="block text-sm font-medium text-gray-800">
           <input
             type="checkbox"
             id={@id}
@@ -211,7 +211,7 @@ defmodule SppaWeb.CoreComponents do
     ~H"""
     <div class="fieldset mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="block text-sm font-medium text-gray-800 mb-1">{@label}</span>
         <select
           id={@id}
           name={@name}
@@ -232,7 +232,7 @@ defmodule SppaWeb.CoreComponents do
     ~H"""
     <div class="fieldset mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span> <textarea
+        <span :if={@label} class="block text-sm font-medium text-gray-800 mb-1">{@label}</span> <textarea
           id={@id}
           name={@name}
           class={[
@@ -252,7 +252,7 @@ defmodule SppaWeb.CoreComponents do
     ~H"""
     <div class="fieldset mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="block text-sm font-medium text-gray-800 mb-1">{@label}</span>
         <input
           type={@type}
           name={@name}
