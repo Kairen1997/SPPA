@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Laporan Modul Projek - {@project.nama}</title>
-    
+
     <style>
       * {
         margin: 0;
@@ -208,12 +208,12 @@
       }
     </style>
   </head>
-  
+
   <body onload="window.print()">
     <!-- Document Header -->
     <div class="document-header">
       <div class="agency">SISTEM PENGURUSAN PROJEK APLIKASI</div>
-      
+
       <div class="title">LAPORAN MODUL PROJEK</div>
     </div>
     <!-- Project Information -->
@@ -221,32 +221,32 @@
       <table>
         <tr>
           <td>Nama Sistem:</td>
-          
+
           <td><strong>{@project.nama}</strong></td>
         </tr>
-        
+
         <tr>
           <td>Kementerian / Jabatan:</td>
-          
+
           <td>{@project.jabatan || "-"}</td>
         </tr>
-        
+
         <tr>
           <td>Bilangan Modul:</td>
-          
+
           <td><strong>{length(@tasks)} modul</strong></td>
         </tr>
-        
+
         <tr>
           <td>Tarikh Dijana:</td>
-          
+
           <td><strong>{Calendar.strftime(Date.utc_today(), "%d/%m/%Y")}</strong></td>
         </tr>
-        
+
         <%= if @current_scope && @current_scope.user do %>
           <tr>
             <td>Dicetak oleh:</td>
-            
+
             <td>
               <%= if @current_scope.user.no_kp && @current_scope.user.no_kp != "" do %>
                 {@current_scope.user.no_kp}
@@ -264,21 +264,21 @@
         <thead>
           <tr>
             <th>Tugasan</th>
-            
+
             <th class="text-center">Fasa</th>
-            
+
             <th class="text-center">Versi</th>
-            
+
             <th class="text-center">Status</th>
-            
+
             <th class="text-center">Keutamaan</th>
-            
+
             <th>Ditugaskan kepada</th>
-            
+
             <th>Sasaran</th>
           </tr>
         </thead>
-        
+
         <tbody>
           <%= if Enum.empty?(@tasks) do %>
             <tr>
@@ -290,15 +290,15 @@
             <%= for task <- @tasks do %>
               <tr>
                 <td><strong>{task.title || "-"}</strong></td>
-                
+
                 <td class="text-center">
                   <span class="badge badge-gray">{task.fasa || "-"}</span>
                 </td>
-                
+
                 <td class="text-center">
                   <span class="badge badge-gray">{task.versi || "-"}</span>
                 </td>
-                
+
                 <td class="text-center">
                   <%= if task.status do %>
                     <span class={[
@@ -311,7 +311,7 @@
                     <span class="badge badge-gray">-</span>
                   <% end %>
                 </td>
-                
+
                 <td class="text-center">
                   <%= if task.priority do %>
                     <span class={[
@@ -329,7 +329,7 @@
                     <span class="badge badge-gray">-</span>
                   <% end %>
                 </td>
-                
+
                 <td>
                   <%= if task.developer do %>
                     <%= if task.developer.email && task.developer.email != "" do %>
@@ -341,7 +341,7 @@
                     -
                   <% end %>
                 </td>
-                
+
                 <td>
                   <%= if task.due_date do %>
                     {Calendar.strftime(task.due_date, "%d/%m/%Y")}
@@ -358,12 +358,12 @@
     <!-- Document Footer -->
     <div class="document-footer">
       <div>Dokumen ini dijana secara automatik oleh Sistem Pengurusan Projek Aplikasi</div>
-      
+
       <div class="generated-date">
         Tarikh Dijana: {Calendar.strftime(Date.utc_today(), "%d %B %Y")}
       </div>
     </div>
-    
+
     <script>
       window.onload = function() {
         window.print();

@@ -117,7 +117,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         perubahan = PermohonanPerubahan.list_by_project(project_id)
         penempatan = get_penempatan()
         penyerahan = get_penyerahan()
-        ujian = UjianPenerimaanPengguna.list_ujian()
+        ujian = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
         ujian_keselamatan = UjianKeselamatan.list_ujian()
 
         {:ok,

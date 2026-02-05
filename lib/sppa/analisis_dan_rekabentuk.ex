@@ -99,6 +99,27 @@ defmodule Sppa.AnalisisDanRekabentuk do
   end
 
   @doc """
+  Returns list of modules from Analisis dan Rekabentuk with id and name,
+  for the current user. Used to display module names (e.g. in Ujian Penerimaan Pengguna).
+  Sorted by analisis inserted_at desc then module number.
+  """
+  def list_modules_id_name(nil), do: []
+
+  def list_modules_id_name(current_scope) do
+    AnalisisDanRekabentuk
+    |> where([a], a.user_id == ^current_scope.user.id)
+    |> order_by([a], desc: a.inserted_at)
+    |> preload(:modules)
+    |> Repo.all()
+    |> Enum.flat_map(fn a ->
+      (a.modules || [])
+      |> Enum.sort_by(& &1.number)
+      |> Enum.map(fn m -> %{id: m.id, name: m.name || ""} end)
+    end)
+    |> Enum.reject(&(&1.name == ""))
+  end
+
+  @doc """
   Returns modules (nama modul, versi, fungsi modul) from Analisis dan Rekabentuk
   for use on the Pembangunan (Pengaturcaraan) page.
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Senarai Projek Diluluskan</title>
-    
+
     <style>
       * {
         margin: 0;
@@ -122,12 +122,12 @@
       }
     </style>
   </head>
-  
+
   <body onload="window.print()">
     <!-- Document Header -->
     <div class="document-header">
       <div class="agency">SISTEM PENGURUSAN PROJEK APLIKASI</div>
-      
+
       <div class="title">SENARAI PROJEK DILULUSKAN</div>
     </div>
     <!-- Table Section -->
@@ -136,15 +136,15 @@
         <thead>
           <tr>
             <th>Nama Projek</th>
-            
+
             <th>Emel</th>
-            
+
             <th>Kementerian/Jabatan</th>
-            
+
             <th>Tarikh</th>
           </tr>
         </thead>
-        
+
         <tbody>
           <%= if Enum.empty?(@projects) do %>
             <tr>
@@ -156,11 +156,11 @@
             <%= for project <- @projects do %>
               <tr>
                 <td><strong>{project.nama_projek}</strong></td>
-                
+
                 <td>{project.pengurus_email || "-"}</td>
-                
+
                 <td>{project.jabatan || "-"}</td>
-                
+
                 <td>
                   <%= if project.tarikh_mula do %>
                     {Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}
@@ -177,11 +177,11 @@
     <!-- Document Footer -->
     <div class="document-footer">
       <div>Dokumen ini dijana secara automatik oleh Sistem Pengurusan Projek Aplikasi</div>
-      
+
       <div class="generated-date">
         Tarikh Dijana: {Calendar.strftime(Date.utc_today(), "%d %B %Y")}
       </div>
-      
+
       <%= if @current_scope && @current_scope.user do %>
         <div class="generated-date">
           Dicetak oleh: {if @current_scope.user.no_kp && @current_scope.user.no_kp != "",
@@ -190,7 +190,7 @@
         </div>
       <% end %>
     </div>
-    
+
     <script>
       window.onload = function() {
         window.print();
