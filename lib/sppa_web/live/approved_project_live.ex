@@ -251,55 +251,38 @@ defmodule SppaWeb.ApprovedProjectLive do
     end
   end
 
-  @impl true
-  def handle_event("update_tarikh_mula", %{"tarikh_mula" => date_str}, socket) do
-    date_value =
-      if date_str == "" or date_str == nil do
-        nil
-      else
-        case Date.from_iso8601(date_str) do
-          {:ok, date} -> date
-          {:error, _} -> nil
-        end
-      end
-
-    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-      "tarikh_mula" => date_value
-    }) do
-      {:ok, updated_project} ->
-        {:noreply,
-         socket
-         |> assign(:approved_project, updated_project)
-         |> put_flash(:info, "Tarikh mula telah dikemaskini.")}
-
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh mula.")}
-    end
-  end
+  # Note: update_tarikh_mula handler removed - tarikh_mula is read-only and comes from external link
 
   @impl true
   def handle_event("update_tarikh_jangkaan_siap", %{"tarikh_jangkaan_siap" => date_str}, socket) do
-    date_value =
-      if date_str == "" or date_str == nil do
-        nil
-      else
-        case Date.from_iso8601(date_str) do
-          {:ok, date} -> date
-          {:error, _} -> nil
+    # Only allow update if project has been registered (daftar projek)
+    if socket.assigns.approved_project.project do
+      date_value =
+        if date_str == "" or date_str == nil do
+          nil
+        else
+          case Date.from_iso8601(date_str) do
+            {:ok, date} -> date
+            {:error, _} -> nil
+          end
         end
+
+      case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+        "tarikh_jangkaan_siap" => date_value
+      }) do
+        {:ok, updated_project} ->
+          {:noreply,
+           socket
+           |> assign(:approved_project, updated_project)
+           |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
+
+        {:error, _changeset} ->
+          {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
       end
-
-    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-      "tarikh_jangkaan_siap" => date_value
-    }) do
-      {:ok, updated_project} ->
-        {:noreply,
-         socket
-         |> assign(:approved_project, updated_project)
-         |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
-
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
+    else
+      {:noreply,
+       socket
+       |> put_flash(:error, "Sila daftar projek terlebih dahulu sebelum menetapkan tarikh jangkaan siap.")}
     end
   end
 
@@ -616,18 +599,16 @@ defmodule SppaWeb.ApprovedProjectLive do
                           Tarikh Mula
                         </dt>
                         <dd>
-                          <.form
-                            for={%{}}
-                            phx-change="update_tarikh_mula"
-                            id="tarikh-mula-form"
-                          >
-                            <input
-                              type="date"
-                              name="tarikh_mula"
-                              value={if @approved_project.tarikh_mula, do: Date.to_iso8601(@approved_project.tarikh_mula), else: ""}
-                              class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
-                            />
-                          </.form>
+                          <div class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                            <%= if @approved_project.tarikh_mula do %>
+                              {format_date(@approved_project.tarikh_mula)}
+                            <% else %>
+                              <span class="text-gray-400 italic">Tiada tarikh mula</span>
+                            <% end %>
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 italic">
+                            Tarikh mula ditetapkan dari sistem luaran dan tidak boleh diubah
+                          </p>
                         </dd>
                       </div>
                       <div>
@@ -635,18 +616,33 @@ defmodule SppaWeb.ApprovedProjectLive do
                           Tarikh Jangkaan Siap
                         </dt>
                         <dd>
-                          <.form
-                            for={%{}}
-                            phx-change="update_tarikh_jangkaan_siap"
-                            id="tarikh-jangkaan-siap-form"
-                          >
-                            <input
-                              type="date"
-                              name="tarikh_jangkaan_siap"
-                              value={if @approved_project.tarikh_jangkaan_siap, do: Date.to_iso8601(@approved_project.tarikh_jangkaan_siap), else: ""}
-                              class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
-                            />
-                          </.form>
+                          <%= if @approved_project.project do %>
+                            <%!-- Editable if project has been registered --%>
+                            <.form
+                              for={%{}}
+                              phx-change="update_tarikh_jangkaan_siap"
+                              id="tarikh-jangkaan-siap-form"
+                            >
+                              <input
+                                type="date"
+                                name="tarikh_jangkaan_siap"
+                                value={if @approved_project.tarikh_jangkaan_siap, do: Date.to_iso8601(@approved_project.tarikh_jangkaan_siap), else: ""}
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
+                              />
+                            </.form>
+                          <% else %>
+                            <%!-- Read-only if project has not been registered --%>
+                            <div class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                              <%= if @approved_project.tarikh_jangkaan_siap do %>
+                                {format_date(@approved_project.tarikh_jangkaan_siap)}
+                              <% else %>
+                                <span class="text-gray-400 italic">Tiada tarikh jangkaan siap</span>
+                              <% end %>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500 italic">
+                              Sila daftar projek terlebih dahulu untuk menetapkan tarikh jangkaan siap
+                            </p>
+                          <% end %>
                         </dd>
                       </div>
                     </dl>

@@ -101,7 +101,7 @@
                 <.link
                   href={~p"/pelan-modul/#{@project_id}/pdf"}
                   target="_blank"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                 >
                   <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
                 </.link>
@@ -258,16 +258,13 @@
                               <div class="flex-1 relative h-12 bg-gray-100 rounded border border-gray-200 overflow-hidden print:overflow-visible print:h-auto print:bg-gray-200 print:border-gray-400 print:min-h-[50px] print:flex print:items-center">
                                 <div
                                   class={[
-                                    "absolute h-full rounded transition-all duration-200 flex items-center justify-center print:relative print:static print:h-auto print:py-2 print:px-3 print:rounded-none print:border print:border-gray-600 print:min-h-[40px] print:w-full print:flex print:items-center print:justify-center",
+                                    "absolute h-full rounded transition-all duration-200 print:relative print:static print:h-auto print:py-2 print:px-3 print:rounded-none print:border print:border-gray-600 print:min-h-[40px] print:w-full",
                                     bar_color_class,
                                     if(is_current, do: "ring-2 ring-blue-300 ring-offset-1 print:ring-0")
                                   ]}
                                   style={"left: #{offset_percent}%; width: #{width_percent}%;"}
                                   title={"#{module.title} - #{Calendar.strftime(module.start_date, "%d/%m/%Y")} hingga #{Calendar.strftime(module.end_date, "%d/%m/%Y")}"}
                                 >
-                                  <span class="text-xs font-medium text-white px-2 truncate print:text-white print:font-semibold print:whitespace-normal print:text-sm print:px-3">
-                                    {module.title}
-                                  </span>
                                 </div>
                               </div>
                               

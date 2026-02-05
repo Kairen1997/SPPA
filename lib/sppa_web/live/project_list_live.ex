@@ -338,14 +338,13 @@ defmodule SppaWeb.ProjectListLive do
                 </div>
                  <%!-- Print Button --%>
                 <div class="print:hidden">
-                  <button
-                    id="print-senarai-projek-btn"
-                    phx-hook="PrintDocument"
-                    data-target="senarai-projek-document"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  <.link
+                    href={~p"/senarai-projek-diluluskan/pdf"}
+                    target="_blank"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                   >
                     <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
-                  </button>
+                  </.link>
                 </div>
               </div>
                <%!-- Filter section --%>
