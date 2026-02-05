@@ -318,72 +318,70 @@
                       </tbody>
                     </table>
                   </div>
-                  <%= if @total_pages > 1 do %>
-                    <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
-                      <p class="text-sm text-gray-600">
-                        Paparan
-                        <span class="font-medium text-gray-900">{( @page - 1 ) * @page_size + 1}</span>
-                        –
-                        <span class="font-medium text-gray-900">{min(@page * @page_size, @total_modules)}</span>
-                        daripada
-                        <span class="font-medium text-gray-900">{@total_modules}</span>
-                        modul
-                      </p>
-                      <nav class="flex items-center gap-1" aria-label="Pagination">
-                        <button
-                          phx-click="go_to_page"
-                          phx-value-page={@page - 1}
-                          disabled={@page <= 1}
-                          class={[
-                            "p-2 rounded-lg text-sm font-medium transition-all duration-200",
-                            if(@page <= 1,
-                              do: "text-gray-400 cursor-not-allowed",
-                              else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
-                            )
-                          ]}
-                          aria-label="Muka surat sebelumnya"
-                        >
-                          <.icon name="hero-chevron-left" class="w-5 h-5" />
-                        </button>
-                        <div class="flex items-center gap-1">
-                          <%= for p <- @page_numbers do %>
-                            <%= if p == :ellipsis do %>
-                              <span class="px-2 text-gray-400">…</span>
-                            <% else %>
-                              <button
-                                phx-click="go_to_page"
-                                phx-value-page={p}
-                                class={[
-                                  "min-w-[2.25rem] py-2 px-2 rounded-lg text-sm font-medium transition-all duration-200",
-                                  if(p == @page,
-                                    do: "bg-blue-600 text-white shadow-sm",
-                                    else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
-                                  )
-                                ]}
-                              >
-                                {p}
-                              </button>
-                            <% end %>
+                  <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-sm text-gray-600">
+                      Paparan
+                      <span class="font-medium text-gray-900">{( @page - 1 ) * @page_size + 1}</span>
+                      –
+                      <span class="font-medium text-gray-900">{min(@page * @page_size, @total_modules)}</span>
+                      daripada
+                      <span class="font-medium text-gray-900">{@total_modules}</span>
+                      modul
+                    </p>
+                    <nav class="flex items-center gap-1" aria-label="Pagination">
+                      <button
+                        phx-click="go_to_page"
+                        phx-value-page={@page - 1}
+                        disabled={@page <= 1}
+                        class={[
+                          "p-2 rounded-lg text-sm font-medium transition-all duration-200",
+                          if(@page <= 1,
+                            do: "text-gray-400 cursor-not-allowed",
+                            else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
+                          )
+                        ]}
+                        aria-label="Muka surat sebelumnya"
+                      >
+                        <.icon name="hero-chevron-left" class="w-5 h-5" />
+                      </button>
+                      <div class="flex items-center gap-1">
+                        <%= for p <- @page_numbers do %>
+                          <%= if p == :ellipsis do %>
+                            <span class="px-2 text-gray-400">…</span>
+                          <% else %>
+                            <button
+                              phx-click="go_to_page"
+                              phx-value-page={p}
+                              class={[
+                                "min-w-[2.25rem] py-2 px-2 rounded-lg text-sm font-medium transition-all duration-200",
+                                if(p == @page,
+                                  do: "bg-blue-600 text-white shadow-sm",
+                                  else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
+                                )
+                              ]}
+                            >
+                              {p}
+                            </button>
                           <% end %>
-                        </div>
-                        <button
-                          phx-click="go_to_page"
-                          phx-value-page={@page + 1}
-                          disabled={@page >= @total_pages}
-                          class={[
-                            "p-2 rounded-lg text-sm font-medium transition-all duration-200",
-                            if(@page >= @total_pages,
-                              do: "text-gray-400 cursor-not-allowed",
-                              else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
-                            )
-                          ]}
-                          aria-label="Muka surat seterusnya"
-                        >
-                          <.icon name="hero-chevron-right" class="w-5 h-5" />
-                        </button>
-                      </nav>
-                    </div>
-                  <% end %>
+                        <% end %>
+                      </div>
+                      <button
+                        phx-click="go_to_page"
+                        phx-value-page={@page + 1}
+                        disabled={@page >= @total_pages}
+                        class={[
+                          "p-2 rounded-lg text-sm font-medium transition-all duration-200",
+                          if(@page >= @total_pages,
+                            do: "text-gray-400 cursor-not-allowed",
+                            else: "text-gray-700 hover:bg-white hover:shadow-sm border border-gray-200"
+                          )
+                        ]}
+                        aria-label="Muka surat seterusnya"
+                      >
+                        <.icon name="hero-chevron-right" class="w-5 h-5" />
+                      </button>
+                    </nav>
+                  </div>
                 <% @view_mode == "board" -> %>
                   <%!-- Board View (Kanban Style by Status) --%>
                   <div class="p-6">

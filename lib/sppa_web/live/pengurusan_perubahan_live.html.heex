@@ -62,13 +62,6 @@
               <.icon name="hero-plus-circle" class="w-5 h-5" /> <span>Daftar Perubahan</span>
             </button>
           </div>
-           <%!-- Count --%>
-          <div class="mb-6 flex items-center justify-end">
-            <div class="flex items-center gap-2 text-gray-600">
-              <.icon name="hero-arrow-path" class="w-5 h-5" />
-              <span class="text-sm font-medium">{length(@perubahan)} Permohonan Perubahan</span>
-            </div>
-          </div>
            <%!-- Perubahan Container --%>
           <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
@@ -136,10 +129,12 @@
                   
                   <tbody class="bg-white divide-y divide-gray-200">
                     <tr
-                      :for={{perubahan, bil} <- Enum.with_index(@perubahan, 1)}
+                      :for={{perubahan, idx} <- Enum.with_index(@paginated_perubahan, 0)}
                       class="hover:bg-gray-50 transition-colors duration-150"
                     >
-                      <td class="px-3 py-2 text-center text-gray-600 font-medium">{bil}</td>
+                      <td class="px-3 py-2 text-center text-gray-600 font-medium">
+                        {@per_page * (@page - 1) + idx + 1}
+                      </td>
                       
                       <td class="px-3 py-2">
                         <div class="text-xs font-semibold text-gray-900">{perubahan.tajuk}</div>
@@ -237,7 +232,7 @@
                           <button
                             phx-click="open_edit_modal"
                             phx-value-perubahan_id={perubahan.id}
-                            class="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200"
+                            class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
                             title="Edit"
                           >
                             <.icon name="hero-pencil" class="w-4 h-4" />
@@ -247,6 +242,71 @@
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
+                <div class="text-xs text-gray-600">
+                  <%= if @perubahan_total > 0 do %>
+                    <span>
+                      Menunjukkan
+                      {@per_page * (@page - 1) + 1}
+                      -
+                      {Enum.min([@page * @per_page, @perubahan_total])}
+                      daripada
+                      {@perubahan_total}
+                      permohonan
+                    </span>
+                  <% else %>
+                    <span>Tiada permohonan untuk dipaparkan</span>
+                  <% end %>
+                </div>
+
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    phx-click="prev_page"
+                    class={[
+                      "inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium bg-white text-gray-700 hover:bg-gray-100 transition-colors duration-150",
+                      if(@page == 1, do: "opacity-60 cursor-not-allowed", else: "")
+                    ]}
+                    disabled={@page == 1}
+                  >
+                    <.icon name="hero-chevron-left" class="w-3 h-3 mr-1" /> Sebelumnya
+                  </button>
+
+                  <div class="flex items-center gap-1">
+                    <button
+                      :for={page <- 1..@total_pages}
+                      type="button"
+                      phx-click="go_to_page"
+                      phx-value-page={page}
+                      class={[
+                        "min-w-[32px] px-2 py-1.5 border text-xs font-medium rounded-md transition-colors duration-150",
+                        if(page == @page,
+                          do: "bg-blue-600 text-white border-blue-600",
+                          else: "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                        )
+                      ]}
+                    >
+                      {page}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    phx-click="next_page"
+                    class={[
+                      "inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium bg-white text-gray-700 hover:bg-gray-100 transition-colors duration-150",
+                      if(@page == @total_pages or @perubahan_total == 0,
+                        do: "opacity-60 cursor-not-allowed",
+                        else: ""
+                      )
+                    ]}
+                    disabled={@page == @total_pages or @perubahan_total == 0}
+                  >
+                    Seterusnya <.icon name="hero-chevron-right" class="w-3 h-3 ml-1" />
+                  </button>
+                </div>
               </div>
             <% end %>
           </div>
@@ -258,18 +318,20 @@
   <%= if @show_view_modal && @selected_perubahan do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_view_modal"
-      phx-click-away="close_view_modal"
       role="dialog"
       aria-modal="true"
     >
-      <%!-- Backdrop --%>
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-       <%!-- Modal container --%>
-      <div class="flex min-h-full items-center justify-center p-4">
+      <%!-- Backdrop: tutup modal hanya bila klik pada kawasan gelap --%>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity z-40"
+        aria-hidden="true"
+        phx-click="close_view_modal"
+      >
+      </div>
+       <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
+      <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
         <div
-          class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-          phx-click-away="close_view_modal"
+          class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto"
         >
           <%!-- Modal header --%>
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
@@ -300,45 +362,29 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Bilangan</label>
-                    <div class="flex items-center gap-2">
-                      <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
-                        {@selected_perubahan.number}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">
-                      ID Perubahan
-                    </label>
-                    <p class="text-sm text-gray-900 font-mono">{@selected_perubahan.id}</p>
-                  </div>
-                  
                   <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                    <label class="block text-sm font-medium text-gray-800 mb-1">
                       Tajuk Perubahan
                     </label>
                     <p class="text-sm text-gray-900 font-semibold">{@selected_perubahan.tajuk}</p>
                   </div>
                   
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Jenis</label>
+                    <label class="block text-sm font-medium text-gray-800 mb-1">Jenis</label>
                     <span class="inline-flex items-center px-3 py-1 rounded-md bg-purple-100 text-purple-700 text-sm font-medium">
                       {@selected_perubahan.jenis}
                     </span>
                   </div>
                   
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                    <label class="block text-sm font-medium text-gray-800 mb-1">
                       Modul Terlibat
                     </label>
                     <p class="text-sm text-gray-900">{@selected_perubahan.modul_terlibat}</p>
                   </div>
                   
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Status</label>
+                    <label class="block text-sm font-medium text-gray-800 mb-1">Status</label>
                     <span class={[
                       "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border",
                       case @selected_perubahan.status do
@@ -367,7 +413,7 @@
                   </div>
                   
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Keutamaan</label>
+                    <label class="block text-sm font-medium text-gray-800 mb-1">Keutamaan</label>
                     <span class={[
                       "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border",
                       case @selected_perubahan.keutamaan do
@@ -402,7 +448,7 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                    <label class="block text-sm font-medium text-gray-800 mb-1">
                       Tarikh Dibuat
                     </label>
                     <div class="flex items-center gap-2">
@@ -414,13 +460,17 @@
                   </div>
                   
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                    <label class="block text-sm font-medium text-gray-800 mb-1">
                       Tarikh Dijangka Siap
                     </label>
                     <div class="flex items-center gap-2">
                       <.icon name="hero-calendar-days" class="w-4 h-4 text-gray-400" />
                       <span class="text-sm text-gray-900">
-                        {Calendar.strftime(@selected_perubahan.tarikh_dijangka_siap, "%d/%m/%Y")}
+                        <%= if @selected_perubahan.tarikh_dijangka_siap do %>
+                          {Calendar.strftime(@selected_perubahan.tarikh_dijangka_siap, "%d/%m/%Y")}
+                        <% else %>
+                          -
+                        <% end %>
                       </span>
                     </div>
                   </div>
@@ -496,18 +546,20 @@
   <%= if @show_create_modal do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_create_modal"
-      phx-click-away="close_create_modal"
       role="dialog"
       aria-modal="true"
     >
-      <%!-- Backdrop --%>
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-       <%!-- Modal container --%>
-      <div class="flex min-h-full items-center justify-center p-4">
+      <%!-- Backdrop: tutup modal hanya bila klik pada kawasan gelap --%>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity z-40"
+        aria-hidden="true"
+        phx-click="close_create_modal"
+      >
+      </div>
+       <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
+      <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
         <div
-          class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-          phx-click-away="close_create_modal"
+          class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto"
         >
           <%!-- Modal header --%>
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
@@ -545,15 +597,15 @@
                     label="Tajuk Perubahan"
                     required
                     placeholder="Masukkan tajuk perubahan"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Jenis</label>
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Jenis</label>
                   <select
                     name="perubahan[jenis]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   >
                     <option value="">Pilih jenis</option>
                     
@@ -584,6 +636,13 @@
                     >
                       Peningkatan Keselamatan
                     </option>
+                    
+                    <option
+                      value="Modul Baharu"
+                      selected={@form[:jenis].value == "Modul Baharu"}
+                    >
+                      Modul Baharu
+                    </option>
                   </select>
                 </div>
                 
@@ -594,35 +653,79 @@
                     label="Modul Terlibat"
                     required
                     placeholder="Masukkan nama modul"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
                 
-                <div>
-                  <.input
-                    field={@form[:tarikh_dibuat]}
-                    type="date"
-                    label="Tarikh Dibuat"
-                    required
-                    class="w-full"
-                  />
+                <div class="fieldset mb-2">
+                  <label for={@form[:tarikh_dibuat].id} class="block text-sm font-medium text-gray-800 mb-1">
+                    Tarikh Dibuat
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      id={@form[:tarikh_dibuat].id}
+                      name="perubahan[tarikh_dibuat]"
+                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dibuat].value)}
+                      required
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    />
+                    <div
+                      id={"trigger-#{@form[:tarikh_dibuat].id}"}
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for={@form[:tarikh_dibuat].id}
+                      class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      aria-label="Pilih tarikh"
+                      tabindex="0"
+                    >
+                      <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <%= for msg <- @form[:tarikh_dibuat].errors do %>
+                    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
+                      <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
+                    </p>
+                  <% end %>
+                </div>
+                
+                <div class="fieldset mb-2">
+                  <label for={@form[:tarikh_dijangka_siap].id} class="block text-sm font-medium text-gray-800 mb-1">
+                    Tarikh Dijangka Siap
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      id={@form[:tarikh_dijangka_siap].id}
+                      name="perubahan[tarikh_dijangka_siap]"
+                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dijangka_siap].value)}
+                      required
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    />
+                    <div
+                      id={"trigger-#{@form[:tarikh_dijangka_siap].id}"}
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for={@form[:tarikh_dijangka_siap].id}
+                      class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      aria-label="Pilih tarikh"
+                      tabindex="0"
+                    >
+                      <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <%= for msg <- @form[:tarikh_dijangka_siap].errors do %>
+                    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
+                      <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
+                    </p>
+                  <% end %>
                 </div>
                 
                 <div>
-                  <.input
-                    field={@form[:tarikh_dijangka_siap]}
-                    type="date"
-                    label="Tarikh Dijangka Siap"
-                    required
-                    class="w-full"
-                  />
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Status</label>
                   <select
                     name="perubahan[status]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   >
                     <option
                       value="Dalam Semakan"
@@ -653,10 +756,10 @@
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Keutamaan</label>
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Keutamaan</label>
                   <select
                     name="perubahan[keutamaan]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   >
                     <option
                       value="Sangat Tinggi"
@@ -680,29 +783,29 @@
                 </div>
                 
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Justifikasi</label> <textarea
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Justifikasi</label> <textarea
                     name="perubahan[justifikasi]"
                     rows="3"
                     placeholder="Masukkan justifikasi perubahan..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   ><%= if @form[:justifikasi] && @form[:justifikasi].value, do: @form[:justifikasi].value, else: "" %></textarea>
                 </div>
                 
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Kesan</label> <textarea
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Kesan</label> <textarea
                     name="perubahan[kesan]"
                     rows="3"
                     placeholder="Masukkan kesan perubahan..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   ><%= if @form[:kesan] && @form[:kesan].value, do: @form[:kesan].value, else: "" %></textarea>
                 </div>
                 
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label> <textarea
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Catatan</label> <textarea
                     name="perubahan[catatan]"
                     rows="3"
                     placeholder="Masukkan catatan..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
                 </div>
               </div>
@@ -733,26 +836,28 @@
   <%= if @show_edit_modal && @selected_perubahan do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_edit_modal"
-      phx-click-away="close_edit_modal"
       role="dialog"
       aria-modal="true"
     >
-      <%!-- Backdrop --%>
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-       <%!-- Modal container --%>
-      <div class="flex min-h-full items-center justify-center p-4">
+      <%!-- Backdrop: tutup modal hanya bila klik pada kawasan gelap --%>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity z-40"
+        aria-hidden="true"
+        phx-click="close_edit_modal"
+      >
+      </div>
+       <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
+      <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
         <div
-          class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-          phx-click-away="close_edit_modal"
+          class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto"
         >
           <%!-- Modal header --%>
-          <div class="border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
+          <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Permohonan Perubahan</h2>
                 
-                <p class="mt-1 text-sm text-green-100">Edit maklumat permohonan perubahan</p>
+                <p class="mt-1 text-sm text-blue-100">Edit maklumat permohonan perubahan</p>
               </div>
               
               <button
@@ -775,21 +880,6 @@
               class="space-y-6"
             >
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-500 mb-1">Bilangan</label>
-                  <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
-                      {@selected_perubahan.number}
-                    </span> <span class="text-xs text-gray-500">(Tidak boleh diubah)</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-500 mb-1">ID Perubahan</label>
-                  <p class="text-sm text-gray-900 font-mono">{@selected_perubahan.id}</p>
-                   <span class="text-xs text-gray-500">(Tidak boleh diubah)</span>
-                </div>
-                
                 <div class="md:col-span-2">
                   <.input
                     field={@form[:tajuk]}
@@ -797,15 +887,15 @@
                     label="Tajuk Perubahan"
                     required
                     placeholder="Masukkan tajuk perubahan"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Jenis</label>
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Jenis</label>
                   <select
                     name="perubahan[jenis]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   >
                     <option value="">Pilih jenis</option>
                     
@@ -836,6 +926,13 @@
                     >
                       Peningkatan Keselamatan
                     </option>
+                    
+                    <option
+                      value="Modul Baharu"
+                      selected={@form[:jenis].value == "Modul Baharu"}
+                    >
+                      Modul Baharu
+                    </option>
                   </select>
                 </div>
                 
@@ -846,35 +943,79 @@
                     label="Modul Terlibat"
                     required
                     placeholder="Masukkan nama modul"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
                 
-                <div>
-                  <.input
-                    field={@form[:tarikh_dibuat]}
-                    type="date"
-                    label="Tarikh Dibuat"
-                    required
-                    class="w-full"
-                  />
+                <div class="fieldset mb-2">
+                  <label for={@form[:tarikh_dibuat].id} class="block text-sm font-medium text-gray-800 mb-1">
+                    Tarikh Dibuat
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      id={@form[:tarikh_dibuat].id}
+                      name="perubahan[tarikh_dibuat]"
+                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dibuat].value)}
+                      required
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                    />
+                    <div
+                      id={"trigger-#{@form[:tarikh_dibuat].id}"}
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for={@form[:tarikh_dibuat].id}
+                      class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      aria-label="Pilih tarikh"
+                      tabindex="0"
+                    >
+                      <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <%= for msg <- @form[:tarikh_dibuat].errors do %>
+                    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
+                      <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
+                    </p>
+                  <% end %>
+                </div>
+                
+                <div class="fieldset mb-2">
+                  <label for={@form[:tarikh_dijangka_siap].id} class="block text-sm font-medium text-gray-800 mb-1">
+                    Tarikh Dijangka Siap
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      id={@form[:tarikh_dijangka_siap].id}
+                      name="perubahan[tarikh_dijangka_siap]"
+                      value={Phoenix.HTML.Form.normalize_value("date", @form[:tarikh_dijangka_siap].value)}
+                      required
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                    />
+                    <div
+                      id={"trigger-#{@form[:tarikh_dijangka_siap].id}"}
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for={@form[:tarikh_dijangka_siap].id}
+                      class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      aria-label="Pilih tarikh"
+                      tabindex="0"
+                    >
+                      <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <%= for msg <- @form[:tarikh_dijangka_siap].errors do %>
+                    <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
+                      <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
+                    </p>
+                  <% end %>
                 </div>
                 
                 <div>
-                  <.input
-                    field={@form[:tarikh_dijangka_siap]}
-                    type="date"
-                    label="Tarikh Dijangka Siap"
-                    required
-                    class="w-full"
-                  />
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Status</label>
                   <select
                     name="perubahan[status]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   >
                     <option
                       value="Dalam Semakan"
@@ -905,10 +1046,10 @@
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Keutamaan</label>
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Keutamaan</label>
                   <select
                     name="perubahan[keutamaan]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   >
                     <option
                       value="Sangat Tinggi"
@@ -932,29 +1073,29 @@
                 </div>
                 
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Justifikasi</label> <textarea
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Justifikasi</label> <textarea
                     name="perubahan[justifikasi]"
                     rows="3"
                     placeholder="Masukkan justifikasi perubahan..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   ><%= if @form[:justifikasi] && @form[:justifikasi].value, do: @form[:justifikasi].value, else: "" %></textarea>
                 </div>
                 
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Kesan</label> <textarea
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Kesan</label> <textarea
                     name="perubahan[kesan]"
                     rows="3"
                     placeholder="Masukkan kesan perubahan..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   ><%= if @form[:kesan] && @form[:kesan].value, do: @form[:kesan].value, else: "" %></textarea>
                 </div>
                 
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label> <textarea
+                  <label class="block text-sm font-medium text-gray-800 mb-2">Catatan</label> <textarea
                     name="perubahan[catatan]"
                     rows="3"
                     placeholder="Masukkan catatan..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
                 </div>
               </div>
@@ -972,7 +1113,7 @@
             <button
               type="submit"
               form="edit-perubahan-form"
-              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
             >
               Simpan Perubahan
             </button>

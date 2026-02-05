@@ -1,20 +1,35 @@
 defmodule SppaWeb.PengurusanPerubahanLive do
   use SppaWeb, :live_view
 
+  alias Sppa.PermohonanPerubahan
   alias Sppa.Projects
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     # Verify user has required role (defense in depth - router already checks this)
     user_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      # Get change requests (perubahan)
-      perubahan = get_perubahan()
+      project_id =
+        case Map.get(params, "project_id") do
+          nil -> nil
+          id when is_binary(id) ->
+            case Integer.parse(id) do
+              {int, _rest} -> int
+              :error -> nil
+            end
+        end
+
+      perubahan = load_perubahan(project_id)
+      per_page = 5
+      total = length(perubahan)
+      total_pages = total_pages(total, per_page)
+      page = 1
+      paginated_perubahan = paginate(perubahan, page, per_page)
 
       socket =
         socket
@@ -24,7 +39,13 @@ defmodule SppaWeb.PengurusanPerubahanLive do
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/pengurusan-perubahan")
+        |> assign(:project_id, project_id)
         |> assign(:perubahan, perubahan)
+        |> assign(:paginated_perubahan, paginated_perubahan)
+        |> assign(:perubahan_total, total)
+        |> assign(:page, page)
+        |> assign(:per_page, per_page)
+        |> assign(:total_pages, total_pages)
         |> assign(:show_view_modal, false)
         |> assign(:show_edit_modal, false)
         |> assign(:show_create_modal, false)
@@ -58,73 +79,103 @@ defmodule SppaWeb.PengurusanPerubahanLive do
     end
   end
 
-  # Get change requests (perubahan)
-  # TODO: In the future, this should be retrieved from a database or context module
-  defp get_perubahan do
-    [
-      %{
-        id: "perubahan_1",
-        number: 1,
-        tajuk: "Perubahan Modul Pengurusan Pengguna",
-        jenis: "Perubahan Fungsian",
-        modul_terlibat: "Modul Pengurusan Pengguna",
-        tarikh_dibuat: ~D[2024-11-15],
-        tarikh_dijangka_siap: ~D[2024-12-15],
-        status: "Dalam Semakan",
-        keutamaan: "Tinggi",
-        justifikasi: "Perlu menambah fungsi pengesahan dua faktor untuk meningkatkan keselamatan",
-        kesan: "Akan meningkatkan keselamatan sistem tetapi memerlukan latihan pengguna",
-        catatan: "Menunggu kelulusan dari ketua bahagian"
-      },
-      %{
-        id: "perubahan_2",
-        number: 2,
-        tajuk: "Pembaikan Bug dalam Modul Permohonan",
-        jenis: "Pembaikan Bug",
-        modul_terlibat: "Modul Permohonan",
-        tarikh_dibuat: ~D[2024-11-20],
-        tarikh_dijangka_siap: ~D[2024-11-30],
-        status: "Diluluskan",
-        keutamaan: "Sangat Tinggi",
-        justifikasi: "Bug menyebabkan data permohonan tidak disimpan dengan betul",
-        kesan: "Akan membetulkan masalah kritikal yang menghalang pengguna menyimpan permohonan",
-        catatan: "Perlu diselesaikan segera"
-      },
-      %{
-        id: "perubahan_3",
-        number: 3,
-        tajuk: "Penambahbaikan Antara Muka Pengguna",
-        jenis: "Penambahbaikan",
-        modul_terlibat: "Modul Dashboard",
-        tarikh_dibuat: ~D[2024-11-25],
-        tarikh_dijangka_siap: ~D[2025-01-15],
-        status: "Ditolak",
-        keutamaan: "Rendah",
-        justifikasi: "Meningkatkan pengalaman pengguna dengan reka bentuk yang lebih moden",
-        kesan:
-          "Akan meningkatkan kepuasan pengguna tetapi memerlukan masa pembangunan yang panjang",
-        catatan: "Ditangguhkan ke fasa seterusnya"
-      },
-      %{
-        id: "perubahan_4",
-        number: 4,
-        tajuk: "Integrasi dengan Sistem Luar",
-        jenis: "Perubahan Fungsian",
-        modul_terlibat: "Modul Laporan",
-        tarikh_dibuat: ~D[2024-12-01],
-        tarikh_dijangka_siap: ~D[2025-02-28],
-        status: "Dalam Semakan",
-        keutamaan: "Sederhana",
-        justifikasi: "Perlu integrasi dengan sistem e-Sabah untuk pertukaran data",
-        kesan: "Akan memudahkan pertukaran data tetapi memerlukan koordinasi dengan pihak lain",
-        catatan: "Menunggu maklumbalas dari pihak e-Sabah"
-      }
-    ]
+  @impl true
+  def handle_params(params, _uri, socket) do
+    # Sentiasa baca project_id dari URL dan muat semula dari DB sahaja
+    project_id =
+      case Map.get(params, "project_id") do
+        nil -> nil
+        id when is_binary(id) ->
+          case Integer.parse(id) do
+            {int, _rest} -> int
+            :error -> nil
+          end
+      end
+
+    perubahan = load_perubahan(project_id)
+    per_page = socket.assigns[:per_page] || 5
+    total = length(perubahan)
+    total_pages = total_pages(total, per_page)
+    page = 1
+    paginated_perubahan = paginate(perubahan, page, per_page)
+
+    {:noreply,
+     socket
+     |> assign(:project_id, project_id)
+     |> assign(:perubahan, perubahan)
+     |> assign(:paginated_perubahan, paginated_perubahan)
+     |> assign(:perubahan_total, total)
+     |> assign(:page, page)
+     |> assign(:total_pages, total_pages)}
   end
+
+  # Hanya data dari pangkalan data – tiada data statik atau hardcoded
+  defp load_perubahan(project_id) do
+    if project_id do
+      PermohonanPerubahan.list_by_project(project_id)
+    else
+      []
+    end
+  end
+
+  defp parse_perubahan_id(perubahan_id) when is_binary(perubahan_id) do
+    case Integer.parse(perubahan_id) do
+      {int, _rest} -> int
+      :error -> nil
+    end
+  end
+
+  defp parse_perubahan_id(perubahan_id) when is_integer(perubahan_id), do: perubahan_id
+  defp parse_perubahan_id(_), do: nil
 
   @impl true
   def handle_event("toggle_sidebar", _params, socket) do
     {:noreply, update(socket, :sidebar_open, &(!&1))}
+  end
+
+  @impl true
+  def handle_event("next_page", _params, socket) do
+    %{page: page, total_pages: total_pages, per_page: per_page, perubahan: perubahan} =
+      socket.assigns
+
+    new_page = min(page + 1, total_pages)
+    paginated = paginate(perubahan, new_page, per_page)
+
+    {:noreply,
+     socket
+     |> assign(:page, new_page)
+     |> assign(:paginated_perubahan, paginated)}
+  end
+
+  @impl true
+  def handle_event("prev_page", _params, socket) do
+    %{page: page, per_page: per_page, perubahan: perubahan} = socket.assigns
+
+    new_page = max(page - 1, 1)
+    paginated = paginate(perubahan, new_page, per_page)
+
+    {:noreply,
+     socket
+     |> assign(:page, new_page)
+     |> assign(:paginated_perubahan, paginated)}
+  end
+
+  @impl true
+  def handle_event("go_to_page", %{"page" => page_param}, socket) do
+    %{total_pages: total_pages, per_page: per_page, perubahan: perubahan} = socket.assigns
+
+    new_page =
+      case Integer.parse(page_param) do
+        {int, _} when int >= 1 and int <= total_pages -> int
+        _ -> socket.assigns.page
+      end
+
+    paginated = paginate(perubahan, new_page, per_page)
+
+    {:noreply,
+     socket
+     |> assign(:page, new_page)
+     |> assign(:paginated_perubahan, paginated)}
   end
 
   @impl true
@@ -160,7 +211,8 @@ defmodule SppaWeb.PengurusanPerubahanLive do
 
   @impl true
   def handle_event("open_view_modal", %{"perubahan_id" => perubahan_id}, socket) do
-    perubahan = Enum.find(socket.assigns.perubahan, fn p -> p.id == perubahan_id end)
+    id = parse_perubahan_id(perubahan_id)
+    perubahan = id && Enum.find(socket.assigns.perubahan, fn p -> p.id == id end)
 
     if perubahan do
       {:noreply,
@@ -200,17 +252,25 @@ defmodule SppaWeb.PengurusanPerubahanLive do
 
   @impl true
   def handle_event("open_edit_modal", %{"perubahan_id" => perubahan_id}, socket) do
-    perubahan = Enum.find(socket.assigns.perubahan, fn p -> p.id == perubahan_id end)
+    id = parse_perubahan_id(perubahan_id)
+    perubahan = id && Enum.find(socket.assigns.perubahan, fn p -> p.id == id end)
 
     if perubahan do
+      tarikh_dijangka_siap_str =
+        if perubahan.tarikh_dijangka_siap do
+          Calendar.strftime(perubahan.tarikh_dijangka_siap, "%Y-%m-%d")
+        else
+          ""
+        end
+
       form_data = %{
         "tajuk" => perubahan.tajuk,
         "jenis" => perubahan.jenis,
         "modul_terlibat" => perubahan.modul_terlibat,
         "tarikh_dibuat" => Calendar.strftime(perubahan.tarikh_dibuat, "%Y-%m-%d"),
-        "tarikh_dijangka_siap" => Calendar.strftime(perubahan.tarikh_dijangka_siap, "%Y-%m-%d"),
+        "tarikh_dijangka_siap" => tarikh_dijangka_siap_str,
         "status" => perubahan.status,
-        "keutamaan" => perubahan.keutamaan,
+        "keutamaan" => perubahan.keutamaan || "",
         "justifikasi" => perubahan.justifikasi || "",
         "kesan" => perubahan.kesan || "",
         "catatan" => perubahan.catatan || ""
@@ -246,106 +306,160 @@ defmodule SppaWeb.PengurusanPerubahanLive do
 
   @impl true
   def handle_event("create_perubahan", %{"perubahan" => perubahan_params}, socket) do
-    # TODO: In the future, this should save to the database
-    new_id = "perubahan_#{length(socket.assigns.perubahan) + 1}"
-    new_number = length(socket.assigns.perubahan) + 1
+    project_id = socket.assigns.project_id
+
+    if is_nil(project_id) do
+      {:noreply,
+       socket
+       |> put_flash(:error, "Sila pilih projek terlebih dahulu (akses melalui halaman projek).")
+       |> assign(:show_create_modal, false)}
+    else
+      tarikh_dibuat =
+        if perubahan_params["tarikh_dibuat"] && perubahan_params["tarikh_dibuat"] != "" do
+          case Date.from_iso8601(perubahan_params["tarikh_dibuat"]) do
+            {:ok, date} -> date
+            _ -> Date.utc_today()
+          end
+        else
+          Date.utc_today()
+        end
+
+      tarikh_dijangka_siap =
+        if perubahan_params["tarikh_dijangka_siap"] && perubahan_params["tarikh_dijangka_siap"] != "" do
+          case Date.from_iso8601(perubahan_params["tarikh_dijangka_siap"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
+        end
+
+      attrs = %{
+        project_id: project_id,
+        tajuk: perubahan_params["tajuk"],
+        jenis: perubahan_params["jenis"],
+        modul_terlibat: perubahan_params["modul_terlibat"],
+        tarikh_dibuat: tarikh_dibuat,
+        tarikh_dijangka_siap: tarikh_dijangka_siap,
+        status: perubahan_params["status"] || "Dalam Semakan",
+        keutamaan: empty_to_nil(perubahan_params["keutamaan"]),
+        justifikasi: empty_to_nil(perubahan_params["justifikasi"]),
+        kesan: empty_to_nil(perubahan_params["kesan"]),
+        catatan: empty_to_nil(perubahan_params["catatan"])
+      }
+
+      case PermohonanPerubahan.create_permohonan_perubahan(attrs) do
+        {:ok, _perubahan} ->
+          perubahan = load_perubahan(project_id)
+          per_page = socket.assigns.per_page
+          total = length(perubahan)
+          total_pages = total_pages(total, per_page)
+          page = 1
+          paginated_perubahan = paginate(perubahan, page, per_page)
+
+          {:noreply,
+           socket
+           |> assign(:perubahan, perubahan)
+           |> assign(:paginated_perubahan, paginated_perubahan)
+           |> assign(:perubahan_total, total)
+           |> assign(:page, page)
+           |> assign(:total_pages, total_pages)
+           |> assign(:show_create_modal, false)
+           |> assign(:form, to_form(%{}, as: :perubahan))
+           |> put_flash(:info, "Permohonan perubahan berjaya didaftarkan")}
+
+        {:error, changeset} ->
+          form = to_form(changeset, as: :perubahan)
+          {:noreply,
+           socket
+           |> assign(:form, form)
+           |> put_flash(:error, "Gagal mendaftar. Sila semak maklumat.")}
+      end
+    end
+  end
+
+  @impl true
+  def handle_event("update_perubahan", %{"perubahan" => perubahan_params}, socket) do
+    selected = socket.assigns.selected_perubahan
+    project_id = socket.assigns.project_id
 
     tarikh_dibuat =
       if perubahan_params["tarikh_dibuat"] && perubahan_params["tarikh_dibuat"] != "" do
         case Date.from_iso8601(perubahan_params["tarikh_dibuat"]) do
           {:ok, date} -> date
-          _ -> Date.utc_today()
+          _ -> selected.tarikh_dibuat
         end
       else
-        Date.utc_today()
+        selected.tarikh_dibuat
       end
 
     tarikh_dijangka_siap =
-      case Date.from_iso8601(perubahan_params["tarikh_dijangka_siap"]) do
-        {:ok, date} -> date
-        _ -> Date.utc_today()
+      if perubahan_params["tarikh_dijangka_siap"] && perubahan_params["tarikh_dijangka_siap"] != "" do
+        case Date.from_iso8601(perubahan_params["tarikh_dijangka_siap"]) do
+          {:ok, date} -> date
+          _ -> selected.tarikh_dijangka_siap
+        end
+      else
+        nil
       end
 
-    new_perubahan = %{
-      id: new_id,
-      number: new_number,
+    attrs = %{
       tajuk: perubahan_params["tajuk"],
       jenis: perubahan_params["jenis"],
       modul_terlibat: perubahan_params["modul_terlibat"],
       tarikh_dibuat: tarikh_dibuat,
       tarikh_dijangka_siap: tarikh_dijangka_siap,
-      status: perubahan_params["status"] || "Dalam Semakan",
-      keutamaan: perubahan_params["keutamaan"],
-      justifikasi:
-        if(perubahan_params["justifikasi"] == "", do: nil, else: perubahan_params["justifikasi"]),
-      kesan: if(perubahan_params["kesan"] == "", do: nil, else: perubahan_params["kesan"]),
-      catatan: if(perubahan_params["catatan"] == "", do: nil, else: perubahan_params["catatan"])
+      status: perubahan_params["status"],
+      keutamaan: empty_to_nil(perubahan_params["keutamaan"]),
+      justifikasi: empty_to_nil(perubahan_params["justifikasi"]),
+      kesan: empty_to_nil(perubahan_params["kesan"]),
+      catatan: empty_to_nil(perubahan_params["catatan"])
     }
 
-    updated_perubahan = [new_perubahan | socket.assigns.perubahan]
+    case PermohonanPerubahan.update_permohonan_perubahan(selected, attrs) do
+      {:ok, _updated} ->
+        perubahan = load_perubahan(project_id)
+        per_page = socket.assigns.per_page
+        total = length(perubahan)
+        total_pages = total_pages(total, per_page)
+        page = min(socket.assigns.page, total_pages)
+        paginated_perubahan = paginate(perubahan, page, per_page)
 
-    {:noreply,
-     socket
-     |> assign(:perubahan, updated_perubahan)
-     |> assign(:show_create_modal, false)
-     |> assign(:form, to_form(%{}, as: :perubahan))
-     |> put_flash(:info, "Permohonan perubahan berjaya didaftarkan")}
+        {:noreply,
+         socket
+         |> assign(:perubahan, perubahan)
+         |> assign(:paginated_perubahan, paginated_perubahan)
+         |> assign(:perubahan_total, total)
+         |> assign(:page, page)
+         |> assign(:total_pages, total_pages)
+         |> assign(:show_edit_modal, false)
+         |> assign(:selected_perubahan, nil)
+         |> assign(:form, to_form(%{}, as: :perubahan))
+         |> put_flash(:info, "Perubahan berjaya dikemaskini")}
+
+      {:error, changeset} ->
+        form = to_form(changeset, as: :perubahan)
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, "Gagal mengemaskini. Sila semak maklumat.")}
+    end
   end
 
-  @impl true
-  def handle_event("update_perubahan", %{"perubahan" => perubahan_params}, socket) do
-    # TODO: In the future, this should update the database
-    perubahan_id = socket.assigns.selected_perubahan.id
+  defp empty_to_nil(""), do: nil
+  defp empty_to_nil(nil), do: nil
+  defp empty_to_nil(s) when is_binary(s), do: s
+  defp empty_to_nil(other), do: other
 
-    updated_perubahan =
-      Enum.map(socket.assigns.perubahan, fn perubahan ->
-        if perubahan.id == perubahan_id do
-          tarikh_dibuat =
-            if perubahan_params["tarikh_dibuat"] && perubahan_params["tarikh_dibuat"] != "" do
-              case Date.from_iso8601(perubahan_params["tarikh_dibuat"]) do
-                {:ok, date} -> date
-                _ -> perubahan.tarikh_dibuat
-              end
-            else
-              perubahan.tarikh_dibuat
-            end
+  defp paginate(perubahan, page, per_page) do
+    start_index = (page - 1) * per_page
+    Enum.slice(perubahan, start_index, per_page)
+  end
 
-          tarikh_dijangka_siap =
-            case Date.from_iso8601(perubahan_params["tarikh_dijangka_siap"]) do
-              {:ok, date} -> date
-              _ -> perubahan.tarikh_dijangka_siap
-            end
+  defp total_pages(0, _per_page), do: 1
 
-          %{
-            perubahan
-            | tajuk: perubahan_params["tajuk"],
-              jenis: perubahan_params["jenis"],
-              modul_terlibat: perubahan_params["modul_terlibat"],
-              tarikh_dibuat: tarikh_dibuat,
-              tarikh_dijangka_siap: tarikh_dijangka_siap,
-              status: perubahan_params["status"],
-              keutamaan: perubahan_params["keutamaan"],
-              justifikasi:
-                if(perubahan_params["justifikasi"] == "",
-                  do: nil,
-                  else: perubahan_params["justifikasi"]
-                ),
-              kesan:
-                if(perubahan_params["kesan"] == "", do: nil, else: perubahan_params["kesan"]),
-              catatan:
-                if(perubahan_params["catatan"] == "", do: nil, else: perubahan_params["catatan"])
-          }
-        else
-          perubahan
-        end
-      end)
-
-    {:noreply,
-     socket
-     |> assign(:perubahan, updated_perubahan)
-     |> assign(:show_edit_modal, false)
-     |> assign(:selected_perubahan, nil)
-     |> assign(:form, to_form(%{}, as: :perubahan))
-     |> put_flash(:info, "Perubahan berjaya dikemaskini")}
+  defp total_pages(total, per_page) do
+    pages = div(total, per_page)
+    if rem(total, per_page) == 0, do: pages, else: pages + 1
   end
 end

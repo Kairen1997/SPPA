@@ -1072,6 +1072,36 @@ const OpenDatePicker = {
   }
 }
 
+// DatePickerTrigger Hook - When clicked, opens the date picker for the input identified by data-trigger-date-for
+const DatePickerTrigger = {
+  mounted() {
+    this.handleClick = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const inputId = this.el.dataset.triggerDateFor
+      if (!inputId) return
+      const input = document.getElementById(inputId)
+      if (!input) return
+      if (input.type === "date" || input.type === "datetime-local") {
+        if (typeof input.showPicker === "function") {
+          input.showPicker()
+        } else {
+          input.focus()
+          input.click()
+        }
+      } else {
+        input.focus()
+      }
+    }
+    this.el.addEventListener("click", this.handleClick)
+  },
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick)
+    }
+  }
+}
+
 // Print Gantt Chart Hook - Opens PDF in hidden popup, triggers print, then closes
 const PrintGanttChart = {
   mounted() {
@@ -1124,6 +1154,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
     SingleClick,
     PreventEnterSubmit,
     OpenDatePicker,
+    DatePickerTrigger,
     PrintDocument,
     UpdateSectionCategory,
     GeneratePDF,
