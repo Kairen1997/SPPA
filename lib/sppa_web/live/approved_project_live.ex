@@ -70,57 +70,44 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
 
   defp ensure_full_url(nil), do: nil
+
   defp ensure_full_url(url) when is_binary(url) do
     url = String.trim(url)
 
-    # First, normalize any localhost references
+    # Base URL for the external System Permohonan Aplikasi
+    external_base_url = "http://10.71.67.222:4000"
+    external_host = "10.71.67.222:4000"
+
+    # Normalize localhost references to the new external host
     normalized_url =
       url
-      |> String.replace("localhost:4000", "10.71.67.159:4000")
-      |> String.replace("127.0.0.1:4000", "10.71.67.159:4000")
+      |> String.replace("localhost:4000", external_host)
+      |> String.replace("127.0.0.1:4000", external_host)
 
     cond do
-      # Already a full URL with http:// or https://
+      # Already a full URL with http:// or https:// – use as is
       String.starts_with?(normalized_url, ["http://", "https://"]) ->
         normalized_url
 
-      # If it starts with the IP address directly (without http://)
-      String.starts_with?(normalized_url, "10.71.67.159:4000") ->
+      # Starts with the bare host (e.g. "10.71.67.222:4000/uploads/...")
+      String.starts_with?(normalized_url, external_host) ->
         "http://" <> normalized_url
-
-      # If it starts with /localhost: or /127.0.0.1:, extract the path
-      String.starts_with?(normalized_url, "/localhost:") or String.starts_with?(normalized_url, "/127.0.0.1:") ->
-        # Remove /localhost:4000 or /127.0.0.1:4000 and keep the rest
-        # Pattern: /localhost:4000/uploads/... -> /uploads/...
-        path =
-          normalized_url
-          |> String.replace(~r/^\/localhost:\d+/, "")
-          |> String.replace(~r/^\/127\.0\.0\.1:\d+/, "")
-        "http://10.71.67.159:4000" <> path
-
-      # If it starts with localhost: or 127.0.0.1: (without leading slash)
-      String.starts_with?(normalized_url, "localhost:") or String.starts_with?(normalized_url, "127.0.0.1:") ->
-        # Replace localhost:4000 or 127.0.0.1:4000 with http://10.71.67.159:4000
-        normalized_url
-        |> String.replace(~r/^localhost:\d+/, "10.71.67.159:4000")
-        |> String.replace(~r/^127\.0\.0\.1:\d+/, "10.71.67.159:4000")
-        |> then(&("http://" <> &1))
-
-      # If it's a relative path starting with /
-      String.starts_with?(normalized_url, "/") ->
-        "http://10.71.67.159:4000" <> normalized_url
 
       # If it's just a number or ID, construct the file download URL
       Regex.match?(~r/^\d+$/, normalized_url) ->
-        "http://10.71.67.159:4000/api/files/#{normalized_url}"
+        "#{external_base_url}/api/files/#{normalized_url}"
+
+      # If it's a relative path starting with /
+      String.starts_with?(normalized_url, "/") ->
+        external_base_url <> normalized_url
 
       # If it looks like a file path without leading slash
       String.contains?(normalized_url, ["/", ".pdf", ".PDF"]) ->
-        "http://10.71.67.159:4000/" <> normalized_url
+        external_base_url <> "/" <> normalized_url
 
-      # Default: treat as relative path
+      # Default: treat as relative path segment
       true ->
-        "http://10.71.67.159:4000/" <> normalized_url
+        external_base_url <> "/" <> normalized_url
     end
   end
   defp ensure_full_url(_), do: nil

@@ -22,6 +22,7 @@ defmodule SppaWeb.Router do
   # scope "/api", SppaWeb do
   #   pipe_through :api
   # end
+
   # ================================
   # Internal API (System-to-System)
   # ================================
