@@ -9,6 +9,7 @@ defmodule Sppa.ProjectModules.ProjectModule do
     field :status, :string, default: "in_progress"
     field :fasa, :string
     field :versi, :string
+    field :tarikh_mula, :date
     field :due_date, :date
 
     belongs_to :project, Sppa.Projects.Project
@@ -20,7 +21,7 @@ defmodule Sppa.ProjectModules.ProjectModule do
   @doc false
   def changeset(project_module, attrs) do
     project_module
-    |> cast(attrs, [:title, :description, :priority, :status, :fasa, :versi, :due_date, :project_id, :developer_id])
+    |> cast(attrs, [:title, :description, :priority, :status, :fasa, :versi, :tarikh_mula, :due_date, :project_id, :developer_id])
     |> validate_required([:title, :project_id])
   end
 end

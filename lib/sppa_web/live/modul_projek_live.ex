@@ -28,50 +28,40 @@ defmodule SppaWeb.ModulProjekLive do
         |> assign(:form, to_form(%{}, as: :task))
         |> assign(:project_id, project_id)
 
-      if connected?(socket) do
-        # Get project details from database for this user scope
-        project =
-          try do
-            Projects.get_project!(project_id, socket.assigns.current_scope)
-          rescue
-            Ecto.NoResultsError -> nil
-          end
-
-        if project do
-          # Get all users for task assignment
-          users = Accounts.list_users()
-          developers = Enum.filter(users, fn user -> user.role == "pembangun sistem" end)
-
-          # Get tasks (modules) from database for this project and sort by phase and version
-          tasks =
-            ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
-
-          sorted_tasks = sort_tasks_by_phase_and_version(tasks)
-
-          {:ok,
-           socket
-           |> assign(:project, project)
-           |> assign(:tasks, sorted_tasks)
-           |> assign(:users, users)
-           |> assign(:developers, developers)}
-        else
-          socket =
-            socket
-            |> Phoenix.LiveView.put_flash(
-              :error,
-              "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk mengakses projek ini."
-            )
-            |> Phoenix.LiveView.redirect(to: ~p"/senarai-projek-diluluskan")
-
-          {:ok, socket}
+      # Always load project + tasks immediately so the page shows the
+      # correct data and action buttons even before the LV socket connects.
+      project =
+        try do
+          Projects.get_project!(project_id, socket.assigns.current_scope)
+        rescue
+          Ecto.NoResultsError -> nil
         end
-      else
+
+      if project do
+        users = Accounts.list_users()
+        developers = Enum.filter(users, fn user -> user.role == "pembangun sistem" end)
+
+        tasks =
+          ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
+
+        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+
         {:ok,
          socket
-         |> assign(:project, nil)
-         |> assign(:tasks, [])
-         |> assign(:users, [])
-         |> assign(:developers, [])}
+         |> assign(:project, project)
+         |> assign(:tasks, sorted_tasks)
+         |> assign(:users, users)
+         |> assign(:developers, developers)}
+      else
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(
+            :error,
+            "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk mengakses projek ini."
+          )
+          |> Phoenix.LiveView.redirect(to: ~p"/senarai-projek-diluluskan")
+
+        {:ok, socket}
       end
     else
       socket =
@@ -156,6 +146,7 @@ defmodule SppaWeb.ModulProjekLive do
         "status" => task.status || "in_progress",
         "fasa" => task.fasa || "",
         "versi" => task.versi || "",
+        "tarikh_mula" => if(task.tarikh_mula, do: Date.to_iso8601(task.tarikh_mula), else: ""),
         "due_date" => if(task.due_date, do: Date.to_iso8601(task.due_date), else: ""),
         "project_id" => Integer.to_string(socket.assigns.project_id)
       }
@@ -195,6 +186,17 @@ defmodule SppaWeb.ModulProjekLive do
         nil
       end
 
+    # Parse tarikh_mula if provided
+    tarikh_mula =
+      if task_params["tarikh_mula"] && task_params["tarikh_mula"] != "" do
+        case Date.from_iso8601(task_params["tarikh_mula"]) do
+          {:ok, date} -> date
+          _ -> nil
+        end
+      else
+        nil
+      end
+
     # Parse due_date if provided
     due_date =
       if task_params["due_date"] && task_params["due_date"] != "" do
@@ -206,21 +208,41 @@ defmodule SppaWeb.ModulProjekLive do
         nil
       end
 
+    project_start = project_start_date(socket.assigns.project)
     project_end = project_end_date(socket.assigns.project)
 
-    attrs = %{
-      "title" => task_params["title"] || "",
-      "description" => task_params["description"] || "",
-      "developer_id" => developer_id,
-      "priority" => task_params["priority"] || "medium",
-      "status" => task_params["status"] || "in_progress",
-      "fasa" => task_params["fasa"] || "",
-      "versi" => task_params["versi"] || "",
-      "due_date" => due_date,
-      "project_id" => socket.assigns.project_id
-    }
+    # Validate tarikh_mula
+    validation_error =
+      cond do
+        tarikh_mula && project_start && Date.compare(tarikh_mula, project_start) == :lt ->
+          "Tarikh mula tidak boleh sebelum tarikh mula projek (#{Date.to_iso8601(project_start)})."
 
-    case ProjectModules.create_module(attrs) do
+        tarikh_mula && due_date && Date.compare(tarikh_mula, due_date) == :gt ->
+          "Tarikh mula tidak boleh selepas tarikh akhir."
+
+        true ->
+          nil
+      end
+
+    if validation_error do
+      {:noreply,
+       socket
+       |> put_flash(:error, validation_error)}
+    else
+      attrs = %{
+        "title" => task_params["title"] || "",
+        "description" => task_params["description"] || "",
+        "developer_id" => developer_id,
+        "priority" => task_params["priority"] || "medium",
+        "status" => task_params["status"] || "in_progress",
+        "fasa" => task_params["fasa"] || "",
+        "versi" => task_params["versi"] || "",
+        "tarikh_mula" => tarikh_mula,
+        "due_date" => due_date,
+        "project_id" => socket.assigns.project_id
+      }
+
+      case ProjectModules.create_module(attrs) do
       {:ok, _module} ->
         tasks =
           ProjectModules.list_modules_for_project(socket.assigns.current_scope, socket.assigns.project_id)
@@ -251,6 +273,7 @@ defmodule SppaWeb.ModulProjekLive do
         {:noreply,
          socket
          |> put_flash(:error, "Gagal menyimpan modul. Sila cuba lagi.")}
+      end
     end
   end
 
@@ -266,6 +289,17 @@ defmodule SppaWeb.ModulProjekLive do
         nil
       end
 
+    # Parse tarikh_mula if provided
+    tarikh_mula =
+      if task_params["tarikh_mula"] && task_params["tarikh_mula"] != "" do
+        case Date.from_iso8601(task_params["tarikh_mula"]) do
+          {:ok, date} -> date
+          _ -> nil
+        end
+      else
+        nil
+      end
+
     # Parse due_date if provided
     due_date =
       if task_params["due_date"] && task_params["due_date"] != "" do
@@ -277,20 +311,40 @@ defmodule SppaWeb.ModulProjekLive do
         nil
       end
 
+    project_start = project_start_date(socket.assigns.project)
     project_end = project_end_date(socket.assigns.project)
 
-    attrs = %{
-      "title" => task_params["title"] || socket.assigns.selected_task.title,
-      "description" => task_params["description"] || socket.assigns.selected_task.description,
-      "developer_id" => developer_id,
-      "priority" => task_params["priority"] || socket.assigns.selected_task.priority,
-      "status" => task_params["status"] || socket.assigns.selected_task.status,
-      "fasa" => task_params["fasa"] || socket.assigns.selected_task.fasa,
-      "versi" => task_params["versi"] || socket.assigns.selected_task.versi,
-      "due_date" => due_date
-    }
+    # Validate tarikh_mula
+    validation_error =
+      cond do
+        tarikh_mula && project_start && Date.compare(tarikh_mula, project_start) == :lt ->
+          "Tarikh mula tidak boleh sebelum tarikh mula projek (#{Date.to_iso8601(project_start)})."
 
-    case ProjectModules.get_module!(task_id) |> ProjectModules.update_module(attrs) do
+        tarikh_mula && due_date && Date.compare(tarikh_mula, due_date) == :gt ->
+          "Tarikh mula tidak boleh selepas tarikh akhir."
+
+        true ->
+          nil
+      end
+
+    if validation_error do
+      {:noreply,
+       socket
+       |> put_flash(:error, validation_error)}
+    else
+      attrs = %{
+        "title" => task_params["title"] || socket.assigns.selected_task.title,
+        "description" => task_params["description"] || socket.assigns.selected_task.description,
+        "developer_id" => developer_id,
+        "priority" => task_params["priority"] || socket.assigns.selected_task.priority,
+        "status" => task_params["status"] || socket.assigns.selected_task.status,
+        "fasa" => task_params["fasa"] || socket.assigns.selected_task.fasa,
+        "versi" => task_params["versi"] || socket.assigns.selected_task.versi,
+        "tarikh_mula" => tarikh_mula,
+        "due_date" => due_date
+      }
+
+      case ProjectModules.get_module!(task_id) |> ProjectModules.update_module(attrs) do
       {:ok, _module} ->
         tasks =
           ProjectModules.list_modules_for_project(socket.assigns.current_scope, socket.assigns.project_id)
@@ -322,6 +376,7 @@ defmodule SppaWeb.ModulProjekLive do
         {:noreply,
          socket
          |> put_flash(:error, "Gagal mengemaskini tugasan. Sila cuba lagi.")}
+      end
     end
   end
 
@@ -427,6 +482,23 @@ defmodule SppaWeb.ModulProjekLive do
   def status_label("done"), do: "Selesai"
   def status_label(_), do: "Dalam Proses"
 
+  # Derive the project's planned start date, used for validation
+  defp project_start_date(project) do
+    cond do
+      project.tarikh_mula ->
+        project.tarikh_mula
+
+      Map.has_key?(project, :approved_project) &&
+          project.approved_project &&
+          Map.has_key?(project.approved_project, :tarikh_mula) &&
+          project.approved_project.tarikh_mula ->
+        project.approved_project.tarikh_mula
+
+      true ->
+        nil
+    end
+  end
+
   # Derive the project's planned end date, used for validation and Gantt warnings
   defp project_end_date(project) do
     cond do
@@ -442,5 +514,24 @@ defmodule SppaWeb.ModulProjekLive do
       true ->
         nil
     end
+  end
+
+  # Helper functions for template access (public)
+  def tarikh_mula_min_date(project) do
+    project_start = project_start_date(project)
+    if project_start, do: Date.to_iso8601(project_start), else: nil
+  end
+
+  def tarikh_mula_max_date(due_date) do
+    if due_date, do: Date.to_iso8601(due_date), else: nil
+  end
+
+  def tarikh_akhir_min_date(tarikh_mula) do
+    if tarikh_mula, do: Date.to_iso8601(tarikh_mula), else: nil
+  end
+
+  def tarikh_akhir_max_date(project) do
+    project_end = project_end_date(project)
+    if project_end, do: Date.to_iso8601(project_end), else: nil
   end
 end

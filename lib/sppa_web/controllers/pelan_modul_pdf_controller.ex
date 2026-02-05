@@ -74,7 +74,7 @@ defmodule SppaWeb.PelanModulPdfController do
       # Normalise modules with derived start/end dates
       enriched_modules =
         Enum.map(modules, fn m ->
-          start_date = project_start
+          start_date = m.tarikh_mula || project_start
           end_date = m.due_date || project_end || project_start
 
           Map.merge(
@@ -103,8 +103,12 @@ defmodule SppaWeb.PelanModulPdfController do
       Date.utc_today()
     else
       modules
-      |> Enum.map(& &1.due_date)
-      |> Enum.filter(& &1)
+      |> Enum.flat_map(fn m ->
+        dates = []
+        dates = if m.tarikh_mula, do: [m.tarikh_mula | dates], else: dates
+        dates = if m.due_date, do: [m.due_date | dates], else: dates
+        dates
+      end)
       |> case do
         [] -> Date.utc_today()
         dates -> Enum.min(dates)

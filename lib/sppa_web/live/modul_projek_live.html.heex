@@ -265,15 +265,18 @@
                     <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
                       Ditugaskan kepada
                     </th>
+                    <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                      Tarikh Mula
+                    </th>
                     <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider">
-                      Sasaran
+                      Tarikh Akhir
                     </th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 print-table-body">
                   <%= if Enum.empty?(@tasks) do %>
                     <tr class="print-table-row">
-                      <td colspan="7" class="px-6 py-10 text-center">
+                      <td colspan="8" class="px-6 py-10 text-center">
                         <div class="flex flex-col items-center justify-center space-y-3">
                           <.icon name="hero-clipboard-document" class="w-12 h-12 text-gray-300" />
                           <p class="text-sm font-medium text-gray-500">
@@ -372,6 +375,21 @@
                             >
                               <.icon name="hero-chevron-down" class="w-4 h-4" />
                             </button>
+                          </div>
+                        </td>
+                        
+                        <td class="px-6 py-4 border-r border-gray-200">
+                          <div class="flex items-center gap-2">
+                            <%= if task.tarikh_mula do %>
+                              <div class="flex items-center gap-2">
+                                <.icon name="hero-calendar" class="w-4 h-4 text-gray-400" />
+                                <span class="text-sm font-medium text-gray-700">
+                                  {Calendar.strftime(task.tarikh_mula, "%d/%m/%Y")}
+                                </span>
+                              </div>
+                            <% else %>
+                              <span class="text-sm text-gray-400 italic">Tiada tarikh</span>
+                            <% end %>
                           </div>
                         </td>
                         
@@ -535,30 +553,67 @@
                 />
               </div>
             </div>
-             <%!-- Due Date and Status --%>
+             <%!-- Start Date and Due Date --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <%!-- Due Date --%>
+              <%!-- Start Date --%>
               <div>
+                <% 
+                  min_date = tarikh_mula_min_date(@project)
+                  due_date_value = if @form[:due_date] && @form[:due_date].value && @form[:due_date].value != "", do: @form[:due_date].value, else: nil
+                  max_date = if due_date_value do
+                    case Date.from_iso8601(due_date_value) do
+                      {:ok, date} -> tarikh_mula_max_date(date)
+                      _ -> nil
+                    end
+                  else
+                    nil
+                  end
+                %>
+                <.input
+                  field={@form[:tarikh_mula]}
+                  type="date"
+                  label="Tarikh Mula"
+                  class="w-full"
+                  min={min_date}
+                  max={max_date}
+                />
+              </div>
+               <%!-- Due Date --%>
+              <div>
+                <% 
+                  tarikh_mula_value = if @form[:tarikh_mula] && @form[:tarikh_mula].value && @form[:tarikh_mula].value != "", do: @form[:tarikh_mula].value, else: nil
+                  min_date_due = if tarikh_mula_value do
+                    case Date.from_iso8601(tarikh_mula_value) do
+                      {:ok, date} -> tarikh_akhir_min_date(date)
+                      _ -> tarikh_akhir_min_date(nil)
+                    end
+                  else
+                    tarikh_akhir_min_date(nil)
+                  end
+                  max_date_due = tarikh_akhir_max_date(@project)
+                %>
                 <.input
                   field={@form[:due_date]}
                   type="date"
                   label="Tarikh Akhir"
                   class="w-full"
+                  min={min_date_due}
+                  max={max_date_due}
                 />
               </div>
-               <%!-- Status --%>
-              <div>
-                <.input
-                  field={@form[:status]}
-                  type="select"
-                  label="Status"
-                  options={[
-                    {"Dalam Proses", "in_progress"},
-                    {"Selesai", "done"}
-                  ]}
-                  class="w-full"
-                />
-              </div>
+            </div>
+             <%!-- Status --%>
+            <div>
+              <.input
+                field={@form[:status]}
+                type="select"
+                label="Status"
+                options={[
+                  {"Dalam Proses", "in_progress"},
+                  {"Selesai", "done"}
+                ]}
+                class="w-full"
+              />
             </div>
              <%!-- Form Actions --%>
             <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
@@ -707,30 +762,67 @@
                 />
               </div>
             </div>
-             <%!-- Due Date and Status --%>
+             <%!-- Start Date and Due Date --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <%!-- Due Date --%>
+              <%!-- Start Date --%>
               <div>
+                <% 
+                  min_date = tarikh_mula_min_date(@project)
+                  due_date_value = if @form[:due_date] && @form[:due_date].value && @form[:due_date].value != "", do: @form[:due_date].value, else: nil
+                  max_date = if due_date_value do
+                    case Date.from_iso8601(due_date_value) do
+                      {:ok, date} -> tarikh_mula_max_date(date)
+                      _ -> nil
+                    end
+                  else
+                    nil
+                  end
+                %>
+                <.input
+                  field={@form[:tarikh_mula]}
+                  type="date"
+                  label="Tarikh Mula"
+                  class="w-full"
+                  min={min_date}
+                  max={max_date}
+                />
+              </div>
+               <%!-- Due Date --%>
+              <div>
+                <% 
+                  tarikh_mula_value = if @form[:tarikh_mula] && @form[:tarikh_mula].value && @form[:tarikh_mula].value != "", do: @form[:tarikh_mula].value, else: nil
+                  min_date_due = if tarikh_mula_value do
+                    case Date.from_iso8601(tarikh_mula_value) do
+                      {:ok, date} -> tarikh_akhir_min_date(date)
+                      _ -> tarikh_akhir_min_date(nil)
+                    end
+                  else
+                    tarikh_akhir_min_date(nil)
+                  end
+                  max_date_due = tarikh_akhir_max_date(@project)
+                %>
                 <.input
                   field={@form[:due_date]}
                   type="date"
                   label="Tarikh Akhir"
                   class="w-full"
+                  min={min_date_due}
+                  max={max_date_due}
                 />
               </div>
-               <%!-- Status --%>
-              <div>
-                <.input
-                  field={@form[:status]}
-                  type="select"
-                  label="Status"
-                  options={[
-                    {"Dalam Proses", "in_progress"},
-                    {"Selesai", "done"}
-                  ]}
-                  class="w-full"
-                />
-              </div>
+            </div>
+             <%!-- Status --%>
+            <div>
+              <.input
+                field={@form[:status]}
+                type="select"
+                label="Status"
+                options={[
+                  {"Dalam Proses", "in_progress"},
+                  {"Selesai", "done"}
+                ]}
+                class="w-full"
+              />
             </div>
              <%!-- Form Actions --%>
             <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">

@@ -11,46 +11,60 @@
       box-sizing: border-box;
     }
     
+    html, body {
+      background: #ffffff !important;
+      background-image: none !important;
+      background-color: #ffffff !important;
+    }
+    
     body {
-      font-family: 'Times New Roman', serif;
-      background: white;
-      color: #000;
-      padding: 8mm;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      background: #ffffff !important;
+      background-image: none !important;
+      color: #000000;
+      padding: 10mm;
       font-size: 10pt;
-      line-height: 1.3;
+      line-height: 1.4;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     
     /* Document Header */
     .document-header {
-      border-bottom: 2px solid #000;
-      padding-bottom: 5px;
-      margin-bottom: 8px;
+      border-bottom: 3px solid #1e40af;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      background: #ffffff;
     }
     
     .document-header .agency {
       text-align: center;
-      font-size: 12pt;
+      font-size: 13pt;
       font-weight: bold;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+      color: #1e3a8a;
     }
     
     .document-header .title {
       text-align: center;
-      font-size: 14pt;
+      font-size: 16pt;
       font-weight: bold;
-      margin-top: 5px;
+      margin-top: 6px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
+      color: #000000;
     }
     
     /* Project Information Section */
     .project-section {
-      border: 1px solid #000;
-      padding: 6px;
-      margin-bottom: 8px;
-      background: #f9f9f9;
+      border: 2px solid #1e40af;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 12px;
+      background: #f8fafc;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
     .project-section table {
@@ -59,46 +73,51 @@
     }
     
     .project-section table td {
-      padding: 3px 8px;
-      font-size: 9pt;
+      padding: 6px 10px;
+      font-size: 10pt;
       vertical-align: top;
     }
     
     .project-section table td:first-child {
       font-weight: bold;
-      width: 25%;
-      border-right: 1px solid #ccc;
+      width: 30%;
+      border-right: 1px solid #cbd5e1;
+      color: #1e40af;
     }
     
     .project-section table td:last-child {
-      width: 75%;
+      width: 70%;
+      color: #000000;
     }
     
     /* Table Section */
     .table-section {
-      margin-top: 8px;
+      margin-top: 12px;
     }
     
     table {
       width: 100%;
       border-collapse: collapse;
-      border: 1px solid #000;
+      border: 2px solid #1e40af;
       font-size: 9pt;
+      background: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     thead {
-      background: #333;
-      color: #fff;
+      background: #1e40af;
+      color: #ffffff;
     }
     
     thead th {
-      padding: 5px 6px;
+      padding: 8px 10px;
       text-align: left;
       font-weight: bold;
-      font-size: 8pt;
+      font-size: 9pt;
       text-transform: uppercase;
-      border-right: 1px solid #000;
-      border-bottom: 2px solid #000;
+      border-right: 1px solid #1e3a8a;
+      border-bottom: 2px solid #1e3a8a;
+      letter-spacing: 0.5px;
     }
     
     thead th.text-center {
@@ -110,18 +129,24 @@
     }
     
     tbody tr {
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid #e2e8f0;
+      transition: background-color 0.1s;
     }
     
     tbody tr:nth-child(even) {
-      background: #f9f9f9;
+      background: #f8fafc;
+    }
+    
+    tbody tr:hover {
+      background: #e0e7ff;
     }
     
     tbody td {
-      padding: 4px 6px;
-      font-size: 8pt;
-      border-right: 1px solid #ccc;
+      padding: 8px 10px;
+      font-size: 9pt;
+      border-right: 1px solid #e2e8f0;
       vertical-align: middle;
+      color: #000000;
     }
     
     tbody td.text-center {
@@ -134,17 +159,19 @@
     
     .badge {
       display: inline-block;
-      padding: 3px 8px;
-      border-radius: 3px;
-      font-size: 7pt;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 8pt;
       font-weight: 600;
       border: 1px solid;
+      text-align: center;
+      min-width: 60px;
     }
     
     .badge-gray {
-      background-color: #f3f4f6;
-      color: #374151;
-      border-color: #d1d5db;
+      background-color: #f1f5f9;
+      color: #475569;
+      border-color: #cbd5e1;
     }
     
     .badge-blue {
@@ -179,26 +206,53 @@
     
     /* Footer */
     .document-footer {
-      margin-top: 12px;
-      padding-top: 6px;
-      border-top: 1px solid #000;
-      font-size: 8pt;
+      margin-top: 16px;
+      padding-top: 10px;
+      border-top: 2px solid #1e40af;
+      font-size: 9pt;
       text-align: center;
-      color: #666;
+      color: #475569;
+      background: #ffffff;
     }
     
     .document-footer .generated-date {
-      margin-top: 3px;
+      margin-top: 4px;
+      font-weight: 500;
+      color: #64748b;
     }
     
     @media print {
       @page {
         size: A4 landscape;
-        margin: 8mm;
+        margin: 10mm;
+      }
+      
+      html, body {
+        background: #ffffff !important;
+        background-image: none !important;
+        background-color: #ffffff !important;
       }
       
       body {
         padding: 0;
+        background: #ffffff !important;
+        background-image: none !important;
+      }
+      
+      .document-header,
+      .project-section,
+      .table-section,
+      .document-footer {
+        background: #ffffff !important;
+        background-image: none !important;
+      }
+      
+      tbody tr {
+        page-break-inside: avoid;
+      }
+      
+      thead {
+        display: table-header-group;
       }
       
       tbody tr {
@@ -207,7 +261,7 @@
     }
   </style>
 </head>
-<body onload="window.print()">
+<body style="background: #ffffff !important; background-image: none !important;">
   <!-- Document Header -->
   <div class="document-header">
     <div class="agency">SISTEM PENGURUSAN PROJEK APLIKASI</div>
@@ -265,8 +319,8 @@
       <tbody>
         <%= if Enum.empty?(@tasks) do %>
           <tr>
-            <td colspan="7" style="text-align: center; padding: 20px;">
-              Tiada tugasan pada masa ini
+            <td colspan="7" style="text-align: center; padding: 30px; color: #64748b;">
+              <strong>Tiada tugasan pada masa ini</strong>
             </td>
           </tr>
         <% else %>
@@ -316,14 +370,14 @@
                     <%= task.developer.no_kp || "-" %>
                   <% end %>
                 <% else %>
-                  -
+                  <span style="color: #94a3b8;">-</span>
                 <% end %>
               </td>
               <td>
                 <%= if task.due_date do %>
-                  <%= Calendar.strftime(task.due_date, "%d/%m/%Y") %>
+                  <strong><%= Calendar.strftime(task.due_date, "%d/%m/%Y") %></strong>
                 <% else %>
-                  -
+                  <span style="color: #94a3b8;">-</span>
                 <% end %>
               </td>
             </tr>
@@ -340,10 +394,23 @@
   </div>
   
   <script>
+    // Ensure no background images are applied
+    document.documentElement.style.background = '#ffffff';
+    document.documentElement.style.backgroundImage = 'none';
+    document.body.style.background = '#ffffff';
+    document.body.style.backgroundImage = 'none';
+    
     window.onload = function() {
-      window.print();
+      // Double-check background is white before printing
+      document.documentElement.style.background = '#ffffff';
+      document.documentElement.style.backgroundImage = 'none';
+      document.body.style.background = '#ffffff';
+      document.body.style.backgroundImage = 'none';
+      
+      setTimeout(function() {
+        window.print();
+      }, 100);
     };
   </script>
 </body>
 </html>
-

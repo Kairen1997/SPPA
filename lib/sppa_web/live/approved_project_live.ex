@@ -21,19 +21,18 @@ defmodule SppaWeb.ApprovedProjectLive do
         |> assign(:notifications_count, 0)
         |> assign(:activities, [])
 
-      if connected?(socket) do
-        with {approved_id, _} <- Integer.parse(id),
-             approved_project when not is_nil(approved_project) <-
-               ApprovedProjects.get_approved_project!(approved_id) do
-          # Get all developers for the dropdown
+      case Integer.parse(id) do
+        {approved_id, _} ->
+          # Load the approved project and all supporting data immediately,
+          # so the page renders full information even before the LV socket connects.
+          approved_project = ApprovedProjects.get_approved_project!(approved_id)
+
           all_users = Accounts.list_users()
           all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
 
-          # Parse pembangun_sistem from string (comma-separated) to list of names
           stored_names = parse_pembangun_sistem(approved_project.pembangun_sistem)
           selected_developers = stored_names
 
-          # Get available developers (not already selected)
           available_developers =
             all_developers
             |> Enum.filter(fn dev -> dev.no_kp not in selected_developers end)
@@ -45,20 +44,12 @@ defmodule SppaWeb.ApprovedProjectLive do
            |> assign(:available_developers, available_developers)
            |> assign(:selected_developers, selected_developers)
            |> assign(:form_pembangun, to_form(%{"pembangun_sistem" => selected_developers}, as: :project))}
-        else
-          _ ->
-            {:ok,
-             socket
-             |> put_flash(:error, "Projek diluluskan tidak ditemui.")
-             |> push_navigate(to: ~p"/senarai-projek-diluluskan")}
-        end
-      else
-        {:ok,
-         socket
-         |> assign(:approved_project, nil)
-         |> assign(:developers, [])
-         |> assign(:available_developers, [])
-         |> assign(:selected_developers, [])}
+
+        :error ->
+          {:ok,
+           socket
+           |> put_flash(:error, "ID projek diluluskan tidak sah.")
+           |> push_navigate(to: ~p"/senarai-projek-diluluskan")}
       end
     else
       {:ok,
@@ -79,57 +70,44 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
 
   defp ensure_full_url(nil), do: nil
+
   defp ensure_full_url(url) when is_binary(url) do
     url = String.trim(url)
 
-    # First, normalize any localhost references
+    # Base URL for the external System Permohonan Aplikasi
+    external_base_url = "http://10.71.67.222:4000"
+    external_host = "10.71.67.222:4000"
+
+    # Normalize localhost references to the new external host
     normalized_url =
       url
-      |> String.replace("localhost:4000", "10.71.67.159:4000")
-      |> String.replace("127.0.0.1:4000", "10.71.67.159:4000")
+      |> String.replace("localhost:4000", external_host)
+      |> String.replace("127.0.0.1:4000", external_host)
 
     cond do
-      # Already a full URL with http:// or https://
+      # Already a full URL with http:// or https:// – use as is
       String.starts_with?(normalized_url, ["http://", "https://"]) ->
         normalized_url
 
-      # If it starts with the IP address directly (without http://)
-      String.starts_with?(normalized_url, "10.71.67.159:4000") ->
+      # Starts with the bare host (e.g. "10.71.67.222:4000/uploads/...")
+      String.starts_with?(normalized_url, external_host) ->
         "http://" <> normalized_url
-
-      # If it starts with /localhost: or /127.0.0.1:, extract the path
-      String.starts_with?(normalized_url, "/localhost:") or String.starts_with?(normalized_url, "/127.0.0.1:") ->
-        # Remove /localhost:4000 or /127.0.0.1:4000 and keep the rest
-        # Pattern: /localhost:4000/uploads/... -> /uploads/...
-        path =
-          normalized_url
-          |> String.replace(~r/^\/localhost:\d+/, "")
-          |> String.replace(~r/^\/127\.0\.0\.1:\d+/, "")
-        "http://10.71.67.159:4000" <> path
-
-      # If it starts with localhost: or 127.0.0.1: (without leading slash)
-      String.starts_with?(normalized_url, "localhost:") or String.starts_with?(normalized_url, "127.0.0.1:") ->
-        # Replace localhost:4000 or 127.0.0.1:4000 with http://10.71.67.159:4000
-        normalized_url
-        |> String.replace(~r/^localhost:\d+/, "10.71.67.159:4000")
-        |> String.replace(~r/^127\.0\.0\.1:\d+/, "10.71.67.159:4000")
-        |> then(&("http://" <> &1))
-
-      # If it's a relative path starting with /
-      String.starts_with?(normalized_url, "/") ->
-        "http://10.71.67.159:4000" <> normalized_url
 
       # If it's just a number or ID, construct the file download URL
       Regex.match?(~r/^\d+$/, normalized_url) ->
-        "http://10.71.67.159:4000/api/files/#{normalized_url}"
+        "#{external_base_url}/api/files/#{normalized_url}"
+
+      # If it's a relative path starting with /
+      String.starts_with?(normalized_url, "/") ->
+        external_base_url <> normalized_url
 
       # If it looks like a file path without leading slash
       String.contains?(normalized_url, ["/", ".pdf", ".PDF"]) ->
-        "http://10.71.67.159:4000/" <> normalized_url
+        external_base_url <> "/" <> normalized_url
 
-      # Default: treat as relative path
+      # Default: treat as relative path segment
       true ->
-        "http://10.71.67.159:4000/" <> normalized_url
+        external_base_url <> "/" <> normalized_url
     end
   end
   defp ensure_full_url(_), do: nil
@@ -260,55 +238,38 @@ defmodule SppaWeb.ApprovedProjectLive do
     end
   end
 
-  @impl true
-  def handle_event("update_tarikh_mula", %{"tarikh_mula" => date_str}, socket) do
-    date_value =
-      if date_str == "" or date_str == nil do
-        nil
-      else
-        case Date.from_iso8601(date_str) do
-          {:ok, date} -> date
-          {:error, _} -> nil
-        end
-      end
-
-    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-      "tarikh_mula" => date_value
-    }) do
-      {:ok, updated_project} ->
-        {:noreply,
-         socket
-         |> assign(:approved_project, updated_project)
-         |> put_flash(:info, "Tarikh mula telah dikemaskini.")}
-
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh mula.")}
-    end
-  end
+  # Note: update_tarikh_mula handler removed - tarikh_mula is read-only and comes from external link
 
   @impl true
   def handle_event("update_tarikh_jangkaan_siap", %{"tarikh_jangkaan_siap" => date_str}, socket) do
-    date_value =
-      if date_str == "" or date_str == nil do
-        nil
-      else
-        case Date.from_iso8601(date_str) do
-          {:ok, date} -> date
-          {:error, _} -> nil
+    # Only allow update if project has been registered (daftar projek)
+    if socket.assigns.approved_project.project do
+      date_value =
+        if date_str == "" or date_str == nil do
+          nil
+        else
+          case Date.from_iso8601(date_str) do
+            {:ok, date} -> date
+            {:error, _} -> nil
+          end
         end
+
+      case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+        "tarikh_jangkaan_siap" => date_value
+      }) do
+        {:ok, updated_project} ->
+          {:noreply,
+           socket
+           |> assign(:approved_project, updated_project)
+           |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
+
+        {:error, _changeset} ->
+          {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
       end
-
-    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-      "tarikh_jangkaan_siap" => date_value
-    }) do
-      {:ok, updated_project} ->
-        {:noreply,
-         socket
-         |> assign(:approved_project, updated_project)
-         |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
-
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
+    else
+      {:noreply,
+       socket
+       |> put_flash(:error, "Sila daftar projek terlebih dahulu sebelum menetapkan tarikh jangkaan siap.")}
     end
   end
 
@@ -625,18 +586,16 @@ defmodule SppaWeb.ApprovedProjectLive do
                           Tarikh Mula
                         </dt>
                         <dd>
-                          <.form
-                            for={%{}}
-                            phx-change="update_tarikh_mula"
-                            id="tarikh-mula-form"
-                          >
-                            <input
-                              type="date"
-                              name="tarikh_mula"
-                              value={if @approved_project.tarikh_mula, do: Date.to_iso8601(@approved_project.tarikh_mula), else: ""}
-                              class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
-                            />
-                          </.form>
+                          <div class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                            <%= if @approved_project.tarikh_mula do %>
+                              {format_date(@approved_project.tarikh_mula)}
+                            <% else %>
+                              <span class="text-gray-400 italic">Tiada tarikh mula</span>
+                            <% end %>
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 italic">
+                            Tarikh mula ditetapkan dari sistem luaran dan tidak boleh diubah
+                          </p>
                         </dd>
                       </div>
                       <div>
@@ -644,18 +603,33 @@ defmodule SppaWeb.ApprovedProjectLive do
                           Tarikh Jangkaan Siap
                         </dt>
                         <dd>
-                          <.form
-                            for={%{}}
-                            phx-change="update_tarikh_jangkaan_siap"
-                            id="tarikh-jangkaan-siap-form"
-                          >
-                            <input
-                              type="date"
-                              name="tarikh_jangkaan_siap"
-                              value={if @approved_project.tarikh_jangkaan_siap, do: Date.to_iso8601(@approved_project.tarikh_jangkaan_siap), else: ""}
-                              class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
-                            />
-                          </.form>
+                          <%= if @approved_project.project do %>
+                            <%!-- Editable if project has been registered --%>
+                            <.form
+                              for={%{}}
+                              phx-change="update_tarikh_jangkaan_siap"
+                              id="tarikh-jangkaan-siap-form"
+                            >
+                              <input
+                                type="date"
+                                name="tarikh_jangkaan_siap"
+                                value={if @approved_project.tarikh_jangkaan_siap, do: Date.to_iso8601(@approved_project.tarikh_jangkaan_siap), else: ""}
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
+                              />
+                            </.form>
+                          <% else %>
+                            <%!-- Read-only if project has not been registered --%>
+                            <div class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                              <%= if @approved_project.tarikh_jangkaan_siap do %>
+                                {format_date(@approved_project.tarikh_jangkaan_siap)}
+                              <% else %>
+                                <span class="text-gray-400 italic">Tiada tarikh jangkaan siap</span>
+                              <% end %>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500 italic">
+                              Sila daftar projek terlebih dahulu untuk menetapkan tarikh jangkaan siap
+                            </p>
+                          <% end %>
                         </dd>
                       </div>
                     </dl>

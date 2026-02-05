@@ -22,42 +22,34 @@ defmodule SppaWeb.PelanModulLive do
         |> assign(:notifications_open, false)
         |> assign(:project_id, project_id)
 
-      if connected?(socket) do
-        # Get project details from database for this user scope
-        project =
-          try do
-            Projects.get_project!(project_id, socket.assigns.current_scope)
-          rescue
-            Ecto.NoResultsError -> nil
-          end
-
-        if project do
-          # Get modules for this specific project from database
-          modules = ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
-          gantt_data = build_gantt_data_for_project(project, modules)
-
-          {:ok,
-           socket
-           |> assign(:project, project)
-           |> assign(:modules, modules)
-           |> assign(:gantt_data, gantt_data)}
-        else
-          socket =
-            socket
-            |> Phoenix.LiveView.put_flash(
-              :error,
-              "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk mengakses projek ini."
-            )
-            |> Phoenix.LiveView.redirect(to: ~p"/senarai-projek-diluluskan")
-
-          {:ok, socket}
+      # Always load project + modules immediately so the Gantt chart can be
+      # built from the current tasks even before the LV socket connects.
+      project =
+        try do
+          Projects.get_project!(project_id, socket.assigns.current_scope)
+        rescue
+          Ecto.NoResultsError -> nil
         end
-      else
+
+      if project do
+        modules = ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
+        gantt_data = build_gantt_data_for_project(project, modules)
+
         {:ok,
          socket
-         |> assign(:project, nil)
-         |> assign(:modules, [])
-         |> assign(:gantt_data, nil)}
+         |> assign(:project, project)
+         |> assign(:modules, modules)
+         |> assign(:gantt_data, gantt_data)}
+      else
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(
+            :error,
+            "Projek tidak ditemui atau anda tidak mempunyai kebenaran untuk mengakses projek ini."
+          )
+          |> Phoenix.LiveView.redirect(to: ~p"/senarai-projek-diluluskan")
+
+        {:ok, socket}
       end
     else
       socket =
@@ -111,7 +103,7 @@ defmodule SppaWeb.PelanModulLive do
       # Normalise modules with derived start/end dates and developer names
       enriched_modules =
         Enum.map(modules, fn m ->
-          start_date = project_start
+          start_date = m.tarikh_mula || project_start
           end_date = m.due_date || project_end || project_start
 
           developer_name =
@@ -176,8 +168,12 @@ defmodule SppaWeb.PelanModulLive do
       Date.utc_today()
     else
       modules
-      |> Enum.map(& &1.due_date)
-      |> Enum.filter(& &1)
+      |> Enum.flat_map(fn m ->
+        dates = []
+        dates = if m.tarikh_mula, do: [m.tarikh_mula | dates], else: dates
+        dates = if m.due_date, do: [m.due_date | dates], else: dates
+        dates
+      end)
       |> case do
         [] -> Date.utc_today()
         dates -> Enum.min(dates)
