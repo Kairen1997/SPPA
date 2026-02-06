@@ -10,6 +10,7 @@ defmodule Sppa.ModulPengaturcaraan.ModulPengaturcaraan do
     field :catatan, :string
 
     belongs_to :project, Sppa.Projects.Project
+
     belongs_to :analisis_dan_rekabentuk_module, Sppa.AnalisisDanRekabentuk.Module,
       foreign_key: :analisis_dan_rekabentuk_module_id
 

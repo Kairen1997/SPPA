@@ -164,10 +164,14 @@ defmodule Sppa.Projects do
       {:ok, project} ->
         # If project is linked to an approved project, broadcast update
         if project.approved_project_id do
-          approved_project = Sppa.ApprovedProjects.get_approved_project!(project.approved_project_id)
+          approved_project =
+            Sppa.ApprovedProjects.get_approved_project!(project.approved_project_id)
+
           Phoenix.PubSub.broadcast(Sppa.PubSub, "approved_projects", {:updated, approved_project})
         end
+
         {:ok, project}
+
       error ->
         error
     end
@@ -183,10 +187,14 @@ defmodule Sppa.Projects do
       {:ok, updated_project} ->
         # If project is linked to an approved project, broadcast update
         if updated_project.approved_project_id do
-          approved_project = Sppa.ApprovedProjects.get_approved_project!(updated_project.approved_project_id)
+          approved_project =
+            Sppa.ApprovedProjects.get_approved_project!(updated_project.approved_project_id)
+
           Phoenix.PubSub.broadcast(Sppa.PubSub, "approved_projects", {:updated, approved_project})
         end
+
         {:ok, updated_project}
+
       error ->
         error
     end

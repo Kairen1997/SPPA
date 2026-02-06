@@ -408,9 +408,9 @@
         module_days = Date.diff(module.end_date, module.start_date) + 1
         offset_days = Date.diff(module.start_date, @gantt_data.start_date)
         total_days = Date.diff(@gantt_data.end_date, @gantt_data.start_date) + 1
-        offset_percent = if total_days > 0, do: (offset_days / total_days) * 100, else: 0
-        width_percent = if total_days > 0, do: (module_days / total_days) * 100, else: 10
-        
+        offset_percent = if total_days > 0, do: offset_days / total_days * 100, else: 0
+        width_percent = if total_days > 0, do: module_days / total_days * 100, else: 10
+
         # Check if this is the first module of a new phase
         previous_module = if index > 0, do: Enum.at(@gantt_data.modules, index - 1), else: nil
         is_new_phase = previous_module == nil || previous_module.fasa != module.fasa

@@ -79,6 +79,47 @@ defmodule Sppa.AnalisisDanRekabentuk do
   end
 
   @doc """
+  Returns a list of unique module names (nama modul) from Analisis dan Rekabentuk
+  for the current user. Used e.g. for dropdowns in Ujian Penerimaan Pengguna.
+
+  Collects module names from all analisis documents belonging to the user,
+  deduplicates and sorts. Returns [] if scope is nil or no modules exist.
+  """
+  def list_module_names(nil), do: []
+
+  def list_module_names(current_scope) do
+    AnalisisDanRekabentuk
+    |> where([a], a.user_id == ^current_scope.user.id)
+    |> preload(:modules)
+    |> Repo.all()
+    |> Enum.flat_map(fn a -> Enum.map(a.modules || [], & &1.name) end)
+    |> Enum.reject(&(is_nil(&1) or &1 == ""))
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+
+  @doc """
+  Returns list of modules from Analisis dan Rekabentuk with id and name,
+  for the current user. Used to display module names (e.g. in Ujian Penerimaan Pengguna).
+  Sorted by analisis inserted_at desc then module number.
+  """
+  def list_modules_id_name(nil), do: []
+
+  def list_modules_id_name(current_scope) do
+    AnalisisDanRekabentuk
+    |> where([a], a.user_id == ^current_scope.user.id)
+    |> order_by([a], desc: a.inserted_at)
+    |> preload(:modules)
+    |> Repo.all()
+    |> Enum.flat_map(fn a ->
+      (a.modules || [])
+      |> Enum.sort_by(& &1.number)
+      |> Enum.map(fn m -> %{id: m.id, name: m.name || ""} end)
+    end)
+    |> Enum.reject(&(&1.name == ""))
+  end
+
+  @doc """
   Returns modules (nama modul, versi, fungsi modul) from Analisis dan Rekabentuk
   for use on the Pembangunan (Pengaturcaraan) page.
 
@@ -99,7 +140,9 @@ defmodule Sppa.AnalisisDanRekabentuk do
     if analisis do
       versi = analisis.versi || "1.0.0"
       project_id = analisis.project_id
-      pengaturcaraan_by_module = if project_id, do: ModulPengaturcaraan.list_by_project(project_id), else: %{}
+
+      pengaturcaraan_by_module =
+        if project_id, do: ModulPengaturcaraan.list_by_project(project_id), else: %{}
 
       analisis.modules
       |> Enum.sort_by(& &1.number)

@@ -117,7 +117,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         perubahan = PermohonanPerubahan.list_by_project(project_id)
         penempatan = get_penempatan()
         penyerahan = get_penyerahan()
-        ujian = UjianPenerimaanPengguna.list_ujian()
+        ujian = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
         ujian_keselamatan = UjianKeselamatan.list_ujian()
 
         {:ok,
@@ -373,7 +373,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       end
 
     tarikh_dijangka_siap =
-      if perubahan_params["tarikh_dijangka_siap"] && perubahan_params["tarikh_dijangka_siap"] != "" do
+      if perubahan_params["tarikh_dijangka_siap"] &&
+           perubahan_params["tarikh_dijangka_siap"] != "" do
         case Date.from_iso8601(perubahan_params["tarikh_dijangka_siap"]) do
           {:ok, date} -> date
           _ -> nil
@@ -399,6 +400,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     case PermohonanPerubahan.create_permohonan_perubahan(attrs) do
       {:ok, _perubahan} ->
         perubahan = PermohonanPerubahan.list_by_project(project_id)
+
         {:noreply,
          socket
          |> assign(:perubahan, perubahan)
@@ -408,6 +410,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
       {:error, changeset} ->
         form = to_form(changeset, as: :perubahan)
+
         {:noreply,
          socket
          |> assign(:form, form)
@@ -431,7 +434,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       end
 
     tarikh_dijangka_siap =
-      if perubahan_params["tarikh_dijangka_siap"] && perubahan_params["tarikh_dijangka_siap"] != "" do
+      if perubahan_params["tarikh_dijangka_siap"] &&
+           perubahan_params["tarikh_dijangka_siap"] != "" do
         case Date.from_iso8601(perubahan_params["tarikh_dijangka_siap"]) do
           {:ok, date} -> date
           _ -> selected.tarikh_dijangka_siap
@@ -456,6 +460,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     case PermohonanPerubahan.update_permohonan_perubahan(selected, attrs) do
       {:ok, _updated} ->
         perubahan = PermohonanPerubahan.list_by_project(project_id)
+
         {:noreply,
          socket
          |> assign(:perubahan, perubahan)
@@ -466,6 +471,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
       {:error, changeset} ->
         form = to_form(changeset, as: :perubahan)
+
         {:noreply,
          socket
          |> assign(:form, form)
