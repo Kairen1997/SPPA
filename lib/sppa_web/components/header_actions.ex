@@ -149,7 +149,7 @@ defmodule SppaWeb.Components.HeaderActions do
             >
               <.icon name="hero-cog-6-tooth" class="w-4 h-4 text-gray-500" /> <span>Tetapan</span>
             </.link>
-             <%!-- Divider --%>
+            <%!-- Divider --%>
             <div class="my-1 border-t border-gray-100"></div>
             <%!-- Logout Button --%>
             <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline w-full">

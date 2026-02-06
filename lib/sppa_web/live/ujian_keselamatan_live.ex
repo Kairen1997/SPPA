@@ -1,6 +1,7 @@
 defmodule SppaWeb.UjianKeselamatanLive do
   use SppaWeb, :live_view
 
+  alias Sppa.AnalisisDanRekabentuk
   alias Sppa.Projects
   alias Sppa.UjianKeselamatan
 
@@ -15,16 +16,49 @@ defmodule SppaWeb.UjianKeselamatanLive do
     mount_index(socket, String.to_integer(project_id))
   end
 
-  def mount(%{"id" => id}, _session, socket) do
-    mount_show(id, socket, nil)
+  def mount(%{"id" => _id}, _session, socket) do
+    # Tanpa project_id, redirect ke senarai projek supaya URL sentiasa ada project id
+    {:ok,
+     socket
+     |> put_flash(:info, "Sila pilih projek untuk mengakses Ujian Keselamatan.")
+     |> redirect(to: ~p"/projek")}
   end
 
   def mount(_params, _session, socket) do
-    mount_index(socket, nil)
+    # Tanpa project_id, redirect ke senarai projek supaya URL sentiasa ada project id
+    {:ok,
+     socket
+     |> put_flash(:info, "Sila pilih projek untuk mengakses Ujian Keselamatan.")
+     |> redirect(to: ~p"/projek")}
   end
 
-  defp index_path(nil), do: ~p"/ujian-keselamatan"
   defp index_path(project_id), do: ~p"/projek/#{project_id}/ujian-keselamatan"
+
+  # Builds one row per module from Analisis dan Rekabentuk. If ujian data exists at same
+  # index it is merged; otherwise a row with defaults is used. Rows follow module count.
+  defp build_ujian_rows_from_modules(modules_from_analisis, ujian_raw) do
+    Enum.with_index(modules_from_analisis, 0)
+    |> Enum.map(fn {mod, idx} ->
+      ujian = Enum.at(ujian_raw, idx)
+
+      if ujian do
+        ujian
+        |> Map.put(:nama_modul, mod[:name] || mod.name || "")
+      else
+        %{
+          id: mod[:id] || "module_#{idx}",
+          nama_modul: mod[:name] || mod.name || "-",
+          status: "Menunggu",
+          tarikh_ujian: nil,
+          tarikh_dijangka_siap: nil,
+          penguji: nil,
+          hasil: "Belum Selesai",
+          catatan: nil,
+          disahkan_oleh: nil
+        }
+      end
+    end)
+  end
 
   defp mount_index(socket, project_id) do
     # Verify user has required role (defense in depth - router already checks this)
@@ -34,17 +68,14 @@ defmodule SppaWeb.UjianKeselamatanLive do
 
     if user_role && user_role in @allowed_roles do
       # Get safety tests (ujian keselamatan); optional project scope for future filtering
-      ujian = UjianKeselamatan.list_ujian()
+      ujian_raw = UjianKeselamatan.list_ujian()
+      project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+
       project_assigns_and_path =
-        if project_id do
-          project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
-          if project do
-            {[project_id: project_id, project: project], "/projek/#{project_id}/ujian-keselamatan"}
-          else
-            nil
-          end
+        if project do
+          {[project_id: project_id, project: project], "/projek/#{project_id}/ujian-keselamatan"}
         else
-          {[project_id: nil, project: nil], "/ujian-keselamatan"}
+          nil
         end
 
       if project_assigns_and_path == nil do
@@ -55,39 +86,44 @@ defmodule SppaWeb.UjianKeselamatanLive do
       else
         {project_assigns, current_path} = project_assigns_and_path
 
-      socket =
-        socket
-        |> assign(:hide_root_header, true)
-        |> assign(:page_title, "Ujian Keselamatan")
-        |> assign(:sidebar_open, false)
-        |> assign(:notifications_open, false)
-        |> assign(:profile_menu_open, false)
-        |> assign(:current_path, current_path)
-        |> assign(:index_path, index_path(project_id))
-        |> assign(project_assigns)
-        |> assign(:ujian, ujian)
-        |> assign(:show_edit_modal, false)
-        |> assign(:show_create_modal, false)
-        |> assign(:show_edit_kes_modal, false)
-        |> assign(:selected_ujian, nil)
-        |> assign(:selected_kes, nil)
-        |> assign(:form, to_form(%{}, as: :ujian))
-        |> assign(:kes_form, to_form(%{}, as: :kes))
+        modules_from_analisis =
+          AnalisisDanRekabentuk.list_modules_for_project(project_id, socket.assigns.current_scope)
 
-      if connected?(socket) do
-        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-        notifications_count = length(activities)
+        ujian = build_ujian_rows_from_modules(modules_from_analisis, ujian_raw)
 
-        {:ok,
-         socket
-         |> assign(:activities, activities)
-         |> assign(:notifications_count, notifications_count)}
-      else
-        {:ok,
-         socket
-         |> assign(:activities, [])
-         |> assign(:notifications_count, 0)}
-      end
+        socket =
+          socket
+          |> assign(:hide_root_header, true)
+          |> assign(:page_title, "Ujian Keselamatan")
+          |> assign(:sidebar_open, false)
+          |> assign(:notifications_open, false)
+          |> assign(:profile_menu_open, false)
+          |> assign(:current_path, current_path)
+          |> assign(:index_path, index_path(project_id))
+          |> assign(project_assigns)
+          |> assign(:ujian, ujian)
+          |> assign(:show_edit_modal, false)
+          |> assign(:show_create_modal, false)
+          |> assign(:show_edit_kes_modal, false)
+          |> assign(:selected_ujian, nil)
+          |> assign(:selected_kes, nil)
+          |> assign(:form, to_form(%{}, as: :ujian))
+          |> assign(:kes_form, to_form(%{}, as: :kes))
+
+        if connected?(socket) do
+          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+          notifications_count = length(activities)
+
+          {:ok,
+           socket
+           |> assign(:activities, activities)
+           |> assign(:notifications_count, notifications_count)}
+        else
+          {:ok,
+           socket
+           |> assign(:activities, [])
+           |> assign(:notifications_count, 0)}
+        end
       end
     else
       socket =
@@ -110,13 +146,8 @@ defmodule SppaWeb.UjianKeselamatanLive do
 
     if user_role && user_role in @allowed_roles do
       back_path = index_path(project_id)
-      project_assigns =
-        if project_id do
-          project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
-          if project, do: [project_id: project_id, project: project], else: nil
-        else
-          [project_id: nil, project: nil]
-        end
+      project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+      project_assigns = if project, do: [project_id: project_id, project: project], else: nil
 
       if project_assigns == nil do
         {:ok,
@@ -124,61 +155,61 @@ defmodule SppaWeb.UjianKeselamatanLive do
          |> put_flash(:error, "Projek tidak dijumpai atau anda tidak mempunyai akses.")
          |> redirect(to: ~p"/projek")}
       else
-      current_path = if project_id, do: "/projek/#{project_id}/ujian-keselamatan", else: "/ujian-keselamatan"
+        current_path = "/projek/#{project_id}/ujian-keselamatan"
 
-      socket =
-        socket
-        |> assign(:hide_root_header, true)
-        |> assign(:page_title, "Butiran Ujian Keselamatan")
-        |> assign(:sidebar_open, false)
-        |> assign(:notifications_open, false)
-        |> assign(:profile_menu_open, false)
-        |> assign(:current_path, current_path)
-        |> assign(:index_path, back_path)
-        |> assign(project_assigns)
+        socket =
+          socket
+          |> assign(:hide_root_header, true)
+          |> assign(:page_title, "Butiran Ujian Keselamatan")
+          |> assign(:sidebar_open, false)
+          |> assign(:notifications_open, false)
+          |> assign(:profile_menu_open, false)
+          |> assign(:current_path, current_path)
+          |> assign(:index_path, back_path)
+          |> assign(project_assigns)
 
-      if connected?(socket) do
-        ujian = get_ujian_by_id(ujian_id)
+        if connected?(socket) do
+          ujian = get_ujian_by_id(ujian_id)
 
-        if ujian do
-          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-          notifications_count = length(activities)
+          if ujian do
+            activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+            notifications_count = length(activities)
 
+            {:ok,
+             socket
+             |> assign(:selected_ujian, ujian)
+             |> assign(:ujian, [])
+             |> assign(:show_edit_modal, false)
+             |> assign(:show_create_modal, false)
+             |> assign(:show_edit_kes_modal, false)
+             |> assign(:selected_kes, nil)
+             |> assign(:form, to_form(%{}, as: :ujian))
+             |> assign(:kes_form, to_form(%{}, as: :kes))
+             |> assign(:activities, activities)
+             |> assign(:notifications_count, notifications_count)}
+          else
+            socket =
+              socket
+              |> Phoenix.LiveView.put_flash(
+                :error,
+                "Ujian keselamatan tidak dijumpai."
+              )
+              |> Phoenix.LiveView.redirect(to: back_path)
+
+            {:ok, socket}
+          end
+        else
           {:ok,
            socket
-           |> assign(:selected_ujian, ujian)
+           |> assign(:selected_ujian, nil)
            |> assign(:ujian, [])
            |> assign(:show_edit_modal, false)
            |> assign(:show_create_modal, false)
            |> assign(:show_edit_kes_modal, false)
            |> assign(:selected_kes, nil)
            |> assign(:form, to_form(%{}, as: :ujian))
-           |> assign(:kes_form, to_form(%{}, as: :kes))
-           |> assign(:activities, activities)
-           |> assign(:notifications_count, notifications_count)}
-        else
-          socket =
-            socket
-            |> Phoenix.LiveView.put_flash(
-              :error,
-              "Ujian keselamatan tidak dijumpai."
-            )
-            |> Phoenix.LiveView.redirect(to: back_path)
-
-          {:ok, socket}
+           |> assign(:kes_form, to_form(%{}, as: :kes))}
         end
-      else
-        {:ok,
-         socket
-         |> assign(:selected_ujian, nil)
-         |> assign(:ujian, [])
-         |> assign(:show_edit_modal, false)
-         |> assign(:show_create_modal, false)
-         |> assign(:show_edit_kes_modal, false)
-         |> assign(:selected_kes, nil)
-         |> assign(:form, to_form(%{}, as: :ujian))
-         |> assign(:kes_form, to_form(%{}, as: :kes))}
-      end
       end
     else
       socket =

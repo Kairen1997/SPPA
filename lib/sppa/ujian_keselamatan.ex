@@ -19,6 +19,7 @@ defmodule Sppa.UjianKeselamatan do
         status: "Dalam Proses",
         penguji: "Ahmad bin Abdullah",
         hasil: "Belum Selesai",
+        disahkan_oleh: nil,
         catatan: "Ujian keselamatan untuk autentikasi pengguna",
         senarai_kes_ujian: [
           %{
@@ -96,6 +97,7 @@ defmodule Sppa.UjianKeselamatan do
         status: "Selesai",
         penguji: "Siti binti Hassan",
         hasil: "Lulus",
+        disahkan_oleh: "Dr. Siti binti Hassan",
         catatan: "Semua ujian keselamatan data berjaya diluluskan",
         senarai_ujian: [],
         senarai_kes_ujian: []
@@ -110,6 +112,7 @@ defmodule Sppa.UjianKeselamatan do
         status: "Menunggu",
         penguji: "Mohd bin Ismail",
         hasil: "Belum Selesai",
+        disahkan_oleh: nil,
         catatan: "Menunggu untuk memulakan ujian",
         senarai_ujian: [],
         senarai_kes_ujian: []
