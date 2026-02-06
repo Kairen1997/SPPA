@@ -47,7 +47,7 @@ defmodule SppaWeb.UjianKeselamatanLive do
       else
         %{
           id: mod[:id] || "module_#{idx}",
-          nama_modul: mod[:name] || mod.name || "-",
+          nama_modul: mod[:name] || mod.name || "",
           status: "Menunggu",
           tarikh_ujian: nil,
           tarikh_dijangka_siap: nil,
@@ -103,7 +103,6 @@ defmodule SppaWeb.UjianKeselamatanLive do
           |> assign(project_assigns)
           |> assign(:ujian, ujian)
           |> assign(:show_edit_modal, false)
-          |> assign(:show_create_modal, false)
           |> assign(:show_edit_kes_modal, false)
           |> assign(:selected_ujian, nil)
           |> assign(:selected_kes, nil)
@@ -180,7 +179,6 @@ defmodule SppaWeb.UjianKeselamatanLive do
              |> assign(:selected_ujian, ujian)
              |> assign(:ujian, [])
              |> assign(:show_edit_modal, false)
-             |> assign(:show_create_modal, false)
              |> assign(:show_edit_kes_modal, false)
              |> assign(:selected_kes, nil)
              |> assign(:form, to_form(%{}, as: :ujian))
@@ -204,11 +202,12 @@ defmodule SppaWeb.UjianKeselamatanLive do
            |> assign(:selected_ujian, nil)
            |> assign(:ujian, [])
            |> assign(:show_edit_modal, false)
-           |> assign(:show_create_modal, false)
            |> assign(:show_edit_kes_modal, false)
            |> assign(:selected_kes, nil)
            |> assign(:form, to_form(%{}, as: :ujian))
-           |> assign(:kes_form, to_form(%{}, as: :kes))}
+           |> assign(:kes_form, to_form(%{}, as: :kes))
+           |> assign(:activities, [])
+           |> assign(:notifications_count, 0)}
         end
       end
     else
@@ -299,24 +298,6 @@ defmodule SppaWeb.UjianKeselamatanLive do
   end
 
   @impl true
-  def handle_event("open_create_modal", _params, socket) do
-    form = to_form(%{}, as: :ujian)
-
-    {:noreply,
-     socket
-     |> assign(:show_create_modal, true)
-     |> assign(:form, form)}
-  end
-
-  @impl true
-  def handle_event("close_create_modal", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_create_modal, false)
-     |> assign(:form, to_form(%{}, as: :ujian))}
-  end
-
-  @impl true
   def handle_event("open_edit_modal", %{"ujian_id" => ujian_id}, socket) do
     # Try to find ujian from list first, then from selected_ujian
     ujian =
@@ -367,53 +348,6 @@ defmodule SppaWeb.UjianKeselamatanLive do
   def handle_event("validate_ujian", %{"ujian" => ujian_params}, socket) do
     form = to_form(ujian_params, as: :ujian)
     {:noreply, assign(socket, :form, form)}
-  end
-
-  @impl true
-  def handle_event("create_ujian", %{"ujian" => ujian_params}, socket) do
-    # TODO: In the future, this should save to the database
-    new_id = "ujian_keselamatan_#{length(socket.assigns.ujian) + 1}"
-    new_number = length(socket.assigns.ujian) + 1
-
-    tarikh_ujian =
-      if ujian_params["tarikh_ujian"] && ujian_params["tarikh_ujian"] != "" do
-        case Date.from_iso8601(ujian_params["tarikh_ujian"]) do
-          {:ok, date} -> date
-          _ -> Date.utc_today()
-        end
-      else
-        Date.utc_today()
-      end
-
-    tarikh_dijangka_siap =
-      case Date.from_iso8601(ujian_params["tarikh_dijangka_siap"]) do
-        {:ok, date} -> date
-        _ -> Date.utc_today()
-      end
-
-    new_ujian = %{
-      id: new_id,
-      number: new_number,
-      tajuk: ujian_params["tajuk"],
-      modul: ujian_params["modul"],
-      tarikh_ujian: tarikh_ujian,
-      tarikh_dijangka_siap: tarikh_dijangka_siap,
-      status: ujian_params["status"] || "Menunggu",
-      penguji: ujian_params["penguji"] || "",
-      hasil: ujian_params["hasil"] || "Belum Selesai",
-      catatan: if(ujian_params["catatan"] == "", do: nil, else: ujian_params["catatan"]),
-      senarai_ujian: [],
-      senarai_kes_ujian: []
-    }
-
-    updated_ujian = [new_ujian | socket.assigns.ujian]
-
-    {:noreply,
-     socket
-     |> assign(:ujian, updated_ujian)
-     |> assign(:show_create_modal, false)
-     |> assign(:form, to_form(%{}, as: :ujian))
-     |> put_flash(:info, "Ujian keselamatan berjaya didaftarkan")}
   end
 
   @impl true
@@ -501,6 +435,7 @@ defmodule SppaWeb.UjianKeselamatanLive do
           "tarikh_ujian" =>
             if(kes.tarikh_ujian, do: Calendar.strftime(kes.tarikh_ujian, "%Y-%m-%d"), else: ""),
           "disahkan" => if(Map.get(kes, :disahkan, false), do: "true", else: ""),
+          "disahkan_oleh" => Map.get(kes, :disahkan_oleh, "") || "",
           "tarikh_pengesahan" =>
             if(kes.tarikh_pengesahan,
               do: Calendar.strftime(kes.tarikh_pengesahan, "%Y-%m-%d"),
@@ -577,6 +512,11 @@ defmodule SppaWeb.UjianKeselamatanLive do
         penguji: if(kes_params["penguji"] == "", do: nil, else: kes_params["penguji"]),
         tarikh_ujian: tarikh_ujian,
         disahkan: kes_params["disahkan"] == "true",
+        disahkan_oleh:
+          if(kes_params["disahkan_oleh"] == "",
+            do: nil,
+            else: kes_params["disahkan_oleh"]
+          ),
         tarikh_pengesahan: tarikh_pengesahan
     }
 
@@ -630,6 +570,7 @@ defmodule SppaWeb.UjianKeselamatanLive do
         penguji: nil,
         tarikh_ujian: nil,
         disahkan: false,
+        disahkan_oleh: nil,
         tarikh_pengesahan: nil
       }
 
@@ -644,6 +585,26 @@ defmodule SppaWeb.UjianKeselamatanLive do
        socket
        |> assign(:selected_ujian, updated_ujian)
        |> put_flash(:info, "Kes ujian baru berjaya ditambah")}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_kes_ujian", %{"kes_id" => kes_id}, socket) do
+    if socket.assigns[:selected_ujian] && socket.assigns.selected_ujian.senarai_kes_ujian do
+      updated_senarai_kes_ujian =
+        Enum.reject(socket.assigns.selected_ujian.senarai_kes_ujian, fn kes -> kes.id == kes_id end)
+
+      updated_ujian = %{
+        socket.assigns.selected_ujian
+        | senarai_kes_ujian: updated_senarai_kes_ujian
+      }
+
+      {:noreply,
+       socket
+       |> assign(:selected_ujian, updated_ujian)
+       |> put_flash(:info, "Kes ujian berjaya dipadam")}
     else
       {:noreply, socket}
     end
