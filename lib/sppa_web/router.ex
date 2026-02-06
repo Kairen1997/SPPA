@@ -22,6 +22,7 @@ defmodule SppaWeb.Router do
   # scope "/api", SppaWeb do
   #   pipe_through :api
   # end
+
   # ================================
   # Internal API (System-to-System)
   # ================================
@@ -65,6 +66,7 @@ defmodule SppaWeb.Router do
       live "/projek/:id/soal-selidik", ProjekTabNavigationLive, :show
       live "/soal-selidik", SoalSelidikLive, :index
       live "/senarai-projek-diluluskan", ProjectListLive, :index
+      get "/senarai-projek-diluluskan/pdf", ProjectListPdfController, :index
       live "/senarai-projek-diluluskan/:id", ApprovedProjectLive, :show
       live "/projek/:project_id/modul", ModulProjekLive, :index
       get "/projek/:project_id/modul/pdf", ModulProjekPdfController, :show

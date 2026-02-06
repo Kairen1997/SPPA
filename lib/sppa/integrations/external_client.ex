@@ -1,7 +1,7 @@
 defmodule Sppa.Integrations.ExternalClient do
   require Logger
 
-  @external_url "http://10.71.67.159:4000/api/requests?status=Diluluskan"
+  @external_url "http://10.71.67.222:4000/api/requests?status=Diluluskan"
 
   # Public API used by the worker
   def fetch_documents do

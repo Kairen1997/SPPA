@@ -102,7 +102,7 @@
                 <.link
                   href={~p"/pelan-modul/#{@project_id}/pdf"}
                   target="_blank"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                 >
                   <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
                 </.link>
@@ -159,158 +159,126 @@
                           </p>
                         </div>
                       </div>
-                    </div>
-                    <%!-- Timeline Grid --%>
-                    <div class="relative">
-                      <%!-- Calculate timeline range --%> <% timeline_start = proj_start
-                      timeline_end = proj_end
-                      total_days = days_between(timeline_start, timeline_end)
-                      today = Date.utc_today() %> <%!-- Month Headers --%>
-                      <div class="border-b border-gray-200 bg-gray-50 print:bg-gray-100 print:border-b print:border-gray-400">
-                        <div
-                          class="flex print:w-full print:flex-wrap"
-                          style="min-width: {max(800, total_days * 4)}px;"
-                        >
-                          <%= for month_offset <- 0..(div(total_days, 30) + 1) do %>
-                            <% month_date = Date.add(timeline_start, month_offset * 30)
-                            month_name = Calendar.strftime(month_date, "%b %Y") %>
-                            <div class="flex-1 border-r border-gray-200 px-2 py-2 text-center print:border-r print:border-gray-400 print:min-w-[100px] print:flex-shrink-0">
-                              <p class="text-xs font-medium text-gray-700 print:text-black print:font-bold">
-                                {month_name}
-                              </p>
-                            </div>
-                          <% end %>
-                        </div>
-                      </div>
-                      <%!-- Today Indicator Line --%>
-                      <%= if Date.compare(today, timeline_start) != :lt && Date.compare(today, timeline_end) != :gt do %>
-                        <% today_offset = days_between(timeline_start, today) %>
-                        <div
-                          class="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10"
-                          style="left: {(today_offset / total_days * 100)}%;"
-                        >
-                          <div class="absolute -top-2 -left-2 w-3 h-3 bg-red-500 rounded-full">
+                      
+                      <%!-- Timeline Grid --%>
+                      <div class="relative">
+                        <%!-- Calculate timeline range --%>
+                        <% 
+                          timeline_start = proj_start
+                          timeline_end = proj_end
+                          total_days = days_between(timeline_start, timeline_end)
+                          today = Date.utc_today()
+                        %>
+                        
+                        <%!-- Month Headers --%>
+                        <div class="border-b border-gray-200 bg-gray-50 print:bg-gray-100 print:border-b print:border-gray-400">
+                          <div class="flex print:w-full print:flex-wrap" style="min-width: {max(800, total_days * 4)}px;">
+                            <%= for month_offset <- 0..(div(total_days, 30) + 1) do %>
+                              <% 
+                                month_date = Date.add(timeline_start, month_offset * 30)
+                                month_name = Calendar.strftime(month_date, "%b %Y")
+                              %>
+                              <div class="flex-1 border-r border-gray-200 px-2 py-2 text-center print:border-r print:border-gray-400 print:min-w-[100px] print:flex-shrink-0">
+                                <p class="text-xs font-medium text-gray-700 print:text-black print:font-bold">{month_name}</p>
+                              </div>
+                            <% end %>
                           </div>
-
-                          <div class="absolute top-0 left-0 w-full h-full bg-red-500/20"></div>
                         </div>
-                      <% end %>
-                      <%!-- Modules Timeline --%>
-                      <div class="p-4 space-y-3 print:space-y-3 print:p-3">
-                        <%= for {module, index} <- Enum.with_index(modules) do %>
-                          <% module_days = days_between(module.start_date, module.end_date)
-                          offset_days = days_between(timeline_start, module.start_date)
-                          offset_percent = offset_days / total_days * 100
-                          width_percent = module_days / total_days * 100
-                          is_past = Date.compare(module.end_date, today) == :lt
-
-                          is_current =
-                            Date.compare(module.start_date, today) != :gt &&
-                              Date.compare(module.end_date, today) != :lt
-
-                          # Check if this is the first module of a new phase
-                          previous_module =
-                            if index > 0, do: Enum.at(modules, index - 1), else: nil
-
-                          is_new_phase =
-                            previous_module == nil || previous_module.fasa != module.fasa %>
-                          <%= if is_new_phase do %>
-                            <%!-- Phase Header Separator --%>
-                            <div
-                              class={[
+                        
+                        <%!-- Modules Timeline --%>
+                        <div class="p-4 space-y-3 print:space-y-3 print:p-3">
+                          <%= for {module, index} <- Enum.with_index(modules) do %>
+                            <% 
+                              module_days = days_between(module.start_date, module.end_date)
+                              offset_days = days_between(timeline_start, module.start_date)
+                              offset_percent = (offset_days / total_days) * 100
+                              width_percent = (module_days / total_days) * 100
+                              is_overdue = module.status == "in_progress" && Date.compare(module.end_date, today) == :lt
+                              
+                              # Determine bar color based on status
+                              bar_color_class = cond do
+                                module.status == "done" -> "bg-green-500 print:bg-green-600 print:text-white"
+                                is_overdue -> "bg-red-400 print:bg-red-500 print:text-white"
+                                true -> "bg-blue-500 print:bg-blue-600 print:text-white"
+                              end
+                              
+                              # Check if this is the first module of a new phase
+                              previous_module = if index > 0, do: Enum.at(modules, index - 1), else: nil
+                              is_new_phase = previous_module == nil || previous_module.fasa != module.fasa
+                            %>
+                            <%= if is_new_phase do %>
+                              <%!-- Phase Header Separator --%>
+                              <div class={[
                                 "pt-4 print-gantt-phase",
                                 if(index > 0, do: "border-t border-gray-300 mt-4", else: "")
-                              ]}
-                              style="page-break-inside: avoid; break-inside: avoid;"
-                            >
-                              <div class="mb-3 flex items-center gap-2">
-                                <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent">
+                              ]} style="page-break-inside: avoid; break-inside: avoid;">
+                                <div class="mb-3 flex items-center gap-2">
+                                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                                  <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                    Fasa {module.fasa}
+                                  </span>
+                                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
                                 </div>
-
-                                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
-                                  Fasa {module.fasa}
-                                </span>
-                                <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent">
+                              </div>
+                            <% end %>
+                            <div class="flex items-center gap-4 min-h-[60px] print-gantt-module" style="page-break-inside: avoid; break-inside: avoid;">
+                              <%!-- Module Info --%>
+                              <div class="w-64 flex-shrink-0 print:w-auto print:flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                  <h4 class="text-sm font-semibold text-gray-900">{module.title}</h4>
                                 </div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                    Fasa {module.fasa}
+                                  </span>
+                                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                    Versi {module.versi}
+                                  </span>
+                                  <span class={[
+                                    "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                                    status_color(module.status)
+                                  ]}>
+                                    {status_label(module.status)}
+                                  </span>
+                                  <span class={[
+                                    "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
+                                    priority_color(module.priority)
+                                  ]}>
+                                    {priority_label(module.priority)}
+                                  </span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">{module.developer_name}</p>
+                              </div>
+                              
+                              <%!-- Gantt Bar --%>
+                              <div class="flex-1 relative h-12 bg-gray-100 rounded border border-gray-200 overflow-hidden print:overflow-visible print:h-auto print:bg-gray-200 print:border-gray-400 print:min-h-[50px] print:flex print:items-center">
+                                <div
+                                  class={[
+                                    "absolute h-full rounded transition-all duration-200 print:relative print:static print:h-auto print:py-2 print:px-3 print:rounded-none print:border print:border-gray-600 print:min-h-[40px] print:w-full",
+                                    bar_color_class
+                                  ]}
+                                  style={"left: #{offset_percent}%; width: #{width_percent}%;"}
+                                  title={"#{module.title} - #{Calendar.strftime(module.start_date, "%d/%m/%Y")} hingga #{Calendar.strftime(module.end_date, "%d/%m/%Y")}"}
+                                >
+                                </div>
+                              </div>
+                              
+                              <%!-- Date Info --%>
+                              <div class="w-32 flex-shrink-0 text-right">
+                                <p class="text-xs font-medium text-gray-700">
+                                  {Calendar.strftime(module.start_date, "%d/%m/%Y")}
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                  {Calendar.strftime(module.end_date, "%d/%m/%Y")}
+                                </p>
+                                <p class="text-xs text-gray-400 mt-1">
+                                  {module_days} hari
+                                </p>
                               </div>
                             </div>
                           <% end %>
-
-                          <div
-                            class="flex items-center gap-4 min-h-[60px] print-gantt-module"
-                            style="page-break-inside: avoid; break-inside: avoid;"
-                          >
-                            <%!-- Module Info --%>
-                            <div class="w-64 flex-shrink-0 print:w-auto print:flex-1">
-                              <div class="flex items-center gap-2 mb-1">
-                                <h4 class="text-sm font-semibold text-gray-900">
-                                  {module.title}
-                                </h4>
-                              </div>
-
-                              <div class="flex items-center gap-2 flex-wrap">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
-                                  Fasa {module.fasa}
-                                </span>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
-                                  Versi {module.versi}
-                                </span>
-                                <span class={[
-                                  "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-                                  status_color(module.status)
-                                ]}>
-                                  {status_label(module.status)}
-                                </span>
-                                <span class={[
-                                  "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
-                                  priority_color(module.priority)
-                                ]}>
-                                  {priority_label(module.priority)}
-                                </span>
-                              </div>
-
-                              <p class="text-xs text-gray-500 mt-1">{module.developer_name}</p>
-                            </div>
-                            <%!-- Gantt Bar --%>
-                            <div class="flex-1 relative h-12 bg-gray-100 rounded border border-gray-200 overflow-hidden print:overflow-visible print:h-auto print:bg-gray-200 print:border-gray-400 print:min-h-[50px] print:flex print:items-center">
-                              <div
-                                class={[
-                                  "absolute h-full rounded transition-all duration-200 flex items-center justify-center print:relative print:static print:h-auto print:py-2 print:px-3 print:rounded-none print:border print:border-gray-600 print:min-h-[40px] print:w-full print:flex print:items-center print:justify-center",
-                                  if(module.status == "done",
-                                    do: "bg-green-500 print:bg-green-600 print:text-white",
-                                    else: "bg-blue-500 print:bg-blue-600 print:text-white"
-                                  ),
-                                  if(is_past && module.status != "done",
-                                    do: "bg-red-400 print:bg-red-500 print:text-white"
-                                  ),
-                                  if(is_current,
-                                    do: "ring-2 ring-blue-300 ring-offset-1 print:ring-0"
-                                  )
-                                ]}
-                                style={"left: #{offset_percent}%; width: #{width_percent}%;"}
-                                title={"#{module.title} - #{Calendar.strftime(module.start_date, "%d/%m/%Y")} hingga #{Calendar.strftime(module.end_date, "%d/%m/%Y")}"}
-                              >
-                                <span class="text-xs font-medium text-white px-2 truncate print:text-white print:font-semibold print:whitespace-normal print:text-sm print:px-3">
-                                  {module.title}
-                                </span>
-                              </div>
-                            </div>
-                            <%!-- Date Info --%>
-                            <div class="w-32 flex-shrink-0 text-right">
-                              <p class="text-xs font-medium text-gray-700">
-                                {Calendar.strftime(module.start_date, "%d/%m/%Y")}
-                              </p>
-
-                              <p class="text-xs text-gray-500">
-                                {Calendar.strftime(module.end_date, "%d/%m/%Y")}
-                              </p>
-
-                              <p class="text-xs text-gray-400 mt-1">{module_days} hari</p>
-                            </div>
-                          </div>
-                        <% end %>
+                        </div>
                       </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -334,11 +302,6 @@
                   <div class="flex items-center gap-2">
                     <div class="w-4 h-4 bg-red-400 rounded"></div>
                     <span class="text-xs text-gray-600">Lewat</span>
-                  </div>
-
-                  <div class="flex items-center gap-2">
-                    <div class="w-0.5 h-4 bg-red-500"></div>
-                    <span class="text-xs text-gray-600">Hari Ini</span>
                   </div>
                 </div>
               </div>
