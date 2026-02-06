@@ -1869,7 +1869,7 @@
                     </div>
 
                     <.link
-                      navigate={~p"/ujian-keselamatan"}
+                      navigate={~p"/projek/#{@project.id}/ujian-keselamatan"}
                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
                     >
                       <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
@@ -2033,7 +2033,7 @@
 
                             <td class="px-3 py-2 text-center align-top">
                               <.link
-                                navigate={~p"/ujian-keselamatan/#{ujian.id}"}
+                                navigate={~p"/projek/#{@project.id}/ujian-keselamatan/#{ujian.id}"}
                                 class="inline-flex items-center justify-center p-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
                                 title="Lihat"
                               >

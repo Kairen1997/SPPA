@@ -16,7 +16,7 @@
       logo_src={~p"/images/logojpkn.png"}
       current_scope={@current_scope}
     /> <%!-- Main Content --%>
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden relative z-[50]">
       <%!-- Header --%>
       <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-md relative gap-2 sm:gap-4">
         <div
@@ -24,10 +24,11 @@
           style="max-width: min(30%, 200px);"
         >
           <button
+            type="button"
             phx-click="toggle_sidebar"
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0 cursor-pointer"
           >
-            <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
+            <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6 pointer-events-none" />
           </button>
            <.header_logos />
         </div>

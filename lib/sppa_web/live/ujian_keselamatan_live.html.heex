@@ -15,7 +15,7 @@
       dashboard_path={~p"/dashboard"}
       logo_src={~p"/images/logojpkn.png"}
       current_scope={@current_scope}
-      current_path="/ujian-keselamatan"
+      current_path={@current_path}
     /> <%!-- Main Content --%>
     <div class="flex-1 flex flex-col overflow-hidden">
       <%!-- Header --%>
@@ -53,7 +53,7 @@
             <div class="mb-6">
               <div class="flex items-center gap-4 mb-4">
                 <.link
-                  navigate={~p"/ujian-keselamatan"}
+                  navigate={@index_path}
                   class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
                 >
                   <.icon name="hero-arrow-left" class="w-4 h-4" />
@@ -425,7 +425,7 @@
                         <td class="px-3 py-2 whitespace-nowrap text-left">
                           <div class="flex items-center gap-1.5">
                             <.link
-                              navigate={~p"/ujian-keselamatan/#{ujian.id}"}
+                              navigate={if assigns[:project_id], do: ~p"/projek/#{@project_id}/ujian-keselamatan/#{ujian.id}", else: ~p"/ujian-keselamatan/#{ujian.id}"}
                               class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
                               title="Lihat"
                             >
