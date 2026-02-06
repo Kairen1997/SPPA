@@ -717,7 +717,7 @@
                     field={@kes_form[:hasil]}
                     type="select"
                     label="Hasil"
-                    prompt="-"
+                    prompt="Belum Selesai"
                     options={["Lulus", "Gagal"]}
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
@@ -734,12 +734,25 @@
                 </div>
 
                 <div>
-                  <.input
-                    field={@kes_form[:tarikh_ujian]}
-                    type="date"
-                    label="Tarikh Ujian"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  />
+                  <div class="relative">
+                    <.input
+                      field={@kes_form[:tarikh_ujian]}
+                      type="date"
+                      id="kes-tarikh-ujian"
+                      label="Tarikh Ujian"
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    />
+                    <button
+                      type="button"
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for="kes-tarikh-ujian"
+                      id="kes-tarikh-ujian-trigger"
+                      class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-blue-600 focus:outline-none"
+                      aria-label="Pilih tarikh ujian"
+                    >
+                      <.icon name="hero-calendar-days" class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -753,12 +766,25 @@
                 </div>
 
                 <div>
-                  <.input
-                    field={@kes_form[:tarikh_pengesahan]}
-                    type="date"
-                    label="Tarikh Pengesahan"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  />
+                  <div class="relative">
+                    <.input
+                      field={@kes_form[:tarikh_pengesahan]}
+                      type="date"
+                      id="kes-tarikh-pengesahan"
+                      label="Tarikh Pengesahan"
+                      class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    />
+                    <button
+                      type="button"
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for="kes-tarikh-pengesahan"
+                      id="kes-tarikh-pengesahan-trigger"
+                      class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-blue-600 focus:outline-none"
+                      aria-label="Pilih tarikh pengesahan"
+                    >
+                      <.icon name="hero-calendar-days" class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </.form>
@@ -777,7 +803,7 @@
               form="edit-kes-form"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
             >
-              Simpan Perubahan
+              Simpan
             </button>
           </div>
         </div>
