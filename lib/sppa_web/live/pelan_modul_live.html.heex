@@ -132,9 +132,8 @@
                   <p class="text-xs text-gray-400">Tambah modul melalui halaman Modul Projek</p>
                 </div>
               </div>
-            <% else %>
-              <% %{project: project, modules: modules, start_date: proj_start, end_date: proj_end} =
-                @gantt_data %>
+            <% end %>
+            <%= if @gantt_data && !Enum.empty?(@gantt_data.modules) do %>
               <div class="overflow-x-auto p-6 print:overflow-visible print:p-4">
                 <%!-- Gantt Chart Timeline --%>
                 <div class="min-w-full print:min-w-0 print:w-full">
@@ -143,17 +142,17 @@
                     <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-gray-200">
                       <div class="flex items-center justify-between">
                         <div>
-                          <h3 class="text-lg font-semibold text-gray-900">{project.nama}</h3>
+                          <h3 class="text-lg font-semibold text-gray-900">{@gantt_data.project.nama}</h3>
 
-                          <p class="text-sm text-gray-600 mt-1">{project.jabatan}</p>
+                          <p class="text-sm text-gray-600 mt-1">{@gantt_data.project.jabatan}</p>
                         </div>
 
                         <div class="text-right">
                           <p class="text-xs text-gray-500">Tempoh Projek</p>
 
                           <p class="text-sm font-medium text-gray-700">
-                            {Calendar.strftime(proj_start, "%d/%m/%Y")} - {Calendar.strftime(
-                              proj_end,
+                            {Calendar.strftime(@gantt_data.start_date, "%d/%m/%Y")} - {Calendar.strftime(
+                              @gantt_data.end_date,
                               "%d/%m/%Y"
                             )}
                           </p>
@@ -164,8 +163,8 @@
                       <div class="relative">
                         <%!-- Calculate timeline range --%>
                         <% 
-                          timeline_start = proj_start
-                          timeline_end = proj_end
+                          timeline_start = @gantt_data.start_date
+                          timeline_end = @gantt_data.end_date
                           total_days = days_between(timeline_start, timeline_end)
                           today = Date.utc_today()
                         %>
@@ -187,7 +186,7 @@
                         
                         <%!-- Modules Timeline --%>
                         <div class="p-4 space-y-3 print:space-y-3 print:p-3">
-                          <%= for {module, index} <- Enum.with_index(modules) do %>
+                          <%= for {module, index} <- Enum.with_index(@gantt_data.modules) do %>
                             <% 
                               module_days = days_between(module.start_date, module.end_date)
                               offset_days = days_between(timeline_start, module.start_date)
@@ -203,7 +202,7 @@
                               end
                               
                               # Check if this is the first module of a new phase
-                              previous_module = if index > 0, do: Enum.at(modules, index - 1), else: nil
+                              previous_module = if index > 0, do: Enum.at(@gantt_data.modules, index - 1), else: nil
                               is_new_phase = previous_module == nil || previous_module.fasa != module.fasa
                             %>
                             <%= if is_new_phase do %>
@@ -278,6 +277,7 @@
                             </div>
                           <% end %>
                         </div>
+                      </div>
                       </div>
                   </div>
                 </div>
