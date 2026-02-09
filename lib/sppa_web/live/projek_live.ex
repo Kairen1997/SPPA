@@ -21,7 +21,7 @@ defmodule SppaWeb.ProjekLive do
       socket =
         socket
         |> assign(:hide_root_header, true)
-        |> assign(:page_title, "Senarai Projek")
+        |> assign(:page_title, "Senarai Sistem")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)

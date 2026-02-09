@@ -2042,27 +2042,14 @@
               </div>
             <% @current_tab == "Penempatan" -> %>
               <div class="space-y-6">
-                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h2 class="text-2xl font-bold text-gray-900">Penempatan</h2>
-
-                    <p class="text-gray-600">
-                      Urus dan pantau penempatan sistem ke pelbagai persekitaran
-                    </p>
-                  </div>
-
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-end">
                   <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm text-gray-600">
-                      <.icon name="hero-server" class="w-5 h-5 text-blue-500" />
-                      <span class="text-sm font-semibold">{length(@penempatan)} Penempatan</span>
-                    </div>
-
                     <.link
                       navigate={~p"/penempatan"}
                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
                     >
                       <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
-                      <span>Halaman Penempatan Penuh</span>
+                      <span>Halaman Penuh</span>
                     </.link>
                   </div>
                 </div>
@@ -2083,7 +2070,7 @@
                         <p class="text-sm font-medium">Tiada penempatan</p>
 
                         <p class="text-xs mt-1">
-                          Klik "Halaman Penempatan Penuh" untuk mendaftar penempatan baharu
+                          Klik "Halaman Penuh" untuk mendaftar penempatan baharu
                         </p>
                       </div>
                     </div>
