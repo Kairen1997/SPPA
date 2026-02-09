@@ -154,6 +154,22 @@ defmodule Sppa.Projects do
   end
 
   @doc """
+  Returns a map of project id to project nama for the given list of project IDs.
+  Used to display nama sistem (project name) for penempatan rows.
+  """
+  def get_project_nama_by_ids(ids) when is_list(ids) do
+    ids = Enum.uniq(Enum.reject(ids, &is_nil/1))
+
+    if ids == [] do
+      %{}
+    else
+      from(p in Project, where: p.id in ^ids, select: {p.id, p.nama})
+      |> Repo.all()
+      |> Map.new()
+    end
+  end
+
+  @doc """
   Creates a project.
   """
   def create_project(attrs, current_scope) do

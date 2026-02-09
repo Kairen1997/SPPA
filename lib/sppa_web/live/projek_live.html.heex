@@ -9,7 +9,7 @@
       phx-click="close_sidebar"
     >
     </div>
-     <%!-- Sidebar --%>
+    <%!-- Sidebar --%>
     <.dashboard_sidebar
       sidebar_open={@sidebar_open}
       dashboard_path={~p"/dashboard"}
@@ -28,11 +28,12 @@
             class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
           >
             <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
-          </button> <.header_logos />
+          </button>
+           <.header_logos />
         </div>
-        
+
         <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
-        
+
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <.header_actions
             notifications_open={@notifications_open}
@@ -43,7 +44,7 @@
           />
         </div>
       </header>
-       <%!-- Content --%>
+      <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
         <%= if assigns[:project] do %>
           <%!-- Project Page --%>
@@ -59,10 +60,10 @@
                   <span>Kembali ke Senarai Projek</span>
                 </.link>
               </div>
-              
+
               <h1 class="text-3xl font-bold text-gray-900 mb-2">{@project.nama}</h1>
             </div>
-             <%!-- Navigation Tabs --%>
+            <%!-- Navigation Tabs --%>
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 mb-6">
               <div class="border-b border-gray-200">
                 <nav class="flex space-x-1 px-6 overflow-x-auto" aria-label="Tabs">
@@ -199,7 +200,7 @@
                 </nav>
               </div>
             </div>
-             <%!-- Tab Content --%>
+            <%!-- Tab Content --%>
             <%= cond do %>
               <% @current_tab == "Soal Selidik" -> %>
                 <%!-- Soal Selidik Content --%>
@@ -223,7 +224,7 @@
                       <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
                     </button>
                   </div>
-                   <%!-- Document Display --%>
+                  <%!-- Document Display --%>
                   <div
                     id="soal-selidik-document"
                     class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 print:shadow-none print:border-0"
@@ -236,7 +237,7 @@
                             {@soal_selidik_pdf_data.document_id}
                           </span>
                         </div>
-                        
+
                         <div class="flex justify-center mb-4">
                           <img
                             src={~p"/images/logojpkn.png"}
@@ -244,11 +245,11 @@
                             class="h-16 w-auto object-contain"
                           />
                         </div>
-                        
+
                         <h2 class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight">
                           Template Soal Selidik Kajian Keperluan Pembangunan Aplikasi
                         </h2>
-                        
+
                         <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
                           <span>Nama Sistem :</span>
                           <span class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded bg-gray-50">
@@ -256,12 +257,12 @@
                           </span>
                         </div>
                       </div>
-                      
+
                       <div class="mb-6">
                         <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
                           FUNCTIONAL REQUIREMENT
                         </h3>
-                        
+
                         <div class="space-y-4">
                           <%= for category <- @soal_selidik_pdf_data.fr_categories do %>
                             <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
@@ -270,7 +271,7 @@
                                   {category.title}
                                 </h4>
                               </div>
-                              
+
                               <div class="p-2 overflow-x-auto">
                                 <table class="w-full border-collapse text-xs">
                                   <thead>
@@ -281,21 +282,21 @@
                                       >
                                         No
                                       </th>
-                                      
+
                                       <th
                                         class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                         style="width: 40%;"
                                       >
                                         Soalan
                                       </th>
-                                      
+
                                       <th
                                         class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                         style="width: 27%;"
                                       >
                                         Maklumbalas
                                       </th>
-                                      
+
                                       <th
                                         class="px-3 py-2 text-left font-semibold text-gray-700"
                                         style="width: 27%;"
@@ -304,7 +305,7 @@
                                       </th>
                                     </tr>
                                   </thead>
-                                  
+
                                   <tbody class="divide-y divide-gray-300">
                                     <%= for question <- category.questions do %>
                                       <tr>
@@ -313,7 +314,7 @@
                                             {question.no}
                                           </div>
                                         </td>
-                                        
+
                                         <td class="px-3 py-2 border-r border-gray-400 align-top">
                                           <div class="px-2 py-1 text-sm text-gray-800">
                                             {question_data =
@@ -340,7 +341,7 @@
                                             end}
                                           </div>
                                         </td>
-                                        
+
                                         <td class="px-3 py-2 border-r border-gray-400 align-top">
                                           <div class="px-2 py-1 text-sm text-gray-700">
                                             {question_data =
@@ -375,7 +376,7 @@
                                             end}
                                           </div>
                                         </td>
-                                        
+
                                         <td class="px-3 py-2 align-top">
                                           <div class="px-2 py-1 text-sm text-gray-700">
                                             {question_data =
@@ -408,12 +409,12 @@
                           <% end %>
                         </div>
                       </div>
-                      
+
                       <div class="mb-6">
                         <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
                           NON-FUNCTIONAL REQUIREMENT
                         </h3>
-                        
+
                         <div class="space-y-4">
                           <%= for category <- @soal_selidik_pdf_data.nfr_categories do %>
                             <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
@@ -422,7 +423,7 @@
                                   {category.title}
                                 </h4>
                               </div>
-                              
+
                               <div class="p-2 overflow-x-auto">
                                 <table class="w-full border-collapse text-xs">
                                   <thead>
@@ -433,21 +434,21 @@
                                       >
                                         No
                                       </th>
-                                      
+
                                       <th
                                         class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                         style="width: 40%;"
                                       >
                                         Soalan
                                       </th>
-                                      
+
                                       <th
                                         class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                         style="width: 27%;"
                                       >
                                         Maklumbalas
                                       </th>
-                                      
+
                                       <th
                                         class="px-3 py-2 text-left font-semibold text-gray-700"
                                         style="width: 27%;"
@@ -456,7 +457,7 @@
                                       </th>
                                     </tr>
                                   </thead>
-                                  
+
                                   <tbody class="divide-y divide-gray-300">
                                     <%= for question <- category.questions do %>
                                       <tr>
@@ -465,7 +466,7 @@
                                             {question.no}
                                           </div>
                                         </td>
-                                        
+
                                         <td class="px-3 py-2 border-r border-gray-400 align-top">
                                           <div class="px-2 py-1 text-sm text-gray-800">
                                             {question_data =
@@ -492,7 +493,7 @@
                                             end}
                                           </div>
                                         </td>
-                                        
+
                                         <td class="px-3 py-2 border-r border-gray-400 align-top">
                                           <div class="px-2 py-1 text-sm text-gray-700">
                                             {question_data =
@@ -527,7 +528,7 @@
                                             end}
                                           </div>
                                         </td>
-                                        
+
                                         <td class="px-3 py-2 align-top">
                                           <div class="px-2 py-1 text-sm text-gray-700">
                                             {question_data =
@@ -560,14 +561,14 @@
                           <% end %>
                         </div>
                       </div>
-                      
+
                       <div class="mb-2">
                         <h3 class="text-lg font-bold text-gray-900 mb-4">Disediakan Oleh :</h3>
-                        
+
                         <p class="text-sm text-gray-600 mb-6 italic">
                           (Diisi oleh Pengurus Projek/Pembangun Sistem)
                         </p>
-                        
+
                         <div class="space-y-4">
                           <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -578,7 +579,7 @@
                                 Map.get(@soal_selidik_pdf_data.disediakan_oleh, "nama") || ""}
                             </div>
                           </div>
-                          
+
                           <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                               Jawatan:
@@ -588,7 +589,7 @@
                                 Map.get(@soal_selidik_pdf_data.disediakan_oleh, "jawatan") || ""}
                             </div>
                           </div>
-                          
+
                           <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                               Tarikh:
@@ -628,7 +629,7 @@
                       <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
                     </button>
                   </div>
-                  
+
                   <div
                     id="analisis-document"
                     class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 print:shadow-none print:border-0"
@@ -638,7 +639,7 @@
                       <div class="mb-6">
                         <div class="flex justify-between items-start mb-3">
                           <div class="flex-1"></div>
-                          
+
                           <div class="flex-1 flex justify-center">
                             <img
                               src={~p"/images/logojpkn.png"}
@@ -646,19 +647,19 @@
                               class="h-16 w-auto object-contain"
                             />
                           </div>
-                          
+
                           <div class="flex-1 flex justify-end">
                             <div class="text-gray-700 font-bold">
                               {@analisis_pdf_data.document_id}
                             </div>
                           </div>
                         </div>
-                        
+
                         <h2 class="text-center font-bold text-gray-900 mb-6 uppercase tracking-wide leading-tight">
                           BORANG VERIFIKASI SPESIFIKASI APLIKASI
                         </h2>
                       </div>
-                      
+
                       <div class="mb-6">
                         <table class="w-full border-collapse border border-gray-800">
                           <tbody>
@@ -669,47 +670,47 @@
                               >
                                 Nama Projek
                               </td>
-                              
+
                               <td class="px-2 py-1.5 border border-gray-800 text-black">
                                 {@analisis_pdf_data.nama_projek}
                               </td>
                             </tr>
-                            
+
                             <tr class="border-b border-gray-800">
                               <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
                                 Nama Agensi
                               </td>
-                              
+
                               <td class="px-2 py-1.5 border border-gray-800 text-black">
                                 {@analisis_pdf_data.nama_agensi}
                               </td>
                             </tr>
-                            
+
                             <tr class="border-b border-gray-800">
                               <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
                                 Versi
                               </td>
-                              
+
                               <td class="px-2 py-1.5 border border-gray-800 text-black">
                                 {@analisis_pdf_data.versi}
                               </td>
                             </tr>
-                            
+
                             <tr class="border-b border-gray-800">
                               <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
                                 Tarikh Semakan (jika ada)
                               </td>
-                              
+
                               <td class="px-2 py-1.5 border border-gray-800 text-black">
                                 {@analisis_pdf_data.tarikh_semakan}
                               </td>
                             </tr>
-                            
+
                             <tr>
                               <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
                                 Rujukan Perubahan (jika ada)
                               </td>
-                              
+
                               <td class="px-2 py-1.5 border border-gray-800 text-black">
                                 {@analisis_pdf_data.rujukan_perubahan}
                               </td>
@@ -717,16 +718,16 @@
                           </tbody>
                         </table>
                       </div>
-                      
+
                       <div class="mb-6">
                         <h3 class="font-bold text-gray-900 mb-2 uppercase">
                           SPESIFIKASI APLIKASI YANG AKAN DIBANGUNKAN
                         </h3>
-                        
+
                         <p class="text-gray-700 mb-2">
                           Nyatakan secara terperinci spesifikasi aplikasi yang akan dibangunkan seperti bilangan modul (nyatakan modul-modul terlibat), fungsi dan sebagainya.
                         </p>
-                        
+
                         <div class="space-y-4 mt-4">
                           <%= for module <- @analisis_pdf_data.modules do %>
                             <div class="mb-4">
@@ -735,7 +736,7 @@
                                   {module.number}. {module.name}
                                 </strong>
                               </div>
-                              
+
                               <div class="ml-6 space-y-2">
                                 <%= for {func, index} <- Enum.with_index(module.functions) do %>
                                   <div class="mb-1">
@@ -758,85 +759,85 @@
                             </div>
                           <% end %>
                         </div>
-                        
+
                         <p class="text-gray-600 mt-4 italic">
                           **spesifikasi aplikasi adalah mengikut kajian yang telah dibuat
                         </p>
                       </div>
-                      
+
                       <div class="mt-8">
                         <div class="grid grid-cols-2 gap-6">
                           <div>
                             <h4 class="font-bold text-gray-900 mb-2">Dipersetujui Oleh:</h4>
-                            
+
                             <p class="text-gray-700 mb-3 font-semibold">Pemohon</p>
-                            
+
                             <div class="space-y-3">
                               <div>
                                 <p class="text-gray-600 mb-1">Tandatangan</p>
-                                
+
                                 <div class="h-10"></div>
                               </div>
-                              
+
                               <div>
                                 <p class="text-gray-600 mb-1">(Nama)</p>
-                                
+
                                 <div class="h-8 text-black">
                                   {@analisis_pdf_data.approved_by_name}
                                 </div>
                               </div>
-                              
+
                               <div>
                                 <p class="text-gray-600 mb-1">Jawatan:</p>
-                                
+
                                 <div class="h-8 text-black">
                                   {@analisis_pdf_data.approved_by_position}
                                 </div>
                               </div>
-                              
+
                               <div>
                                 <p class="text-gray-600 mb-1">Tarikh:</p>
-                                
+
                                 <div class="h-8 text-black">
                                   {@analisis_pdf_data.approved_by_date}
                                 </div>
                               </div>
                             </div>
                           </div>
-                          
+
                           <div>
                             <h4 class="font-bold text-gray-900 mb-2">Disediakan Oleh:</h4>
-                            
+
                             <p class="text-gray-700 mb-3 font-semibold">
                               Pengurus Projek / Pembangun
                             </p>
-                            
+
                             <div class="space-y-3">
                               <div>
                                 <p class="text-gray-600 mb-1">Tandatangan</p>
-                                
+
                                 <div class="h-10"></div>
                               </div>
-                              
+
                               <div>
                                 <p class="text-gray-600 mb-1">(Nama)</p>
-                                
+
                                 <div class="h-8 text-black">
                                   {@analisis_pdf_data.prepared_by_name}
                                 </div>
                               </div>
-                              
+
                               <div>
                                 <p class="text-gray-600 mb-1">Jawatan:</p>
-                                
+
                                 <div class="h-8 text-black">
                                   {@analisis_pdf_data.prepared_by_position}
                                 </div>
                               </div>
-                              
+
                               <div>
                                 <p class="text-gray-600 mb-1">Tarikh:</p>
-                                
+
                                 <div class="h-8 text-black">
                                   {@analisis_pdf_data.prepared_by_date}
                                 </div>
@@ -859,7 +860,7 @@
                     <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                       <h2 class="text-xl font-semibold text-white">Senarai Modul</h2>
                     </div>
-                    
+
                     <%= if assigns[:modules] && length(@modules) > 0 do %>
                       <div class="overflow-x-auto">
                         <table class="w-full text-sm">
@@ -868,37 +869,37 @@
                               <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 NAMA MODUL
                               </th>
-                              
+
                               <th class="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 VERSI
                               </th>
-                              
+
                               <th class="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 KEUTAMAAN
                               </th>
-                              
+
                               <th class="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 STATUS
                               </th>
-                              
+
                               <th class="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 TARIKH MULA
                               </th>
-                              
+
                               <th class="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 TARIKH JANGKA SIAP
                               </th>
-                              
+
                               <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 FUNGSI MODUL
                               </th>
-                              
+
                               <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 CATATAN
                               </th>
                             </tr>
                           </thead>
-                          
+
                           <tbody class="bg-white divide-y divide-gray-200">
                             <%= for module <- @modules do %>
                               <tr class="hover:bg-gray-50 transition-colors duration-150">
@@ -907,17 +908,17 @@
                                     <div class="text-sm font-medium text-gray-900">
                                       {module.name}
                                     </div>
-                                    
+
                                     <div class="text-xs text-gray-500">{module.id}</div>
                                   </div>
                                 </td>
-                                
+
                                 <td class="px-3 py-3 whitespace-nowrap text-center">
                                   <span class="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-mono font-medium">
                                     {module.version}
                                   </span>
                                 </td>
-                                
+
                                 <td class="px-3 py-3 whitespace-nowrap">
                                   <div class="flex justify-center">
                                     <span class={[
@@ -954,7 +955,7 @@
                                     </span>
                                   </div>
                                 </td>
-                                
+
                                 <td class="px-3 py-3 whitespace-nowrap">
                                   <div class="flex justify-center">
                                     <span class={[
@@ -991,7 +992,7 @@
                                     </span>
                                   </div>
                                 </td>
-                                
+
                                 <td class="px-3 py-3 whitespace-nowrap">
                                   <%= if module.tarikh_mula do %>
                                     <div class="flex items-center justify-center gap-1.5">
@@ -1007,7 +1008,7 @@
                                     <span class="text-sm text-gray-400 italic">-</span>
                                   <% end %>
                                 </td>
-                                
+
                                 <td class="px-3 py-3 whitespace-nowrap">
                                   <%= if module.tarikh_jangka_siap do %>
                                     <div class="flex items-center justify-center gap-1.5">
@@ -1023,7 +1024,7 @@
                                     <span class="text-sm text-gray-400 italic">-</span>
                                   <% end %>
                                 </td>
-                                
+
                                 <td class="px-3 py-3">
                                   <%= if length(module.functions) > 0 do %>
                                     <div class="space-y-1 max-h-32 overflow-y-auto">
@@ -1054,7 +1055,7 @@
                                     <span class="text-sm text-gray-400 italic">-</span>
                                   <% end %>
                                 </td>
-                                
+
                                 <td class="px-3 py-3">
                                   <%= if module.catatan do %>
                                     <div class="max-w-xs">
@@ -1076,7 +1077,7 @@
                         <div class="flex flex-col items-center justify-center text-gray-400">
                           <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                           <p class="text-sm font-medium">Tiada modul didaftarkan</p>
-                          
+
                           <p class="text-xs mt-1">
                             Sila daftarkan modul di halaman Analisis dan Rekabentuk
                           </p>
@@ -1094,7 +1095,7 @@
                         Senarai Permohonan Perubahan
                       </h2>
                     </div>
-                    
+
                     <%= if assigns[:change_requests] && length(@change_requests) > 0 do %>
                       <div class="overflow-x-auto">
                         <table class="w-full text-sm">
@@ -1103,37 +1104,37 @@
                               <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 TAJUK PERUBAHAN
                               </th>
-                              
+
                               <th class="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 JENIS
                               </th>
-                              
+
                               <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 MODUL TERLIBAT
                               </th>
-                              
+
                               <th class="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 STATUS
                               </th>
-                              
+
                               <th class="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 TARIKH DIBUAT
                               </th>
-                              
+
                               <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 JUSTIFIKASI
                               </th>
-                              
+
                               <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 KESAN
                               </th>
-                              
+
                               <th class="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 CATATAN
                               </th>
                             </tr>
                           </thead>
-                          
+
                           <tbody class="bg-white divide-y divide-gray-200">
                             <%= for change_request <- @change_requests do %>
                               <tr class="hover:bg-gray-50 transition-colors duration-150">
@@ -1142,11 +1143,11 @@
                                     <div class="text-sm font-medium text-gray-900">
                                       {change_request.tajuk}
                                     </div>
-                                    
+
                                     <div class="text-xs text-gray-500">{change_request.id}</div>
                                   </div>
                                 </td>
-                                
+
                                 <td class="px-3 py-3 whitespace-nowrap">
                                   <div class="flex justify-center">
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
@@ -1154,13 +1155,13 @@
                                     </span>
                                   </div>
                                 </td>
-                                
+
                                 <td class="px-3 py-3">
                                   <div class="text-sm text-gray-900">
                                     {change_request.modul_terlibat}
                                   </div>
                                 </td>
-                                
+
                                 <td class="px-3 py-3 whitespace-nowrap">
                                   <div class="flex justify-center">
                                     <span class={[
@@ -1193,7 +1194,7 @@
                                     </span>
                                   </div>
                                 </td>
-                                
+
                                 <td class="px-3 py-3 whitespace-nowrap">
                                   <%= if change_request.tarikh_dibuat do %>
                                     <div class="flex items-center justify-center gap-1.5">
@@ -1212,7 +1213,7 @@
                                     <span class="text-sm text-gray-400 italic">-</span>
                                   <% end %>
                                 </td>
-                                
+
                                 <td class="px-3 py-3">
                                   <div class="max-w-xs">
                                     <p class="text-sm text-gray-700 line-clamp-2">
@@ -1220,7 +1221,7 @@
                                     </p>
                                   </div>
                                 </td>
-                                
+
                                 <td class="px-3 py-3">
                                   <div class="max-w-xs">
                                     <p class="text-sm text-gray-700 line-clamp-2">
@@ -1228,7 +1229,7 @@
                                     </p>
                                   </div>
                                 </td>
-                                
+
                                 <td class="px-3 py-3">
                                   <%= if change_request.catatan do %>
                                     <div class="max-w-xs">
@@ -1250,7 +1251,7 @@
                         <div class="flex flex-col items-center justify-center text-gray-400">
                           <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                           <p class="text-sm font-medium">Tiada permohonan perubahan</p>
-                          
+
                           <p class="text-xs mt-1">Tiada permohonan perubahan didaftarkan</p>
                         </div>
                       </div>
@@ -1264,10 +1265,10 @@
           <div class="max-w-7xl mx-auto">
             <div class="mb-8">
               <h1 class="text-3xl font-bold text-gray-900 mb-2">Senarai Sistem</h1>
-              
+
               <p class="text-gray-600">Senarai lengkap semua sistem dan status terkini</p>
             </div>
-             <%!-- Filter and Search Bar --%>
+            <%!-- Filter and Search Bar --%>
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
               <.form
                 for={%{}}
@@ -1297,7 +1298,7 @@
                       />
                     </div>
                   </div>
-                   <%!-- Status Filter --%>
+                  <%!-- Status Filter --%>
                   <div>
                     <label
                       for="status_filter"
@@ -1312,13 +1313,13 @@
                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-black"
                     >
                       <option value="">Semua Status</option>
-                      
+
                       <option value="Dalam Pembangunan">Dalam Pembangunan</option>
-                      
+
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
-                   <%!-- Fasa Filter --%>
+                  <%!-- Fasa Filter --%>
                   <div>
                     <label for="fasa_filter" class="block text-sm font-medium text-black mb-2">
                       Fasa
@@ -1330,30 +1331,30 @@
                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-black"
                     >
                       <option value="">Semua Fasa</option>
-                      
+
                       <option value="Analisis dan Rekabentuk">Analisis dan Rekabentuk</option>
-                      
+
                       <option value="Soal Selidik">Soal Selidik</option>
-                      
+
                       <option value="Jadual Projek">Jadual Projek</option>
-                      
+
                       <option value="Pengaturcaraan">Pengaturcaraan</option>
-                      
+
                       <option value="Pengurusan Perubahan">Pengurusan Perubahan</option>
-                      
+
                       <option value="UAT">UAT</option>
-                      
+
                       <option value="Ujian Keselamatan">Ujian Keselamatan</option>
-                      
+
                       <option value="Penempatan">Penempatan</option>
-                      
+
                       <option value="Penyerahan">Penyerahan</option>
-                      
+
                       <option value="Maklumbalas Pelanggan">Maklumbalas Pelanggan</option>
                     </select>
                   </div>
                 </div>
-                 <%!-- Clear Filters Button --%>
+                <%!-- Clear Filters Button --%>
                 <%= if @search_term != "" || @status_filter != "" || @fasa_filter != "" do %>
                   <div class="flex items-center justify-end pt-2">
                     <button
@@ -1367,7 +1368,7 @@
                 <% end %>
               </.form>
             </div>
-             <%!-- Projects Table --%>
+            <%!-- Projects Table --%>
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
               <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                 <div class="flex items-center justify-between">
@@ -1377,7 +1378,7 @@
                   </div>
                 </div>
               </div>
-              
+
               <div class="overflow-x-auto">
                 <table
                   class="w-full divide-y divide-gray-200 table-fixed"
@@ -1391,63 +1392,63 @@
                       >
                         Nama Sistem
                       </th>
-                      
+
                       <th
                         class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                         style="width: 10%;"
                       >
                         Status
                       </th>
-                      
+
                       <th
                         class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                         style="width: 11%;"
                       >
                         Jabatan
                       </th>
-                      
+
                       <th
                         class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                         style="width: 10%;"
                       >
                         Fasa
                       </th>
-                      
+
                       <th
                         class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                         style="width: 8%;"
                       >
                         Tarikh Mula
                       </th>
-                      
+
                       <th
                         class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                         style="width: 8%;"
                       >
                         Tarikh Jangka Siap
                       </th>
-                      
+
                       <th
                         class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                         style="width: 10%;"
                       >
                         Pengurus
                       </th>
-                      
+
                       <th
                         class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                         style="width: 10%;"
                       >
                         Pembangun Sistem
                       </th>
-                      
+
                       <th
                         class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                         style="width: 8%;"
                       >
                         Dokumen
                       </th>
-                      
+
                       <th
                         class="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                         style="width: 10%;"
@@ -1456,7 +1457,7 @@
                       </th>
                     </tr>
                   </thead>
-                  
+
                   <tbody class="bg-white divide-y divide-gray-200">
                     <%= if Enum.empty?(@projects) do %>
                       <tr>
@@ -1475,7 +1476,7 @@
                               <div class="flex-shrink-0 h-6 w-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded flex items-center justify-center mr-1.5">
                                 <.icon name="hero-folder" class="w-3 h-3 text-white" />
                               </div>
-                              
+
                               <div
                                 class="text-xs font-medium text-gray-900 truncate"
                                 title={project.nama}
@@ -1484,7 +1485,7 @@
                               </div>
                             </div>
                           </td>
-                          
+
                           <td class="px-2 py-2">
                             <span
                               class={[
@@ -1505,7 +1506,7 @@
                               {project.status}
                             </span>
                           </td>
-                          
+
                           <td class="px-2 py-2">
                             <%= if project.jabatan && project.jabatan != "" do %>
                               <div class="flex items-center text-xs text-gray-600 min-w-0">
@@ -1519,7 +1520,7 @@
                               </div>
                             <% end %>
                           </td>
-                          
+
                           <td class="px-2 py-2">
                             <%= if project.fasa && project.fasa != "" do %>
                               <div
@@ -1530,7 +1531,7 @@
                               </div>
                             <% end %>
                           </td>
-                          
+
                           <td class="px-2 py-2 whitespace-nowrap">
                             <%= if project.tarikh_mula do %>
                               <div class="flex items-center text-xs text-gray-600">
@@ -1542,7 +1543,7 @@
                               </div>
                             <% end %>
                           </td>
-                          
+
                           <td class="px-2 py-2 whitespace-nowrap">
                             <%= if project.tarikh_siap do %>
                               <div class="flex items-center text-xs text-gray-600">
@@ -1554,7 +1555,7 @@
                               </div>
                             <% end %>
                           </td>
-                          
+
                           <td class="px-2 py-2">
                             <div class="flex items-center text-xs text-gray-600 min-w-0">
                               <.icon
@@ -1569,7 +1570,7 @@
                               </span>
                             </div>
                           </td>
-                          
+
                           <td class="px-2 py-2">
                             <%= if project.pembangun_sistem && project.pembangun_sistem != "" do %>
                               <div class="flex items-center text-xs text-gray-600 min-w-0">
@@ -1583,7 +1584,7 @@
                               </div>
                             <% end %>
                           </td>
-                          
+
                           <td class="px-2 py-2">
                             <%= if project.dokumen_sokongan && project.dokumen_sokongan > 0 do %>
                               <div class="flex items-center text-xs text-gray-600 min-w-0">
@@ -1595,7 +1596,7 @@
                               </div>
                             <% end %>
                           </td>
-                          
+
                           <td class="px-2 py-2 whitespace-nowrap">
                             <.link
                               navigate={~p"/projek/#{project.id}/soal-selidik"}
@@ -1610,7 +1611,7 @@
                   </tbody>
                 </table>
               </div>
-               <%!-- Pagination --%>
+              <%!-- Pagination --%>
               <%= if @total_pages > 0 do %>
                 <div class="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                   <div class="flex items-center justify-between">
@@ -1624,7 +1625,7 @@
                       daripada <span class="font-medium text-gray-900">{@total_count}</span>
                       sistem
                     </div>
-                    
+
                     <div class="flex items-center gap-2">
                       <button
                         phx-click="change_page"
@@ -1657,7 +1658,7 @@
                           {page_num}
                         </button>
                       <% end %>
-                      
+
                       <button
                         phx-click="change_page"
                         phx-value-page={@page + 1}

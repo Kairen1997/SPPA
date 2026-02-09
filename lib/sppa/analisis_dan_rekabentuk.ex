@@ -79,6 +79,30 @@ defmodule Sppa.AnalisisDanRekabentuk do
   end
 
   @doc """
+  Returns a map of project_id to versi (version string) from Analisis dan Rekabentuk.
+  Uses the latest analisis per project (by inserted_at). Used e.g. for penempatan table VERSI column.
+  """
+  def get_versi_by_project_ids(ids) when is_list(ids) do
+    ids = Enum.uniq(Enum.reject(ids, &is_nil/1))
+
+    if ids == [] do
+      %{}
+    else
+      from(a in AnalisisDanRekabentuk,
+        where: a.project_id in ^ids,
+        order_by: [desc: a.inserted_at],
+        select: %{project_id: a.project_id, versi: a.versi}
+      )
+      |> Repo.all()
+      |> Enum.reduce(%{}, fn row, acc ->
+        if Map.has_key?(acc, row.project_id),
+          do: acc,
+          else: Map.put(acc, row.project_id, row.versi || "1.0.0")
+      end)
+    end
+  end
+
+  @doc """
   Returns a list of unique module names (nama modul) from Analisis dan Rekabentuk
   for the current user. Used e.g. for dropdowns in Ujian Penerimaan Pengguna.
 

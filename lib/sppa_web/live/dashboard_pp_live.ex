@@ -148,7 +148,7 @@ defmodule SppaWeb.DashboardPPLive do
               >
                 <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
-               <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+              <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
 
             <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
