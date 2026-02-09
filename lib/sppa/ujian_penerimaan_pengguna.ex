@@ -16,6 +16,39 @@ defmodule Sppa.UjianPenerimaanPengguna do
   end
 
   @doc """
+  Ensures an ujian record exists for the given modul and project.
+  Creates one with default values if not found. Returns the ujian struct.
+  """
+  def ensure_ujian_for_module(project_id, modul_name) when is_integer(project_id) do
+    name = String.trim(modul_name || "")
+    today = Date.utc_today()
+
+    existing =
+      UjianPenerimaanPengguna
+      |> where([u], u.project_id == ^project_id and u.modul == ^name)
+      |> Repo.one()
+
+    if existing do
+      existing
+    else
+      attrs = %{
+        project_id: project_id,
+        tajuk: "Ujian Penerimaan Pengguna - #{name}",
+        modul: name,
+        tarikh_ujian: today,
+        tarikh_dijangka_siap: today,
+        status: "Menunggu",
+        hasil: "Belum Selesai"
+      }
+
+      case create_ujian(attrs) do
+        {:ok, ujian} -> ujian
+        {:error, _} -> nil
+      end
+    end
+  end
+
+  @doc """
   Returns the list of UAT records for a project.
   When project_id is nil, returns all ujian.
   """

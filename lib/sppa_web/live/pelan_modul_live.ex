@@ -32,7 +32,9 @@ defmodule SppaWeb.PelanModulLive do
         end
 
       if project do
-        modules = ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
+        modules =
+          ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
+
         gantt_data = build_gantt_data_for_project(project, modules)
 
         {:ok,

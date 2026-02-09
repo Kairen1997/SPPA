@@ -73,10 +73,10 @@ defmodule SppaWeb.CoreComponents do
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
-
+          
           <p>{msg}</p>
         </div>
-        <div class="flex-1" />
+         <div class="flex-1" />
         <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
           <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
         </button>
@@ -220,7 +220,7 @@ defmodule SppaWeb.CoreComponents do
           {@rest}
         >
           <option :if={@prompt} value="">{@prompt}</option>
-          {Phoenix.HTML.Form.options_for_select(@options, @value)}
+           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
@@ -291,10 +291,10 @@ defmodule SppaWeb.CoreComponents do
     <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
       <div>
         <h1 class="text-lg font-semibold leading-8">{render_slot(@inner_block)}</h1>
-
+        
         <p :if={@subtitle != []} class="text-sm text-base-content/70">{render_slot(@subtitle)}</p>
       </div>
-
+      
       <div class="flex-none">{render_slot(@actions)}</div>
     </header>
     """
@@ -336,11 +336,11 @@ defmodule SppaWeb.CoreComponents do
       <thead>
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>
-
+          
           <th :if={@action != []}><span class="sr-only">{gettext("Actions")}</span></th>
         </tr>
       </thead>
-
+      
       <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
         <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
           <td
@@ -350,7 +350,7 @@ defmodule SppaWeb.CoreComponents do
           >
             {render_slot(col, @row_item.(row))}
           </td>
-
+          
           <td :if={@action != []} class="w-0 font-semibold">
             <div class="flex gap-4">
               <%= for action <- @action do %>
@@ -384,7 +384,7 @@ defmodule SppaWeb.CoreComponents do
       <li :for={item <- @item} class="list-row">
         <div class="list-col-grow">
           <div class="font-bold">{item.title}</div>
-
+          
           <div>{render_slot(item)}</div>
         </div>
       </li>
@@ -572,7 +572,7 @@ defmodule SppaWeb.CoreComponents do
               class="h-24 w-auto object-contain"
             />
           </div>
-
+          
           <button
             phx-click="toggle_sidebar"
             class="text-gray-400 hover:text-white hover:bg-gray-700 p-2 rounded-lg transition-all duration-200"
@@ -580,7 +580,7 @@ defmodule SppaWeb.CoreComponents do
             <.icon name="hero-x-mark" class="w-5 h-5" />
           </button>
         </div>
-
+        
         <nav class="flex-1 overflow-y-auto py-4 px-3">
           <%= if @current_scope && @current_scope.user && @current_scope.user.role == "pengurus projek" do %>
             <div class="space-y-1">
@@ -735,7 +735,7 @@ defmodule SppaWeb.CoreComponents do
           <.icon name="hero-plus" class="w-4 h-4" /> <span>Tambah Baris</span>
         </button>
       </div>
-
+      
       <table class="w-full border-collapse text-sm">
         <thead>
           <tr class="bg-gray-100 border-b border-gray-400">
@@ -745,40 +745,40 @@ defmodule SppaWeb.CoreComponents do
             >
               No
             </th>
-
+            
             <th
               class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
               style="width: 40%;"
             >
               Soalan
             </th>
-
+            
             <th
               class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
               style="width: 25%;"
             >
               Maklumbalas
             </th>
-
+            
             <th
               class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
               style="width: 25%;"
             >
               Catatan
             </th>
-
+            
             <th class="px-3 py-2 text-left font-semibold text-gray-700" style="width: 10%;">
               Tindakan
             </th>
           </tr>
         </thead>
-
+        
         <tbody class="divide-y divide-gray-300">
           <tr :for={question <- @questions} class="hover:bg-gray-50">
             <td class="px-3 py-2 border-r border-gray-400 align-top">
               <div class="px-2 py-1 text-sm font-medium text-gray-900">{question.no}</div>
             </td>
-
+            
             <td class="px-3 py-2 border-r border-gray-400 align-top">
               <textarea
                 id={"soalan-#{@tab_type}-#{@category_key}-#{question.no}"}
@@ -795,7 +795,7 @@ defmodule SppaWeb.CoreComponents do
                 style="min-height: 2.5rem; max-height: 20rem;"
               >{requirement_form_value(@form, @tab_type, @category_key, question.no, "soalan", question.soalan || "")}</textarea>
             </td>
-
+            
             <td class="px-3 py-2 border-r border-gray-400 align-top">
               <%= cond do %>
                 <% question.type == :text -> %>
@@ -841,7 +841,7 @@ defmodule SppaWeb.CoreComponents do
                     phx-hook="SaveFieldOnBlur"
                   >
                     <option value="">-- Pilih --</option>
-
+                    
                     <option
                       :for={option <- question.options || []}
                       value={option}
@@ -909,7 +909,7 @@ defmodule SppaWeb.CoreComponents do
                   >{requirement_form_value(@form, @tab_type, @category_key, question.no, "maklumbalas", "")}</textarea>
               <% end %>
             </td>
-
+            
             <td class="px-3 py-2 border-r border-gray-400 align-top">
               <textarea
                 id={"catatan-#{@tab_type}-#{@category_key}-#{question.no}"}
@@ -926,7 +926,7 @@ defmodule SppaWeb.CoreComponents do
                 style="min-height: 2.5rem; max-height: 20rem;"
               >{requirement_form_value(@form, @tab_type, @category_key, question.no, "catatan", "")}</textarea>
             </td>
-
+            
             <td class="px-3 py-2 align-top">
               <div class="flex items-center gap-2">
                 <%= if requirement_has_data?(@form, @tab_type, @category_key, question) do %>
@@ -942,7 +942,7 @@ defmodule SppaWeb.CoreComponents do
                     <.icon name="hero-pencil" class="w-4 h-4" />
                   </button>
                 <% end %>
-
+                
                 <button
                   type="button"
                   phx-click="delete_question"

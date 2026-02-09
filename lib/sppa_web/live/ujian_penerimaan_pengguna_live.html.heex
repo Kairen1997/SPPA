@@ -83,50 +83,50 @@
               </div>
 
               <div class="overflow-x-auto">
-                <table class="w-full text-sm table-auto">
+                <table class="w-full text-sm table-auto leading-tight">
                   <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
+                      <th class="px-3 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
                         ID Kes Ujian
                       </th>
 
-                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">
+                      <th class="px-3 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[160px]">
                         Senario Ujian
                       </th>
 
-                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[150px]">
+                      <th class="px-3 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[120px]">
                         Langkah Ujian
                       </th>
 
-                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
+                      <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
                         Keputusan Dijangka
                       </th>
 
-                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
+                      <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
                         Keputusan Sebenar
                       </th>
 
-                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
+                      <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
                         Hasil
                       </th>
 
-                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[120px]">
+                      <th class="px-3 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[100px]">
                         Di Uji Oleh
                       </th>
 
-                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
+                      <th class="px-3 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
                         Tarikh Ujian
                       </th>
 
-                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">
+                      <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">
                         Disahkan Oleh
                       </th>
 
-                      <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
+                      <th class="px-3 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
                         Tarikh Pengesahan
                       </th>
 
-                      <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">
+                      <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">
                         Tindakan
                       </th>
                     </tr>
@@ -147,14 +147,18 @@
                         :for={kes <- Map.get(@selected_ujian, :senarai_kes_ujian, [])}
                         class="hover:bg-gray-50 transition-colors duration-150"
                       >
-                        <td class="px-3 py-3">
+                        <td class="px-3 py-1.5">
                           <span class="text-gray-900 font-mono text-xs">
                             {Map.get(kes, :kod, kes.id)}
                           </span>
                         </td>
 
-                        <td class="px-3 py-3 align-top">
-                          <% senario_lines = (kes.senario || "") |> String.split(~r/\r?\n/) |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == "")) %>
+                        <td class="px-3 py-1.5 align-top">
+                          <% senario_lines =
+                            (kes.senario || "")
+                            |> String.split(~r/\r?\n/)
+                            |> Enum.map(&String.trim/1)
+                            |> Enum.reject(&(&1 == "")) %>
                           <%= if senario_lines == [] do %>
                             <span class="text-gray-400 text-xs">—</span>
                           <% else %>
@@ -166,8 +170,12 @@
                           <% end %>
                         </td>
 
-                        <td class="px-3 py-3 align-top">
-                          <% langkah_lines = (kes.langkah || "") |> String.split(~r/\r?\n/) |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == "")) %>
+                        <td class="px-3 py-1.5 align-top">
+                          <% langkah_lines =
+                            (kes.langkah || "")
+                            |> String.split(~r/\r?\n/)
+                            |> Enum.map(&String.trim/1)
+                            |> Enum.reject(&(&1 == "")) %>
                           <%= if langkah_lines == [] do %>
                             <span class="text-gray-400 text-xs">—</span>
                           <% else %>
@@ -179,8 +187,12 @@
                           <% end %>
                         </td>
 
-                        <td class="px-3 py-3 align-top">
-                          <% dijangka_lines = (kes.keputusan_dijangka || "") |> String.split(~r/\r?\n/) |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == "")) %>
+                        <td class="px-3 py-1.5 align-top">
+                          <% dijangka_lines =
+                            (kes.keputusan_dijangka || "")
+                            |> String.split(~r/\r?\n/)
+                            |> Enum.map(&String.trim/1)
+                            |> Enum.reject(&(&1 == "")) %>
                           <%= if dijangka_lines == [] do %>
                             <span class="text-gray-400 text-xs">—</span>
                           <% else %>
@@ -192,9 +204,12 @@
                           <% end %>
                         </td>
 
-                        <td class="px-3 py-3 align-top">
-                          <% sebenar_str = (kes.keputusan_sebenar || "") |> to_string() %>
-                          <% sebenar_lines = sebenar_str |> String.split(~r/\r?\n/) |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == "")) %>
+                        <td class="px-3 py-1.5 align-top">
+                          <% sebenar_str = (kes.keputusan_sebenar || "") |> to_string() %> <% sebenar_lines =
+                            sebenar_str
+                            |> String.split(~r/\r?\n/)
+                            |> Enum.map(&String.trim/1)
+                            |> Enum.reject(&(&1 == "")) %>
                           <%= if sebenar_lines != [] do %>
                             <div class="text-gray-900 text-xs">
                               <%= for line <- sebenar_lines do %>
@@ -204,7 +219,7 @@
                           <% end %>
                         </td>
 
-                        <td class="px-3 py-3 text-center align-top">
+                        <td class="px-3 py-1.5 text-center align-top">
                           <%= if kes.hasil do %>
                             <span class={[
                               "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
@@ -228,11 +243,11 @@
                           <% end %>
                         </td>
 
-                        <td class="px-3 py-3">
+                        <td class="px-3 py-1.5">
                           <span class="text-gray-900 text-xs">{Map.get(kes, :penguji, "")}</span>
                         </td>
 
-                        <td class="px-3 py-3">
+                        <td class="px-3 py-1.5">
                           <%= if Map.get(kes, :tarikh_ujian) do %>
                             <div class="flex items-center gap-1.5">
                               <.icon
@@ -246,14 +261,16 @@
                           <% end %>
                         </td>
 
-                        <td class="px-3 py-3 text-center">
-                          <% name = Map.get(kes, :disahkan_oleh) || (if Map.get(kes, :disahkan), do: "Ya", else: nil) %>
+                        <td class="px-3 py-1.5 text-center">
+                          <% name =
+                            Map.get(kes, :disahkan_oleh) ||
+                              if Map.get(kes, :disahkan), do: "Ya", else: nil %>
                           <%= if name && (name |> to_string() |> String.trim()) not in ["", "-"] do %>
                             <span class="text-xs text-gray-900">{name}</span>
                           <% end %>
                         </td>
 
-                        <td class="px-3 py-3">
+                        <td class="px-3 py-1.5">
                           <% t = Map.get(kes, :tarikh_pengesahan) %>
                           <%= if t && t != "-" && t != "" do %>
                             <div class="flex items-center gap-1.5">
@@ -268,7 +285,7 @@
                           <% end %>
                         </td>
 
-                        <td class="px-3 py-3 text-center">
+                        <td class="px-3 py-1.5 text-center">
                           <div class="flex items-center justify-center gap-1.5">
                             <button
                               phx-click="edit_kes_ujian"
@@ -300,9 +317,7 @@
             <div class="mb-8">
               <div class="flex items-center gap-4 flex-wrap">
                 <div>
-                  <h1 class="text-4xl font-bold text-gray-900 mb-2">
-                    Ujian Penerimaan Pengguna
-                  </h1>
+                  <h1 class="text-4xl font-bold text-gray-900 mb-2">Ujian Penerimaan Pengguna</h1>
 
                   <p class="text-gray-600">
                     Urus dan pantau ujian penerimaan pengguna untuk modul sistem
@@ -324,46 +339,44 @@
                     <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                     <p class="text-sm font-medium">Tiada ujian penerimaan pengguna</p>
 
-                    <p class="text-xs mt-1">
-                      Tiada ujian untuk dipaparkan
-                    </p>
+                    <p class="text-xs mt-1">Tiada ujian untuk dipaparkan</p>
                   </div>
                 </div>
               <% else %>
                 <%!-- Table View --%>
                 <div class="overflow-x-auto">
-                  <table class="w-full text-sm">
+                  <table class="w-full text-sm leading-tight">
                     <thead class="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
+                        <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
                           Bil
                         </th>
 
-                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Nama Modul
                         </th>
 
-                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Status
                         </th>
 
-                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Tarikh Ujian
                         </th>
 
-                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Di Uji Oleh
                         </th>
 
-                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Hasil
                         </th>
 
-                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px] align-top">
+                        <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[140px]">
                           Catatan
                         </th>
 
-                        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Tindakan
                         </th>
                       </tr>
@@ -372,19 +385,17 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                       <tr
                         :for={{ujian, idx} <- Enum.with_index(@paginated_ujian, 0)}
-                        class="hover:bg-gray-50 transition-colors duration-150"
+                        class="hover:bg-gray-50 transition-colors duration-150 h-12"
                       >
-                        <td class="px-3 py-2 text-center text-xs font-semibold text-gray-700">
+                        <td class="px-3 py-1.5 text-center text-xs font-semibold text-gray-700 align-middle">
                           {@per_page * (@page - 1) + idx + 1}
                         </td>
 
-                        <td class="px-3 py-2 text-left">
-                          <span class="text-xs text-gray-700">
-                            {ujian.modul}
-                          </span>
+                        <td class="px-3 py-1.5 text-left align-middle">
+                          <span class="text-xs text-gray-700">{ujian.modul}</span>
                         </td>
 
-                        <td class="px-3 py-2 whitespace-nowrap text-left">
+                        <td class="px-3 py-1.5 whitespace-nowrap text-left align-middle">
                           <span class={[
                             "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
                             case ujian.status do
@@ -410,50 +421,60 @@
                           </span>
                         </td>
 
-                        <td class="px-3 py-2 whitespace-nowrap text-left">
-                          <div class="flex items-center gap-1.5">
-                            <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400" />
-                            <span class="text-xs text-gray-700">
-                              {Calendar.strftime(ujian.tarikh_ujian, "%d/%m/%Y")}
-                            </span>
-                          </div>
+                        <% data_dimasukkan =
+                          ujian.penguji && String.trim(to_string(ujian.penguji || "")) != "" %>
+                        <td class="px-3 py-1.5 whitespace-nowrap text-left align-middle">
+                          <%= if data_dimasukkan && ujian.tarikh_ujian do %>
+                            <div class="flex items-center gap-1.5">
+                              <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400" />
+                              <span class="text-xs text-gray-700">
+                                {Calendar.strftime(ujian.tarikh_ujian, "%d/%m/%Y")}
+                              </span>
+                            </div>
+                          <% end %>
                         </td>
 
-                        <td class="px-3 py-2 text-left">
-                          <span class="text-xs text-gray-700">{ujian.penguji}</span>
-                        </td>
-
-                        <td class="px-3 py-2 whitespace-nowrap text-left">
-                          <span class={[
-                            "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
-                            case ujian.hasil do
-                              "Lulus" -> "bg-green-100 text-green-800 border-green-200"
-                              "Gagal" -> "bg-red-100 text-red-800 border-red-200"
-                              "Belum Selesai" -> "bg-gray-100 text-gray-800 border-gray-200"
-                              _ -> "bg-gray-100 text-gray-800 border-gray-200"
-                            end
-                          ]}>
-                            <.icon
-                              name={
-                                case ujian.hasil do
-                                  "Lulus" -> "hero-check-circle"
-                                  "Gagal" -> "hero-x-circle"
-                                  "Belum Selesai" -> "hero-clock"
-                                  _ -> "hero-information-circle"
-                                end
-                              }
-                              class="w-3 h-3 mr-1"
-                            /> {ujian.hasil}
+                        <td class="px-3 py-1.5 text-left align-middle">
+                          <span class="text-xs text-gray-700">
+                            {if data_dimasukkan, do: ujian.penguji || "", else: ""}
                           </span>
                         </td>
 
-                        <td class="px-3 py-2 text-left align-top">
-                          <div class="text-xs text-gray-700 whitespace-pre-wrap text-left">
-                            {if Map.get(ujian, :catatan), do: ujian.catatan, else: "-"}
+                        <td class="px-3 py-1.5 whitespace-nowrap text-left align-middle">
+                          <%= if data_dimasukkan && ujian.hasil && ujian.hasil not in [nil, "", "Belum Selesai"] do %>
+                            <span class={[
+                              "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
+                              case ujian.hasil do
+                                "Lulus" -> "bg-green-100 text-green-800 border-green-200"
+                                "Gagal" -> "bg-red-100 text-red-800 border-red-200"
+                                _ -> "bg-gray-100 text-gray-800 border-gray-200"
+                              end
+                            ]}>
+                              <.icon
+                                name={
+                                  case ujian.hasil do
+                                    "Lulus" -> "hero-check-circle"
+                                    "Gagal" -> "hero-x-circle"
+                                    _ -> "hero-information-circle"
+                                  end
+                                }
+                                class="w-3 h-3 mr-1"
+                              /> {ujian.hasil}
+                            </span>
+                          <% end %>
+                        </td>
+
+                        <td class="px-3 py-1.5 text-left align-middle h-12">
+                          <div class="text-xs text-gray-700 text-left leading-tight line-clamp-2 max-w-[140px]">
+                            <%= if data_dimasukkan do %>
+                              <%= if (c = Map.get(ujian, :catatan)) && String.trim(to_string(c || "")) != "" do %>
+                                {c}
+                              <% end %>
+                            <% end %>
                           </div>
                         </td>
 
-                        <td class="px-3 py-2 whitespace-nowrap text-left">
+                        <td class="px-3 py-1.5 whitespace-nowrap text-left align-middle">
                           <div class="flex items-center gap-1.5">
                             <.link
                               navigate={
@@ -482,7 +503,6 @@
                     </tbody>
                   </table>
                 </div>
-
                 <%!-- Pagination --%>
                 <div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between bg-gray-50">
                   <div class="text-sm text-gray-600">
@@ -559,7 +579,8 @@
         class="fixed inset-0 bg-black/60 transition-opacity"
         aria-hidden="true"
         phx-click="close_create_modal"
-      ></div>
+      >
+      </div>
       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
@@ -650,6 +671,7 @@
                       <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
+
                   <%= for msg <- Enum.map(@form[:tarikh_ujian].errors || [], &translate_error/1) do %>
                     <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                       <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
@@ -691,6 +713,7 @@
                       <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
+
                   <%= for msg <- Enum.map(@form[:tarikh_dijangka_siap].errors || [], &translate_error/1) do %>
                     <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                       <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
@@ -760,7 +783,8 @@
         class="fixed inset-0 bg-black/60 transition-opacity"
         aria-hidden="true"
         phx-click="close_edit_modal"
-      ></div>
+      >
+      </div>
       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
@@ -801,6 +825,7 @@
                   <div class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-gray-700 bg-gray-50">
                     {if @editing_ujian, do: @editing_ujian.modul, else: "-"}
                   </div>
+
                   <input
                     type="hidden"
                     name="ujian[modul]"
@@ -849,6 +874,7 @@
                       <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
+
                   <%= for msg <- Enum.map(@form[:tarikh_ujian].errors || [], &translate_error/1) do %>
                     <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                       <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
@@ -890,6 +916,7 @@
                       <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
+
                   <%= for msg <- Enum.map(@form[:tarikh_dijangka_siap].errors || [], &translate_error/1) do %>
                     <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                       <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
@@ -958,7 +985,9 @@
         class="fixed inset-0 bg-black/60 transition-opacity"
         aria-hidden="true"
         phx-click="close_add_kes_modal"
-      ></div>
+      >
+      </div>
+
       <div class="flex min-h-full items-center justify-center p-4">
         <div
           class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -968,8 +997,10 @@
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Tambah Kes Ujian</h2>
+
                 <p class="mt-1 text-sm text-blue-100">Isi maklumat kes ujian baharu</p>
               </div>
+
               <button
                 type="button"
                 phx-click="close_add_kes_modal"
@@ -980,6 +1011,7 @@
               </button>
             </div>
           </div>
+
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@kes_form}
@@ -999,6 +1031,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
+
                 <div class="md:col-span-2">
                   <.input
                     field={@kes_form[:langkah]}
@@ -1009,6 +1042,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
+
                 <div class="md:col-span-2">
                   <.input
                     field={@kes_form[:keputusan_dijangka]}
@@ -1019,6 +1053,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
+
                 <div class="md:col-span-2">
                   <.input
                     field={@kes_form[:keputusan_sebenar]}
@@ -1029,6 +1064,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
+
                 <div>
                   <.input
                     field={@kes_form[:hasil]}
@@ -1039,6 +1075,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
+
                 <div>
                   <.input
                     field={@kes_form[:penguji]}
@@ -1048,6 +1085,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
+
                 <div class="fieldset mb-2">
                   <label
                     for={@kes_form[:tarikh_ujian].id}
@@ -1079,6 +1117,7 @@
                     </div>
                   </div>
                 </div>
+
                 <div>
                   <.input
                     field={@kes_form[:disahkan_oleh]}
@@ -1088,6 +1127,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
+
                 <div class="fieldset mb-2">
                   <label
                     for={@kes_form[:tarikh_pengesahan].id}
@@ -1125,6 +1165,7 @@
               </div>
             </.form>
           </div>
+
           <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
             <button
               type="button"
@@ -1153,7 +1194,8 @@
         class="fixed inset-0 bg-black/60 transition-opacity"
         aria-hidden="true"
         phx-click="close_edit_kes_modal"
-      ></div>
+      >
+      </div>
       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
@@ -1286,6 +1328,7 @@
                       <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
+
                   <%= for msg <- Enum.map(@kes_form[:tarikh_ujian].errors || [], &translate_error/1) do %>
                     <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                       <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
@@ -1336,6 +1379,7 @@
                       <.icon name="hero-calendar-days" class="w-5 h-5 pointer-events-none" />
                     </div>
                   </div>
+
                   <%= for msg <- Enum.map(@kes_form[:tarikh_pengesahan].errors || [], &translate_error/1) do %>
                     <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                       <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}

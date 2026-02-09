@@ -118,7 +118,16 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         penempatan = get_penempatan()
         penyerahan = get_penyerahan()
         ujian = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
-        ujian_keselamatan = UjianKeselamatan.list_ujian()
+
+        # Untuk tab "Ujian Keselamatan", kita mahu paparkan data yang sama
+        # seperti di halaman penuh UjianKeselamatanLive, iaitu:
+        # - satu baris bagi setiap modul projek
+        # - data ujian (jika wujud) akan dipadankan mengikut index modul
+        ujian_keselamatan_rows =
+          build_ujian_keselamatan_rows_for_project(
+            modules,
+            UjianKeselamatan.list_ujian()
+          )
 
         {:ok,
          socket
@@ -139,7 +148,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:penempatan, penempatan)
          |> assign(:penyerahan, penyerahan)
          |> assign(:ujian, ujian)
-         |> assign(:ujian_keselamatan, ujian_keselamatan)
+         |> assign(:ujian_keselamatan, ujian_keselamatan_rows)
          |> assign(:show_view_modal, false)
          |> assign(:show_edit_modal, false)
          |> assign(:show_create_modal, false)
@@ -493,6 +502,45 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   defp empty_to_nil(nil), do: nil
   defp empty_to_nil(s) when is_binary(s), do: s
   defp empty_to_nil(other), do: other
+
+  # Senarai ujian keselamatan untuk tab projek
+  # Menggunakan logik yang sama seperti di UjianKeselamatanLive:
+  # satu baris per modul, dan data ujian (jika ada) akan digabung
+  # mengikut index modul.
+  defp build_ujian_keselamatan_rows_for_project(modules_from_analisis, ujian_raw) do
+    Enum.with_index(modules_from_analisis, 0)
+    |> Enum.map(fn {mod, idx} ->
+      ujian = Enum.at(ujian_raw, idx)
+
+      modul_name = mod[:name] || Map.get(mod, :name) || Map.get(mod, :nama_modul) || ""
+      modul_id = mod[:id] || Map.get(mod, :id) || "module_#{idx}"
+
+      if ujian do
+        ujian
+        |> Map.put(:modul, modul_name)
+        |> Map.put(:nama_modul, modul_name)
+        |> Map.put_new(:id, modul_id)
+        |> Map.put_new(:status, "Menunggu")
+        |> Map.put_new(:tarikh_ujian, nil)
+        |> Map.put_new(:tarikh_dijangka_siap, nil)
+        |> Map.put_new(:penguji, nil)
+        |> Map.put_new(:hasil, "Belum Selesai")
+        |> Map.put_new(:catatan, nil)
+      else
+        %{
+          id: modul_id,
+          modul: modul_name,
+          nama_modul: modul_name,
+          status: "Menunggu",
+          tarikh_ujian: nil,
+          tarikh_dijangka_siap: nil,
+          penguji: nil,
+          hasil: "Belum Selesai",
+          catatan: nil
+        }
+      end
+    end)
+  end
 
   # Penyerahan (delivery) - same data as PenyerahanLive for tab display
   defp get_penyerahan do

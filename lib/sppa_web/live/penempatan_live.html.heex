@@ -9,7 +9,7 @@
       phx-click="close_sidebar"
     >
     </div>
-    <%!-- Sidebar --%>
+     <%!-- Sidebar --%>
     <.dashboard_sidebar
       sidebar_open={@sidebar_open}
       dashboard_path={~p"/dashboard"}
@@ -29,12 +29,11 @@
             class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
           >
             <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-           <.header_logos />
+          </button> <.header_logos />
         </div>
-
+        
         <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
-
+        
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <.header_actions
             notifications_open={@notifications_open}
@@ -45,7 +44,7 @@
           />
         </div>
       </header>
-      <%!-- Main Content Area --%>
+       <%!-- Main Content Area --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100">
         <div class="max-w-7xl mx-auto px-6 py-8">
           <%= if assigns[:selected_penempatan] do %>
@@ -60,19 +59,19 @@
                   <span>Kembali ke Senarai Penempatan</span>
                 </.link>
               </div>
-
+              
               <h1 class="text-3xl font-bold text-gray-900 mb-2">
                 {@selected_penempatan.nama_sistem}
               </h1>
-
+              
               <p class="text-gray-600">Butiran lengkap penempatan sistem</p>
             </div>
-            <%!-- Maklumat Penempatan Card --%>
+             <%!-- Maklumat Penempatan Card --%>
             <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
               <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                 <h2 class="text-xl font-semibold text-white">Maklumat Penempatan</h2>
               </div>
-
+              
               <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -83,17 +82,17 @@
                       {@selected_penempatan.nama_sistem}
                     </p>
                   </div>
-
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Versi</label>
                     <p class="text-base text-gray-900">{@selected_penempatan.versi}</p>
                   </div>
-
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Lokasi</label>
                     <p class="text-base text-gray-900">{@selected_penempatan.lokasi}</p>
                   </div>
-
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Jenis</label>
                     <span class={[
@@ -108,14 +107,14 @@
                       {@selected_penempatan.jenis}
                     </span>
                   </div>
-
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">
                       Persekitaran
                     </label>
                     <p class="text-base text-gray-900">{@selected_penempatan.persekitaran}</p>
                   </div>
-
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Status</label>
                     <span class={[
@@ -142,7 +141,7 @@
                       /> {@selected_penempatan.status}
                     </span>
                   </div>
-
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">URL</label>
                     <%= if @selected_penempatan.url && @selected_penempatan.url != "" do %>
@@ -159,7 +158,7 @@
                       <p class="text-base text-gray-400">-</p>
                     <% end %>
                   </div>
-
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">
                       Tarikh Dijangka
@@ -171,7 +170,7 @@
                       </p>
                     </div>
                   </div>
-
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">
                       Tarikh Penempatan
@@ -183,7 +182,7 @@
                       </p>
                     </div>
                   </div>
-
+                  
                   <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-500 mb-1">Catatan</label>
                     <p class="text-base text-gray-900 whitespace-pre-wrap">
@@ -193,10 +192,10 @@
                     </p>
                   </div>
                 </div>
-                <%!-- Maklumat Kelulusan --%>
+                 <%!-- Maklumat Kelulusan --%>
                 <div class="mt-8 pt-6 border-t border-gray-200">
                   <h3 class="text-lg font-semibold text-gray-900 mb-4">Maklumat Kelulusan</h3>
-
+                  
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <label class="block text-sm font-medium text-gray-500 mb-1">
@@ -207,14 +206,14 @@
                           do: @selected_penempatan.dibina_oleh,
                           else: "-"}
                       </p>
-
+                      
                       <%= if @selected_penempatan.tarikh_dibina do %>
                         <p class="text-xs text-gray-500 mt-1">
                           {Calendar.strftime(@selected_penempatan.tarikh_dibina, "%d/%m/%Y")}
                         </p>
                       <% end %>
                     </div>
-
+                    
                     <div>
                       <label class="block text-sm font-medium text-gray-500 mb-1">
                         Disemak Oleh
@@ -224,14 +223,14 @@
                           do: @selected_penempatan.disemak_oleh,
                           else: "-"}
                       </p>
-
+                      
                       <%= if Map.get(@selected_penempatan, :tarikh_disemak) do %>
                         <p class="text-xs text-gray-500 mt-1">
                           {Calendar.strftime(@selected_penempatan.tarikh_disemak, "%d/%m/%Y")}
                         </p>
                       <% end %>
                     </div>
-
+                    
                     <div>
                       <label class="block text-sm font-medium text-gray-500 mb-1">
                         Diluluskan Oleh
@@ -241,7 +240,7 @@
                           do: @selected_penempatan.diluluskan_oleh,
                           else: "-"}
                       </p>
-
+                      
                       <%= if Map.get(@selected_penempatan, :tarikh_diluluskan) do %>
                         <p class="text-xs text-gray-500 mt-1">
                           {Calendar.strftime(@selected_penempatan.tarikh_diluluskan, "%d/%m/%Y")}
@@ -257,12 +256,12 @@
             <div class="mb-8 flex items-center justify-between">
               <div>
                 <h1 class="text-4xl font-bold text-gray-900 mb-2">Penempatan</h1>
-
+                
                 <p class="text-gray-600">
                   Urus dan pantau penempatan sistem ke pelbagai persekitaran
                 </p>
               </div>
-
+              
               <button
                 phx-click="open_create_modal"
                 class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
@@ -270,25 +269,25 @@
                 <.icon name="hero-plus-circle" class="w-5 h-5" /> <span>Daftar Penempatan</span>
               </button>
             </div>
-            <%!-- Count --%>
+             <%!-- Count --%>
             <div class="mb-6 flex items-center justify-end">
               <div class="flex items-center gap-2 text-gray-600">
                 <.icon name="hero-server" class="w-5 h-5" />
                 <span class="text-sm font-medium">{length(@penempatan)} Penempatan</span>
               </div>
             </div>
-            <%!-- Penempatan Container --%>
+             <%!-- Penempatan Container --%>
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
               <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                 <h2 class="text-xl font-semibold text-white">Senarai Penempatan</h2>
               </div>
-
+              
               <%= if length(@penempatan) == 0 do %>
                 <div class="px-6 py-12 text-center">
                   <div class="flex flex-col items-center justify-center text-gray-400">
                     <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                     <p class="text-sm font-medium">Tiada penempatan</p>
-
+                    
                     <p class="text-xs mt-1">
                       Klik butang "Daftar Penempatan" untuk menambah penempatan baharu
                     </p>
@@ -303,37 +302,37 @@
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
                           Bil
                         </th>
-
+                        
                         <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Nama Sistem
                         </th>
-
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Versi
                         </th>
-
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Lokasi
                         </th>
-
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Jenis
                         </th>
-
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Status
                         </th>
-
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Tarikh Penempatan
                         </th>
-
+                        
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Tindakan
                         </th>
                       </tr>
                     </thead>
-
+                    
                     <tbody class="bg-white divide-y divide-gray-200">
                       <tr
                         :for={{penempatan, index} <- Enum.with_index(@penempatan, 1)}
@@ -342,21 +341,21 @@
                         <td class="px-3 py-2 text-center">
                           <span class="text-xs text-gray-600 font-medium">{index}</span>
                         </td>
-
+                        
                         <td class="px-3 py-2 text-left">
                           <span class="text-xs text-gray-900 font-semibold">
                             {penempatan.nama_sistem}
                           </span>
                         </td>
-
+                        
                         <td class="px-3 py-2 text-center">
                           <span class="text-xs text-gray-700">{penempatan.versi}</span>
                         </td>
-
+                        
                         <td class="px-3 py-2 text-left">
                           <span class="text-xs text-gray-700">{penempatan.lokasi}</span>
                         </td>
-
+                        
                         <td class="px-3 py-2 text-center">
                           <span class={[
                             "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -370,7 +369,7 @@
                             {penempatan.jenis}
                           </span>
                         </td>
-
+                        
                         <td class="px-3 py-2 text-center">
                           <span class={[
                             "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -396,7 +395,7 @@
                             /> {penempatan.status}
                           </span>
                         </td>
-
+                        
                         <td class="px-3 py-2 text-center">
                           <div class="flex items-center justify-center gap-1.5">
                             <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400" />
@@ -405,7 +404,7 @@
                             </span>
                           </div>
                         </td>
-
+                        
                         <td class="px-3 py-2 text-center">
                           <div class="flex items-center justify-center gap-1.5">
                             <.link
@@ -437,7 +436,7 @@
       </main>
     </div>
   </div>
-  <%!-- Create Modal --%>
+   <%!-- Create Modal --%>
   <%= if @show_create_modal do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
@@ -448,7 +447,7 @@
     >
       <%!-- Backdrop --%>
       <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-      <%!-- Modal container --%>
+       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
           class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -459,10 +458,10 @@
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Daftar Penempatan</h2>
-
+                
                 <p class="mt-1 text-sm text-blue-100">Isi maklumat penempatan baharu</p>
               </div>
-
+              
               <button
                 type="button"
                 phx-click="close_create_modal"
@@ -473,7 +472,7 @@
               </button>
             </div>
           </div>
-          <%!-- Modal body --%>
+           <%!-- Modal body --%>
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@form}
@@ -493,7 +492,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:versi]}
@@ -503,7 +502,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:lokasi]}
@@ -514,7 +513,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:jenis]}
@@ -525,7 +524,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:persekitaran]}
@@ -535,7 +534,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:status]}
@@ -545,7 +544,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:url]}
@@ -555,7 +554,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:tarikh_dijangka]}
@@ -565,7 +564,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:tarikh_penempatan]}
@@ -575,7 +574,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:dibina_oleh]}
@@ -585,7 +584,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:tarikh_dibina]}
@@ -594,7 +593,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:disemak_oleh]}
@@ -604,7 +603,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:tarikh_disemak]}
@@ -613,7 +612,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:diluluskan_oleh]}
@@ -623,7 +622,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:tarikh_diluluskan]}
@@ -632,7 +631,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div class="md:col-span-2">
                   <.input
                     field={@form[:catatan]}
@@ -646,7 +645,7 @@
               </div>
             </.form>
           </div>
-          <%!-- Modal footer --%>
+           <%!-- Modal footer --%>
           <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
             <button
               type="button"
@@ -667,7 +666,7 @@
       </div>
     </div>
   <% end %>
-  <%!-- Edit Penempatan Modal --%>
+   <%!-- Edit Penempatan Modal --%>
   <%= if assigns[:show_edit_modal] && assigns[:editing_penempatan] do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
@@ -678,7 +677,7 @@
     >
       <%!-- Backdrop --%>
       <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-      <%!-- Modal container --%>
+       <%!-- Modal container --%>
       <div class="flex min-h-full items-center justify-center p-4">
         <div
           class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -689,10 +688,10 @@
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Penempatan</h2>
-
+                
                 <p class="mt-1 text-sm text-green-100">Edit maklumat penempatan</p>
               </div>
-
+              
               <button
                 type="button"
                 phx-click="close_edit_modal"
@@ -703,7 +702,7 @@
               </button>
             </div>
           </div>
-          <%!-- Modal body --%>
+           <%!-- Modal body --%>
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@form}
@@ -723,7 +722,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:versi]}
@@ -733,7 +732,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:lokasi]}
@@ -744,7 +743,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:jenis]}
@@ -755,7 +754,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:persekitaran]}
@@ -765,7 +764,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:status]}
@@ -775,7 +774,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:url]}
@@ -785,7 +784,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:tarikh_dijangka]}
@@ -795,7 +794,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:tarikh_penempatan]}
@@ -805,7 +804,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:dibina_oleh]}
@@ -815,7 +814,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:tarikh_dibina]}
@@ -824,7 +823,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:disemak_oleh]}
@@ -834,7 +833,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:tarikh_disemak]}
@@ -843,7 +842,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:diluluskan_oleh]}
@@ -853,7 +852,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div>
                   <.input
                     field={@form[:tarikh_diluluskan]}
@@ -862,7 +861,7 @@
                     class="w-full"
                   />
                 </div>
-
+                
                 <div class="md:col-span-2">
                   <.input
                     field={@form[:catatan]}
@@ -876,7 +875,7 @@
               </div>
             </.form>
           </div>
-          <%!-- Modal footer --%>
+           <%!-- Modal footer --%>
           <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
             <button
               type="button"

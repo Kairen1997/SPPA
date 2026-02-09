@@ -26,7 +26,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
 
     if user_role && user_role in @allowed_roles do
       project_id = parse_project_id(params)
-      ujian = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
+      ujian = build_ujian_list(project_id, socket.assigns.current_scope)
 
       project =
         if project_id do
@@ -231,7 +231,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
     # For index: refresh ujian list and pagination when project_id changes
     socket =
       if is_nil(Map.get(socket.assigns, :selected_ujian)) do
-        ujian = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
+        ujian = build_ujian_list(project_id, socket.assigns.current_scope)
         per_page = socket.assigns[:per_page] || 10
         total = length(ujian)
         total_pages = total_pages(total, per_page)
@@ -476,7 +476,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
 
       case UjianPenerimaanPengguna.create_ujian(attrs) do
         {:ok, _ujian} ->
-          ujian = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
+          ujian = build_ujian_list(project_id, socket.assigns.current_scope)
           per_page = socket.assigns.per_page
           total = length(ujian)
           total_pages_val = total_pages(total, per_page)
@@ -530,7 +530,7 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
 
           updated_ujian_list =
             if project_id do
-              UjianPenerimaanPengguna.list_ujian_for_project(project_id)
+              build_ujian_list(project_id, socket.assigns.current_scope)
             else
               UjianPenerimaanPengguna.list_ujian()
             end
@@ -800,6 +800,30 @@ defmodule SppaWeb.UjianPenerimaanPenggunaLive do
     else
       {:noreply, socket}
     end
+  end
+
+  # Build list of ujian for display. When project_id is set, merges modules from
+  # AnalisisDanRekabentuk with ujian - auto-creates ujian for modules that don't have one.
+  defp build_ujian_list(nil, _current_scope) do
+    UjianPenerimaanPengguna.list_ujian_for_project(nil)
+  end
+
+  defp build_ujian_list(project_id, current_scope) when is_integer(project_id) do
+    modules = AnalisisDanRekabentuk.list_modules_for_project(project_id, current_scope)
+    ujian_list = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
+    ujian_by_modul = Map.new(ujian_list, fn u -> {String.trim(u.modul || ""), u} end)
+
+    Enum.map(modules, fn mod ->
+      name = String.trim(mod.name || "")
+      ujian = Map.get(ujian_by_modul, name)
+
+      if ujian do
+        ujian
+      else
+        UjianPenerimaanPengguna.ensure_ujian_for_module(project_id, name)
+      end
+    end)
+    |> Enum.reject(&is_nil/1)
   end
 
   defp paginate(ujian, page, per_page) do

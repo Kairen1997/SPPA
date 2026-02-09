@@ -243,39 +243,39 @@ defmodule SppaWeb.ModulProjekLive do
       }
 
       case ProjectModules.create_module(attrs) do
-      {:ok, _module} ->
-        tasks =
-          ProjectModules.list_modules_for_project(
-            socket.assigns.current_scope,
-            socket.assigns.project_id
-          )
-
-        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
-
-        socket =
-          socket
-          |> assign(:tasks, sorted_tasks)
-          |> assign(:show_new_task_modal, false)
-          |> assign(:form, to_form(%{}, as: :task))
-          |> put_flash(:info, "Modul baru telah ditambah")
-
-        socket =
-          if project_end && due_date && Date.compare(due_date, project_end) == :gt do
-            put_flash(
-              socket,
-              :error,
-              "Tarikh tugasan melebihi tarikh jangkaan siap projek. Sila semak semula jadual."
+        {:ok, _module} ->
+          tasks =
+            ProjectModules.list_modules_for_project(
+              socket.assigns.current_scope,
+              socket.assigns.project_id
             )
-          else
+
+          sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+
+          socket =
             socket
-          end
+            |> assign(:tasks, sorted_tasks)
+            |> assign(:show_new_task_modal, false)
+            |> assign(:form, to_form(%{}, as: :task))
+            |> put_flash(:info, "Modul baru telah ditambah")
 
-        {:noreply, socket}
+          socket =
+            if project_end && due_date && Date.compare(due_date, project_end) == :gt do
+              put_flash(
+                socket,
+                :error,
+                "Tarikh tugasan melebihi tarikh jangkaan siap projek. Sila semak semula jadual."
+              )
+            else
+              socket
+            end
 
-      {:error, _changeset} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Gagal menyimpan modul. Sila cuba lagi.")}
+          {:noreply, socket}
+
+        {:error, _changeset} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Gagal menyimpan modul. Sila cuba lagi.")}
       end
     end
   end
@@ -348,40 +348,40 @@ defmodule SppaWeb.ModulProjekLive do
       }
 
       case ProjectModules.get_module!(task_id) |> ProjectModules.update_module(attrs) do
-      {:ok, _module} ->
-        tasks =
-          ProjectModules.list_modules_for_project(
-            socket.assigns.current_scope,
-            socket.assigns.project_id
-          )
-
-        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
-
-        socket =
-          socket
-          |> assign(:tasks, sorted_tasks)
-          |> assign(:show_edit_task_modal, false)
-          |> assign(:selected_task, nil)
-          |> assign(:form, to_form(%{}, as: :task))
-          |> put_flash(:info, "Tugasan telah dikemaskini")
-
-        socket =
-          if project_end && due_date && Date.compare(due_date, project_end) == :gt do
-            put_flash(
-              socket,
-              :error,
-              "Tarikh tugasan melebihi tarikh jangkaan siap projek. Sila semak semula jadual."
+        {:ok, _module} ->
+          tasks =
+            ProjectModules.list_modules_for_project(
+              socket.assigns.current_scope,
+              socket.assigns.project_id
             )
-          else
+
+          sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+
+          socket =
             socket
-          end
+            |> assign(:tasks, sorted_tasks)
+            |> assign(:show_edit_task_modal, false)
+            |> assign(:selected_task, nil)
+            |> assign(:form, to_form(%{}, as: :task))
+            |> put_flash(:info, "Tugasan telah dikemaskini")
 
-        {:noreply, socket}
+          socket =
+            if project_end && due_date && Date.compare(due_date, project_end) == :gt do
+              put_flash(
+                socket,
+                :error,
+                "Tarikh tugasan melebihi tarikh jangkaan siap projek. Sila semak semula jadual."
+              )
+            else
+              socket
+            end
 
-      {:error, _changeset} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Gagal mengemaskini tugasan. Sila cuba lagi.")}
+          {:noreply, socket}
+
+        {:error, _changeset} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Gagal mengemaskini tugasan. Sila cuba lagi.")}
       end
     end
   end
@@ -502,8 +502,8 @@ defmodule SppaWeb.ModulProjekLive do
         project.tarikh_mula
 
       Map.has_key?(project, :approved_project) &&
-          project.approved_project &&
-          Map.has_key?(project.approved_project, :tarikh_mula) &&
+        project.approved_project &&
+        Map.has_key?(project.approved_project, :tarikh_mula) &&
           project.approved_project.tarikh_mula ->
         project.approved_project.tarikh_mula
 

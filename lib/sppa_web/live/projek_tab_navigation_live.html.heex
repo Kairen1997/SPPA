@@ -29,7 +29,7 @@
           >
             <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
-           <.header_logos />
+          <.header_logos />
         </div>
 
         <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
@@ -1521,7 +1521,9 @@
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   Bilangan
                                 </label>
-                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">{@selected_perubahan.id}</span>
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
+                                  {@selected_perubahan.id}
+                                </span>
                               </div>
 
                               <div>
@@ -1546,7 +1548,9 @@
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   Jenis
                                 </label>
-                                <span class="inline-flex items-center px-3 py-1 rounded-md bg-purple-100 text-purple-700 text-sm font-medium">{@selected_perubahan.jenis}</span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-md bg-purple-100 text-purple-700 text-sm font-medium">
+                                  {@selected_perubahan.jenis}
+                                </span>
                               </div>
 
                               <div>
@@ -1583,14 +1587,18 @@
                                     _ ->
                                       "bg-gray-100 text-gray-800 border-gray-200"
                                   end
-                                ]}>{@selected_perubahan.status}</span>
+                                ]}>
+                                  {@selected_perubahan.status}
+                                </span>
                               </div>
 
                               <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   Keutamaan
                                 </label>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border bg-gray-100 text-gray-800 border-gray-200">{@selected_perubahan.keutamaan}</span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border bg-gray-100 text-gray-800 border-gray-200">
+                                  {@selected_perubahan.keutamaan}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -1605,7 +1613,12 @@
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   Tarikh Dibuat
                                 </label>
-                                <span class="text-sm text-gray-900">{Calendar.strftime(@selected_perubahan.tarikh_dibuat, "%d/%m/%Y")}</span>
+                                <span class="text-sm text-gray-900">
+                                  {Calendar.strftime(
+                                    @selected_perubahan.tarikh_dibuat,
+                                    "%d/%m/%Y"
+                                  )}
+                                </span>
                               </div>
 
                               <div>
@@ -1614,7 +1627,10 @@
                                 </label>
                                 <span class="text-sm text-gray-900">
                                   <%= if @selected_perubahan.tarikh_dijangka_siap do %>
-                                    {Calendar.strftime(@selected_perubahan.tarikh_dijangka_siap, "%d/%m/%Y")}
+                                    {Calendar.strftime(
+                                      @selected_perubahan.tarikh_dijangka_siap,
+                                      "%d/%m/%Y"
+                                    )}
                                   <% else %>
                                     -
                                   <% end %>
@@ -1743,7 +1759,7 @@
                               Hasil
                             </th>
 
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px] align-top">
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">
                               Catatan
                             </th>
                           </tr>
@@ -1752,17 +1768,17 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{ujian, index} <- Enum.with_index(@ujian, 1)}
-                            class="hover:bg-gray-50 transition-colors duration-150"
+                            class="hover:bg-gray-50 transition-colors duration-150 h-12"
                           >
-                            <td class="px-3 py-2 text-center text-xs font-semibold text-gray-700">
+                            <td class="px-3 py-2 text-center text-xs font-semibold text-gray-700 align-middle">
                               {index}
                             </td>
 
-                            <td class="px-3 py-2 text-left">
+                            <td class="px-3 py-2 text-left align-middle">
                               <span class="text-xs text-gray-700">{ujian.modul}</span>
                             </td>
 
-                            <td class="px-3 py-2 whitespace-nowrap text-left">
+                            <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
                                 case ujian.status do
@@ -1797,23 +1813,27 @@
                               </span>
                             </td>
 
-                            <td class="px-3 py-2 whitespace-nowrap text-left">
-                              <div class="flex items-center gap-1.5">
-                                <.icon
-                                  name="hero-calendar-days"
-                                  class="w-3.5 h-3.5 text-gray-400"
-                                />
-                                <span class="text-xs text-gray-700">
-                                  {Calendar.strftime(ujian.tarikh_ujian, "%d/%m/%Y")}
-                                </span>
-                              </div>
+                            <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
+                              <%= if ujian.tarikh_ujian do %>
+                                <div class="flex items-center gap-1.5">
+                                  <.icon
+                                    name="hero-calendar-days"
+                                    class="w-3.5 h-3.5 text-gray-400"
+                                  />
+                                  <span class="text-xs text-gray-700">
+                                    {Calendar.strftime(ujian.tarikh_ujian, "%d/%m/%Y")}
+                                  </span>
+                                </div>
+                              <% else %>
+                                <span class="text-xs text-gray-400">-</span>
+                              <% end %>
                             </td>
 
-                            <td class="px-3 py-2 text-left">
+                            <td class="px-3 py-2 text-left align-middle">
                               <span class="text-xs text-gray-700">{ujian.penguji}</span>
                             </td>
 
-                            <td class="px-3 py-2 whitespace-nowrap text-left">
+                            <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
                                 case ujian.hasil do
@@ -1837,8 +1857,8 @@
                               </span>
                             </td>
 
-                            <td class="px-3 py-2 text-left align-top">
-                              <div class="text-xs text-gray-700 whitespace-pre-wrap text-left">
+                            <td class="px-3 py-2 text-left align-middle h-12">
+                              <div class="text-xs text-gray-700 text-left leading-tight line-clamp-2 max-w-[200px]">
                                 {if Map.get(ujian, :catatan), do: ujian.catatan, else: "-"}
                               </div>
                             </td>
@@ -1851,31 +1871,14 @@
               </div>
             <% @current_tab == "Ujian Keselamatan" -> %>
               <div class="space-y-6">
-                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h2 class="text-2xl font-bold text-gray-900">Ujian Keselamatan</h2>
-
-                    <p class="text-gray-600">
-                      Urus dan pantau ujian keselamatan untuk modul sistem.
-                    </p>
-                  </div>
-
-                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm text-gray-600">
-                      <.icon name="hero-shield-check" class="w-5 h-5 text-blue-500" />
-                      <span class="text-sm font-semibold">
-                        {length(@ujian_keselamatan)} Ujian Keselamatan
-                      </span>
-                    </div>
-
-                    <.link
-                      navigate={~p"/ujian-keselamatan"}
-                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
-                    >
-                      <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
-                      <span>Halaman Ujian Penuh</span>
-                    </.link>
-                  </div>
+                <div class="flex justify-end">
+                  <.link
+                    navigate={~p"/projek/#{@project.id}/ujian-keselamatan"}
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                  >
+                    <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
+                    <span>Halaman Ujian Penuh</span>
+                  </.link>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -1927,12 +1930,8 @@
                               Hasil
                             </th>
 
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px] align-top">
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">
                               Catatan
-                            </th>
-
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-20">
-                              Tindakan
                             </th>
                           </tr>
                         </thead>
@@ -1940,17 +1939,17 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{ujian, idx} <- Enum.with_index(@ujian_keselamatan, 1)}
-                            class="hover:bg-gray-50 transition-colors duration-150"
+                            class="hover:bg-gray-50 transition-colors duration-150 h-12"
                           >
-                            <td class="px-3 py-2 text-center">
+                            <td class="px-3 py-2 text-center align-middle">
                               <span class="text-xs font-medium text-gray-700">{idx}</span>
                             </td>
 
-                            <td class="px-3 py-2 text-left">
+                            <td class="px-3 py-2 text-left align-middle">
                               <span class="text-xs text-gray-700">{ujian.modul}</span>
                             </td>
 
-                            <td class="px-3 py-2 whitespace-nowrap text-left">
+                            <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
                                 case ujian.status do
@@ -1985,23 +1984,27 @@
                               </span>
                             </td>
 
-                            <td class="px-3 py-2 whitespace-nowrap text-left">
-                              <div class="flex items-center gap-1.5">
-                                <.icon
-                                  name="hero-calendar-days"
-                                  class="w-3.5 h-3.5 text-gray-400"
-                                />
-                                <span class="text-xs text-gray-700">
-                                  {Calendar.strftime(ujian.tarikh_ujian, "%d/%m/%Y")}
-                                </span>
-                              </div>
+                            <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
+                              <%= if ujian.tarikh_ujian do %>
+                                <div class="flex items-center gap-1.5">
+                                  <.icon
+                                    name="hero-calendar-days"
+                                    class="w-3.5 h-3.5 text-gray-400"
+                                  />
+                                  <span class="text-xs text-gray-700">
+                                    {Calendar.strftime(ujian.tarikh_ujian, "%d/%m/%Y")}
+                                  </span>
+                                </div>
+                              <% else %>
+                                <span class="text-xs text-gray-400">-</span>
+                              <% end %>
                             </td>
 
-                            <td class="px-3 py-2 text-left">
+                            <td class="px-3 py-2 text-left align-middle">
                               <span class="text-xs text-gray-700">{ujian.penguji}</span>
                             </td>
 
-                            <td class="px-3 py-2 whitespace-nowrap text-left">
+                            <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
                                 case ujian.hasil do
@@ -2025,39 +2028,10 @@
                               </span>
                             </td>
 
-                            <td class="px-3 py-2 text-left align-top">
-                              <div class="text-xs text-gray-700 whitespace-pre-wrap text-left">
+                            <td class="px-3 py-2 text-left align-middle h-12">
+                              <div class="text-xs text-gray-700 text-left leading-tight line-clamp-2 max-w-[200px]">
                                 {if Map.get(ujian, :catatan), do: ujian.catatan, else: "-"}
                               </div>
-                            </td>
-
-                            <td class="px-3 py-2 text-center align-top">
-                              <.link
-                                navigate={~p"/ujian-keselamatan/#{ujian.id}"}
-                                class="inline-flex items-center justify-center p-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
-                                title="Lihat"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke-width="1.5"
-                                  stroke="currentColor"
-                                  class="w-5 h-5"
-                                  aria-hidden="true"
-                                >
-                                  <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
-                                  />
-                                  <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                                  />
-                                </svg>
-                              </.link>
                             </td>
                           </tr>
                         </tbody>

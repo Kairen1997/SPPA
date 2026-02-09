@@ -95,7 +95,7 @@ defmodule Sppa.Projects do
     Project
     |> where([p], p.user_id == ^current_scope.user.id)
     |> where([p], p.status == "Dalam Pembangunan" or p.status == "Selesai")
-    |> preload([:developer, :project_manager])
+    |> preload([:developer, :project_manager, :user])
     |> order_by([p], desc: p.last_updated)
     |> limit(^limit)
     |> Repo.all()
@@ -149,7 +149,7 @@ defmodule Sppa.Projects do
   def get_project_by_id(id) do
     Project
     |> where([p], p.id == ^id)
-    |> preload([:developer, :project_manager])
+    |> preload([:developer, :project_manager, :user])
     |> Repo.one()
   end
 
