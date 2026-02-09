@@ -144,7 +144,9 @@
                         class="hover:bg-gray-50 transition-colors duration-150"
                       >
                         <td class="px-3 py-3">
-                          <span class="text-gray-900 font-mono text-xs">{kes.id}</span>
+                          <span class="text-gray-900 font-mono text-xs">
+                            {kes[:kod] || kes.id}
+                          </span>
                         </td>
 
                         <td class="px-3 py-3">
@@ -449,13 +451,17 @@
 
                         <td class="px-3 py-2 whitespace-nowrap text-left">
                           <div class="flex items-center gap-1.5">
-                            <.link
-                              navigate={~p"/projek/#{@project_id}/ujian-keselamatan/#{ujian.id}"}
-                              class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
-                              title="Lihat"
-                            >
-                              <.icon name="hero-eye" class="w-4 h-4" />
-                            </.link>
+                            <%= if is_integer(ujian.id) do %>
+                              <.link
+                                navigate={
+                                  ~p"/projek/#{@project_id}/ujian-keselamatan/#{ujian.id}"
+                                }
+                                class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                title="Lihat"
+                              >
+                                <.icon name="hero-eye" class="w-4 h-4" />
+                              </.link>
+                            <% end %>
                             <button
                               type="button"
                               phx-click="open_edit_modal"
@@ -481,20 +487,18 @@
   <%!-- Create Modal removed as per request (Daftar Ujian) --%>
   <%!-- Edit Ujian Modal --%>
   <%= if assigns[:show_edit_modal] && assigns[:editing_ujian] do %>
-    <div
-      class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_edit_modal"
-      phx-click-away="close_edit_modal"
-      role="dialog"
-      aria-modal="true"
-    >
-      <%!-- Backdrop --%>
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-      <%!-- Modal container --%>
-      <div class="flex min-h-full items-center justify-center p-4">
+    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+      <%!-- Backdrop - klik di sini sahaja untuk tutup --%>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="close_edit_modal"
+      >
+      </div>
+      <%!-- Modal container - pointer-events-none supaya klik pada kawasan gelap sampai ke backdrop --%>
+      <div class="flex min-h-full items-center justify-center p-4 pointer-events-none">
         <div
-          class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-          phx-click-away="close_edit_modal"
+          class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto"
         >
           <%!-- Modal header --%>
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
@@ -526,14 +530,11 @@
             >
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <.input
-                    field={@form[:modul]}
-                    type="text"
-                    label="Modul"
-                    required
-                    placeholder="Masukkan nama modul"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  <input type="hidden" name="ujian[modul]" value={@form[:modul].value} />
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Nama Modul</label>
+                  <div class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
+                    {@form[:modul].value || "-"}
+                  </div>
                 </div>
 
                 <div>
@@ -546,24 +547,54 @@
                   />
                 </div>
 
-                <div>
-                  <.input
-                    field={@form[:tarikh_ujian]}
-                    type="date"
-                    label="Tarikh Ujian"
-                    required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                <div class="fieldset mb-2">
+                  <label for="ujian-tarikh-ujian" class="block text-sm font-medium text-gray-800 mb-1">
+                    Tarikh Ujian
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      name="ujian[tarikh_ujian]"
+                      id="ujian-tarikh-ujian"
+                      value={@form[:tarikh_ujian].value || ""}
+                      class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <button
+                      type="button"
+                      id="ujian-tarikh-ujian-trigger"
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for="ujian-tarikh-ujian"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-400 hover:text-blue-600 focus:outline-none"
+                      aria-label="Pilih tarikh ujian"
+                    >
+                      <.icon name="hero-calendar-days" class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
-                <div>
-                  <.input
-                    field={@form[:tarikh_dijangka_siap]}
-                    type="date"
-                    label="Tarikh Dijangka Siap"
-                    required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                <div class="fieldset mb-2">
+                  <label for="ujian-tarikh-dijangka-siap" class="block text-sm font-medium text-gray-800 mb-1">
+                    Tarikh Dijangka Siap
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="date"
+                      name="ujian[tarikh_dijangka_siap]"
+                      id="ujian-tarikh-dijangka-siap"
+                      value={@form[:tarikh_dijangka_siap].value || ""}
+                      class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <button
+                      type="button"
+                      id="ujian-tarikh-dijangka-siap-trigger"
+                      phx-hook="DatePickerTrigger"
+                      data-trigger-date-for="ujian-tarikh-dijangka-siap"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-400 hover:text-blue-600 focus:outline-none"
+                      aria-label="Pilih tarikh dijangka siap"
+                    >
+                      <.icon name="hero-calendar-days" class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -583,6 +614,16 @@
                     label="Hasil"
                     options={["Belum Selesai", "Lulus", "Gagal"]}
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  />
+                </div>
+
+                <div class="md:col-span-2">
+                  <.input
+                    field={@form[:disahkan_oleh]}
+                    type="text"
+                    label="Di Sahkan Oleh"
+                    placeholder="Masukkan nama pegawai yang mengesahkan"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
@@ -622,20 +663,18 @@
   <% end %>
   <%!-- Edit Kes Ujian Modal --%>
   <%= if assigns[:show_edit_kes_modal] && assigns[:selected_kes] do %>
-    <div
-      class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="close_edit_kes_modal"
-      phx-click-away="close_edit_kes_modal"
-      role="dialog"
-      aria-modal="true"
-    >
-      <%!-- Backdrop --%>
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-      <%!-- Modal container --%>
-      <div class="flex min-h-full items-center justify-center p-4">
+    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+      <%!-- Backdrop - klik di sini sahaja untuk tutup --%>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="close_edit_kes_modal"
+      >
+      </div>
+      <%!-- Modal container - pointer-events-none supaya klik pada kawasan gelap sampai ke backdrop --%>
+      <div class="flex min-h-full items-center justify-center p-4 pointer-events-none">
         <div
-          class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-          phx-click-away="close_edit_kes_modal"
+          class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto"
         >
           <%!-- Modal header --%>
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
@@ -644,7 +683,7 @@
                 <h2 class="text-2xl font-bold text-white">Kemaskini Kes Ujian</h2>
 
                 <p class="mt-1 text-sm text-blue-100">
-                  Edit maklumat kes ujian: {@selected_kes.id}
+                  Edit maklumat kes ujian: {@selected_kes[:kod] || @selected_kes.id}
                 </p>
               </div>
 
