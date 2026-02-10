@@ -1,6 +1,7 @@
 defmodule SppaWeb.PenyerahanLive do
   use SppaWeb, :live_view
 
+  alias Sppa.AnalisisDanRekabentuk
   alias Sppa.Projects
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
@@ -246,21 +247,29 @@ defmodule SppaWeb.PenyerahanLive do
     |> Enum.find(fn p -> p.id == penyerahan_id end)
   end
 
+  # Versi for penyerahan: from Analisis dan Rekabentuk when project given, else default
+  defp versi_for_project(nil), do: "1.0.0"
+  defp versi_for_project(project) do
+    AnalisisDanRekabentuk.get_versi_by_project_ids([project.id])
+    |> Map.get(project.id, "1.0.0")
+  end
+
   # Get submission records (penyerahan).
-  # When project is given: 1 baris sahaja untuk 1 projek ID (nama_sistem from project.nama).
+  # When project is given: 1 baris sahaja untuk 1 projek ID (nama_sistem from project.nama, versi from Analisis dan Rekabentuk).
   # When project is nil: full list (e.g. senarai semua penyerahan).
   # TODO: In the future, this should be retrieved from a database or context module
   defp get_penyerahan(project) do
     nama_sistem = if project, do: project.nama || "Sistem Pengurusan Permohonan", else: "Sistem Pengurusan Permohonan"
+    versi = versi_for_project(project)
 
     if project do
-      # Satu baris sahaja untuk satu projek ID
+      # Satu baris sahaja untuk satu projek ID; versi dari Analisis dan Rekabentuk
       [
         %{
           id: "penyerahan_1",
           number: 1,
           nama_sistem: nama_sistem,
-          versi: "1.0.0",
+          versi: versi,
           tarikh_penyerahan: ~D[2024-12-20],
           tarikh_dijangka: ~D[2024-12-18],
           status: "Selesai",
@@ -283,7 +292,7 @@ defmodule SppaWeb.PenyerahanLive do
           id: "penyerahan_1",
           number: 1,
           nama_sistem: nama_sistem,
-          versi: "1.0.0",
+          versi: versi,
           tarikh_penyerahan: ~D[2024-12-20],
           tarikh_dijangka: ~D[2024-12-18],
           status: "Selesai",

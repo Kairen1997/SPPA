@@ -90,13 +90,13 @@
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Penerima</label>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Jabatan</label>
                     <p class="text-base text-gray-900">{@selected_penyerahan.penerima}</p>
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">
-                      Pembangun/Team
+                      Pembangun
                     </label>
                     <p class="text-base text-gray-900">
                       <%= if @selected_penyerahan.pembangun_team do %>
@@ -109,7 +109,7 @@
 
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">
-                      Pengurus Projek
+                      Pengurus
                     </label>
                     <p class="text-base text-gray-900">
                       <%= if @selected_penyerahan.pengurus_projek do %>
@@ -236,7 +236,7 @@
               <div>
                 <h1 class="text-4xl font-bold text-gray-900 mb-2">Penyerahan</h1>
 
-                <p class="text-gray-600">Urus dan pantau penyerahan sistem kepada penerima</p>
+                <p class="text-gray-600">Urus dan pantau penyerahan sistem kepada jabatan</p>
               </div>
             </div>
             <%!-- Penyerahan Container --%>
@@ -273,15 +273,15 @@
                         </th>
 
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Penerima
+                          Jabatan
                         </th>
 
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Pembangun/Team
+                          Pembangun
                         </th>
 
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Pengurus Projek
+                          Pengurus
                         </th>
 
                         <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -462,7 +462,7 @@
                               type="button"
                               phx-click="open_edit_modal"
                               phx-value-penyerahan_id={penyerahan.id}
-                              class="p-1.5 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded-md transition-colors duration-200"
+                              class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
                               title="Edit"
                             >
                               <.icon name="hero-pencil" class="w-4 h-4" />
@@ -560,9 +560,9 @@
                   <.input
                     field={@form[:penerima]}
                     type="text"
-                    label="Penerima"
+                    label="Jabatan"
                     required
-                    placeholder="Masukkan nama penerima"
+                    placeholder="Masukkan nama jabatan"
                     class="w-full"
                   />
                 </div>
@@ -571,8 +571,8 @@
                   <.input
                     field={@form[:pembangun_team]}
                     type="text"
-                    label="Pembangun/Team"
-                    placeholder="Masukkan nama team"
+                    label="Pembangun"
+                    placeholder="Masukkan nama pembangun"
                     class="w-full"
                   />
                 </div>
@@ -581,8 +581,8 @@
                   <.input
                     field={@form[:pengurus_projek]}
                     type="text"
-                    label="Pengurus Projek"
-                    placeholder="Masukkan nama pengurus projek"
+                    label="Pengurus"
+                    placeholder="Masukkan nama pengurus"
                     class="w-full"
                   />
                 </div>
@@ -709,12 +709,12 @@
           phx-click-away="close_edit_modal"
         >
           <%!-- Modal header --%>
-          <div class="border-b border-gray-200 bg-gradient-to-r from-yellow-600 to-yellow-700 px-6 py-5">
+          <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Penyerahan</h2>
 
-                <p class="mt-1 text-sm text-yellow-100">Kemaskini maklumat penyerahan</p>
+                <p class="mt-1 text-sm text-blue-100">Kemaskini maklumat penyerahan</p>
               </div>
 
               <button
@@ -744,7 +744,7 @@
                     label="Nama Sistem"
                     required
                     placeholder="Masukkan nama sistem"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
 
@@ -754,7 +754,7 @@
                     type="text"
                     label="Versi"
                     placeholder="Contoh: 1.0.0"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
 
@@ -762,10 +762,10 @@
                   <.input
                     field={@form[:penerima]}
                     type="text"
-                    label="Penerima"
+                    label="Jabatan"
                     required
-                    placeholder="Masukkan nama penerima"
-                    class="w-full"
+                    placeholder="Masukkan nama jabatan"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
 
@@ -773,9 +773,9 @@
                   <.input
                     field={@form[:pembangun_team]}
                     type="text"
-                    label="Pembangun/Team"
-                    placeholder="Masukkan nama team"
-                    class="w-full"
+                    label="Pembangun"
+                    placeholder="Masukkan nama pembangun"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
 
@@ -783,9 +783,9 @@
                   <.input
                     field={@form[:pengurus_projek]}
                     type="text"
-                    label="Pengurus Projek"
-                    placeholder="Masukkan nama pengurus projek"
-                    class="w-full"
+                    label="Pengurus"
+                    placeholder="Masukkan nama pengurus"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
 
@@ -796,7 +796,7 @@
                     label="Lokasi"
                     required
                     placeholder="Masukkan lokasi"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
 
@@ -804,7 +804,7 @@
                   <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                   <select
                     name="penyerahan[status]"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   >
                     <option value="Menunggu" selected={@form[:status].value == "Menunggu"}>
                       Menunggu
@@ -829,7 +829,7 @@
                     field={@form[:tarikh_dijangka]}
                     type="date"
                     label="Tarikh Dijangka"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
 
@@ -838,7 +838,7 @@
                     field={@form[:tarikh_penyerahan]}
                     type="date"
                     label="Tarikh Penyerahan"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
 
@@ -848,7 +848,7 @@
                     type="text"
                     label="Diserahkan Oleh"
                     placeholder="Masukkan nama"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
 
@@ -858,7 +858,7 @@
                     type="text"
                     label="Diterima Oleh"
                     placeholder="Masukkan nama"
-                    class="w-full"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
 
@@ -867,7 +867,7 @@
                     name="penyerahan[catatan]"
                     rows="4"
                     placeholder="Masukkan catatan..."
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 resize-none"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
                 </div>
               </div>
@@ -882,9 +882,9 @@
                 </button>
                 <button
                   type="submit"
-                  class="px-6 py-2.5 bg-gradient-to-r from-yellow-600 to-yellow-700 text-white rounded-lg hover:from-yellow-700 hover:to-yellow-800 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                  class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
                 >
-                  Kemaskini Penyerahan
+                  Simpan
                 </button>
               </div>
             </.form>
@@ -917,7 +917,7 @@
                 <h2 class="text-2xl font-bold text-white">Muat Naik Dokumen</h2>
 
                 <p class="mt-1 text-sm text-green-100">
-                  Muat naik Manual Pengguna Bahagian A dan Surat Akuan Penerimaan Aplikasi
+                  Muat naik Manual Pengguna Bahagian A dan Surat Akuan Jabatanan Aplikasi
                 </p>
               </div>
 
@@ -1012,10 +1012,10 @@
                   </button>
                 </.form>
               </div>
-              <%!-- Surat Akuan Penerimaan Aplikasi Upload --%>
+              <%!-- Surat Akuan Jabatanan Aplikasi Upload --%>
               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-900 mb-3">
-                  Surat Akuan Penerimaan Aplikasi
+                  Surat Akuan Jabatanan Aplikasi
                 </h3>
 
                 <%= if assigns[:uploading_penyerahan] && assigns[:uploading_penyerahan].surat_akuan_penerimaan do %>
