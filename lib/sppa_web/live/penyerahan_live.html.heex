@@ -15,7 +15,7 @@
       dashboard_path={~p"/dashboard"}
       logo_src={~p"/images/logojpkn.png"}
       current_scope={@current_scope}
-      current_path="/penyerahan"
+      current_path={@current_path}
     /> <%!-- Main Content --%>
     <div class="flex-1 flex flex-col overflow-hidden">
       <%!-- Header --%>
@@ -51,9 +51,19 @@
           <%= if assigns[:selected_penyerahan] do %>
             <%!-- Show Page - Detail Penyerahan --%>
             <div class="mb-6">
-              <div class="flex items-center gap-4 mb-4">
+              <div class="flex items-center gap-4 mb-4 flex-wrap">
+                <%= if assigns[:project_id] && assigns[:project] do %>
+                  <.link
+                    navigate={~p"/projek/#{@project_id}?tab=penyerahan"}
+                    class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                  >
+                    <.icon name="hero-arrow-left" class="w-4 h-4" />
+                    <span>Kembali ke Projek: {@project.nama}</span>
+                  </.link>
+                  <span class="text-gray-300">|</span>
+                <% end %>
                 <.link
-                  navigate={~p"/penyerahan"}
+                  navigate={@index_path || ~p"/penyerahan"}
                   class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
                 >
                   <.icon name="hero-arrow-left" class="w-4 h-4" />
@@ -232,6 +242,17 @@
             </div>
           <% else %>
             <%!-- Index Page - List Penyerahan --%>
+            <%= if assigns[:project_id] && assigns[:project] do %>
+              <div class="mb-4">
+                <.link
+                  navigate={~p"/projek/#{@project_id}?tab=penyerahan"}
+                  class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                >
+                  <.icon name="hero-arrow-left" class="w-4 h-4" />
+                  <span>Kembali ke Projek: {@project.nama}</span>
+                </.link>
+              </div>
+            <% end %>
             <div class="mb-8 flex items-center justify-between">
               <div>
                 <h1 class="text-4xl font-bold text-gray-900 mb-2">Penyerahan</h1>
@@ -245,13 +266,6 @@
               >
                 <.icon name="hero-plus-circle" class="w-5 h-5" /> <span>Penyerahan Baharu</span>
               </button>
-            </div>
-            <%!-- Count --%>
-            <div class="mb-6 flex items-center justify-end">
-              <div class="flex items-center gap-2 text-gray-600">
-                <.icon name="hero-paper-airplane" class="w-5 h-5" />
-                <span class="text-sm font-medium">{length(@penyerahan)} Penyerahan</span>
-              </div>
             </div>
             <%!-- Penyerahan Container --%>
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">

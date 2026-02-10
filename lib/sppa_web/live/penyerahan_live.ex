@@ -6,35 +6,70 @@ defmodule SppaWeb.PenyerahanLive do
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @impl true
+  def mount(%{"project_id" => project_id, "id" => id}, _session, socket) do
+    mount_show(id, socket, String.to_integer(project_id))
+  end
+
+  def mount(%{"project_id" => project_id}, _session, socket) do
+    mount_index(socket, String.to_integer(project_id))
+  end
+
   def mount(%{"id" => id}, _session, socket) do
-    # Handle show action - view penyerahan details
-    mount_show(id, socket)
+    # Handle show action - view penyerahan details (tanpa project scope)
+    mount_show(id, socket, nil)
   end
 
   def mount(_params, _session, socket) do
     # Handle index action - list all penyerahan
-    mount_index(socket)
+    mount_index(socket, nil)
   end
 
-  defp mount_index(socket) do
+  defp index_path(nil), do: ~p"/penyerahan"
+  defp index_path(project_id), do: ~p"/projek/#{project_id}/penyerahan"
+
+  defp mount_index(socket, project_id) do
     # Verify user has required role (defense in depth - router already checks this)
     user_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      # Get submission records (penyerahan)
-      penyerahan = get_penyerahan()
+      # Verify project access when project_id is present
+      project_assigns =
+        if project_id do
+          project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+          if project do
+            [project_id: project_id, project: project]
+          else
+            nil
+          end
+        else
+          [project_id: nil, project: nil]
+        end
 
-      socket =
-        socket
-        |> assign(:hide_root_header, true)
-        |> assign(:page_title, "Penyerahan")
-        |> assign(:sidebar_open, false)
-        |> assign(:notifications_open, false)
-        |> assign(:profile_menu_open, false)
-        |> assign(:current_path, "/penyerahan")
-        |> assign(:penyerahan, penyerahan)
+      if project_id && project_assigns == nil do
+        {:ok,
+         socket
+         |> put_flash(:error, "Projek tidak dijumpai atau anda tidak mempunyai akses.")
+         |> redirect(to: ~p"/projek")}
+      else
+        # Get submission records (penyerahan)
+        # TODO: Filter by project_id when data comes from DB
+        penyerahan = get_penyerahan()
+
+        current_path = index_path(project_id) |> to_string()
+
+        socket =
+          socket
+          |> assign(:hide_root_header, true)
+          |> assign(:page_title, "Penyerahan")
+          |> assign(:sidebar_open, false)
+          |> assign(:notifications_open, false)
+          |> assign(:profile_menu_open, false)
+          |> assign(:current_path, current_path)
+          |> assign(:index_path, index_path(project_id))
+          |> assign(project_assigns || [])
+          |> assign(:penyerahan, penyerahan)
         |> assign(:show_edit_modal, false)
         |> assign(:editing_penyerahan, nil)
         |> assign(:show_create_modal, false)
@@ -46,19 +81,20 @@ defmodule SppaWeb.PenyerahanLive do
         |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
         |> assign(:expanded_catatan, MapSet.new())
 
-      if connected?(socket) do
-        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-        notifications_count = length(activities)
+        if connected?(socket) do
+          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+          notifications_count = length(activities)
 
-        {:ok,
-         socket
-         |> assign(:activities, activities)
-         |> assign(:notifications_count, notifications_count)}
-      else
-        {:ok,
-         socket
-         |> assign(:activities, [])
-         |> assign(:notifications_count, 0)}
+          {:ok,
+           socket
+           |> assign(:activities, activities)
+           |> assign(:notifications_count, notifications_count)}
+        else
+          {:ok,
+           socket
+           |> assign(:activities, [])
+           |> assign(:notifications_count, 0)}
+        end
       end
     else
       socket =
@@ -73,55 +109,75 @@ defmodule SppaWeb.PenyerahanLive do
     end
   end
 
-  defp mount_show(penyerahan_id, socket) do
+  defp mount_show(penyerahan_id, socket, project_id) do
     # Verify user has required role (defense in depth - router already checks this)
     user_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      socket =
-        socket
-        |> assign(:hide_root_header, true)
-        |> assign(:page_title, "Butiran Penyerahan")
-        |> assign(:sidebar_open, false)
-        |> assign(:notifications_open, false)
-        |> assign(:profile_menu_open, false)
-        |> assign(:current_path, "/penyerahan")
-
-      if connected?(socket) do
-        penyerahan = get_penyerahan_by_id(penyerahan_id)
-
-        if penyerahan do
-          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-          notifications_count = length(activities)
-
-          {:ok,
-           socket
-           |> assign(:selected_penyerahan, penyerahan)
-           |> assign(:penyerahan, [])
-           |> assign(:show_edit_modal, false)
-           |> assign(:editing_penyerahan, nil)
-           |> assign(:show_create_modal, false)
-           |> assign(:show_upload_modal, false)
-           |> assign(:uploading_penyerahan_id, nil)
-           |> assign(:form, to_form(%{}, as: :penyerahan))
-           |> assign(:upload_manual_form, to_form(%{}, as: :upload_manual))
-           |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
-           |> assign(:expanded_catatan, MapSet.new())
-           |> assign(:activities, activities)
-           |> assign(:notifications_count, notifications_count)}
+      # Verify project access when project_id is present
+      project_assigns =
+        if project_id do
+          project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+          if project do
+            [project_id: project_id, project: project]
+          else
+            nil
+          end
         else
-          socket =
-            socket
-            |> Phoenix.LiveView.put_flash(
-              :error,
-              "Penyerahan tidak dijumpai."
-            )
-            |> Phoenix.LiveView.redirect(to: ~p"/penyerahan")
-
-          {:ok, socket}
+          [project_id: nil, project: nil]
         end
+
+      if project_id && project_assigns == nil do
+        {:ok,
+         socket
+         |> put_flash(:error, "Projek tidak dijumpai atau anda tidak mempunyai akses.")
+         |> redirect(to: ~p"/projek")}
+      else
+        current_path = index_path(project_id) |> to_string()
+
+        socket =
+          socket
+          |> assign(:hide_root_header, true)
+          |> assign(:page_title, "Butiran Penyerahan")
+          |> assign(:sidebar_open, false)
+          |> assign(:notifications_open, false)
+          |> assign(:profile_menu_open, false)
+          |> assign(:current_path, current_path)
+          |> assign(:index_path, index_path(project_id))
+          |> assign(project_assigns || [])
+
+        if connected?(socket) do
+          penyerahan = get_penyerahan_by_id(penyerahan_id)
+
+          if penyerahan do
+            activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+            notifications_count = length(activities)
+
+            {:ok,
+             socket
+             |> assign(:selected_penyerahan, penyerahan)
+             |> assign(:penyerahan, [])
+             |> assign(:show_edit_modal, false)
+             |> assign(:editing_penyerahan, nil)
+             |> assign(:show_create_modal, false)
+             |> assign(:show_upload_modal, false)
+             |> assign(:uploading_penyerahan_id, nil)
+             |> assign(:form, to_form(%{}, as: :penyerahan))
+             |> assign(:upload_manual_form, to_form(%{}, as: :upload_manual))
+             |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
+             |> assign(:expanded_catatan, MapSet.new())
+             |> assign(:activities, activities)
+             |> assign(:notifications_count, notifications_count)}
+          else
+            redirect_to = index_path(project_id)
+
+            {:ok,
+             socket
+             |> put_flash(:error, "Penyerahan tidak dijumpai.")
+             |> redirect(to: redirect_to)}
+          end
       else
         {:ok,
          socket
@@ -136,6 +192,7 @@ defmodule SppaWeb.PenyerahanLive do
          |> assign(:upload_manual_form, to_form(%{}, as: :upload_manual))
          |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
          |> assign(:expanded_catatan, MapSet.new())}
+        end
       end
     else
       socket =
@@ -147,6 +204,38 @@ defmodule SppaWeb.PenyerahanLive do
         |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
 
       {:ok, socket}
+    end
+  end
+
+  defp get_project_by_id(project_id, current_scope, user_role) do
+    current_user_id = current_scope.user.id
+
+    project =
+      case user_role do
+        "ketua penolong pengarah" ->
+          Projects.get_project_by_id(project_id)
+
+        "pembangun sistem" ->
+          case Projects.get_project_by_id(project_id) do
+            nil -> nil
+            p -> if p.developer_id == current_user_id, do: p, else: nil
+          end
+
+        "pengurus projek" ->
+          case Projects.get_project_by_id(project_id) do
+            nil -> nil
+            p -> if p.project_manager_id == current_user_id, do: p, else: nil
+          end
+
+        _ ->
+          nil
+      end
+
+    if project do
+      project
+      |> Projects.format_project_for_display()
+    else
+      nil
     end
   end
 
