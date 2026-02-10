@@ -1,205 +1,189 @@
 defmodule Sppa.UjianPenerimaanPengguna do
-  @moduledoc false
+  @moduledoc """
+  Context for ujian penerimaan pengguna (User Acceptance Testing).
+  """
+
+  import Ecto.Query, warn: false
+  alias Sppa.Repo
+  alias Sppa.UjianPenerimaanPengguna.UjianPenerimaanPengguna
+  alias Sppa.UjianPenerimaanPengguna.KesUjian
 
   @doc """
-  Returns the list of UAT records (placeholder seed data for now).
+  Returns the list of UAT records.
   """
   def list_ujian do
-    [
-      %{
-        id: "ujian_1",
-        number: 1,
-        tajuk: "Ujian Modul Pendaftaran",
-        modul: "Modul Pendaftaran",
-        tarikh_ujian: ~D[2024-12-01],
-        tarikh_dijangka_siap: ~D[2024-12-15],
-        status: "Dalam Proses",
-        penguji: "Ahmad bin Abdullah",
-        hasil: "Belum Selesai",
-        catatan: "Ujian pendaftaran pengguna",
-        senarai_kes_ujian: [
-          %{
-            id: "REG-001",
-            senario: "Semak paparan halaman pendaftaran",
-            langkah: "1. Layari laman utama Sistem\n2. Klik butang 'Daftar'",
-            keputusan_dijangka: "Halaman pendaftaran dipaparkan dengan betul",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-002",
-            senario: "Pendaftaran berjaya dengan data yang sah",
-            langkah: "Isikan semua maklumat dengan betul",
-            keputusan_dijangka:
-              "Akaun berjaya dicipta dan mesej 'Pendaftaran Pengguna berjaya didaftarkan' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-003",
-            senario: "Pendaftaran gagal - kata laluan tidak sepadan",
-            langkah: "Isikan kata laluan dan pengesahan kata laluan yang berbeza",
-            keputusan_dijangka: "Mesej ralat 'Kata laluan tidak sepadan' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-004",
-            senario: "Pendaftaran gagal - emel telah digunakan",
-            langkah: "Isikan emel yang telah wujud dalam sistem",
-            keputusan_dijangka: "Mesej ralat 'Emel telah digunakan' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-005",
-            senario: "Pendaftaran gagal - medan wajib kosong",
-            langkah: "Biarkan medan wajib kosong dan cuba hantar borang",
-            keputusan_dijangka: "Mesej ralat 'Sila isi semua medan wajib' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-006",
-            senario: "Pendaftaran gagal - format emel tidak sah",
-            langkah: "Isikan format emel yang tidak sah (cth: emel@)",
-            keputusan_dijangka: "Mesej ralat 'Format emel tidak sah' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-007",
-            senario: "Pendaftaran gagal - kata laluan terlalu pendek",
-            langkah: "Isikan kata laluan yang kurang daripada 8 aksara",
-            keputusan_dijangka:
-              "Mesej ralat 'Kata laluan mesti sekurang-kurangnya 8 aksara' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          },
-          %{
-            id: "REG-008",
-            senario: "Pendaftaran gagal - kata laluan tidak mengandungi nombor",
-            langkah: "Isikan kata laluan tanpa nombor",
-            keputusan_dijangka:
-              "Mesej ralat 'Kata laluan mesti mengandungi sekurang-kurangnya satu nombor' dipaparkan",
-            keputusan_sebenar: nil,
-            hasil: nil,
-            penguji: nil,
-            tarikh_ujian: nil,
-            disahkan: false,
-            tarikh_pengesahan: nil
-          }
-        ]
-      },
-      %{
-        id: "ujian_2",
-        number: 2,
-        tajuk: "Ujian Modul Pengurusan Pengguna",
-        modul: "Modul Pengurusan Pengguna",
-        tarikh_ujian: ~D[2024-12-01],
-        tarikh_dijangka_siap: ~D[2024-12-15],
-        status: "Dalam Proses",
-        penguji: "Ahmad bin Abdullah",
-        hasil: "Lulus",
-        catatan: "Semua fungsi asas berfungsi dengan baik",
-        senarai_ujian: [
-          %{
-            id: "test_1_1",
-            nama: "Ujian Pendaftaran Pengguna",
-            status: "Lulus",
-            catatan: "Berfungsi dengan baik"
-          },
-          %{id: "test_1_2", nama: "Ujian Log Masuk", status: "Lulus", catatan: "Tiada masalah"},
-          %{
-            id: "test_1_3",
-            nama: "Ujian Kemaskini Profil",
-            status: "Gagal",
-            catatan: "Perlu pembaikan pada validasi"
-          }
-        ]
-      },
-      %{
-        id: "ujian_2",
-        number: 2,
-        tajuk: "Ujian Modul Permohonan",
-        modul: "Modul Permohonan",
-        tarikh_ujian: ~D[2024-12-05],
-        tarikh_dijangka_siap: ~D[2024-12-20],
-        status: "Selesai",
-        penguji: "Siti binti Hassan",
-        hasil: "Lulus",
-        catatan: "Semua ujian berjaya diluluskan",
-        senarai_ujian: [
-          %{
-            id: "test_2_1",
-            nama: "Ujian Pendaftaran Permohonan",
-            status: "Lulus",
-            catatan: "Berfungsi dengan baik"
-          },
-          %{
-            id: "test_2_2",
-            nama: "Ujian Kemaskini Permohonan",
-            status: "Lulus",
-            catatan: "Tiada masalah"
-          },
-          %{
-            id: "test_2_3",
-            nama: "Ujian Semakan Status",
-            status: "Lulus",
-            catatan: "Berfungsi dengan baik"
-          }
-        ],
-        senarai_kes_ujian: []
-      },
-      %{
-        id: "ujian_3",
-        number: 3,
-        tajuk: "Ujian Modul Pengurusan Permohonan",
-        modul: "Modul Pengurusan Permohonan",
-        tarikh_ujian: ~D[2024-12-10],
-        tarikh_dijangka_siap: ~D[2024-12-25],
-        status: "Menunggu",
-        penguji: "Mohd bin Ismail",
-        hasil: "Belum Selesai",
-        catatan: "Menunggu untuk memulakan ujian",
-        senarai_ujian: [],
-        senarai_kes_ujian: []
-      }
-    ]
+    list_ujian_for_project(nil)
   end
 
   @doc """
-  Finds a UAT entry by id.
+  Ensures an ujian record exists for the given modul and project.
+  Creates one with default values if not found. Returns the ujian struct.
   """
-  def get_ujian(id) do
-    Enum.find(list_ujian(), fn ujian -> ujian.id == id end)
+  def ensure_ujian_for_module(project_id, modul_name) when is_integer(project_id) do
+    name = String.trim(modul_name || "")
+    today = Date.utc_today()
+
+    existing =
+      UjianPenerimaanPengguna
+      |> where([u], u.project_id == ^project_id and u.modul == ^name)
+      |> Repo.one()
+
+    if existing do
+      existing
+    else
+      attrs = %{
+        project_id: project_id,
+        tajuk: "Ujian Penerimaan Pengguna - #{name}",
+        modul: name,
+        tarikh_ujian: today,
+        tarikh_dijangka_siap: today,
+        status: "Menunggu",
+        hasil: "Belum Selesai"
+      }
+
+      case create_ujian(attrs) do
+        {:ok, ujian} -> ujian
+        {:error, _} -> nil
+      end
+    end
+  end
+
+  @doc """
+  Returns the list of UAT records for a project.
+  When project_id is nil, returns all ujian.
+  """
+  def list_ujian_for_project(nil) do
+    UjianPenerimaanPengguna
+    |> order_by([u], asc: u.inserted_at)
+    |> Repo.all()
+  end
+
+  def list_ujian_for_project(project_id) when is_integer(project_id) do
+    UjianPenerimaanPengguna
+    |> where([u], u.project_id == ^project_id)
+    |> order_by([u], asc: u.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single ujian by id with kes_ujian preloaded.
+  """
+  def get_ujian(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int_id, _} -> get_ujian(int_id)
+      :error -> nil
+    end
+  end
+
+  def get_ujian(id) when is_integer(id) do
+    UjianPenerimaanPengguna
+    |> Repo.get(id)
+    |> case do
+      nil -> nil
+      ujian -> Repo.preload(ujian, :kes_ujian)
+    end
+  end
+
+  @doc """
+  Creates a ujian penerimaan pengguna.
+  """
+  def create_ujian(attrs \\ %{}) do
+    %UjianPenerimaanPengguna{}
+    |> UjianPenerimaanPengguna.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a ujian penerimaan pengguna.
+  """
+  def update_ujian(%UjianPenerimaanPengguna{} = ujian, attrs) do
+    ujian
+    |> UjianPenerimaanPengguna.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a ujian penerimaan pengguna.
+  """
+  def delete_ujian(%UjianPenerimaanPengguna{} = ujian) do
+    Repo.delete(ujian)
+  end
+
+  @doc """
+  Creates a kes ujian.
+  """
+  def create_kes(attrs \\ %{}) do
+    %KesUjian{}
+    |> KesUjian.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a kes ujian.
+  """
+  def update_kes(%KesUjian{} = kes, attrs) do
+    kes
+    |> KesUjian.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a kes ujian.
+  """
+  def delete_kes(%KesUjian{} = kes) do
+    Repo.delete(kes)
+  end
+
+  @doc """
+  Gets a kes ujian by id.
+  """
+  def get_kes(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int_id, _} -> Repo.get(KesUjian, int_id)
+      :error -> nil
+    end
+  end
+
+  def get_kes(id) when is_integer(id) do
+    Repo.get(KesUjian, id)
+  end
+
+  @doc """
+  Formats ujian struct for LiveView display.
+  Maps kes_ujian to senarai_kes_ujian and ensures kes has id (for compatibility).
+  """
+  def format_ujian_for_display(%UjianPenerimaanPengguna{} = ujian) do
+    kes_ujian = Repo.preload(ujian, :kes_ujian).kes_ujian
+
+    kes_formatted =
+      Enum.map(kes_ujian, fn kes ->
+        %{
+          id: kes.id,
+          kod: kes.kod,
+          senario: kes.senario,
+          langkah: kes.langkah,
+          keputusan_dijangka: kes.keputusan_dijangka,
+          keputusan_sebenar: kes.keputusan_sebenar,
+          hasil: kes.hasil,
+          penguji: kes.penguji,
+          tarikh_ujian: kes.tarikh_ujian,
+          disahkan_oleh: kes.disahkan_oleh,
+          tarikh_pengesahan: kes.tarikh_pengesahan,
+          disahkan: (kes.disahkan_oleh || "") != ""
+        }
+      end)
+
+    %{
+      id: ujian.id,
+      tajuk: ujian.tajuk,
+      modul: ujian.modul,
+      tarikh_ujian: ujian.tarikh_ujian,
+      tarikh_dijangka_siap: ujian.tarikh_dijangka_siap,
+      status: ujian.status,
+      penguji: ujian.penguji,
+      hasil: ujian.hasil,
+      catatan: ujian.catatan,
+      senarai_kes_ujian: kes_formatted
+    }
   end
 end

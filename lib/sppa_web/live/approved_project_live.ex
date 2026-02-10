@@ -43,7 +43,10 @@ defmodule SppaWeb.ApprovedProjectLive do
            |> assign(:developers, all_developers)
            |> assign(:available_developers, available_developers)
            |> assign(:selected_developers, selected_developers)
-           |> assign(:form_pembangun, to_form(%{"pembangun_sistem" => selected_developers}, as: :project))}
+           |> assign(
+             :form_pembangun,
+             to_form(%{"pembangun_sistem" => selected_developers}, as: :project)
+           )}
 
         :error ->
           {:ok,
@@ -110,19 +113,23 @@ defmodule SppaWeb.ApprovedProjectLive do
         external_base_url <> "/" <> normalized_url
     end
   end
+
   defp ensure_full_url(_), do: nil
 
   defp parse_pembangun_sistem(nil), do: []
   defp parse_pembangun_sistem(""), do: []
+
   defp parse_pembangun_sistem(str) when is_binary(str) do
     str
     |> String.split(",")
     |> Enum.map(&String.trim/1)
     |> Enum.filter(&(&1 != ""))
   end
+
   defp parse_pembangun_sistem(_), do: []
 
   defp format_pembangun_sistem([]), do: nil
+
   defp format_pembangun_sistem(list) when is_list(list) do
     list
     |> Enum.filter(&(&1 != ""))
@@ -181,8 +188,8 @@ defmodule SppaWeb.ApprovedProjectLive do
 
           # Update the approved project
           case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-            "pembangun_sistem" => pembangun_sistem_str
-          }) do
+                 "pembangun_sistem" => pembangun_sistem_str
+               }) do
             {:ok, updated_project} ->
               # Update available developers (exclude selected ones)
               available_developers =
@@ -214,12 +221,13 @@ defmodule SppaWeb.ApprovedProjectLive do
     new_selected = List.delete(socket.assigns.selected_developers, no_kp)
 
     # Format as comma-separated string (or nil if empty)
-    pembangun_sistem_str = if new_selected == [], do: nil, else: format_pembangun_sistem(new_selected)
+    pembangun_sistem_str =
+      if new_selected == [], do: nil, else: format_pembangun_sistem(new_selected)
 
     # Update the approved project
     case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-      "pembangun_sistem" => pembangun_sistem_str
-    }) do
+           "pembangun_sistem" => pembangun_sistem_str
+         }) do
       {:ok, updated_project} ->
         # Update available developers (exclude selected ones)
         available_developers =
@@ -255,8 +263,8 @@ defmodule SppaWeb.ApprovedProjectLive do
         end
 
       case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-        "tarikh_jangkaan_siap" => date_value
-      }) do
+             "tarikh_jangkaan_siap" => date_value
+           }) do
         {:ok, updated_project} ->
           {:noreply,
            socket
@@ -269,7 +277,10 @@ defmodule SppaWeb.ApprovedProjectLive do
     else
       {:noreply,
        socket
-       |> put_flash(:error, "Sila daftar projek terlebih dahulu sebelum menetapkan tarikh jangkaan siap.")}
+       |> put_flash(
+         :error,
+         "Sila daftar projek terlebih dahulu sebelum menetapkan tarikh jangkaan siap."
+       )}
     end
   end
 
@@ -287,15 +298,14 @@ defmodule SppaWeb.ApprovedProjectLive do
           phx-click="close_sidebar"
         >
         </div>
-        <%!-- Sidebar --%>
+         <%!-- Sidebar --%>
         <.dashboard_sidebar
           sidebar_open={@sidebar_open}
           dashboard_path={~p"/dashboard-pp"}
           logo_src={~p"/images/logojpkn.png"}
           current_scope={@current_scope}
           current_path="/senarai-projek-diluluskan"
-        />
-        <%!-- Main Content --%>
+        /> <%!-- Main Content --%>
         <div class="flex-1 flex flex-col overflow-hidden">
           <%!-- Header --%>
           <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
@@ -306,10 +316,9 @@ defmodule SppaWeb.ApprovedProjectLive do
                 class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
               >
                 <.icon name="hero-bars-3" class="w-6 h-6" />
-              </button>
-              <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+              </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
+            
             <.header_actions
               notifications_open={@notifications_open}
               notifications_count={@notifications_count}
@@ -318,10 +327,11 @@ defmodule SppaWeb.ApprovedProjectLive do
               current_scope={@current_scope}
             />
           </header>
-          <%!-- Content --%>
+           <%!-- Content --%>
           <main class="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
             <div class="text-center text-gray-600 space-y-2">
               <p class="text-base font-medium">Memuatkan maklumat projek yang diluluskan...</p>
+              
               <p class="text-xs text-gray-400">Sila tunggu sebentar.</p>
             </div>
           </main>
@@ -344,15 +354,14 @@ defmodule SppaWeb.ApprovedProjectLive do
           phx-click="close_sidebar"
         >
         </div>
-        <%!-- Sidebar --%>
+         <%!-- Sidebar --%>
         <.dashboard_sidebar
           sidebar_open={@sidebar_open}
           dashboard_path={~p"/dashboard-pp"}
           logo_src={~p"/images/logojpkn.png"}
           current_scope={@current_scope}
           current_path="/senarai-projek-diluluskan"
-        />
-        <%!-- Main Content --%>
+        /> <%!-- Main Content --%>
         <div class="flex-1 flex flex-col overflow-hidden">
           <%!-- Header --%>
           <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-6 py-4 flex items-center justify-between shadow-md relative">
@@ -363,10 +372,9 @@ defmodule SppaWeb.ApprovedProjectLive do
                 class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
               >
                 <.icon name="hero-bars-3" class="w-6 h-6" />
-              </button>
-              <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+              </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
+            
             <.header_actions
               notifications_open={@notifications_open}
               notifications_count={@notifications_count}
@@ -375,7 +383,7 @@ defmodule SppaWeb.ApprovedProjectLive do
               current_scope={@current_scope}
             />
           </header>
-          <%!-- Content --%>
+           <%!-- Content --%>
           <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10">
             <div class="max-w-6xl mx-auto space-y-8">
               <%!-- Page Header --%>
@@ -384,71 +392,76 @@ defmodule SppaWeb.ApprovedProjectLive do
                   <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
                     Butiran Projek Diluluskan
                   </h1>
+                  
                   <p class="text-base text-gray-600">
                     Maklumat penuh permohonan projek yang telah diluluskan
                   </p>
                 </div>
+                
                 <div class="flex items-center gap-3">
                   <%= if @approved_project.project do %>
                     <.link
                       navigate={~p"/projek/#{@approved_project.project.id}/modul"}
                       class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-all duration-200"
                     >
-                      <.icon name="hero-cog-6-tooth" class="w-4 h-4" />
-                      <span>Modul Projek</span>
+                      <.icon name="hero-cog-6-tooth" class="w-4 h-4" /> <span>Modul Projek</span>
                     </.link>
                   <% end %>
-
+                  
                   <.link
                     navigate={~p"/senarai-projek-diluluskan"}
                     class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                   >
-                    <.icon name="hero-arrow-left" class="w-4 h-4" />
-                    <span>Kembali ke Senarai</span>
+                    <.icon name="hero-arrow-left" class="w-4 h-4" /> <span>Kembali ke Senarai</span>
                   </.link>
                 </div>
               </div>
-
-              <%!-- Main Project Card --%>
+               <%!-- Main Project Card --%>
               <div class="bg-white rounded-2xl shadow-lg border border-gray-200/80 overflow-hidden">
                 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 md:px-8 py-5">
                   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div class="space-y-2 flex-1">
                       <div class="flex items-center gap-2">
                         <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold uppercase tracking-wide">
-                          <.icon name="hero-check-circle" class="w-4 h-4" />
-                          Diluluskan
+                          <.icon name="hero-check-circle" class="w-4 h-4" /> Diluluskan
                         </span>
                         <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Projek Diluluskan
                         </span>
                       </div>
+                      
                       <h2 class="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
                         {@approved_project.nama_projek}
                       </h2>
+                      
                       <p class="text-base text-gray-600 font-medium">
                         {@approved_project.jabatan || "Tiada maklumat jabatan"}
                       </p>
                     </div>
+                    
                     <div class="flex flex-col items-start md:items-end gap-3 md:pl-6 md:border-l md:border-gray-300">
                       <div class="space-y-1.5 text-sm">
                         <div class="flex items-center gap-2 text-gray-600">
                           <.icon name="hero-calendar" class="w-4 h-4 text-gray-400" />
                           <span class="font-medium">Tarikh Permohonan:</span>
-                          <span class="text-gray-900">{format_date(@approved_project.tarikh_mula)}</span>
+                          <span class="text-gray-900">
+                            {format_date(@approved_project.tarikh_mula)}
+                          </span>
                         </div>
+                        
                         <div class="flex items-center gap-2 text-gray-600">
                           <.icon name="hero-clock" class="w-4 h-4 text-gray-400" />
                           <span class="font-medium">Tarikh Jangkaan Siap:</span>
-                          <span class="text-gray-900">{format_date(@approved_project.tarikh_jangkaan_siap)}</span>
+                          <span class="text-gray-900">
+                            {format_date(@approved_project.tarikh_jangkaan_siap)}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-
-              <%!-- Information Cards Grid --%>
+               <%!-- Information Cards Grid --%>
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <%!-- Maklumat Pemohon --%>
                 <section class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
@@ -460,12 +473,14 @@ defmodule SppaWeb.ApprovedProjectLive do
                       Maklumat Pemohon
                     </h2>
                   </div>
+                  
                   <div class="p-6">
                     <dl class="space-y-4">
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                           Emel
                         </dt>
+                        
                         <dd class="text-base text-gray-900 break-all">
                           <%= if @approved_project.pengurus_email do %>
                             {@approved_project.pengurus_email}
@@ -474,10 +489,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           <% end %>
                         </dd>
                       </div>
+                      
                       <div>
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                           Kementerian / Jabatan
                         </dt>
+                        
                         <dd class="text-base text-gray-900">
                           <%= if @approved_project.jabatan do %>
                             {@approved_project.jabatan}
@@ -489,8 +506,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                     </dl>
                   </div>
                 </section>
-
-                <%!-- Maklumat Sistem --%>
+                 <%!-- Maklumat Sistem --%>
                 <section class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                   <div class="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-gray-200">
                     <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2.5">
@@ -500,20 +516,24 @@ defmodule SppaWeb.ApprovedProjectLive do
                       Maklumat Sistem
                     </h2>
                   </div>
+                  
                   <div class="p-6">
                     <dl class="space-y-4">
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                           Nama Sistem
                         </dt>
+                        
                         <dd class="text-base font-semibold text-gray-900">
                           {@approved_project.nama_projek}
                         </dd>
                       </div>
+                      
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Pembangun Sistem
                         </dt>
+                        
                         <dd>
                           <div class="space-y-3">
                             <%!-- Dropdown to add pembangun sistem --%>
@@ -530,9 +550,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                                   required
                                 >
                                   <option value="">Pilih Pembangun Sistem</option>
+                                  
                                   <%= for developer <- @available_developers do %>
                                     <option value={developer.id}>
-                                      <%= developer.no_kp || "Unknown" %><%= if developer.email, do: " (#{developer.email})", else: "" %>
+                                      {developer.no_kp || "Unknown"}{if developer.email,
+                                        do: " (#{developer.email})",
+                                        else: ""}
                                     </option>
                                   <% end %>
                                 </select>
@@ -540,8 +563,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                                   type="submit"
                                   class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all duration-200"
                                 >
-                                  <.icon name="hero-plus" class="w-4 h-4" />
-                                  <span>Tambah</span>
+                                  <.icon name="hero-plus" class="w-4 h-4" /> <span>Tambah</span>
                                 </button>
                               </.form>
                             <% else %>
@@ -549,17 +571,17 @@ defmodule SppaWeb.ApprovedProjectLive do
                                 Semua pembangun sistem telah dipilih
                               </p>
                             <% end %>
-
-                            <%!-- Display selected pembangun sistem --%>
+                             <%!-- Display selected pembangun sistem --%>
                             <%= if @selected_developers != [] do %>
                               <div class="mt-4 space-y-2">
                                 <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                                   Pembangun Sistem Dipilih:
                                 </p>
+                                
                                 <div class="flex flex-wrap gap-2">
                                   <%= for no_kp <- @selected_developers do %>
                                     <div class="inline-flex items-center gap-2 rounded-full bg-indigo-100 px-3 py-1.5 text-sm text-indigo-800">
-                                      <span><%= no_kp %></span>
+                                      <span>{no_kp}</span>
                                       <button
                                         type="button"
                                         phx-click="remove_pembangun_sistem"
@@ -581,10 +603,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </div>
                         </dd>
                       </div>
+                      
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Tarikh Mula
                         </dt>
+                        
                         <dd>
                           <div class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                             <%= if @approved_project.tarikh_mula do %>
@@ -593,15 +617,18 @@ defmodule SppaWeb.ApprovedProjectLive do
                               <span class="text-gray-400 italic">Tiada tarikh mula</span>
                             <% end %>
                           </div>
+                          
                           <p class="mt-1 text-xs text-gray-500 italic">
                             Tarikh mula ditetapkan dari sistem luaran dan tidak boleh diubah
                           </p>
                         </dd>
                       </div>
+                      
                       <div>
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Tarikh Jangkaan Siap
                         </dt>
+                        
                         <dd>
                           <%= if @approved_project.project do %>
                             <%!-- Editable if project has been registered --%>
@@ -613,7 +640,11 @@ defmodule SppaWeb.ApprovedProjectLive do
                               <input
                                 type="date"
                                 name="tarikh_jangkaan_siap"
-                                value={if @approved_project.tarikh_jangkaan_siap, do: Date.to_iso8601(@approved_project.tarikh_jangkaan_siap), else: ""}
+                                value={
+                                  if @approved_project.tarikh_jangkaan_siap,
+                                    do: Date.to_iso8601(@approved_project.tarikh_jangkaan_siap),
+                                    else: ""
+                                }
                                 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
                               />
                             </.form>
@@ -626,6 +657,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                                 <span class="text-gray-400 italic">Tiada tarikh jangkaan siap</span>
                               <% end %>
                             </div>
+                            
                             <p class="mt-1 text-xs text-gray-500 italic">
                               Sila daftar projek terlebih dahulu untuk menetapkan tarikh jangkaan siap
                             </p>
@@ -636,8 +668,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                   </div>
                 </section>
               </div>
-
-              <%!-- Maklumat Terperinci --%>
+               <%!-- Maklumat Terperinci --%>
               <section class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                 <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
                   <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2.5">
@@ -647,6 +678,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                     Maklumat Terperinci
                   </h2>
                 </div>
+                
                 <div class="p-6 md:p-8">
                   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="space-y-6">
@@ -655,6 +687,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                           <.icon name="hero-information-circle" class="w-4 h-4 text-blue-600" />
                           Latar Belakang Sistem
                         </h3>
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.latar_belakang do %>
@@ -665,11 +698,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
-                          <.icon name="hero-flag" class="w-4 h-4 text-green-600" />
-                          Objektif Sistem
+                          <.icon name="hero-flag" class="w-4 h-4 text-green-600" /> Objektif Sistem
                         </h3>
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.objektif do %>
@@ -680,11 +714,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
-                          <.icon name="hero-globe-alt" class="w-4 h-4 text-purple-600" />
-                          Skop Sistem
+                          <.icon name="hero-globe-alt" class="w-4 h-4 text-purple-600" /> Skop Sistem
                         </h3>
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.skop do %>
@@ -696,12 +731,14 @@ defmodule SppaWeb.ApprovedProjectLive do
                         </div>
                       </div>
                     </div>
+                    
                     <div class="space-y-6">
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-user-group" class="w-4 h-4 text-orange-600" />
                           Kumpulan Pengguna
                         </h3>
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.kumpulan_pengguna do %>
@@ -712,11 +749,13 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-exclamation-triangle" class="w-4 h-4 text-amber-600" />
                           Implikasi
                         </h3>
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.implikasi do %>
@@ -727,11 +766,13 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-document-arrow-down" class="w-4 h-4 text-red-600" />
                           Dokumen Kertas Kerja
                         </h3>
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <%= if @approved_project.kertas_kerja_path do %>
                             <% full_url = ensure_full_url(@approved_project.kertas_kerja_path) %>
@@ -752,10 +793,15 @@ defmodule SppaWeb.ApprovedProjectLive do
                               </div>
                             <% else %>
                               <p class="text-sm text-gray-400 italic">URL dokumen tidak sah</p>
-                              <p class="text-xs text-gray-500 mt-1">Nilai tersimpan: {@approved_project.kertas_kerja_path}</p>
+                              
+                              <p class="text-xs text-gray-500 mt-1">
+                                Nilai tersimpan: {@approved_project.kertas_kerja_path}
+                              </p>
                             <% end %>
                           <% else %>
-                            <p class="text-sm text-gray-400 italic">Tiada dokumen kertas kerja tersedia</p>
+                            <p class="text-sm text-gray-400 italic">
+                              Tiada dokumen kertas kerja tersedia
+                            </p>
                           <% end %>
                         </div>
                       </div>

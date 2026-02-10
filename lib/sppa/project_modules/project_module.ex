@@ -21,7 +21,18 @@ defmodule Sppa.ProjectModules.ProjectModule do
   @doc false
   def changeset(project_module, attrs) do
     project_module
-    |> cast(attrs, [:title, :description, :priority, :status, :fasa, :versi, :tarikh_mula, :due_date, :project_id, :developer_id])
+    |> cast(attrs, [
+      :title,
+      :description,
+      :priority,
+      :status,
+      :fasa,
+      :versi,
+      :tarikh_mula,
+      :due_date,
+      :project_id,
+      :developer_id
+    ])
     |> validate_required([:title, :project_id])
   end
 end

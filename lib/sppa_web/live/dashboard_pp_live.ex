@@ -37,7 +37,11 @@ defmodule SppaWeb.DashboardPPLive do
       else
         {:ok,
          socket
-         |> assign(:stats, %{jumlah: 0, jumlah_projek_berdaftar: 0, jumlah_projek_perlu_didaftar: 0})
+         |> assign(:stats, %{
+           jumlah: 0,
+           jumlah_projek_berdaftar: 0,
+           jumlah_projek_perlu_didaftar: 0
+         })
          |> assign(:activities, [])
          |> assign(:notifications_count, 0)}
       end
@@ -123,7 +127,7 @@ defmodule SppaWeb.DashboardPPLive do
           phx-click="close_sidebar"
         >
         </div>
-         <%!-- Sidebar --%>
+        <%!-- Sidebar --%>
         <.dashboard_sidebar
           sidebar_open={@sidebar_open}
           dashboard_path={~p"/dashboard-pp"}
@@ -143,7 +147,8 @@ defmodule SppaWeb.DashboardPPLive do
                 class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
               >
                 <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
-              </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+              </button>
+               <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
 
             <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
@@ -158,7 +163,7 @@ defmodule SppaWeb.DashboardPPLive do
               />
             </div>
           </header>
-           <%!-- Dashboard Content --%>
+          <%!-- Dashboard Content --%>
           <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
             <div class="max-w-7xl mx-auto">
               <div class="mb-8">
@@ -166,7 +171,7 @@ defmodule SppaWeb.DashboardPPLive do
 
                 <p class="text-gray-600">Gambaran keseluruhan projek dan aktiviti terkini</p>
               </div>
-               <%!-- Summary Cards --%>
+              <%!-- Summary Cards --%>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 <%!-- Jumlah --%>
                 <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
@@ -174,34 +179,36 @@ defmodule SppaWeb.DashboardPPLive do
                     <.icon name="hero-folder-open" class="w-8 h-8 text-yellow-800 opacity-80" />
                   </div>
 
-                  <div class="text-4xl font-bold text-gray-900 mb-1">
-                    {@stats[:jumlah] || 0}
-                  </div>
+                  <div class="text-4xl font-bold text-gray-900 mb-1">{@stats[:jumlah] || 0}</div>
 
                   <div class="text-sm font-medium text-gray-800">Jumlah</div>
                 </div>
-                 <%!-- Jumlah Projek Berdaftar --%>
+                <%!-- Jumlah Projek Berdaftar --%>
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-check-circle" class="w-8 h-8 text-white opacity-90" />
                   </div>
 
-                  <div class="text-4xl font-bold text-white mb-1">{@stats[:jumlah_projek_berdaftar] || 0}</div>
+                  <div class="text-4xl font-bold text-white mb-1">
+                    {@stats[:jumlah_projek_berdaftar] || 0}
+                  </div>
 
                   <div class="text-sm font-medium text-blue-50">Jumlah Projek Berdaftar</div>
                 </div>
-                 <%!-- Jumlah Projek Perlu Didaftar --%>
+                <%!-- Jumlah Projek Perlu Didaftar --%>
                 <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-exclamation-triangle" class="w-8 h-8 text-white opacity-90" />
                   </div>
 
-                  <div class="text-4xl font-bold text-white mb-1">{@stats[:jumlah_projek_perlu_didaftar] || 0}</div>
+                  <div class="text-4xl font-bold text-white mb-1">
+                    {@stats[:jumlah_projek_perlu_didaftar] || 0}
+                  </div>
 
                   <div class="text-sm font-medium text-green-50">Jumlah Projek Perlu Didaftar</div>
                 </div>
               </div>
-               <%!-- Latest Activities --%>
+              <%!-- Latest Activities --%>
               <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                   <div class="flex items-center justify-between">

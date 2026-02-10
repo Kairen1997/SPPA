@@ -164,13 +164,16 @@ defmodule Sppa.Workers.ExternalSyncWorker do
           get_string(document, "objektif") ||
           get_string(document, "objective"),
       # API uses "skop_sistem"
-      "skop" => get_string(document, "skop_sistem") ||
-                get_string(document, "skop") ||
-                get_string(document, "scope"),
-      "kumpulan_pengguna" => get_string(document, "kumpulan_pengguna") ||
-                             get_string(document, "user_group"),
-      "implikasi" => get_string(document, "implikasi") ||
-                     get_string(document, "implication"),
+      "skop" =>
+        get_string(document, "skop_sistem") ||
+          get_string(document, "skop") ||
+          get_string(document, "scope"),
+      "kumpulan_pengguna" =>
+        get_string(document, "kumpulan_pengguna") ||
+          get_string(document, "user_group"),
+      "implikasi" =>
+        get_string(document, "implikasi") ||
+          get_string(document, "implication"),
       # Track external updated_at so we can order the list like the API
       "external_updated_at" =>
         parse_datetime(
