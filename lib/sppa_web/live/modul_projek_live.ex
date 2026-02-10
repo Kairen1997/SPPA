@@ -39,7 +39,10 @@ defmodule SppaWeb.ModulProjekLive do
 
       if project do
         users = Accounts.list_users()
-        developers = Enum.filter(users, fn user -> user.role == "pembangun sistem" end)
+        all_developers = Enum.filter(users, fn user -> user.role == "pembangun sistem" end)
+
+        # Filter developers to only include those selected in the approved project's pembangun_sistem
+        developers = filter_developers_by_project_involvement(all_developers, project)
 
         tasks =
           ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
@@ -547,4 +550,35 @@ defmodule SppaWeb.ModulProjekLive do
     project_end = project_end_date(project)
     if project_end, do: Date.to_iso8601(project_end), else: nil
   end
+
+  # Filter developers to only include those selected in the approved project's pembangun_sistem
+  defp filter_developers_by_project_involvement(developers, project) do
+    # Check if project has an approved_project with pembangun_sistem
+    approved_project = project.approved_project
+
+    if approved_project && approved_project.pembangun_sistem do
+      # Parse the comma-separated list of no_kp values
+      selected_no_kps = parse_pembangun_sistem(approved_project.pembangun_sistem)
+
+      # Filter developers to only include those whose no_kp is in the selected list
+      Enum.filter(developers, fn developer ->
+        developer.no_kp && developer.no_kp in selected_no_kps
+      end)
+    else
+      # If no approved_project or no pembangun_sistem selected, return empty list
+      # This ensures only selected developers appear in task assignment
+      []
+    end
+  end
+
+  # Parse comma-separated pembangun_sistem string into list of no_kp values
+  defp parse_pembangun_sistem(nil), do: []
+  defp parse_pembangun_sistem(""), do: []
+  defp parse_pembangun_sistem(str) when is_binary(str) do
+    str
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&(&1 != ""))
+  end
+  defp parse_pembangun_sistem(_), do: []
 end

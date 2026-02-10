@@ -799,10 +799,12 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           Projects.get_project_by_id(project_id)
 
         "pembangun sistem" ->
-          # Developers can only view projects where they are assigned as developer
+          # Developers can only view projects where their no_kp is in the approved_project's pembangun_sistem
           case Projects.get_project_by_id(project_id) do
             nil -> nil
-            p -> if p.developer_id == current_user_id, do: p, else: nil
+            p ->
+              user_no_kp = current_scope.user.no_kp
+              if Projects.has_access_to_project?(p, user_no_kp), do: p, else: nil
           end
 
         "pengurus projek" ->

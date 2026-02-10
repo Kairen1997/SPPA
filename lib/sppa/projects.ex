@@ -45,16 +45,52 @@ defmodule Sppa.Projects do
 
   @doc """
   Returns the list of projects for a pembangun sistem (developer).
-  Projects where the current user is assigned as developer.
+  Only returns projects where the developer's no_kp is in the approved_project's pembangun_sistem list.
   """
   def list_projects_for_pembangun_sistem(current_scope) do
+    user_no_kp = current_scope.user.no_kp
+
+    # Get all projects with approved_project preloaded
     Project
-    |> where([p], p.developer_id == ^current_scope.user.id)
-    |> preload([:developer, :project_manager])
+    |> preload([:developer, :project_manager, :approved_project])
     |> order_by([p], desc: p.last_updated)
     |> Repo.all()
+    |> Enum.filter(fn project ->
+      # Check if developer has access based on approved_project.pembangun_sistem
+      has_access_to_project?(project, user_no_kp)
+    end)
     |> Enum.map(&format_project_for_display/1)
   end
+
+  @doc """
+  Checks if a developer (by no_kp) has access to a project.
+  Access is granted if the developer's no_kp is in the approved_project's pembangun_sistem list.
+  """
+  def has_access_to_project?(project, developer_no_kp) when is_binary(developer_no_kp) do
+    approved_project = project.approved_project
+
+    if approved_project && approved_project.pembangun_sistem do
+      # Parse the comma-separated list of no_kp values
+      selected_no_kps = parse_pembangun_sistem(approved_project.pembangun_sistem)
+      developer_no_kp in selected_no_kps
+    else
+      # If no approved_project or no pembangun_sistem selected, no access
+      false
+    end
+  end
+
+  def has_access_to_project?(_project, _developer_no_kp), do: false
+
+  # Parse comma-separated pembangun_sistem string into list of no_kp values
+  defp parse_pembangun_sistem(nil), do: []
+  defp parse_pembangun_sistem(""), do: []
+  defp parse_pembangun_sistem(str) when is_binary(str) do
+    str
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&(&1 != ""))
+  end
+  defp parse_pembangun_sistem(_), do: []
 
   @doc """
   Formats project data for display in senarai projek.
@@ -149,6 +185,7 @@ defmodule Sppa.Projects do
   def get_project_by_id(id) do
     Project
     |> where([p], p.id == ^id)
+    |> preload([:developer, :project_manager, :approved_project])
     |> preload([:developer, :project_manager, :user])
     |> Repo.one()
   end

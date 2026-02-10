@@ -43,12 +43,18 @@ defmodule SppaWeb.ProjectDetailsLive do
 
   defp fetch_project(project_id, socket) do
     current_scope = socket.assigns.current_scope
+    user_no_kp = current_scope.user.no_kp
 
+    # For pembangun sistem, check access via approved_project.pembangun_sistem
     db_project =
-      try do
-        Projects.get_project!(project_id, current_scope)
-      rescue
-        _ -> nil
+      case Projects.get_project_by_id(project_id) do
+        nil -> nil
+        project ->
+          if Projects.has_access_to_project?(project, user_no_kp) do
+            project
+          else
+            nil
+          end
       end
 
     db_project || get_mock_project_by_id(project_id)
