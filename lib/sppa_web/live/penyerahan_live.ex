@@ -53,9 +53,9 @@ defmodule SppaWeb.PenyerahanLive do
          |> put_flash(:error, "Projek tidak dijumpai atau anda tidak mempunyai akses.")
          |> redirect(to: ~p"/projek")}
       else
-        # Get submission records (penyerahan)
-        # TODO: Filter by project_id when data comes from DB
-        penyerahan = get_penyerahan()
+        # Get submission records (penyerahan); nama_sistem from project when in project scope
+        project = if project_assigns, do: Keyword.get(project_assigns, :project), else: nil
+        penyerahan = get_penyerahan(project)
 
         current_path = index_path(project_id) |> to_string()
 
@@ -149,7 +149,8 @@ defmodule SppaWeb.PenyerahanLive do
           |> assign(project_assigns || [])
 
         if connected?(socket) do
-          penyerahan = get_penyerahan_by_id(penyerahan_id)
+          project = if project_assigns, do: Keyword.get(project_assigns, :project), else: nil
+          penyerahan = get_penyerahan_by_id(penyerahan_id, project)
 
           if penyerahan do
             activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
@@ -239,77 +240,107 @@ defmodule SppaWeb.PenyerahanLive do
     end
   end
 
-  # Get penyerahan by id
-  defp get_penyerahan_by_id(penyerahan_id) do
-    get_penyerahan()
+  # Get penyerahan by id; pass project to set nama_sistem from project.nama
+  defp get_penyerahan_by_id(penyerahan_id, project) do
+    get_penyerahan(project)
     |> Enum.find(fn p -> p.id == penyerahan_id end)
   end
 
-  # Get submission records (penyerahan)
+  # Get submission records (penyerahan).
+  # When project is given: 1 baris sahaja untuk 1 projek ID (nama_sistem from project.nama).
+  # When project is nil: full list (e.g. senarai semua penyerahan).
   # TODO: In the future, this should be retrieved from a database or context module
-  defp get_penyerahan do
-    [
-      %{
-        id: "penyerahan_1",
-        number: 1,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.0.0",
-        tarikh_penyerahan: ~D[2024-12-20],
-        tarikh_dijangka: ~D[2024-12-18],
-        status: "Selesai",
-        penerima: "Jabatan Teknologi Maklumat",
-        pembangun_team: "Team Alpha",
-        pengurus_projek: "Siti binti Hassan",
-        lokasi: "Pejabat Utama JPKN",
-        catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
-        manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
-        surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
-        diserahkan_oleh: "Ahmad bin Abdullah",
-        diterima_oleh: "Siti binti Hassan",
-        tarikh_diserahkan: ~D[2024-12-20],
-        tarikh_diterima: ~D[2024-12-20]
-      },
-      %{
-        id: "penyerahan_2",
-        number: 2,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.1.0",
-        tarikh_penyerahan: ~D[2024-12-25],
-        tarikh_dijangka: ~D[2024-12-22],
-        status: "Dalam Proses",
-        penerima: "Jabatan Teknologi Maklumat",
-        pembangun_team: "Team Beta",
-        pengurus_projek: "Ahmad bin Abdullah",
-        lokasi: "Pejabat Utama JPKN",
-        catatan: "Penyerahan untuk versi 1.1.0",
-        manual_pengguna_bahagian_a: nil,
-        surat_akuan_penerimaan: nil,
-        diserahkan_oleh: "Ahmad bin Abdullah",
-        diterima_oleh: nil,
-        tarikh_diserahkan: ~D[2024-12-25],
-        tarikh_diterima: nil
-      },
-      %{
-        id: "penyerahan_3",
-        number: 3,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.2.0",
-        tarikh_penyerahan: nil,
-        tarikh_dijangka: ~D[2024-12-28],
-        status: "Menunggu",
-        penerima: "Jabatan Teknologi Maklumat",
-        pembangun_team: nil,
-        pengurus_projek: nil,
-        lokasi: "Pejabat Utama JPKN",
-        catatan: "Penyerahan untuk versi 1.2.0",
-        manual_pengguna_bahagian_a: nil,
-        surat_akuan_penerimaan: nil,
-        diserahkan_oleh: nil,
-        diterima_oleh: nil,
-        tarikh_diserahkan: nil,
-        tarikh_diterima: nil
-      }
-    ]
+  defp get_penyerahan(project) do
+    nama_sistem = if project, do: project.nama || "Sistem Pengurusan Permohonan", else: "Sistem Pengurusan Permohonan"
+
+    if project do
+      # Satu baris sahaja untuk satu projek ID
+      [
+        %{
+          id: "penyerahan_1",
+          number: 1,
+          nama_sistem: nama_sistem,
+          versi: "1.0.0",
+          tarikh_penyerahan: ~D[2024-12-20],
+          tarikh_dijangka: ~D[2024-12-18],
+          status: "Selesai",
+          penerima: "Jabatan Teknologi Maklumat",
+          pembangun_team: "Team Alpha",
+          pengurus_projek: "Siti binti Hassan",
+          lokasi: "Pejabat Utama JPKN",
+          catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
+          manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
+          surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
+          diserahkan_oleh: "Ahmad bin Abdullah",
+          diterima_oleh: "Siti binti Hassan",
+          tarikh_diserahkan: ~D[2024-12-20],
+          tarikh_diterima: ~D[2024-12-20]
+        }
+      ]
+    else
+      [
+        %{
+          id: "penyerahan_1",
+          number: 1,
+          nama_sistem: nama_sistem,
+          versi: "1.0.0",
+          tarikh_penyerahan: ~D[2024-12-20],
+          tarikh_dijangka: ~D[2024-12-18],
+          status: "Selesai",
+          penerima: "Jabatan Teknologi Maklumat",
+          pembangun_team: "Team Alpha",
+          pengurus_projek: "Siti binti Hassan",
+          lokasi: "Pejabat Utama JPKN",
+          catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
+          manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
+          surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
+          diserahkan_oleh: "Ahmad bin Abdullah",
+          diterima_oleh: "Siti binti Hassan",
+          tarikh_diserahkan: ~D[2024-12-20],
+          tarikh_diterima: ~D[2024-12-20]
+        },
+        %{
+          id: "penyerahan_2",
+          number: 2,
+          nama_sistem: nama_sistem,
+          versi: "1.1.0",
+          tarikh_penyerahan: ~D[2024-12-25],
+          tarikh_dijangka: ~D[2024-12-22],
+          status: "Dalam Proses",
+          penerima: "Jabatan Teknologi Maklumat",
+          pembangun_team: "Team Beta",
+          pengurus_projek: "Ahmad bin Abdullah",
+          lokasi: "Pejabat Utama JPKN",
+          catatan: "Penyerahan untuk versi 1.1.0",
+          manual_pengguna_bahagian_a: nil,
+          surat_akuan_penerimaan: nil,
+          diserahkan_oleh: "Ahmad bin Abdullah",
+          diterima_oleh: nil,
+          tarikh_diserahkan: ~D[2024-12-25],
+          tarikh_diterima: nil
+        },
+        %{
+          id: "penyerahan_3",
+          number: 3,
+          nama_sistem: nama_sistem,
+          versi: "1.2.0",
+          tarikh_penyerahan: nil,
+          tarikh_dijangka: ~D[2024-12-28],
+          status: "Menunggu",
+          penerima: "Jabatan Teknologi Maklumat",
+          pembangun_team: nil,
+          pengurus_projek: nil,
+          lokasi: "Pejabat Utama JPKN",
+          catatan: "Penyerahan untuk versi 1.2.0",
+          manual_pengguna_bahagian_a: nil,
+          surat_akuan_penerimaan: nil,
+          diserahkan_oleh: nil,
+          diterima_oleh: nil,
+          tarikh_diserahkan: nil,
+          tarikh_diterima: nil
+        }
+      ]
+    end
   end
 
   @impl true
@@ -368,7 +399,8 @@ defmodule SppaWeb.PenyerahanLive do
 
   @impl true
   def handle_event("open_edit_modal", %{"penyerahan_id" => penyerahan_id}, socket) do
-    penyerahan = get_penyerahan_by_id(penyerahan_id)
+    project = socket.assigns[:project]
+    penyerahan = get_penyerahan_by_id(penyerahan_id, project)
 
     if penyerahan do
       form_data = %{
@@ -418,11 +450,12 @@ defmodule SppaWeb.PenyerahanLive do
   @impl true
   def handle_event("open_upload_modal", %{"penyerahan_id" => penyerahan_id}, socket) do
     # Try to find penyerahan from list first
+    project = socket.assigns[:project]
     penyerahan =
       if socket.assigns[:penyerahan] && length(socket.assigns.penyerahan) > 0 do
         Enum.find(socket.assigns.penyerahan, fn p -> p.id == penyerahan_id end)
       else
-        get_penyerahan_by_id(penyerahan_id)
+        get_penyerahan_by_id(penyerahan_id, project)
       end
 
     if penyerahan do

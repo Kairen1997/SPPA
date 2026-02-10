@@ -232,19 +232,12 @@
             </div>
           <% else %>
             <%!-- Index Page - List Penyerahan --%>
-            <div class="mb-8 flex items-center justify-between">
+            <div class="mb-8">
               <div>
                 <h1 class="text-4xl font-bold text-gray-900 mb-2">Penyerahan</h1>
 
                 <p class="text-gray-600">Urus dan pantau penyerahan sistem kepada penerima</p>
               </div>
-
-              <button
-                phx-click="open_create_modal"
-                class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
-              >
-                <.icon name="hero-plus-circle" class="w-5 h-5" /> <span>Penyerahan Baharu</span>
-              </button>
             </div>
             <%!-- Penyerahan Container --%>
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
