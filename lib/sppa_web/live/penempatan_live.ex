@@ -1,6 +1,8 @@
 defmodule SppaWeb.PenempatanLive do
   use SppaWeb, :live_view
 
+  alias Sppa.AnalisisDanRekabentuk
+  alias Sppa.Penempatans
   alias Sppa.Projects
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
@@ -23,9 +25,11 @@ defmodule SppaWeb.PenempatanLive do
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      # Get deployment records (penempatan)
-      penempatan = get_penempatan()
+      # Get deployment records (penempatan) with projek_id for linking to tab penempatan
+      penempatan = get_penempatan(socket.assigns.current_scope)
+      project_ids = get_project_ids_for_scope(socket.assigns.current_scope)
 
+      # url_projek_id akan dikemas kini dalam handle_params (supaya dipaparkan pada URL)
       socket =
         socket
         |> assign(:hide_root_header, true)
@@ -35,10 +39,13 @@ defmodule SppaWeb.PenempatanLive do
         |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/penempatan")
         |> assign(:penempatan, penempatan)
+        |> assign(:penempatan_display, penempatan)
         |> assign(:show_edit_modal, false)
         |> assign(:show_create_modal, false)
         |> assign(:selected_penempatan, nil)
         |> assign(:form, to_form(%{}, as: :penempatan))
+        |> assign(:url_projek_id, nil)
+        |> assign(:project_ids, project_ids)
 
       if connected?(socket) do
         activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
@@ -66,6 +73,23 @@ defmodule SppaWeb.PenempatanLive do
       {:ok, socket}
     end
   end
+
+  defp parse_projek_id_from_params(%{"projek_id" => id}) when is_binary(id) do
+    case Integer.parse(id) do
+      {num, _} -> num
+      :error -> nil
+    end
+  end
+
+  defp parse_projek_id_from_params(_params), do: nil
+
+  defp maybe_patch_url_with_projek_id(socket, nil, first_project_id)
+       when not is_nil(first_project_id) do
+    # URL tiada projek_id tetapi pengguna ada projek - patch supaya projek id dipaparkan pada URL
+    Phoenix.LiveView.push_patch(socket, to: ~p"/penempatan?projek_id=#{first_project_id}")
+  end
+
+  defp maybe_patch_url_with_projek_id(socket, _url_projek_id, _first_project_id), do: socket
 
   defp mount_show(penempatan_id, socket) do
     # Verify user has required role (defense in depth - router already checks this)
@@ -135,77 +159,133 @@ defmodule SppaWeb.PenempatanLive do
     end
   end
 
-  # Get penempatan by id
+  # Get penempatan by id (from database). Returns display map or nil.
   defp get_penempatan_by_id(penempatan_id) do
-    get_penempatan()
-    |> Enum.find(fn p -> p.id == penempatan_id end)
+    id = parse_penempatan_id(penempatan_id)
+    if id, do: penempatan_struct_to_display_map(Penempatans.get_penempatan(id)), else: nil
   end
 
-  # Get deployment records (penempatan)
-  # TODO: In the future, this should be retrieved from a database or context module
-  defp get_penempatan do
-    [
-      %{
-        id: "penempatan_1",
-        number: 1,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.0.0",
-        lokasi: "Server Produksi - JPKN",
-        tarikh_penempatan: ~D[2024-12-15],
-        tarikh_dijangka: ~D[2024-12-10],
-        status: "Selesai",
-        jenis: "Produksi",
-        persekitaran: "Produksi",
-        url: "https://sppa.jpkn.gov.my",
-        catatan: "Penempatan pertama untuk sistem pengurusan permohonan",
-        dibina_oleh: "Ahmad bin Abdullah",
-        disemak_oleh: "Siti binti Hassan",
-        diluluskan_oleh: "Mohd bin Ismail",
-        tarikh_dibina: ~D[2024-12-05],
-        tarikh_disemak: ~D[2024-12-08],
-        tarikh_diluluskan: ~D[2024-12-10]
-      },
-      %{
-        id: "penempatan_2",
-        number: 2,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.1.0",
-        lokasi: "Server Staging - JPKN",
-        tarikh_penempatan: ~D[2024-12-20],
-        tarikh_dijangka: ~D[2024-12-18],
-        status: "Dalam Proses",
-        jenis: "Staging",
-        persekitaran: "Staging",
-        url: "https://staging-sppa.jpkn.gov.my",
-        catatan: "Penempatan untuk ujian staging sebelum produksi",
-        dibina_oleh: "Ahmad bin Abdullah",
-        disemak_oleh: nil,
-        diluluskan_oleh: nil,
-        tarikh_dibina: ~D[2024-12-15],
-        tarikh_disemak: nil,
-        tarikh_diluluskan: nil
-      },
-      %{
-        id: "penempatan_3",
-        number: 3,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.2.0",
-        lokasi: "Server Development - JPKN",
-        tarikh_penempatan: ~D[2024-12-25],
-        tarikh_dijangka: ~D[2024-12-22],
-        status: "Menunggu",
-        jenis: "Development",
-        persekitaran: "Development",
-        url: "https://dev-sppa.jpkn.gov.my",
-        catatan: "Penempatan untuk persekitaran pembangunan",
-        dibina_oleh: nil,
-        disemak_oleh: nil,
-        diluluskan_oleh: nil,
-        tarikh_dibina: nil,
-        tarikh_disemak: nil,
-        tarikh_diluluskan: nil
-      }
-    ]
+  # Returns list of project IDs the current user can access (for linking penempatan to projek tab)
+  defp get_project_ids_for_scope(current_scope) do
+    projects =
+      case current_scope.user.role do
+        "ketua penolong pengarah" -> Projects.list_all_projects()
+        "pengurus projek" -> Projects.list_projects_for_pengurus_projek(current_scope)
+        "pembangun sistem" -> Projects.list_projects_for_pembangun_sistem(current_scope)
+        _ -> Projects.list_projects(current_scope)
+      end
+
+    projects
+    |> Enum.map(fn p -> if is_map(p), do: p.id, else: p.id end)
+    |> Enum.take(10)
+  end
+
+  defp parse_penempatan_id(id) when is_integer(id), do: id
+
+  defp parse_penempatan_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {num, _} -> num
+      :error -> nil
+    end
+  end
+
+  defp parse_penempatan_id(_), do: nil
+
+  # Convert Penempatan struct to the display map shape expected by templates.
+  defp penempatan_struct_to_display_map(nil), do: nil
+
+  defp penempatan_struct_to_display_map(p) do
+    %{
+      id: p.id,
+      nama_sistem: p.nama_sistem,
+      versi: p.versi,
+      lokasi: p.lokasi,
+      tarikh_penempatan: p.tarikh_penempatan,
+      tarikh_dijangka: p.tarikh_dijangka,
+      status: p.status,
+      jenis: p.jenis,
+      persekitaran: p.persekitaran,
+      url: p.url,
+      catatan: p.catatan,
+      dibina_oleh: p.dibina_oleh,
+      disemak_oleh: p.disemak_oleh,
+      diluluskan_oleh: p.diluluskan_oleh,
+      tarikh_dibina: p.tarikh_dibina,
+      tarikh_disemak: p.tarikh_disemak,
+      tarikh_diluluskan: p.tarikh_diluluskan,
+      projek_id: p.project_id
+    }
+  end
+
+  # Get deployment records from database with projek_id and optional project nama/versi for display.
+  defp get_penempatan(current_scope) do
+    project_ids = get_project_ids_for_scope(current_scope)
+
+    list =
+      if project_ids == [] do
+        Penempatans.list_all_penempatans()
+      else
+        Penempatans.list_penempatans_by_project_ids(project_ids)
+      end
+
+    ids_used = list |> Enum.map(& &1.project_id) |> Enum.uniq() |> Enum.reject(&is_nil/1)
+    project_nama_by_id = Projects.get_project_nama_by_ids(ids_used)
+    versi_by_project_id = AnalisisDanRekabentuk.get_versi_by_project_ids(ids_used)
+
+    Enum.map(list, fn p ->
+      nama_sistem = p.nama_sistem || Map.get(project_nama_by_id, p.project_id)
+      versi = p.versi || Map.get(versi_by_project_id, p.project_id, p.versi)
+
+      penempatan_struct_to_display_map(p)
+      |> Map.put(:nama_sistem, nama_sistem || p.nama_sistem)
+      |> Map.put(:versi, versi || p.versi)
+      |> Map.put(:projek_id, p.project_id)
+    end)
+  end
+
+  # Reload penempatan assigns after create/update (keeps url_projek_id filter).
+  defp reload_penempatan_assigns(socket) do
+    penempatan = get_penempatan(socket.assigns.current_scope)
+    url_projek_id = socket.assigns[:url_projek_id]
+
+    penempatan_display =
+      if url_projek_id do
+        Enum.filter(penempatan, &(&1.projek_id == url_projek_id))
+      else
+        penempatan
+      end
+
+    socket
+    |> assign(:penempatan, penempatan)
+    |> assign(:penempatan_display, penempatan_display)
+  end
+
+  @impl true
+  def handle_params(params, _uri, socket) do
+    # Halaman senarai penempatan: pastikan projek_id dipaparkan pada URL dan filter mengikut projek
+    if Map.has_key?(socket.assigns, :project_ids) do
+      url_projek_id = parse_projek_id_from_params(params)
+      first_project_id = List.first(socket.assigns.project_ids || [])
+
+      # Bila projek_id dalam URL, hanya papar penempatan untuk projek tersebut (satu sistem)
+      penempatan_display =
+        if url_projek_id do
+          socket.assigns.penempatan
+          |> Enum.filter(&(&1.projek_id == url_projek_id))
+        else
+          socket.assigns.penempatan
+        end
+
+      socket =
+        socket
+        |> assign(:url_projek_id, url_projek_id)
+        |> assign(:penempatan_display, penempatan_display)
+        |> maybe_patch_url_with_projek_id(url_projek_id, first_project_id)
+
+      {:noreply, socket}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true
@@ -246,7 +326,21 @@ defmodule SppaWeb.PenempatanLive do
 
   @impl true
   def handle_event("open_create_modal", _params, socket) do
-    form = to_form(%{}, as: :penempatan)
+    # Isi default versi (dan nama sistem) dari Analisis dan Rekabentuk bila projek dipilih
+    initial_params =
+      case socket.assigns[:url_projek_id] do
+        nil ->
+          %{}
+        projek_id ->
+          versi_map = AnalisisDanRekabentuk.get_versi_by_project_ids([projek_id])
+          nama_map = Projects.get_project_nama_by_ids([projek_id])
+          %{
+            "versi" => Map.get(versi_map, projek_id, "1.0.0"),
+            "nama_sistem" => Map.get(nama_map, projek_id, "")
+          }
+      end
+
+    form = to_form(initial_params, as: :penempatan)
 
     {:noreply,
      socket
@@ -264,13 +358,14 @@ defmodule SppaWeb.PenempatanLive do
 
   @impl true
   def handle_event("open_edit_modal", %{"penempatan_id" => penempatan_id}, socket) do
+    id_parsed = parse_penempatan_id(penempatan_id)
     # Try to find penempatan from list first, then from selected_penempatan
     penempatan =
       if socket.assigns[:penempatan] && length(socket.assigns.penempatan) > 0 do
-        Enum.find(socket.assigns.penempatan, fn p -> p.id == penempatan_id end)
+        Enum.find(socket.assigns.penempatan, fn p -> p.id == id_parsed end)
       else
         if socket.assigns[:selected_penempatan] &&
-             socket.assigns.selected_penempatan.id == penempatan_id do
+             socket.assigns.selected_penempatan.id == id_parsed do
           socket.assigns.selected_penempatan
         else
           get_penempatan_by_id(penempatan_id)
@@ -283,7 +378,11 @@ defmodule SppaWeb.PenempatanLive do
         "versi" => penempatan.versi,
         "lokasi" => penempatan.lokasi,
         "tarikh_penempatan" => Calendar.strftime(penempatan.tarikh_penempatan, "%Y-%m-%d"),
-        "tarikh_dijangka" => Calendar.strftime(penempatan.tarikh_dijangka, "%Y-%m-%d"),
+        "tarikh_dijangka" =>
+          if(penempatan.tarikh_dijangka,
+            do: Calendar.strftime(penempatan.tarikh_dijangka, "%Y-%m-%d"),
+            else: ""
+          ),
         "status" => penempatan.status,
         "jenis" => penempatan.jenis,
         "persekitaran" => penempatan.persekitaran,
@@ -338,219 +437,111 @@ defmodule SppaWeb.PenempatanLive do
 
   @impl true
   def handle_event("create_penempatan", %{"penempatan" => penempatan_params}, socket) do
-    # TODO: In the future, this should save to the database
-    new_id = "penempatan_#{length(socket.assigns.penempatan) + 1}"
-    new_number = length(socket.assigns.penempatan) + 1
+    attrs = build_penempatan_attrs_from_params(penempatan_params)
+    attrs = maybe_put_project_id(attrs, socket.assigns[:url_projek_id])
 
-    tarikh_penempatan =
-      if penempatan_params["tarikh_penempatan"] && penempatan_params["tarikh_penempatan"] != "" do
-        case Date.from_iso8601(penempatan_params["tarikh_penempatan"]) do
-          {:ok, date} -> date
-          _ -> Date.utc_today()
-        end
-      else
-        Date.utc_today()
-      end
+    case Penempatans.create_penempatan(attrs) do
+      {:ok, _penempatan} ->
+        {:noreply,
+         socket
+         |> reload_penempatan_assigns()
+         |> assign(:show_create_modal, false)
+         |> assign(:form, to_form(%{}, as: :penempatan))
+         |> put_flash(:info, "Penempatan berjaya didaftarkan")}
 
-    tarikh_dijangka =
-      if penempatan_params["tarikh_dijangka"] && penempatan_params["tarikh_dijangka"] != "" do
-        case Date.from_iso8601(penempatan_params["tarikh_dijangka"]) do
-          {:ok, date} -> date
-          _ -> Date.utc_today()
-        end
-      else
-        Date.utc_today()
-      end
+      {:error, changeset} ->
+        form = to_form(changeset, as: :penempatan)
 
-    tarikh_dibina =
-      if penempatan_params["tarikh_dibina"] && penempatan_params["tarikh_dibina"] != "" do
-        case Date.from_iso8601(penempatan_params["tarikh_dibina"]) do
-          {:ok, date} -> date
-          _ -> nil
-        end
-      else
-        nil
-      end
-
-    tarikh_disemak =
-      if penempatan_params["tarikh_disemak"] && penempatan_params["tarikh_disemak"] != "" do
-        case Date.from_iso8601(penempatan_params["tarikh_disemak"]) do
-          {:ok, date} -> date
-          _ -> nil
-        end
-      else
-        nil
-      end
-
-    tarikh_diluluskan =
-      if penempatan_params["tarikh_diluluskan"] && penempatan_params["tarikh_diluluskan"] != "" do
-        case Date.from_iso8601(penempatan_params["tarikh_diluluskan"]) do
-          {:ok, date} -> date
-          _ -> nil
-        end
-      else
-        nil
-      end
-
-    new_penempatan = %{
-      id: new_id,
-      number: new_number,
-      nama_sistem: penempatan_params["nama_sistem"],
-      versi: penempatan_params["versi"] || "",
-      lokasi: penempatan_params["lokasi"],
-      tarikh_penempatan: tarikh_penempatan,
-      tarikh_dijangka: tarikh_dijangka,
-      status: penempatan_params["status"] || "Menunggu",
-      jenis: penempatan_params["jenis"] || "",
-      persekitaran: penempatan_params["persekitaran"] || "",
-      url: penempatan_params["url"] || "",
-      catatan:
-        if(penempatan_params["catatan"] == "", do: nil, else: penempatan_params["catatan"]),
-      dibina_oleh: penempatan_params["dibina_oleh"] || "",
-      disemak_oleh:
-        if(penempatan_params["disemak_oleh"] == "",
-          do: nil,
-          else: penempatan_params["disemak_oleh"]
-        ),
-      diluluskan_oleh:
-        if(penempatan_params["diluluskan_oleh"] == "",
-          do: nil,
-          else: penempatan_params["diluluskan_oleh"]
-        ),
-      tarikh_dibina: tarikh_dibina,
-      tarikh_disemak: tarikh_disemak,
-      tarikh_diluluskan: tarikh_diluluskan
-    }
-
-    updated_penempatan = [new_penempatan | socket.assigns.penempatan]
-
-    {:noreply,
-     socket
-     |> assign(:penempatan, updated_penempatan)
-     |> assign(:show_create_modal, false)
-     |> assign(:form, to_form(%{}, as: :penempatan))
-     |> put_flash(:info, "Penempatan berjaya didaftarkan")}
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, "Gagal mendaftar penempatan. Sila semak maklumat.")}
+    end
   end
 
   @impl true
   def handle_event("update_penempatan", %{"penempatan" => penempatan_params}, socket) do
-    # TODO: In the future, this should update the database
     editing_penempatan =
       socket.assigns[:editing_penempatan] || socket.assigns[:selected_penempatan]
 
     if editing_penempatan do
-      penempatan_id = editing_penempatan.id
+      penempatan_struct = Penempatans.get_penempatan(editing_penempatan.id)
+      attrs = build_penempatan_attrs_from_params(penempatan_params)
 
-      tarikh_penempatan =
-        if penempatan_params["tarikh_penempatan"] && penempatan_params["tarikh_penempatan"] != "" do
-          case Date.from_iso8601(penempatan_params["tarikh_penempatan"]) do
-            {:ok, date} -> date
-            _ -> editing_penempatan.tarikh_penempatan
-          end
-        else
-          editing_penempatan.tarikh_penempatan
+      if penempatan_struct do
+        case Penempatans.update_penempatan(penempatan_struct, attrs) do
+          {:ok, updated} ->
+            display_map = penempatan_struct_to_display_map(updated)
+
+            updated_socket =
+              socket
+              |> reload_penempatan_assigns()
+              |> assign(:show_edit_modal, false)
+              |> assign(:editing_penempatan, nil)
+              |> assign(:form, to_form(%{}, as: :penempatan))
+              |> put_flash(:info, "Penempatan berjaya dikemaskini")
+
+            final_socket =
+              if socket.assigns[:selected_penempatan] &&
+                   socket.assigns.selected_penempatan.id == editing_penempatan.id do
+                assign(updated_socket, :selected_penempatan, display_map)
+              else
+                updated_socket
+              end
+
+            {:noreply, final_socket}
+
+          {:error, changeset} ->
+            form = to_form(changeset, as: :penempatan)
+
+            {:noreply,
+             socket
+             |> assign(:form, form)
+             |> put_flash(:error, "Gagal mengemaskini penempatan. Sila semak maklumat.")}
         end
-
-      tarikh_dijangka =
-        if penempatan_params["tarikh_dijangka"] && penempatan_params["tarikh_dijangka"] != "" do
-          case Date.from_iso8601(penempatan_params["tarikh_dijangka"]) do
-            {:ok, date} -> date
-            _ -> editing_penempatan.tarikh_dijangka
-          end
-        else
-          editing_penempatan.tarikh_dijangka
-        end
-
-      tarikh_dibina =
-        if penempatan_params["tarikh_dibina"] && penempatan_params["tarikh_dibina"] != "" do
-          case Date.from_iso8601(penempatan_params["tarikh_dibina"]) do
-            {:ok, date} -> date
-            _ -> Map.get(editing_penempatan, :tarikh_dibina, nil)
-          end
-        else
-          Map.get(editing_penempatan, :tarikh_dibina, nil)
-        end
-
-      tarikh_disemak =
-        if penempatan_params["tarikh_disemak"] && penempatan_params["tarikh_disemak"] != "" do
-          case Date.from_iso8601(penempatan_params["tarikh_disemak"]) do
-            {:ok, date} -> date
-            _ -> Map.get(editing_penempatan, :tarikh_disemak, nil)
-          end
-        else
-          Map.get(editing_penempatan, :tarikh_disemak, nil)
-        end
-
-      tarikh_diluluskan =
-        if penempatan_params["tarikh_diluluskan"] && penempatan_params["tarikh_diluluskan"] != "" do
-          case Date.from_iso8601(penempatan_params["tarikh_diluluskan"]) do
-            {:ok, date} -> date
-            _ -> Map.get(editing_penempatan, :tarikh_diluluskan, nil)
-          end
-        else
-          Map.get(editing_penempatan, :tarikh_diluluskan, nil)
-        end
-
-      updated_penempatan_data = %{
-        editing_penempatan
-        | nama_sistem: penempatan_params["nama_sistem"] || editing_penempatan.nama_sistem,
-          versi: penempatan_params["versi"] || "",
-          lokasi: penempatan_params["lokasi"],
-          tarikh_penempatan: tarikh_penempatan,
-          tarikh_dijangka: tarikh_dijangka,
-          status: penempatan_params["status"],
-          jenis: penempatan_params["jenis"],
-          persekitaran: penempatan_params["persekitaran"],
-          url: penempatan_params["url"] || "",
-          catatan:
-            if(penempatan_params["catatan"] == "", do: nil, else: penempatan_params["catatan"]),
-          dibina_oleh: penempatan_params["dibina_oleh"] || "",
-          disemak_oleh:
-            if(penempatan_params["disemak_oleh"] == "",
-              do: nil,
-              else: penempatan_params["disemak_oleh"]
-            ),
-          diluluskan_oleh:
-            if(penempatan_params["diluluskan_oleh"] == "",
-              do: nil,
-              else: penempatan_params["diluluskan_oleh"]
-            ),
-          tarikh_dibina: tarikh_dibina,
-          tarikh_disemak: tarikh_disemak,
-          tarikh_diluluskan: tarikh_diluluskan
-      }
-
-      # Update in list if we're on index page
-      updated_penempatan_list =
-        if socket.assigns[:penempatan] && length(socket.assigns.penempatan) > 0 do
-          Enum.map(socket.assigns.penempatan, fn penempatan ->
-            if penempatan.id == penempatan_id, do: updated_penempatan_data, else: penempatan
-          end)
-        else
-          []
-        end
-
-      # Update selected_penempatan if we're on detail page
-      updated_socket =
-        socket
-        |> assign(:penempatan, updated_penempatan_list)
-        |> assign(:show_edit_modal, false)
-        |> assign(:editing_penempatan, nil)
-        |> assign(:form, to_form(%{}, as: :penempatan))
-        |> put_flash(:info, "Penempatan berjaya dikemaskini")
-
-      # Only update selected_penempatan if we're on detail page
-      final_socket =
-        if socket.assigns[:selected_penempatan] &&
-             socket.assigns.selected_penempatan.id == penempatan_id do
-          assign(updated_socket, :selected_penempatan, updated_penempatan_data)
-        else
-          updated_socket
-        end
-
-      {:noreply, final_socket}
+      else
+        {:noreply, socket}
+      end
     else
       {:noreply, socket}
     end
   end
+
+  defp maybe_put_project_id(attrs, nil), do: attrs
+  defp maybe_put_project_id(attrs, project_id), do: Map.put(attrs, :project_id, project_id)
+
+  defp build_penempatan_attrs_from_params(params) do
+    %{
+      nama_sistem: params["nama_sistem"] || "",
+      versi: params["versi"] || "1.0.0",
+      lokasi: params["lokasi"] || "",
+      jenis: params["jenis"] || "Produksi",
+      status: params["status"] || "Menunggu",
+      persekitaran: params["persekitaran"] || "",
+      tarikh_penempatan: parse_date_param(params["tarikh_penempatan"]) || Date.utc_today(),
+      tarikh_dijangka: parse_date_param(params["tarikh_dijangka"]),
+      url: blank_to_nil(params["url"]),
+      catatan: blank_to_nil(params["catatan"]),
+      dibina_oleh: blank_to_nil(params["dibina_oleh"]),
+      disemak_oleh: blank_to_nil(params["disemak_oleh"]),
+      diluluskan_oleh: blank_to_nil(params["diluluskan_oleh"]),
+      tarikh_dibina: parse_date_param(params["tarikh_dibina"]),
+      tarikh_disemak: parse_date_param(params["tarikh_disemak"]),
+      tarikh_diluluskan: parse_date_param(params["tarikh_diluluskan"])
+    }
+  end
+
+  defp parse_date_param(""), do: nil
+  defp parse_date_param(nil), do: nil
+
+  defp parse_date_param(str) when is_binary(str) do
+    case Date.from_iso8601(str) do
+      {:ok, date} -> date
+      _ -> nil
+    end
+  end
+
+  defp blank_to_nil(""), do: nil
+  defp blank_to_nil(nil), do: nil
+  defp blank_to_nil(s), do: s
 end

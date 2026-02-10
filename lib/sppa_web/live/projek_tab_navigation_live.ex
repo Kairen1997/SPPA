@@ -2,6 +2,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   use SppaWeb, :live_view
 
   alias Sppa.AnalisisDanRekabentuk
+  alias Sppa.Penempatans
   alias Sppa.PermohonanPerubahan
   alias Sppa.Projects
   alias Sppa.SoalSelidiks
@@ -115,7 +116,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         {jadual_gantt_data, jadual_month_labels} = prepare_jadual_data_for_project(project)
 
         perubahan = PermohonanPerubahan.list_by_project(project_id)
-        penempatan = get_penempatan()
+        penempatan = get_penempatan_for_project(project_id, socket.assigns.current_scope, project)
         penyerahan = get_penyerahan()
         ujian = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
 
@@ -195,6 +196,17 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     # Phoenix may pass uri as a string; ensure we have (params_map, uri_string)
     {params_map, uri_string} = normalize_params_uri(params, uri)
     current_tab = tab_from_params(params_map, uri_string)
+
+    # Refresh penempatan from DB when user switches to Penempatan tab so changes from halaman penempatan are shown
+    socket =
+      if current_tab == "Penempatan" && socket.assigns[:project] do
+        project = socket.assigns.project
+        penempatan =
+          get_penempatan_for_project(project.id, socket.assigns.current_scope, project)
+        assign(socket, :penempatan, penempatan)
+      else
+        socket
+      end
 
     {:noreply,
      socket
@@ -608,55 +620,44 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     ]
   end
 
-  # Penempatan (deployment) - same data as PenempatanLive for tab display
-  defp get_penempatan do
-    [
-      %{
-        id: "penempatan_1",
-        number: 1,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.0.0",
-        lokasi: "Server Produksi - JPKN",
-        tarikh_penempatan: ~D[2024-12-15],
-        tarikh_dijangka: ~D[2024-12-10],
-        status: "Selesai",
-        jenis: "Produksi",
-        persekitaran: "Produksi",
-        url: "https://sppa.jpkn.gov.my",
-        catatan: "Penempatan pertama untuk sistem pengurusan permohonan",
-        dibina_oleh: "Ahmad bin Abdullah"
-      },
-      %{
-        id: "penempatan_2",
-        number: 2,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.1.0",
-        lokasi: "Server Staging - JPKN",
-        tarikh_penempatan: ~D[2024-12-20],
-        tarikh_dijangka: ~D[2024-12-18],
-        status: "Dalam Proses",
-        jenis: "Staging",
-        persekitaran: "Staging",
-        url: "https://staging-sppa.jpkn.gov.my",
-        catatan: "Penempatan untuk ujian staging sebelum produksi",
-        dibina_oleh: "Ahmad bin Abdullah"
-      },
-      %{
-        id: "penempatan_3",
-        number: 3,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.2.0",
-        lokasi: "Server Development - JPKN",
-        tarikh_penempatan: ~D[2024-12-25],
-        tarikh_dijangka: ~D[2024-12-22],
-        status: "Menunggu",
-        jenis: "Development",
-        persekitaran: "Development",
-        url: "https://dev-sppa.jpkn.gov.my",
-        catatan: "Penempatan untuk persekitaran pembangunan",
-        dibina_oleh: nil
-      }
-    ]
+  # Penempatan (deployment) - data from DB, same source as halaman penempatan (PenempatanLive)
+  defp get_penempatan_for_project(project_id, _current_scope, project) do
+    list = Penempatans.list_penempatans_by_project_ids([project_id])
+    versi_by_id = AnalisisDanRekabentuk.get_versi_by_project_ids([project_id])
+    project_nama = project && project.nama
+
+    Enum.map(list, fn p ->
+      nama_sistem = p.nama_sistem || project_nama
+      versi = p.versi || Map.get(versi_by_id, p.project_id, p.versi)
+
+      penempatan_struct_to_display_map(p)
+      |> Map.put(:nama_sistem, nama_sistem || p.nama_sistem)
+      |> Map.put(:versi, versi || p.versi)
+      |> Map.put(:projek_id, p.project_id)
+    end)
+  end
+
+  defp penempatan_struct_to_display_map(p) do
+    %{
+      id: p.id,
+      nama_sistem: p.nama_sistem,
+      versi: p.versi,
+      lokasi: p.lokasi,
+      tarikh_penempatan: p.tarikh_penempatan,
+      tarikh_dijangka: p.tarikh_dijangka,
+      status: p.status,
+      jenis: p.jenis,
+      persekitaran: p.persekitaran,
+      url: p.url,
+      catatan: p.catatan,
+      dibina_oleh: p.dibina_oleh,
+      disemak_oleh: p.disemak_oleh,
+      diluluskan_oleh: p.diluluskan_oleh,
+      tarikh_dibina: p.tarikh_dibina,
+      tarikh_disemak: p.tarikh_disemak,
+      tarikh_diluluskan: p.tarikh_diluluskan,
+      projek_id: p.project_id
+    }
   end
 
   # Prepare jadual (Gantt) data for a single project

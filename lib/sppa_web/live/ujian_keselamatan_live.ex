@@ -524,7 +524,8 @@ defmodule SppaWeb.UjianKeselamatanLive do
       ujian_id = selected && (Map.get(selected, :id) || Map.get(selected, "id"))
 
       if selected && is_integer(ujian_id) do
-        senarai = Map.get(selected, :senarai_kes_ujian, []) || Map.get(selected, "senarai_kes_ujian", [])
+        senarai =
+          Map.get(selected, :senarai_kes_ujian, []) || Map.get(selected, "senarai_kes_ujian", [])
 
         existing_kods =
           Enum.map(senarai, fn k ->
@@ -572,7 +573,10 @@ defmodule SppaWeb.UjianKeselamatanLive do
             else
               {:noreply,
                socket
-               |> put_flash(:error, "Kes ujian ditambah tetapi data tidak dapat dimuat semula. Sila refresh halaman.")}
+               |> put_flash(
+                 :error,
+                 "Kes ujian ditambah tetapi data tidak dapat dimuat semula. Sila refresh halaman."
+               )}
             end
 
           {:error, changeset} ->
@@ -608,6 +612,7 @@ defmodule SppaWeb.UjianKeselamatanLive do
         Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
         err_msg = Exception.message(e)
+
         flash_msg =
           if String.length(err_msg) < 120 do
             "Ralat menambah kes ujian: #{err_msg}"
