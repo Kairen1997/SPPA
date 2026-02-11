@@ -3,14 +3,8 @@ defmodule Sppa.Integrations.ExternalClient do
 
   @external_url "http://10.71.67.140:4000/api/requests?status=Diluluskan"
 
-  # Public API used by the worker
-  def fetch_documents do
-    headers = [{"accept", "application/json"}]
-
-    Logger.info("Fetching documents from: #{@external_url}")
-
   defp requests_url do
-    base_url() <> "/api/requests?status=Diluluskan"
+    @external_url
   end
 
   # Keys the external API might use to wrap the list of requests (try in order)
