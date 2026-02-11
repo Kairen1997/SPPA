@@ -17,24 +17,27 @@ alias Sppa.Repo
 import Ecto.Query, only: [from: 2]
 
 # Helper function to create and confirm a user
-create_confirmed_user = fn no_kp, password, email, role_name ->
+create_confirmed_user = fn no_kp, password, email, role_name, name ->
   case Accounts.get_user_by_no_kp(no_kp) do
     nil ->
       case Accounts.create_user(%{
              no_kp: no_kp,
+             name: name,
              password: password,
              role: role_name
            }) do
         {:ok, user} ->
-          # Update user with email and confirm
+          # Update user with email, name, and confirm
+          # Use change/2 to set email, name, and confirmed_at
+          now = DateTime.utc_now(:second)
           updated_user =
             user
-            |> User.email_changeset(%{email: email}, validate_unique: false)
-            |> User.confirm_changeset()
+            |> Ecto.Changeset.change(email: email, name: name, confirmed_at: now)
             |> Repo.update!()
 
           IO.puts("✅ #{role_name} created successfully!")
           IO.puts("   No K/P: #{updated_user.no_kp}")
+          IO.puts("   Name: #{updated_user.name}")
           IO.puts("   Email: #{updated_user.email}")
           IO.puts("   Role: #{updated_user.role}")
           IO.puts("   ID: #{updated_user.id}")
@@ -45,8 +48,37 @@ create_confirmed_user = fn no_kp, password, email, role_name ->
           IO.inspect(errors)
       end
 
-    _existing_user ->
-      IO.puts("ℹ️  #{role_name} with No K/P '#{no_kp}' already exists. Skipping...")
+    existing_user ->
+      # Update existing user with name if it's missing or different
+      needs_name_update = is_nil(existing_user.name) || existing_user.name != name
+      needs_email_update = existing_user.email != email
+      needs_confirm = is_nil(existing_user.confirmed_at)
+
+      if needs_name_update || needs_email_update || needs_confirm do
+        updates = %{}
+        updates = if needs_name_update, do: Map.put(updates, :name, name), else: updates
+        updates = if needs_email_update, do: Map.put(updates, :email, email), else: updates
+
+        changeset = Ecto.Changeset.change(existing_user, updates)
+
+        # Add confirmed_at if needed
+        changeset = if needs_confirm do
+          now = DateTime.utc_now(:second)
+          Ecto.Changeset.put_change(changeset, :confirmed_at, now)
+        else
+          changeset
+        end
+
+        updated_user = Repo.update!(changeset)
+
+        IO.puts("✅ #{role_name} with No K/P '#{no_kp}' updated successfully!")
+        IO.puts("   No K/P: #{updated_user.no_kp}")
+        IO.puts("   Name: #{updated_user.name}")
+        IO.puts("   Email: #{updated_user.email}")
+        IO.puts("   Role: #{updated_user.role}")
+      else
+        IO.puts("ℹ️  #{role_name} with No K/P '#{no_kp}' already exists with correct data. Skipping...")
+      end
   end
 end
 
@@ -59,21 +91,24 @@ create_confirmed_user.(
   "800101010101",
   "pembangun123456",
   "pembangun.sistem@sppa.gov.my",
-  "pembangun sistem"
+  "pembangun sistem",
+  "Kairi Minach"
 )
 
 create_confirmed_user.(
   "123456127890",
   "PembangunSistem123",
   "pembangunsistem123@sppa.gov.my",
-  "pembangun sistem"
+  "pembangun sistem",
+  "Yozora"
 )
 
 create_confirmed_user.(
   "098765123456",
   "Mark_00123456",
   "mark_00@sppa.gov.my",
-  "pembangun sistem"
+  "pembangun sistem",
+  "Noct Flare"
 )
 
 # Create Pengurus Projek (Project Manager)
@@ -83,7 +118,8 @@ create_confirmed_user.(
   "800202020202",
   "projek12345678",
   "projek.manajer@sppa.gov.my",
-  "pengurus projek"
+  "pengurus projek",
+  "Athur Pendragon"
 )
 
 # Create Ketua Penolong Pengarah (Deputy Director Head)
@@ -93,7 +129,8 @@ create_confirmed_user.(
   "800303030303",
   "ketua123456789",
   "ketua.penolong.pengarah@sppa.gov.my",
-  "ketua penolong pengarah"
+  "ketua penolong pengarah",
+  "Yshtolla Harvey"
 )
 
 IO.puts("\n=== Seed users creation completed ===\n")
