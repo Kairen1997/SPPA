@@ -4,6 +4,7 @@ defmodule Sppa.Accounts.User do
 
   schema "users" do
     field :no_kp, :string
+    field :name, :string
     field :email, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
@@ -23,7 +24,7 @@ defmodule Sppa.Accounts.User do
   """
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:no_kp, :password, :role])
+    |> cast(attrs, [:no_kp, :name, :password, :role])
     |> validate_required([:no_kp, :password])
     |> validate_length(:password, min: 12, max: 72)
     |> validate_role()

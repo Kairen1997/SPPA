@@ -590,7 +590,7 @@ defmodule SppaWeb.UjianKeselamatanLive do
               end
 
             msg =
-              if is_binary(errors) && errors != "" do
+              if errors != "" do
                 "Gagal menambah kes ujian: #{errors}"
               else
                 "Gagal menambah kes ujian. Sila cuba lagi."

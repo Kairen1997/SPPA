@@ -1,15 +1,10 @@
 defmodule Sppa.Integrations.ExternalClient do
   require Logger
 
-  @doc """
-  Base URL for the external System Permohonan Aplikasi API (from config).
-  """
-  def base_url do
-    Application.fetch_env!(:sppa, :system_permohonan_aplikasi)[:base_url]
-  end
+  @external_url "http://10.71.67.140:4000/api/requests?status=Diluluskan"
 
   defp requests_url do
-    base_url() <> "/api/requests?status=Diluluskan"
+    @external_url
   end
 
   # Keys the external API might use to wrap the list of requests (try in order)
