@@ -83,8 +83,9 @@ defmodule SppaWeb.ApprovedProjectLive do
     url = String.trim(url)
 
     # Base URL for the external System Permohonan Aplikasi
-    external_base_url = "http://10.71.67.140:4000"
-    external_host = "10.71.67.140:4000"
+    external_base_url = external_api_base_url()
+    uri = URI.parse(external_base_url)
+    external_host = if uri.port, do: "#{uri.host}:#{uri.port}", else: uri.host
 
     # Normalize localhost references to the new external host
     normalized_url =
