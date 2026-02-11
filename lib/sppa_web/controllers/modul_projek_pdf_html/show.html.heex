@@ -386,11 +386,7 @@
                 
                 <td>
                   <%= if task.developer do %>
-                    <%= if task.developer.email && task.developer.email != "" do %>
-                      {task.developer.email}
-                    <% else %>
-                      {task.developer.no_kp || "-"}
-                    <% end %>
+                    {task.developer.name || task.developer.email || task.developer.no_kp || "-"}
                   <% else %>
                     <span style="color: #94a3b8;">-</span>
                   <% end %>

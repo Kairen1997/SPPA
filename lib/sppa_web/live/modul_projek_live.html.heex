@@ -369,11 +369,7 @@
                                 </div>
                                 
                                 <span class="text-sm font-medium text-gray-700">
-                                  <%= if task.developer.email && task.developer.email != "" do %>
-                                    {task.developer.email}
-                                  <% else %>
-                                    {task.developer.no_kp || "N/A"}
-                                  <% end %>
+                                  {task.developer.name || task.developer.email || task.developer.no_kp || "N/A"}
                                 </span>
                               </div>
                             <% else %>
@@ -539,11 +535,11 @@
                 <.input
                   field={@form[:developer_id]}
                   type="select"
-                  label="Tetapkan Kepada"
-                  prompt="Pilih Pembangun Sistem"
+                  label="Tetapkan Kepada Pembangun"
+                  prompt="Pilih Pembangun"
                   options={
                     Enum.map(@developers, fn developer ->
-                      {"#{developer.email || developer.no_kp}", developer.id}
+                      {"#{developer.name || developer.email || developer.no_kp}", developer.id}
                     end)
                   }
                   class="w-full"
@@ -755,11 +751,11 @@
                 <.input
                   field={@form[:developer_id]}
                   type="select"
-                  label="Tetapkan Kepada"
-                  prompt="Pilih Pembangun Sistem"
+                  label="Tetapkan Kepada Pembangun"
+                  prompt="Pilih Pembangun"
                   options={
                     Enum.map(@developers, fn developer ->
-                      {"#{developer.email || developer.no_kp}", developer.id}
+                      {"#{developer.name || developer.email || developer.no_kp}", developer.id}
                     end)
                   }
                   class="w-full"
