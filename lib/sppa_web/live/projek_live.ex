@@ -31,45 +31,39 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:status_filter, "")
         |> assign(:fasa_filter, "")
 
-      if connected?(socket) do
-        # Mock data - will be replaced with database queries later
-        # Filter projects based on user role
-        all_projects = list_projects(socket.assigns.current_scope, user_role)
+      # Always load projects on mount so data is shown on first render.
+      # (When connected? is false, we still need to load so the initial HTML has the table.)
+      all_projects = list_projects(socket.assigns.current_scope, user_role)
 
-        filtered_projects =
-          filter_projects(
-            all_projects,
-            socket.assigns.search_term,
-            socket.assigns.status_filter,
-            socket.assigns.fasa_filter
-          )
+      filtered_projects =
+        filter_projects(
+          all_projects,
+          socket.assigns.search_term,
+          socket.assigns.status_filter,
+          socket.assigns.fasa_filter
+        )
 
-        {paginated_projects, total_pages} =
-          paginate_projects(filtered_projects, socket.assigns.page, socket.assigns.per_page)
+      {paginated_projects, total_pages} =
+        paginate_projects(filtered_projects, socket.assigns.page, socket.assigns.per_page)
 
-        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-        notifications_count = length(activities)
+      activities =
+        if connected?(socket) do
+          Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        else
+          []
+        end
 
-        {:ok,
-         socket
-         |> assign(:projects, paginated_projects)
-         |> assign(:all_projects, all_projects)
-         |> assign(:filtered_projects, filtered_projects)
-         |> assign(:total_pages, total_pages)
-         |> assign(:total_count, length(filtered_projects))
-         |> assign(:activities, activities)
-         |> assign(:notifications_count, notifications_count)}
-      else
-        {:ok,
-         socket
-         |> assign(:projects, [])
-         |> assign(:all_projects, [])
-         |> assign(:filtered_projects, [])
-         |> assign(:total_pages, 0)
-         |> assign(:total_count, 0)
-         |> assign(:activities, [])
-         |> assign(:notifications_count, 0)}
-      end
+      notifications_count = length(activities)
+
+      {:ok,
+       socket
+       |> assign(:projects, paginated_projects)
+       |> assign(:all_projects, all_projects)
+       |> assign(:filtered_projects, filtered_projects)
+       |> assign(:total_pages, total_pages)
+       |> assign(:total_count, length(filtered_projects))
+       |> assign(:activities, activities)
+       |> assign(:notifications_count, notifications_count)}
     else
       socket =
         socket
