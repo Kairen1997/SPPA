@@ -45,19 +45,21 @@ defmodule Sppa.Projects do
 
   @doc """
   Returns the list of projects for a pembangun sistem (developer).
-  Only returns projects where the developer's no_kp is in the approved_project's pembangun_sistem list.
+  Returns projects where the developer is assigned, i.e.:
+  - project.developer_id is the current user, OR
+  - project has an approved_project and the developer's no_kp is in approved_project.pembangun_sistem.
   """
   def list_projects_for_pembangun_sistem(current_scope) do
+    user_id = current_scope.user.id
     user_no_kp = current_scope.user.no_kp
 
-    # Get all projects with approved_project preloaded
     Project
     |> preload([:developer, :project_manager, :approved_project])
     |> order_by([p], desc: p.last_updated)
     |> Repo.all()
     |> Enum.filter(fn project ->
-      # Check if developer has access based on approved_project.pembangun_sistem
-      has_access_to_project?(project, user_no_kp)
+      # Assigned as developer on the project, or listed in approved_project's pembangun_sistem
+      project.developer_id == user_id or has_access_to_project?(project, user_no_kp)
     end)
     |> Enum.map(&format_project_for_display/1)
   end
