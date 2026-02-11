@@ -72,14 +72,20 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp format_date(nil), do: "-"
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
 
+  defp external_api_base_url do
+    Application.get_env(:sppa, :system_permohonan_aplikasi, [])[:base_url] ||
+      "http://10.71.67.140:4000"
+  end
+
   defp ensure_full_url(nil), do: nil
 
   defp ensure_full_url(url) when is_binary(url) do
     url = String.trim(url)
 
-    # Base URL for the external System Permohonan Aplikasi
-    external_base_url = "http://10.71.67.222:4000"
-    external_host = "10.71.67.222:4000"
+    # Base URL for the external System Permohonan Aplikasi (from config)
+    external_base_url = external_api_base_url()
+    %{host: host, port: port} = URI.parse(external_base_url)
+    external_host = if port, do: "#{host}:#{port}", else: host
 
     # Normalize localhost references to the new external host
     normalized_url =

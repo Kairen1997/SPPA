@@ -100,10 +100,11 @@ defmodule Sppa.Workers.ExternalSyncWorker do
     end
   end
 
-  # Map external API response to ApprovedProject attributes
-  # Based on actual API response structure from http://10.71.67.159:4000/api/requests?status=Diluluskan
+  # Map external API response to ApprovedProject attributes.
+  # API returns a list of objects with: id, nama_sistem, emel, kementerian_jabatan,
+  # tarikh_permohonan, latarbelakang_sistem, objektif_sistem, skop_sistem,
+  # kumpulan_pengguna, implikasi, kertas_kerja_url, updated_at; optional nested pemohon.
   defp map_to_approved_project(document) when is_map(document) do
-    # Log the raw document for debugging
     Logger.debug("Mapping document: #{inspect(Map.keys(document))}")
 
     external_id = get_integer(document, "id")
@@ -115,7 +116,6 @@ defmodule Sppa.Workers.ExternalSyncWorker do
         get_string(document, "name") ||
         ""
 
-    # If nama_projek is still empty, log warning
     if nama_projek == "" do
       Logger.warning(
         "Document with id=#{external_id} has no nama_projek. Available keys: #{inspect(Map.keys(document))}"
@@ -125,15 +125,14 @@ defmodule Sppa.Workers.ExternalSyncWorker do
     attrs = %{
       "external_application_id" => external_id,
       "nama_projek" => nama_projek,
-      # API uses "kementerian_jabatan"
       "jabatan" =>
         get_string(document, "kementerian_jabatan") ||
           get_string(document, "jabatan") ||
           get_string(document, "department") ||
           get_string(document, "kementerian"),
-      # API uses "emel" for email
       "pengurus_email" =>
         get_string(document, "emel") ||
+          get_nested_string(document, "pemohon", "emel") ||
           get_string(document, "pengurus_email") ||
           get_string(document, "email") ||
           get_string(document, "pengurus_projek_email"),
@@ -148,7 +147,8 @@ defmodule Sppa.Workers.ExternalSyncWorker do
         parse_date(
           get_string(document, "tarikh_jangkaan_siap") ||
             get_string(document, "expected_completion_date") ||
-            get_string(document, "tarikh_siap")
+            get_string(document, "tarikh_siap") ||
+            get_first_in_list(document, "pengurusan_pelulus", "tarikh_kelulusan")
         ),
       "pembangun_sistem" =>
         get_string(document, "pembangun_sistem") ||
@@ -220,6 +220,19 @@ defmodule Sppa.Workers.ExternalSyncWorker do
       nil -> nil
       value when is_binary(value) -> value
       value -> to_string(value)
+    end
+  end
+
+  defp get_nested_string(map, parent_key, child_key) when is_map(map) do
+    parent = Map.get(map, parent_key) || Map.get(map, to_string(parent_key))
+    if is_map(parent), do: get_string(parent, child_key), else: nil
+  end
+
+  defp get_first_in_list(map, list_key, item_key) when is_map(map) do
+    list = Map.get(map, list_key) || Map.get(map, to_string(list_key))
+    case is_list(list) && List.first(list) do
+      first when is_map(first) -> get_string(first, item_key)
+      _ -> nil
     end
   end
 

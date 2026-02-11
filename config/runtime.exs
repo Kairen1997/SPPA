@@ -20,6 +20,11 @@ if System.get_env("PHX_SERVER") do
   config :sppa, SppaWeb.Endpoint, server: true
 end
 
+# External System Permohonan Aplikasi API (optional override via env in any env)
+if base_url = System.get_env("SYSTEM_PERMOHONAN_APLIKASI_BASE_URL") do
+  config :sppa, :system_permohonan_aplikasi, base_url: base_url
+end
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
