@@ -1,40 +1,76 @@
 defmodule SppaWeb.PenyerahanLive do
   use SppaWeb, :live_view
 
+  alias Sppa.AnalisisDanRekabentuk
   alias Sppa.Projects
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
   @impl true
+  def mount(%{"project_id" => project_id, "id" => id}, _session, socket) do
+    mount_show(id, socket, String.to_integer(project_id))
+  end
+
+  def mount(%{"project_id" => project_id}, _session, socket) do
+    mount_index(socket, String.to_integer(project_id))
+  end
+
   def mount(%{"id" => id}, _session, socket) do
-    # Handle show action - view penyerahan details
-    mount_show(id, socket)
+    # Handle show action - view penyerahan details (tanpa project scope)
+    mount_show(id, socket, nil)
   end
 
   def mount(_params, _session, socket) do
     # Handle index action - list all penyerahan
-    mount_index(socket)
+    mount_index(socket, nil)
   end
 
-  defp mount_index(socket) do
+  defp index_path(nil), do: ~p"/penyerahan"
+  defp index_path(project_id), do: ~p"/projek/#{project_id}/penyerahan"
+
+  defp mount_index(socket, project_id) do
     # Verify user has required role (defense in depth - router already checks this)
     user_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      # Get submission records (penyerahan)
-      penyerahan = get_penyerahan()
+      # Verify project access when project_id is present
+      project_assigns =
+        if project_id do
+          project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+          if project do
+            [project_id: project_id, project: project]
+          else
+            nil
+          end
+        else
+          [project_id: nil, project: nil]
+        end
 
-      socket =
-        socket
-        |> assign(:hide_root_header, true)
-        |> assign(:page_title, "Penyerahan")
-        |> assign(:sidebar_open, false)
-        |> assign(:notifications_open, false)
-        |> assign(:profile_menu_open, false)
-        |> assign(:current_path, "/penyerahan")
-        |> assign(:penyerahan, penyerahan)
+      if project_id && project_assigns == nil do
+        {:ok,
+         socket
+         |> put_flash(:error, "Projek tidak dijumpai atau anda tidak mempunyai akses.")
+         |> redirect(to: ~p"/projek")}
+      else
+        # Get submission records (penyerahan); nama_sistem from project when in project scope
+        project = if project_assigns, do: Keyword.get(project_assigns, :project), else: nil
+        penyerahan = get_penyerahan(project)
+
+        current_path = index_path(project_id) |> to_string()
+
+        socket =
+          socket
+          |> assign(:hide_root_header, true)
+          |> assign(:page_title, "Penyerahan")
+          |> assign(:sidebar_open, false)
+          |> assign(:notifications_open, false)
+          |> assign(:profile_menu_open, false)
+          |> assign(:current_path, current_path)
+          |> assign(:index_path, index_path(project_id))
+          |> assign(project_assigns || [])
+          |> assign(:penyerahan, penyerahan)
         |> assign(:show_edit_modal, false)
         |> assign(:editing_penyerahan, nil)
         |> assign(:show_create_modal, false)
@@ -46,19 +82,20 @@ defmodule SppaWeb.PenyerahanLive do
         |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
         |> assign(:expanded_catatan, MapSet.new())
 
-      if connected?(socket) do
-        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-        notifications_count = length(activities)
+        if connected?(socket) do
+          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+          notifications_count = length(activities)
 
-        {:ok,
-         socket
-         |> assign(:activities, activities)
-         |> assign(:notifications_count, notifications_count)}
-      else
-        {:ok,
-         socket
-         |> assign(:activities, [])
-         |> assign(:notifications_count, 0)}
+          {:ok,
+           socket
+           |> assign(:activities, activities)
+           |> assign(:notifications_count, notifications_count)}
+        else
+          {:ok,
+           socket
+           |> assign(:activities, [])
+           |> assign(:notifications_count, 0)}
+        end
       end
     else
       socket =
@@ -73,55 +110,76 @@ defmodule SppaWeb.PenyerahanLive do
     end
   end
 
-  defp mount_show(penyerahan_id, socket) do
+  defp mount_show(penyerahan_id, socket, project_id) do
     # Verify user has required role (defense in depth - router already checks this)
     user_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      socket =
-        socket
-        |> assign(:hide_root_header, true)
-        |> assign(:page_title, "Butiran Penyerahan")
-        |> assign(:sidebar_open, false)
-        |> assign(:notifications_open, false)
-        |> assign(:profile_menu_open, false)
-        |> assign(:current_path, "/penyerahan")
-
-      if connected?(socket) do
-        penyerahan = get_penyerahan_by_id(penyerahan_id)
-
-        if penyerahan do
-          activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-          notifications_count = length(activities)
-
-          {:ok,
-           socket
-           |> assign(:selected_penyerahan, penyerahan)
-           |> assign(:penyerahan, [])
-           |> assign(:show_edit_modal, false)
-           |> assign(:editing_penyerahan, nil)
-           |> assign(:show_create_modal, false)
-           |> assign(:show_upload_modal, false)
-           |> assign(:uploading_penyerahan_id, nil)
-           |> assign(:form, to_form(%{}, as: :penyerahan))
-           |> assign(:upload_manual_form, to_form(%{}, as: :upload_manual))
-           |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
-           |> assign(:expanded_catatan, MapSet.new())
-           |> assign(:activities, activities)
-           |> assign(:notifications_count, notifications_count)}
+      # Verify project access when project_id is present
+      project_assigns =
+        if project_id do
+          project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+          if project do
+            [project_id: project_id, project: project]
+          else
+            nil
+          end
         else
-          socket =
-            socket
-            |> Phoenix.LiveView.put_flash(
-              :error,
-              "Penyerahan tidak dijumpai."
-            )
-            |> Phoenix.LiveView.redirect(to: ~p"/penyerahan")
-
-          {:ok, socket}
+          [project_id: nil, project: nil]
         end
+
+      if project_id && project_assigns == nil do
+        {:ok,
+         socket
+         |> put_flash(:error, "Projek tidak dijumpai atau anda tidak mempunyai akses.")
+         |> redirect(to: ~p"/projek")}
+      else
+        current_path = index_path(project_id) |> to_string()
+
+        socket =
+          socket
+          |> assign(:hide_root_header, true)
+          |> assign(:page_title, "Butiran Penyerahan")
+          |> assign(:sidebar_open, false)
+          |> assign(:notifications_open, false)
+          |> assign(:profile_menu_open, false)
+          |> assign(:current_path, current_path)
+          |> assign(:index_path, index_path(project_id))
+          |> assign(project_assigns || [])
+
+        if connected?(socket) do
+          project = if project_assigns, do: Keyword.get(project_assigns, :project), else: nil
+          penyerahan = get_penyerahan_by_id(penyerahan_id, project)
+
+          if penyerahan do
+            activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+            notifications_count = length(activities)
+
+            {:ok,
+             socket
+             |> assign(:selected_penyerahan, penyerahan)
+             |> assign(:penyerahan, [])
+             |> assign(:show_edit_modal, false)
+             |> assign(:editing_penyerahan, nil)
+             |> assign(:show_create_modal, false)
+             |> assign(:show_upload_modal, false)
+             |> assign(:uploading_penyerahan_id, nil)
+             |> assign(:form, to_form(%{}, as: :penyerahan))
+             |> assign(:upload_manual_form, to_form(%{}, as: :upload_manual))
+             |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
+             |> assign(:expanded_catatan, MapSet.new())
+             |> assign(:activities, activities)
+             |> assign(:notifications_count, notifications_count)}
+          else
+            redirect_to = index_path(project_id)
+
+            {:ok,
+             socket
+             |> put_flash(:error, "Penyerahan tidak dijumpai.")
+             |> redirect(to: redirect_to)}
+          end
       else
         {:ok,
          socket
@@ -136,6 +194,7 @@ defmodule SppaWeb.PenyerahanLive do
          |> assign(:upload_manual_form, to_form(%{}, as: :upload_manual))
          |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
          |> assign(:expanded_catatan, MapSet.new())}
+        end
       end
     else
       socket =
@@ -150,77 +209,147 @@ defmodule SppaWeb.PenyerahanLive do
     end
   end
 
-  # Get penyerahan by id
-  defp get_penyerahan_by_id(penyerahan_id) do
-    get_penyerahan()
+  defp get_project_by_id(project_id, current_scope, user_role) do
+    current_user_id = current_scope.user.id
+
+    project =
+      case user_role do
+        "ketua penolong pengarah" ->
+          Projects.get_project_by_id(project_id)
+
+        "pembangun sistem" ->
+          case Projects.get_project_by_id(project_id) do
+            nil -> nil
+            p -> if p.developer_id == current_user_id, do: p, else: nil
+          end
+
+        "pengurus projek" ->
+          case Projects.get_project_by_id(project_id) do
+            nil -> nil
+            p -> if p.project_manager_id == current_user_id, do: p, else: nil
+          end
+
+        _ ->
+          nil
+      end
+
+    if project do
+      project
+      |> Projects.format_project_for_display()
+    else
+      nil
+    end
+  end
+
+  # Get penyerahan by id; pass project to set nama_sistem from project.nama
+  defp get_penyerahan_by_id(penyerahan_id, project) do
+    get_penyerahan(project)
     |> Enum.find(fn p -> p.id == penyerahan_id end)
   end
 
-  # Get submission records (penyerahan)
+  # Versi for penyerahan: from Analisis dan Rekabentuk when project given, else default
+  defp versi_for_project(nil), do: "1.0.0"
+  defp versi_for_project(project) do
+    AnalisisDanRekabentuk.get_versi_by_project_ids([project.id])
+    |> Map.get(project.id, "1.0.0")
+  end
+
+  # Get submission records (penyerahan).
+  # When project is given: 1 baris sahaja untuk 1 projek ID (nama_sistem from project.nama, versi from Analisis dan Rekabentuk).
+  # When project is nil: full list (e.g. senarai semua penyerahan).
   # TODO: In the future, this should be retrieved from a database or context module
-  defp get_penyerahan do
-    [
-      %{
-        id: "penyerahan_1",
-        number: 1,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.0.0",
-        tarikh_penyerahan: ~D[2024-12-20],
-        tarikh_dijangka: ~D[2024-12-18],
-        status: "Selesai",
-        penerima: "Jabatan Teknologi Maklumat",
-        pembangun_team: "Team Alpha",
-        pengurus_projek: "Siti binti Hassan",
-        lokasi: "Pejabat Utama JPKN",
-        catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
-        manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
-        surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
-        diserahkan_oleh: "Ahmad bin Abdullah",
-        diterima_oleh: "Siti binti Hassan",
-        tarikh_diserahkan: ~D[2024-12-20],
-        tarikh_diterima: ~D[2024-12-20]
-      },
-      %{
-        id: "penyerahan_2",
-        number: 2,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.1.0",
-        tarikh_penyerahan: ~D[2024-12-25],
-        tarikh_dijangka: ~D[2024-12-22],
-        status: "Dalam Proses",
-        penerima: "Jabatan Teknologi Maklumat",
-        pembangun_team: "Team Beta",
-        pengurus_projek: "Ahmad bin Abdullah",
-        lokasi: "Pejabat Utama JPKN",
-        catatan: "Penyerahan untuk versi 1.1.0",
-        manual_pengguna_bahagian_a: nil,
-        surat_akuan_penerimaan: nil,
-        diserahkan_oleh: "Ahmad bin Abdullah",
-        diterima_oleh: nil,
-        tarikh_diserahkan: ~D[2024-12-25],
-        tarikh_diterima: nil
-      },
-      %{
-        id: "penyerahan_3",
-        number: 3,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.2.0",
-        tarikh_penyerahan: nil,
-        tarikh_dijangka: ~D[2024-12-28],
-        status: "Menunggu",
-        penerima: "Jabatan Teknologi Maklumat",
-        pembangun_team: nil,
-        pengurus_projek: nil,
-        lokasi: "Pejabat Utama JPKN",
-        catatan: "Penyerahan untuk versi 1.2.0",
-        manual_pengguna_bahagian_a: nil,
-        surat_akuan_penerimaan: nil,
-        diserahkan_oleh: nil,
-        diterima_oleh: nil,
-        tarikh_diserahkan: nil,
-        tarikh_diterima: nil
-      }
-    ]
+  defp get_penyerahan(project) do
+    nama_sistem = if project, do: project.nama || "Sistem Pengurusan Permohonan", else: "Sistem Pengurusan Permohonan"
+    versi = versi_for_project(project)
+
+    if project do
+      # Satu baris sahaja untuk satu projek ID; versi dari Analisis dan Rekabentuk
+      [
+        %{
+          id: "penyerahan_1",
+          number: 1,
+          nama_sistem: nama_sistem,
+          versi: versi,
+          tarikh_penyerahan: ~D[2024-12-20],
+          tarikh_dijangka: ~D[2024-12-18],
+          status: "Selesai",
+          penerima: "Jabatan Teknologi Maklumat",
+          pembangun_team: "Team Alpha",
+          pengurus_projek: "Siti binti Hassan",
+          lokasi: "Pejabat Utama JPKN",
+          catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
+          manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
+          surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
+          diserahkan_oleh: "Ahmad bin Abdullah",
+          diterima_oleh: "Siti binti Hassan",
+          tarikh_diserahkan: ~D[2024-12-20],
+          tarikh_diterima: ~D[2024-12-20]
+        }
+      ]
+    else
+      [
+        %{
+          id: "penyerahan_1",
+          number: 1,
+          nama_sistem: nama_sistem,
+          versi: versi,
+          tarikh_penyerahan: ~D[2024-12-20],
+          tarikh_dijangka: ~D[2024-12-18],
+          status: "Selesai",
+          penerima: "Jabatan Teknologi Maklumat",
+          pembangun_team: "Team Alpha",
+          pengurus_projek: "Siti binti Hassan",
+          lokasi: "Pejabat Utama JPKN",
+          catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
+          manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
+          surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
+          diserahkan_oleh: "Ahmad bin Abdullah",
+          diterima_oleh: "Siti binti Hassan",
+          tarikh_diserahkan: ~D[2024-12-20],
+          tarikh_diterima: ~D[2024-12-20]
+        },
+        %{
+          id: "penyerahan_2",
+          number: 2,
+          nama_sistem: nama_sistem,
+          versi: "1.1.0",
+          tarikh_penyerahan: ~D[2024-12-25],
+          tarikh_dijangka: ~D[2024-12-22],
+          status: "Dalam Proses",
+          penerima: "Jabatan Teknologi Maklumat",
+          pembangun_team: "Team Beta",
+          pengurus_projek: "Ahmad bin Abdullah",
+          lokasi: "Pejabat Utama JPKN",
+          catatan: "Penyerahan untuk versi 1.1.0",
+          manual_pengguna_bahagian_a: nil,
+          surat_akuan_penerimaan: nil,
+          diserahkan_oleh: "Ahmad bin Abdullah",
+          diterima_oleh: nil,
+          tarikh_diserahkan: ~D[2024-12-25],
+          tarikh_diterima: nil
+        },
+        %{
+          id: "penyerahan_3",
+          number: 3,
+          nama_sistem: nama_sistem,
+          versi: "1.2.0",
+          tarikh_penyerahan: nil,
+          tarikh_dijangka: ~D[2024-12-28],
+          status: "Menunggu",
+          penerima: "Jabatan Teknologi Maklumat",
+          pembangun_team: nil,
+          pengurus_projek: nil,
+          lokasi: "Pejabat Utama JPKN",
+          catatan: "Penyerahan untuk versi 1.2.0",
+          manual_pengguna_bahagian_a: nil,
+          surat_akuan_penerimaan: nil,
+          diserahkan_oleh: nil,
+          diterima_oleh: nil,
+          tarikh_diserahkan: nil,
+          tarikh_diterima: nil
+        }
+      ]
+    end
   end
 
   @impl true
@@ -279,7 +408,8 @@ defmodule SppaWeb.PenyerahanLive do
 
   @impl true
   def handle_event("open_edit_modal", %{"penyerahan_id" => penyerahan_id}, socket) do
-    penyerahan = get_penyerahan_by_id(penyerahan_id)
+    project = socket.assigns[:project]
+    penyerahan = get_penyerahan_by_id(penyerahan_id, project)
 
     if penyerahan do
       form_data = %{
@@ -329,11 +459,12 @@ defmodule SppaWeb.PenyerahanLive do
   @impl true
   def handle_event("open_upload_modal", %{"penyerahan_id" => penyerahan_id}, socket) do
     # Try to find penyerahan from list first
+    project = socket.assigns[:project]
     penyerahan =
       if socket.assigns[:penyerahan] && length(socket.assigns.penyerahan) > 0 do
         Enum.find(socket.assigns.penyerahan, fn p -> p.id == penyerahan_id end)
       else
-        get_penyerahan_by_id(penyerahan_id)
+        get_penyerahan_by_id(penyerahan_id, project)
       end
 
     if penyerahan do

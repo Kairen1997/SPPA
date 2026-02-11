@@ -52,7 +52,7 @@ defmodule SppaWeb.Components.HeaderActions do
         >
           <div class="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700">
             <p class="text-sm font-semibold text-white">Notifikasi</p>
-
+            
             <p class="text-xs text-blue-100">
               <%= if @notifications_count > 0 do %>
                 Anda mempunyai {@notifications_count} aktiviti terkini
@@ -61,13 +61,13 @@ defmodule SppaWeb.Components.HeaderActions do
               <% end %>
             </p>
           </div>
-
+          
           <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 bg-white">
             <%= if Enum.empty?(@activities) do %>
               <div class="px-4 py-6 flex flex-col items-center justify-center text-center">
                 <.icon name="hero-inbox" class="w-10 h-10 text-gray-300 mb-2" />
                 <p class="text-sm font-medium text-gray-600">Tiada aktiviti terkini</p>
-
+                
                 <p class="text-xs text-gray-400 mt-1">
                   Notifikasi baharu akan dipaparkan di sini sebaik sahaja terdapat kemaskini.
                 </p>
@@ -79,14 +79,14 @@ defmodule SppaWeb.Components.HeaderActions do
                     <div class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-sm">
                       <.icon name="hero-bell-alert" class="w-4 h-4 text-white" />
                     </div>
-
+                    
                     <div class="flex-1 min-w-0">
                       <p class="text-xs font-semibold text-gray-900 truncate">{activity.nama}</p>
-
+                      
                       <p class="mt-0.5 text-[0.70rem] text-gray-600 line-clamp-2">
                         Status terkini projek dikemaskini kepada <span class="font-semibold">{activity.status}</span>.
                       </p>
-
+                      
                       <div class="mt-1 flex items-center gap-2 text-[0.65rem] text-gray-400">
                         <.icon name="hero-clock" class="w-3 h-3" />
                         <%= if activity.last_updated do %>
@@ -103,7 +103,7 @@ defmodule SppaWeb.Components.HeaderActions do
           </div>
         </div>
       </div>
-      <%!-- Profile Menu Dropdown --%>
+       <%!-- Profile Menu Dropdown --%>
       <div class="relative" id="profile-menu-container" phx-click-away="close_profile_menu">
         <button
           id="profile-menu-toggle-btn"
@@ -134,12 +134,12 @@ defmodule SppaWeb.Components.HeaderActions do
                 Pengguna
               <% end %>
             </p>
-
+            
             <%= if @current_scope && @current_scope.user && @current_scope.user.role do %>
               <p class="text-xs text-blue-100 mt-0.5">{@current_scope.user.role}</p>
             <% end %>
           </div>
-          <%!-- Menu Items --%>
+           <%!-- Menu Items --%>
           <div class="py-1 bg-white">
             <%!-- Settings Link --%>
             <.link
@@ -148,10 +148,9 @@ defmodule SppaWeb.Components.HeaderActions do
               phx-click="close_profile_menu"
             >
               <.icon name="hero-cog-6-tooth" class="w-4 h-4 text-gray-500" /> <span>Tetapan</span>
-            </.link>
-            <%!-- Divider --%>
+            </.link> <%!-- Divider --%>
             <div class="my-1 border-t border-gray-100"></div>
-            <%!-- Logout Button --%>
+             <%!-- Logout Button --%>
             <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline w-full">
               <button
                 type="submit"

@@ -412,7 +412,7 @@ defmodule SppaWeb.ProjectListLive do
                   <thead class="bg-gray-50 print-table-header">
                     <tr>
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Nama Projek
+                        Nama Sistem
                       </th>
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -591,12 +591,12 @@ defmodule SppaWeb.ProjectListLive do
 
                         <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
                       </div>
-                       <%!-- Nama Projek --%>
+                       <%!-- Nama Sistem --%>
                       <div>
                         <.input
                           field={@form[:name]}
                           type="text"
-                          label="Nama Projek"
+                          label="Nama Sistem"
                           required
                           placeholder="Masukkan nama projek"
                           class="w-full"

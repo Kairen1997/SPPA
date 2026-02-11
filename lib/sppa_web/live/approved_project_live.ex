@@ -72,6 +72,11 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp format_date(nil), do: "-"
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
 
+  defp external_api_base_url do
+    Application.get_env(:sppa, :system_permohonan_aplikasi, [])[:base_url] ||
+      "http://10.71.67.140:4000"
+  end
+
   defp ensure_full_url(nil), do: nil
 
   defp ensure_full_url(url) when is_binary(url) do
