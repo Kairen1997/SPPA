@@ -26,7 +26,7 @@ defmodule Sppa.Projects do
   def list_projects_for_pengurus_projek(current_scope) do
     Project
     |> where([p], p.project_manager_id == ^current_scope.user.id)
-    |> preload([:developer, :project_manager])
+    |> preload([:developer, :project_manager, :approved_project])
     |> order_by([p], desc: p.last_updated)
     |> Repo.all()
     |> Enum.map(&format_project_for_display/1)
@@ -37,7 +37,7 @@ defmodule Sppa.Projects do
   """
   def list_all_projects do
     Project
-    |> preload([:developer, :project_manager])
+    |> preload([:developer, :project_manager, :approved_project])
     |> order_by([p], desc: p.last_updated)
     |> Repo.all()
     |> Enum.map(&format_project_for_display/1)
@@ -98,6 +98,46 @@ defmodule Sppa.Projects do
   Formats project data for display in senarai projek.
   """
   def format_project_for_display(project) do
+    approved_project = Map.get(project, :approved_project)
+
+    # Tarikh jangka siap diutamakan dari rekod ApprovedProject (data admin).
+    tarikh_siap =
+      cond do
+        approved_project &&
+            Map.has_key?(approved_project, :tarikh_jangkaan_siap) &&
+            approved_project.tarikh_jangkaan_siap ->
+          approved_project.tarikh_jangkaan_siap
+
+        true ->
+          project.tarikh_siap
+      end
+
+    # Pengurus projek diutamakan dari rekod ApprovedProject (pengurus_email).
+    pengurus_projek =
+      cond do
+        approved_project &&
+            Map.has_key?(approved_project, :pengurus_email) &&
+            approved_project.pengurus_email &&
+            approved_project.pengurus_email != "" ->
+          approved_project.pengurus_email
+
+        true ->
+          get_user_display_name(project.project_manager)
+      end
+
+    # Pembangun sistem diutamakan dari rekod ApprovedProject (senarai no_kp pembangun_sistem).
+    pembangun_sistem =
+      cond do
+        approved_project &&
+            Map.has_key?(approved_project, :pembangun_sistem) &&
+            approved_project.pembangun_sistem &&
+            approved_project.pembangun_sistem != "" ->
+          approved_project.pembangun_sistem
+
+        true ->
+          get_user_display_name(project.developer)
+      end
+
     %{
       id: project.id,
       nama: project.nama,
@@ -105,12 +145,22 @@ defmodule Sppa.Projects do
       status: project.status,
       fasa: project.fasa,
       tarikh_mula: project.tarikh_mula,
-      tarikh_siap: project.tarikh_siap,
-      pengurus_projek: get_user_display_name(project.project_manager),
-      pembangun_sistem: get_user_display_name(project.developer),
+      tarikh_siap: tarikh_siap,
+      pengurus_projek: pengurus_projek,
+      pembangun_sistem: pembangun_sistem,
       developer_id: project.developer_id,
       project_manager_id: project.project_manager_id,
-      dokumen_sokongan: project.dokumen_sokongan || 0
+      dokumen_sokongan:
+        cond do
+          approved_project &&
+              Map.has_key?(approved_project, :kertas_kerja_path) &&
+              approved_project.kertas_kerja_path &&
+              approved_project.kertas_kerja_path != "" ->
+            1
+
+          true ->
+            project.dokumen_sokongan || 0
+        end
     }
   end
 
@@ -231,6 +281,20 @@ defmodule Sppa.Projects do
         error
     end
   end
+
+  @doc """
+  Updates only the fasa (phase) field for a project.
+  Used to reflect the phase where the developer is currently working (tab navigation).
+  When the user has not started any phase, fasa remains nil and the list shows it blank.
+  """
+  def update_project_fasa(project_id, fasa) when is_integer(project_id) and is_binary(fasa) do
+    case get_project_by_id(project_id) do
+      nil -> {:error, :not_found}
+      project -> update_project(project, %{fasa: fasa})
+    end
+  end
+
+  def update_project_fasa(_project_id, _fasa), do: {:error, :invalid}
 
   @doc """
   Updates a project.

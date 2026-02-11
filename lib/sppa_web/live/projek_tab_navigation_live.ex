@@ -197,6 +197,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     {params_map, uri_string} = normalize_params_uri(params, uri)
     current_tab = tab_from_params(params_map, uri_string)
 
+    # Simpan fasa semasa projek berdasarkan tab yang dibuka (fasa di mana pembangun berada)
+    if socket.assigns[:project] && current_tab do
+      Projects.update_project_fasa(socket.assigns.project.id, current_tab)
+    end
+
     # Refresh penempatan from DB when user switches to Penempatan tab so changes from halaman penempatan are shown
     socket =
       if current_tab == "Penempatan" && socket.assigns[:project] do
