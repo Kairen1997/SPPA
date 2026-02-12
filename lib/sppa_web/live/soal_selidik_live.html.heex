@@ -170,16 +170,14 @@
             class="bg-white shadow-lg rounded-lg p-6 md:p-8"
           >
             <%!-- Document Header --%>
-            <div class="mb-6 text-center">
-              <div class="flex justify-end mb-3">
-                <span class="text-xs text-gray-600 font-bold">{@document_id}</span>
-              </div>
-              <%!-- Nama Sistem --%>
-              <div :if={@system_name && @system_name != ""} class="mb-4">
-                <div class="text-base font-semibold text-gray-800 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+            <div class="mb-6">
+              <div class="flex items-center gap-4">
+                <%!-- Nama Sistem (kiri) --%>
+                <div :if={@system_name && @system_name != ""} class="text-base font-medium text-gray-800">
                   <span class="text-gray-600">Nama Sistem:</span>
-                  <span class="ml-2 text-blue-700">{@system_name}</span>
+                  <span class="ml-2 font-semibold text-gray-900">{@system_name}</span>
                 </div>
+                <span class="ml-auto text-xs text-gray-600 font-bold">{@document_id}</span>
               </div>
             </div>
             <%!-- Tabs --%>
@@ -472,9 +470,7 @@
 
               <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
                 <span>Nama Sistem :</span>
-                <span class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded bg-gray-50">
-                  {@pdf_data.nama_sistem}
-                </span>
+                <span class="font-semibold text-gray-900">{@pdf_data.nama_sistem}</span>
               </div>
             </div>
             <%!-- Functional Requirements Section --%>

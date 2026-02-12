@@ -142,34 +142,21 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     end
   end
 
-  defp get_project_for_form(project_id, current_scope, user_role) do
-    current_user_id = current_scope.user.id
+  defp get_project_for_form(project_id, _current_scope, _user_role) do
+    # Untuk borang Analisis & Rekabentuk, kita benarkan capaian projek
+    # berasaskan project_id sahaja (router sudah kawal authentication/role).
+    # Nama projek & jabatan diutamakan dari Approved Project.
+    case Projects.get_project_by_id(project_id) do
+      nil ->
+        nil
 
-    project =
-      case user_role do
-        "ketua penolong pengarah" ->
-          Projects.get_project_by_id(project_id)
+      project ->
+        ap = project.approved_project
+        formatted = Projects.format_project_for_display(project)
 
-        "pembangun sistem" ->
-          case Projects.get_project_by_id(project_id) do
-            nil -> nil
-            p -> if p.developer_id == current_user_id, do: p, else: nil
-          end
-
-        "pengurus projek" ->
-          case Projects.get_project_by_id(project_id) do
-            nil -> nil
-            p -> if p.project_manager_id == current_user_id, do: p, else: nil
-          end
-
-        _ ->
-          nil
-      end
-
-    if project do
-      Projects.format_project_for_display(project)
-    else
-      nil
+        formatted
+        |> Map.put(:nama, (ap && ap.nama_projek) || formatted.nama)
+        |> Map.put(:jabatan, (ap && ap.jabatan) || formatted.jabatan)
     end
   end
 
