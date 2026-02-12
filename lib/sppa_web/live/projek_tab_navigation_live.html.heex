@@ -46,17 +46,18 @@
        <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
-          <%!-- Back Button and Project Title --%>
+          <%!-- Kembali ke Senarai Projek --%>
+          <div class="mb-4 print:hidden">
+            <.link
+              navigate={~p"/projek"}
+              class="group inline-flex items-center justify-center gap-2.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-blue-50/80 hover:text-blue-700 hover:shadow-md"
+            >
+              <.icon name="hero-arrow-uturn-left" class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5 group-hover:text-blue-600" />
+              <span>Kembali</span>
+            </.link>
+          </div>
+          <%!-- Project Title --%>
           <div class="mb-6">
-            <div class="flex items-center gap-4 mb-4">
-              <.link
-                navigate={~p"/projek"}
-                class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 hover:shadow"
-              >
-                <span>Kembali ke Senarai Projek</span>
-              </.link>
-            </div>
-            
             <h1 class="text-3xl font-bold text-gray-900 mb-2">{@project.nama}</h1>
           </div>
            <%!-- Navigation Tabs - professional tab bar --%>
@@ -203,23 +204,27 @@
           <%= cond do %>
             <% @current_tab == "Soal Selidik" -> %>
               <div class="space-y-6">
-                <div class="flex justify-end gap-3 mb-4 print:hidden">
-                  <.link
-                    id="edit-soal-selidik-form"
-                    navigate={~p"/soal-selidik?project_id=#{@project.id}"}
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
-                  >
-                    <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
-                    <span>Edit Borang</span>
-                  </.link>
-                  <button
-                    id="print-soal-selidik-btn"
-                    phx-hook="PrintDocument"
-                    data-target="soal-selidik-document"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-                  >
-                    <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
-                  </button>
+                <div class="flex flex-wrap items-center justify-end gap-3 mb-4 print:hidden">
+                  <div class="flex gap-3">
+                    <.link
+                      id="edit-soal-selidik-form"
+                      navigate={~p"/soal-selidik?project_id=#{@project.id}"}
+                      class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
+                    >
+                      <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
+                      <span>Edit Borang</span>
+                    </.link>
+                    <button
+                      id="print-soal-selidik-btn"
+                      phx-hook="PrintDocument"
+                      data-target="soal-selidik-document"
+                      type="button"
+                      title="Cetak borang"
+                      class="inline-flex items-center justify-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                    >
+                      <.icon name="hero-printer" class="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
                 
                 <div
@@ -629,9 +634,11 @@
                     id="print-analisis-btn"
                     phx-hook="PrintDocument"
                     data-target="analisis-document"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                    type="button"
+                    title="Cetak borang"
+                    class="inline-flex items-center justify-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                   >
-                    <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
+                    <.icon name="hero-printer" class="w-5 h-5" />
                   </button>
                 </div>
                 
