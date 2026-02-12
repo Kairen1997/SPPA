@@ -579,21 +579,3 @@
     padding: 0 !important;
   }
 }
-
-/* Hide native calendar icon for custom date inputs (we use our own icon) */
-input.no-native-date-icon[type="date"] {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: textfield;
-  position: relative;
-}
-
-input.no-native-date-icon[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  display: none;
-}
-
-input.no-native-date-icon[type="date"]::-webkit-clear-button,
-input.no-native-date-icon[type="date"]::-ms-clear {
-  display: none;
-}

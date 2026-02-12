@@ -145,18 +145,9 @@
                         field={@form[:tarikh_semakan]}
                         id="tarikh_semakan_date"
                         type="date"
-                        class="no-native-date-icon w-full px-3 py-2 pr-9 text-sm text-black border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
+                        class="w-full px-3 py-2 text-sm text-black border border-gray-400 rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-black"
                         placeholder="dd/mm/yyyy"
                       />
-                      <label
-                        id="tarikh_semakan_calendar_trigger"
-                        for="tarikh_semakan_date"
-                        phx-hook="OpenDatePicker"
-                        data-date-input-id="tarikh_semakan_date"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-900 hover:text-gray-600 transition-colors"
-                      >
-                        <.icon name="hero-calendar" class="w-4 h-4" />
-                      </label>
                     </div>
                   </div>
                   
@@ -447,19 +438,10 @@
                             type="date"
                             name="analisis_dan_rekabentuk[prepared_by_date]"
                             value={Map.get(@form.params || %{}, "prepared_by_date", "")}
-                            class="no-native-date-icon w-full px-2 py-1.5 pr-8 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-black"
+                            class="w-full px-2 py-1.5 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-black"
                             style="color: #000;"
                             placeholder="dd/mm/yyyy"
                           />
-                          <label
-                            id="prepared_by_date_calendar_trigger"
-                            for="prepared_by_date"
-                            phx-hook="OpenDatePicker"
-                            data-date-input-id="prepared_by_date"
-                            class="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-900 hover:text-gray-600 transition-colors"
-                          >
-                            <.icon name="hero-calendar" class="w-4 h-4" />
-                          </label>
                         </div>
                       </div>
                     </div>
@@ -504,18 +486,9 @@
                             type="date"
                             name="analisis_dan_rekabentuk[approved_by_date]"
                             value={Map.get(@form.params || %{}, "approved_by_date", "")}
-                            class="no-native-date-icon w-full px-2 py-1.5 pr-8 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder:text-black"
+                            class="w-full px-2 py-1.5 text-xs text-black border border-gray-400 rounded bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder:text-black"
                             placeholder="dd/mm/yyyy"
                           />
-                          <label
-                            id="approved_by_date_calendar_trigger"
-                            for="approved_by_date"
-                            phx-hook="OpenDatePicker"
-                            data-date-input-id="approved_by_date"
-                            class="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-900 hover:text-gray-600 transition-colors"
-                          >
-                            <.icon name="hero-calendar" class="w-4 h-4" />
-                          </label>
                         </div>
                       </div>
                     </div>
