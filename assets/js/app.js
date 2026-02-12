@@ -1009,24 +1009,19 @@ const ToggleOptionsField = {
 }
 
 // Preserve Details Open State Hook
+// Notify server when user opens/closes a category so server can re-render with correct open state (e.g. after add row).
 const PreserveDetailsOpen = {
   mounted() {
-    // Store initial open state
-    this.wasOpen = this.el.hasAttribute("open")
-  },
-  
-  updated() {
-    // Restore open state if it was open before
-    if (this.wasOpen && !this.el.hasAttribute("open")) {
-      this.el.setAttribute("open", "")
+    const key = this.el.id && this.el.id.replace(/^category-/, '')
+    if (!key || !this.pushEvent) return
+    this.handleToggle = () => {
+      this.pushEvent('toggle_soal_selidik_category', { key, open: this.el.hasAttribute('open') })
     }
-    // Update stored state
-    this.wasOpen = this.el.hasAttribute("open")
+    this.el.addEventListener('toggle', this.handleToggle)
   },
-  
-  beforeUpdate() {
-    // Store current open state before update
-    this.wasOpen = this.el.hasAttribute("open")
+
+  destroyed() {
+    if (this.handleToggle) this.el.removeEventListener('toggle', this.handleToggle)
   }
 }
 

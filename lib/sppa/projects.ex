@@ -87,12 +87,14 @@ defmodule Sppa.Projects do
   # Parse comma-separated pembangun_sistem string into list of no_kp values
   defp parse_pembangun_sistem(nil), do: []
   defp parse_pembangun_sistem(""), do: []
+
   defp parse_pembangun_sistem(str) when is_binary(str) do
     str
     |> String.split(",")
     |> Enum.map(&String.trim/1)
     |> Enum.filter(&(&1 != ""))
   end
+
   defp parse_pembangun_sistem(_), do: []
 
   @doc """
@@ -110,7 +112,8 @@ defmodule Sppa.Projects do
       fasa: project.fasa,
       tarikh_mula: project.tarikh_mula || (ap && ap.tarikh_mula),
       tarikh_siap: project.tarikh_siap || (ap && ap.tarikh_jangkaan_siap),
-      pengurus_projek: get_user_display_name(project.project_manager) || (ap && ap.pengurus_email),
+      pengurus_projek:
+        get_user_display_name(project.project_manager) || (ap && ap.pengurus_email),
       pembangun_sistem: coalesce_pembangun(project.developer, ap && ap.pembangun_sistem),
       developer_id: project.developer_id,
       project_manager_id: project.project_manager_id,
@@ -122,7 +125,10 @@ defmodule Sppa.Projects do
   defp coalesce(_a, b), do: b
 
   defp coalesce_pembangun(%{} = developer, _), do: get_user_display_name(developer)
-  defp coalesce_pembangun(nil, ap_pembangun) when is_binary(ap_pembangun) and ap_pembangun != "", do: ap_pembangun
+
+  defp coalesce_pembangun(nil, ap_pembangun) when is_binary(ap_pembangun) and ap_pembangun != "",
+    do: ap_pembangun
+
   defp coalesce_pembangun(nil, _), do: nil
 
   defp get_user_display_name(nil), do: nil
@@ -300,14 +306,15 @@ defmodule Sppa.Projects do
     map_result(result)
   end
 
-  defp map_result(nil), do: %{
-    total_projects: 0,
-    in_development: 0,
-    completed: 0,
-    on_hold: 0,
-    uat: 0,
-    change_management: 0
-  }
+  defp map_result(nil),
+    do: %{
+      total_projects: 0,
+      in_development: 0,
+      completed: 0,
+      on_hold: 0,
+      uat: 0,
+      change_management: 0
+    }
 
   defp map_result(result) do
     %{
@@ -428,6 +435,7 @@ defmodule Sppa.Projects do
         # Log activity when actor is known
         if current_scope && current_scope.user do
           details = format_update_details(project, attrs)
+
           ActivityLogs.log_activity(%{
             actor_id: current_scope.user.id,
             action: "projek_dikemaskini",
@@ -461,8 +469,10 @@ defmodule Sppa.Projects do
   defp maybe_add_change(acc, _label, _old, nil), do: acc
   defp maybe_add_change(acc, _label, nil, _new), do: acc
   defp maybe_add_change(acc, _label, same, same), do: acc
+
   defp maybe_add_change(acc, label, old, new) when is_binary(new) or is_number(new),
     do: acc ++ ["#{label}: #{old} → #{new}"]
+
   defp maybe_add_change(acc, label, _old, new), do: acc ++ ["#{label}: #{inspect(new)}"]
 
   @doc """

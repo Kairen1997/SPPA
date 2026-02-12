@@ -201,8 +201,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     socket =
       if current_tab == "Penempatan" && socket.assigns[:project] do
         project = socket.assigns.project
+
         penempatan =
           get_penempatan_for_project(project.id, socket.assigns.current_scope, project)
+
         assign(socket, :penempatan, penempatan)
       else
         socket
@@ -802,7 +804,9 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         "pembangun sistem" ->
           # Developers can only view projects where their no_kp is in the approved_project's pembangun_sistem
           case Projects.get_project_by_id(project_id) do
-            nil -> nil
+            nil ->
+              nil
+
             p ->
               user_no_kp = current_scope.user.no_kp
               if Projects.has_access_to_project?(p, user_no_kp), do: p, else: nil

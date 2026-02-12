@@ -26,10 +26,12 @@ defmodule SppaWeb.DashboardLive do
       # Always load stats and activities from database so metric cards show actual counts
       stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
       raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
+
       activities =
         Enum.map(raw_activities, fn a ->
           Map.put(a, :action_label, ActivityLogs.action_label(a.action))
         end)
+
       notifications_count = length(activities)
 
       {:ok,

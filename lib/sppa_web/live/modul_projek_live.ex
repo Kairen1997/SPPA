@@ -574,11 +574,13 @@ defmodule SppaWeb.ModulProjekLive do
   # Parse comma-separated pembangun_sistem string into list of no_kp values
   defp parse_pembangun_sistem(nil), do: []
   defp parse_pembangun_sistem(""), do: []
+
   defp parse_pembangun_sistem(str) when is_binary(str) do
     str
     |> String.split(",")
     |> Enum.map(&String.trim/1)
     |> Enum.filter(&(&1 != ""))
   end
+
   defp parse_pembangun_sistem(_), do: []
 end

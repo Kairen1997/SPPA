@@ -30,6 +30,7 @@ create_confirmed_user = fn no_kp, password, email, role_name, name ->
           # Update user with email, name, and confirm
           # Use change/2 to set email, name, and confirmed_at
           now = DateTime.utc_now(:second)
+
           updated_user =
             user
             |> Ecto.Changeset.change(email: email, name: name, confirmed_at: now)
@@ -62,12 +63,13 @@ create_confirmed_user = fn no_kp, password, email, role_name, name ->
         changeset = Ecto.Changeset.change(existing_user, updates)
 
         # Add confirmed_at if needed
-        changeset = if needs_confirm do
-          now = DateTime.utc_now(:second)
-          Ecto.Changeset.put_change(changeset, :confirmed_at, now)
-        else
-          changeset
-        end
+        changeset =
+          if needs_confirm do
+            now = DateTime.utc_now(:second)
+            Ecto.Changeset.put_change(changeset, :confirmed_at, now)
+          else
+            changeset
+          end
 
         updated_user = Repo.update!(changeset)
 
@@ -77,7 +79,9 @@ create_confirmed_user = fn no_kp, password, email, role_name, name ->
         IO.puts("   Email: #{updated_user.email}")
         IO.puts("   Role: #{updated_user.role}")
       else
-        IO.puts("ℹ️  #{role_name} with No K/P '#{no_kp}' already exists with correct data. Skipping...")
+        IO.puts(
+          "ℹ️  #{role_name} with No K/P '#{no_kp}' already exists with correct data. Skipping..."
+        )
       end
   end
 end

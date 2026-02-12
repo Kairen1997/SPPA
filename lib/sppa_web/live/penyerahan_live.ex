@@ -39,6 +39,7 @@ defmodule SppaWeb.PenyerahanLive do
       project_assigns =
         if project_id do
           project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+
           if project do
             [project_id: project_id, project: project]
           else
@@ -71,16 +72,16 @@ defmodule SppaWeb.PenyerahanLive do
           |> assign(:index_path, index_path(project_id))
           |> assign(project_assigns || [])
           |> assign(:penyerahan, penyerahan)
-        |> assign(:show_edit_modal, false)
-        |> assign(:editing_penyerahan, nil)
-        |> assign(:show_create_modal, false)
-        |> assign(:show_upload_modal, false)
-        |> assign(:selected_penyerahan, nil)
-        |> assign(:uploading_penyerahan_id, nil)
-        |> assign(:form, to_form(%{}, as: :penyerahan))
-        |> assign(:upload_manual_form, to_form(%{}, as: :upload_manual))
-        |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
-        |> assign(:expanded_catatan, MapSet.new())
+          |> assign(:show_edit_modal, false)
+          |> assign(:editing_penyerahan, nil)
+          |> assign(:show_create_modal, false)
+          |> assign(:show_upload_modal, false)
+          |> assign(:selected_penyerahan, nil)
+          |> assign(:uploading_penyerahan_id, nil)
+          |> assign(:form, to_form(%{}, as: :penyerahan))
+          |> assign(:upload_manual_form, to_form(%{}, as: :upload_manual))
+          |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
+          |> assign(:expanded_catatan, MapSet.new())
 
         if connected?(socket) do
           activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
@@ -121,6 +122,7 @@ defmodule SppaWeb.PenyerahanLive do
       project_assigns =
         if project_id do
           project = get_project_by_id(project_id, socket.assigns.current_scope, user_role)
+
           if project do
             [project_id: project_id, project: project]
           else
@@ -180,20 +182,20 @@ defmodule SppaWeb.PenyerahanLive do
              |> put_flash(:error, "Penyerahan tidak dijumpai.")
              |> redirect(to: redirect_to)}
           end
-      else
-        {:ok,
-         socket
-         |> assign(:selected_penyerahan, nil)
-         |> assign(:penyerahan, [])
-         |> assign(:show_edit_modal, false)
-         |> assign(:editing_penyerahan, nil)
-         |> assign(:show_create_modal, false)
-         |> assign(:show_upload_modal, false)
-         |> assign(:uploading_penyerahan_id, nil)
-         |> assign(:form, to_form(%{}, as: :penyerahan))
-         |> assign(:upload_manual_form, to_form(%{}, as: :upload_manual))
-         |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
-         |> assign(:expanded_catatan, MapSet.new())}
+        else
+          {:ok,
+           socket
+           |> assign(:selected_penyerahan, nil)
+           |> assign(:penyerahan, [])
+           |> assign(:show_edit_modal, false)
+           |> assign(:editing_penyerahan, nil)
+           |> assign(:show_create_modal, false)
+           |> assign(:show_upload_modal, false)
+           |> assign(:uploading_penyerahan_id, nil)
+           |> assign(:form, to_form(%{}, as: :penyerahan))
+           |> assign(:upload_manual_form, to_form(%{}, as: :upload_manual))
+           |> assign(:upload_surat_form, to_form(%{}, as: :upload_surat))
+           |> assign(:expanded_catatan, MapSet.new())}
         end
       end
     else
@@ -249,6 +251,7 @@ defmodule SppaWeb.PenyerahanLive do
 
   # Versi for penyerahan: from Analisis dan Rekabentuk when project given, else default
   defp versi_for_project(nil), do: "1.0.0"
+
   defp versi_for_project(project) do
     AnalisisDanRekabentuk.get_versi_by_project_ids([project.id])
     |> Map.get(project.id, "1.0.0")
@@ -259,7 +262,11 @@ defmodule SppaWeb.PenyerahanLive do
   # When project is nil: full list (e.g. senarai semua penyerahan).
   # TODO: In the future, this should be retrieved from a database or context module
   defp get_penyerahan(project) do
-    nama_sistem = if project, do: project.nama || "Sistem Pengurusan Permohonan", else: "Sistem Pengurusan Permohonan"
+    nama_sistem =
+      if project,
+        do: project.nama || "Sistem Pengurusan Permohonan",
+        else: "Sistem Pengurusan Permohonan"
+
     versi = versi_for_project(project)
 
     if project do
@@ -460,6 +467,7 @@ defmodule SppaWeb.PenyerahanLive do
   def handle_event("open_upload_modal", %{"penyerahan_id" => penyerahan_id}, socket) do
     # Try to find penyerahan from list first
     project = socket.assigns[:project]
+
     penyerahan =
       if socket.assigns[:penyerahan] && length(socket.assigns.penyerahan) > 0 do
         Enum.find(socket.assigns.penyerahan, fn p -> p.id == penyerahan_id end)

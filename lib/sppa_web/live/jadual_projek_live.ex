@@ -25,6 +25,7 @@ defmodule SppaWeb.JadualProjekLive do
       # Sentiasa muat projek dari DB (sama bila connected atau tidak) supaya data tidak hilang selepas refresh
       projects = list_projects(socket.assigns.current_scope, user_role)
       gantt_data = prepare_gantt_data(projects)
+
       month_labels =
         if length(gantt_data.projects) > 0 do
           generate_month_labels(gantt_data.min_date, gantt_data.max_date)
@@ -450,8 +451,14 @@ defmodule SppaWeb.JadualProjekLive do
         project ->
           case Projects.update_project(project, attrs, socket.assigns.current_scope) do
             {:ok, _updated} ->
-              projects = list_projects(socket.assigns.current_scope, socket.assigns.current_scope.user.role)
+              projects =
+                list_projects(
+                  socket.assigns.current_scope,
+                  socket.assigns.current_scope.user.role
+                )
+
               gantt_data = prepare_gantt_data(projects)
+
               month_labels =
                 if length(gantt_data.projects) > 0 do
                   generate_month_labels(gantt_data.min_date, gantt_data.max_date)

@@ -151,6 +151,7 @@ defmodule SppaWeb.SoalSelidikLive do
         |> assign(:show_edit_question_modal, false)
         |> assign(:selected_question, nil)
         |> assign(:edit_question_form, to_form(%{}, as: :edit_question))
+        |> assign(:open_category_ids, MapSet.new())
 
       if connected?(socket) do
         activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
@@ -213,6 +214,24 @@ defmodule SppaWeb.SoalSelidikLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("toggle_soal_selidik_category", %{"key" => key, "open" => open}, socket)
+      when is_binary(key) do
+    open? = open in [true, "true", "1"]
+    ids =
+      if open? do
+        MapSet.put(socket.assigns.open_category_ids, key)
+      else
+        MapSet.delete(socket.assigns.open_category_ids, key)
+      end
+
+    {:noreply, assign(socket, :open_category_ids, ids)}
+  end
+
+  def handle_event("toggle_soal_selidik_category", _params, socket) do
+    {:noreply, socket}
   end
 
   @impl true
@@ -717,7 +736,7 @@ defmodule SppaWeb.SoalSelidikLive do
             socket
         end
 
-      # Sync form with new question structure and persist to DB so rows survive refresh
+      # Update form only (no DB round-trip) so the page does not refresh; data is saved on blur/validate or "Simpan"
       existing_soal_selidik = extract_form_data(socket.assigns.form)
 
       params_with_soalan =
@@ -734,7 +753,6 @@ defmodule SppaWeb.SoalSelidikLive do
           socket.assigns.nfr_categories
         )
 
-      # Ensure project_id in params when we have a project (e.g. from URL)
       final_params =
         if socket.assigns[:project] do
           Map.put(final_params, "project_id", to_string(socket.assigns.project.id))
@@ -742,55 +760,16 @@ defmodule SppaWeb.SoalSelidikLive do
           final_params
         end
 
-      attrs = prepare_save_data(final_params, socket)
-      attrs = Map.put(attrs, :user_id, socket.assigns.current_scope.user.id)
+      form = to_form(final_params, as: :soal_selidik)
 
-      result =
-        case socket.assigns.soal_selidik_id do
-          nil ->
-            SoalSelidiks.create_soal_selidik(attrs, socket.assigns.current_scope)
-
-          id ->
-            try do
-              soal_selidik = SoalSelidiks.get_soal_selidik!(id, socket.assigns.current_scope)
-              SoalSelidiks.update_soal_selidik(soal_selidik, attrs)
-            rescue
-              Ecto.NoResultsError ->
-                SoalSelidiks.create_soal_selidik(attrs, socket.assigns.current_scope)
-            end
-        end
-
-      case result do
-        {:ok, soal_selidik} ->
-          socket =
-            socket
-            |> assign(:soal_selidik_id, soal_selidik.id)
-            |> assign(:form, to_form(final_params, as: :soal_selidik))
-            |> Phoenix.LiveView.put_flash(:info, "Baris baru telah ditambah dan disimpan.")
-
-          {:noreply, socket}
-
-        {:error, changeset} ->
-          # Revert categories so UI matches DB
-          socket =
-            case tab_type do
-              "fr" -> assign(socket, :fr_categories, categories)
-              "nfr" -> assign(socket, :nfr_categories, categories)
-              _ -> socket
-            end
-
-          error_message =
-            if changeset.errors != [] do
-              errors = Enum.map(changeset.errors, fn {f, {msg, _}} -> "#{f}: #{msg}" end)
-              "Ralat: #{Enum.join(errors, ", ")}"
-            else
-              "Ralat semasa menambah baris. Sila cuba lagi."
-            end
-
-          {:noreply,
-           socket
-           |> Phoenix.LiveView.put_flash(:error, error_message)}
-      end
+      {:noreply,
+       socket
+       |> assign(:form, form)
+       |> assign(:open_category_ids, MapSet.put(socket.assigns.open_category_ids || MapSet.new(), category_key))
+       |> Phoenix.LiveView.put_flash(
+         :info,
+         "Baris baru telah ditambah. Klik Simpan untuk menyimpan."
+       )}
     end
   end
 

@@ -331,9 +331,11 @@ defmodule SppaWeb.PenempatanLive do
       case socket.assigns[:url_projek_id] do
         nil ->
           %{}
+
         projek_id ->
           versi_map = AnalisisDanRekabentuk.get_versi_by_project_ids([projek_id])
           nama_map = Projects.get_project_nama_by_ids([projek_id])
+
           %{
             "versi" => Map.get(versi_map, projek_id, "1.0.0"),
             "nama_sistem" => Map.get(nama_map, projek_id, "")

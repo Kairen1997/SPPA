@@ -787,6 +787,7 @@ defmodule SppaWeb.CoreComponents do
                 class="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                 placeholder="Masukkan soalan..."
                 phx-change="validate"
+                phx-debounce="blur"
                 phx-value-tab_type={@tab_type}
                 phx-value-category_key={@category_key}
                 phx-value-question_no={question.no}
@@ -806,6 +807,7 @@ defmodule SppaWeb.CoreComponents do
                     class="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                     placeholder="Masukkan maklumbalas..."
                     phx-change="validate"
+                    phx-debounce="blur"
                     phx-value-tab_type={@tab_type}
                     phx-value-category_key={@category_key}
                     phx-value-question_no={question.no}
@@ -821,6 +823,7 @@ defmodule SppaWeb.CoreComponents do
                     class="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                     placeholder="Masukkan maklumbalas..."
                     phx-change="validate"
+                    phx-debounce="blur"
                     phx-value-tab_type={@tab_type}
                     phx-value-category_key={@category_key}
                     phx-value-question_no={question.no}
@@ -834,6 +837,7 @@ defmodule SppaWeb.CoreComponents do
                     name={"soal_selidik[#{@tab_type}][#{@category_key}][#{question.no}][maklumbalas]"}
                     class="w-full px-2 py-1.5 text-sm border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     phx-change="validate"
+                    phx-debounce="blur"
                     phx-value-tab_type={@tab_type}
                     phx-value-category_key={@category_key}
                     phx-value-question_no={question.no}
@@ -882,6 +886,7 @@ defmodule SppaWeb.CoreComponents do
                             end
                           }
                           phx-change="validate"
+                          phx-debounce="blur"
                           phx-value-tab_type={@tab_type}
                           phx-value-category_key={@category_key}
                           phx-value-question_no={question.no}
@@ -900,6 +905,7 @@ defmodule SppaWeb.CoreComponents do
                     class="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                     placeholder="Masukkan maklumbalas..."
                     phx-change="validate"
+                    phx-debounce="blur"
                     phx-value-tab_type={@tab_type}
                     phx-value-category_key={@category_key}
                     phx-value-question_no={question.no}
@@ -918,6 +924,7 @@ defmodule SppaWeb.CoreComponents do
                 class="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none overflow-hidden"
                 placeholder="Catatan..."
                 phx-change="validate"
+                phx-debounce="blur"
                 phx-value-tab_type={@tab_type}
                 phx-value-category_key={@category_key}
                 phx-value-question_no={question.no}
