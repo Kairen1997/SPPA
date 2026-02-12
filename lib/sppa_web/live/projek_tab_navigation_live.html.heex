@@ -51,27 +51,29 @@
             <div class="flex items-center gap-4 mb-4">
               <.link
                 navigate={~p"/projek"}
-                class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 hover:shadow"
               >
-                <.icon name="hero-arrow-left" class="w-4 h-4" />
                 <span>Kembali ke Senarai Projek</span>
               </.link>
             </div>
             
             <h1 class="text-3xl font-bold text-gray-900 mb-2">{@project.nama}</h1>
           </div>
-           <%!-- Navigation Tabs --%>
-          <div class="bg-white rounded-xl shadow-lg border border-gray-200 mb-6">
-            <div class="border-b border-gray-200">
-              <nav class="flex space-x-1 px-6 overflow-x-auto" aria-label="Tabs">
+           <%!-- Navigation Tabs - professional tab bar --%>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+            <div class="bg-gray-50 border-b border-gray-200">
+              <nav
+                class="flex flex-wrap gap-0.5 px-4 pt-2 pb-0"
+                aria-label="Tab navigasi projek"
+              >
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=soal-selidik"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Soal Selidik",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -80,11 +82,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=analisis-dan-rekabentuk"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Analisis dan Rekabentuk",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -93,11 +95,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=jadual-projek"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Jadual Projek",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -106,11 +108,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=pengaturcaraan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Pengaturcaraan",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -119,11 +121,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=pengurus-perubahan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
-                    if(@current_tab == "Pengurus Perubahan",
-                      do: "border-green-500 text-green-600",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
+                    if(@current_tab == "Pengurusan Perubahan",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -132,11 +134,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=uat"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "UAT",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -145,11 +147,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=ujian-keselamatan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Ujian Keselamatan",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -158,11 +160,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=penempatan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Penempatan",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -171,11 +173,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=penyerahan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Penyerahan",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -184,11 +186,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=maklumbalas-pelanggan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Maklumbalas Pelanggan",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
