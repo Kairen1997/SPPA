@@ -1,6 +1,7 @@
 defmodule SppaWeb.DashboardLive do
   use SppaWeb, :live_view
 
+  alias Sppa.ActivityLogs
   alias Sppa.Projects
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
@@ -22,31 +23,20 @@ defmodule SppaWeb.DashboardLive do
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
 
-      if connected?(socket) do
-        new_stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
-        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-        notifications_count = length(activities)
+      # Always load stats and activities from database so metric cards show actual counts
+      stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
+      raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
+      activities =
+        Enum.map(raw_activities, fn a ->
+          Map.put(a, :action_label, ActivityLogs.action_label(a.action))
+        end)
+      notifications_count = length(activities)
 
-        # Merge stats preserving displayed values - once a stat shows a value, don't let it go to zero
-        fallback_stats = %{}
-
-        displayed_stats =
-          socket.assigns
-          |> Map.get(:stats, fallback_stats)
-          |> merge_stats_preserving_values(new_stats)
-
-        {:ok,
-         socket
-         |> assign(:stats, displayed_stats)
-         |> assign(:activities, activities)
-         |> assign(:notifications_count, notifications_count)}
-      else
-        {:ok,
-         socket
-         |> assign(:stats, %{})
-         |> assign(:activities, [])
-         |> assign(:notifications_count, 0)}
-      end
+      {:ok,
+       socket
+       |> assign(:stats, stats)
+       |> assign(:activities, activities)
+       |> assign(:notifications_count, notifications_count)}
     else
       socket =
         socket
@@ -58,33 +48,6 @@ defmodule SppaWeb.DashboardLive do
 
       {:ok, socket}
     end
-  end
-
-  # Helper function to merge stats, preserving displayed values
-  # Once a stat has been displayed with a value, it won't revert to zero
-  defp merge_stats_preserving_values(existing_stats, new_stats) do
-    Enum.reduce(new_stats, existing_stats, fn {key, new_value}, acc ->
-      existing_value = Map.get(acc, key)
-
-      # If we have an existing value that was displayed (non-zero), preserve it when new value is zero
-      # Otherwise, use the new value
-      updated_value =
-        cond do
-          # If existing value exists and is non-zero, and new value is zero, keep existing
-          existing_value && existing_value > 0 && new_value == 0 ->
-            existing_value
-
-          # Always use new value if it's greater than 0
-          new_value && new_value > 0 ->
-            new_value
-
-          # If new value is zero, preserve existing value (which could be a fallback)
-          true ->
-            existing_value
-        end
-
-      Map.put(acc, key, updated_value)
-    end)
   end
 
   @impl true

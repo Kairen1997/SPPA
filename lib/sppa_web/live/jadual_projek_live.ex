@@ -22,51 +22,40 @@ defmodule SppaWeb.JadualProjekLive do
         |> assign(:profile_menu_open, false)
         |> assign(:current_path, "/jadual-projek")
 
-      if connected?(socket) do
-        projects = list_projects(socket.assigns.current_scope, user_role)
-        gantt_data = prepare_gantt_data(projects)
-        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-        notifications_count = length(activities)
+      # Sentiasa muat projek dari DB (sama bila connected atau tidak) supaya data tidak hilang selepas refresh
+      projects = list_projects(socket.assigns.current_scope, user_role)
+      gantt_data = prepare_gantt_data(projects)
+      month_labels =
+        if length(gantt_data.projects) > 0 do
+          generate_month_labels(gantt_data.min_date, gantt_data.max_date)
+        else
+          []
+        end
 
-        month_labels =
-          if length(gantt_data.projects) > 0 do
-            generate_month_labels(gantt_data.min_date, gantt_data.max_date)
-          else
-            []
-          end
+      activities =
+        if connected?(socket) do
+          Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        else
+          []
+        end
 
-        is_developer = user_role == "pembangun sistem"
+      notifications_count = length(activities)
+      is_developer = user_role == "pembangun sistem"
 
-        {:ok,
-         socket
-         |> assign(:projects, projects)
-         |> assign(:gantt_data, gantt_data)
-         |> assign(:month_labels, month_labels)
-         |> assign(:get_status_color, &get_status_color_value/1)
-         |> assign(:activities, activities)
-         |> assign(:notifications_count, notifications_count)
-         |> assign(:get_status_badge_class, &get_status_badge_class_value/1)
-         |> assign(:is_developer, is_developer)
-         |> assign(:show_new_project_modal, false)
-         |> assign(:show_edit_project_modal, false)
-         |> assign(:selected_project, nil)
-         |> assign(:form, to_form(%{}, as: :project))}
-      else
-        {:ok,
-         socket
-         |> assign(:projects, [])
-         |> assign(:gantt_data, %{projects: []})
-         |> assign(:month_labels, [])
-         |> assign(:get_status_color, &get_status_color_value/1)
-         |> assign(:get_status_badge_class, &get_status_badge_class_value/1)
-         |> assign(:is_developer, false)
-         |> assign(:activities, [])
-         |> assign(:notifications_count, 0)
-         |> assign(:show_new_project_modal, false)
-         |> assign(:show_edit_project_modal, false)
-         |> assign(:selected_project, nil)
-         |> assign(:form, to_form(%{}, as: :project))}
-      end
+      {:ok,
+       socket
+       |> assign(:projects, projects)
+       |> assign(:gantt_data, gantt_data)
+       |> assign(:month_labels, month_labels)
+       |> assign(:get_status_color, &get_status_color_value/1)
+       |> assign(:activities, activities)
+       |> assign(:notifications_count, notifications_count)
+       |> assign(:get_status_badge_class, &get_status_badge_class_value/1)
+       |> assign(:is_developer, is_developer)
+       |> assign(:show_new_project_modal, false)
+       |> assign(:show_edit_project_modal, false)
+       |> assign(:selected_project, nil)
+       |> assign(:form, to_form(%{}, as: :project))}
     else
       socket =
         socket
@@ -80,115 +69,27 @@ defmodule SppaWeb.JadualProjekLive do
     end
   end
 
-  # Get projects list - using same mock data structure as ProjekLive
+  # Get projects list from DB (sama seperti Senarai Sistem) supaya data konsisten dan tidak hilang selepas refresh
   defp list_projects(current_scope, user_role) do
-    _current_user_id = current_scope.user.id
+    projects =
+      case user_role do
+        "ketua penolong pengarah" ->
+          Projects.list_all_projects()
 
-    all_projects = [
-      %{
-        id: 1,
-        nama: "Sistem Pengurusan Projek A",
-        status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
-        tarikh_mula: ~D[2024-01-15],
-        tarikh_siap: ~D[2024-06-30],
-        pengurus_projek: "Ahmad bin Abdullah",
-        developer_id: 1,
-        project_manager_id: 2,
-        isu: "Tiada",
-        tindakan: "Teruskan pembangunan"
-      },
-      %{
-        id: 2,
-        nama: "Sistem Analisis Data B",
-        status: "Ujian Penerimaan Pengguna",
-        fasa: "UAT",
-        tarikh_mula: ~D[2023-11-01],
-        tarikh_siap: ~D[2024-05-15],
-        pengurus_projek: "Siti Nurhaliza",
-        developer_id: 1,
-        project_manager_id: 3,
-        isu: "Perlu pembetulan pada modul laporan",
-        tindakan: "Selesaikan isu sebelum penyerahan"
-      },
-      %{
-        id: 3,
-        nama: "Portal E-Services C",
-        status: "Selesai",
-        fasa: "Penyerahan",
-        tarikh_mula: ~D[2023-06-01],
-        tarikh_siap: ~D[2024-01-31],
-        pengurus_projek: "Mohd Faizal",
-        developer_id: 2,
-        project_manager_id: 4,
-        isu: "Tiada",
-        tindakan: "Projek telah diserahkan"
-      },
-      %{
-        id: 4,
-        nama: "Sistem Pengurusan Dokumen D",
-        status: "Ditangguhkan",
-        fasa: "Analisis dan Rekabentuk",
-        tarikh_mula: ~D[2024-02-01],
-        tarikh_siap: ~D[2024-08-31],
-        pengurus_projek: "Nurul Aina",
-        developer_id: 3,
-        project_manager_id: 5,
-        isu: "Menunggu kelulusan bajet tambahan",
-        tindakan: "Sambung semula selepas kelulusan"
-      },
-      %{
-        id: 5,
-        nama: "Aplikasi Mobile E",
-        status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
-        tarikh_mula: ~D[2024-03-01],
-        tarikh_siap: ~D[2024-09-30],
-        pengurus_projek: "Lim Wei Ming",
-        developer_id: 1,
-        project_manager_id: 2,
-        isu: "Masalah integrasi dengan API",
-        tindakan: "Selesaikan integrasi API"
-      },
-      %{
-        id: 6,
-        nama: "Sistem Pengurusan Inventori F",
-        status: "Dalam Pembangunan",
-        fasa: "Pembangunan",
-        tarikh_mula: ~D[2024-04-15],
-        tarikh_siap: ~D[2024-10-31],
-        pengurus_projek: "Ahmad bin Abdullah",
-        developer_id: 2,
-        project_manager_id: 2,
-        isu: "Tiada",
-        tindakan: "Teruskan pembangunan modul inventori"
-      },
-      %{
-        id: 7,
-        nama: "Portal Pelanggan G",
-        status: "Ujian Penerimaan Pengguna",
-        fasa: "UAT",
-        tarikh_mula: ~D[2023-12-01],
-        tarikh_siap: ~D[2024-07-15],
-        pengurus_projek: "Siti Nurhaliza",
-        developer_id: 2,
-        project_manager_id: 3,
-        isu: "Isu keselamatan data perlu disemak",
-        tindakan: "Lengkapkan audit keselamatan"
-      }
-    ]
+        "pembangun sistem" ->
+          Projects.list_projects_for_pembangun_sistem(current_scope)
 
-    # Filter based on user role
-    case user_role do
-      "pembangun sistem" ->
-        Enum.filter(all_projects, fn p -> p.developer_id == current_scope.user.id end)
+        "pengurus projek" ->
+          Projects.list_projects_for_pengurus_projek(current_scope)
 
-      "pengurus projek" ->
-        Enum.filter(all_projects, fn p -> p.project_manager_id == current_scope.user.id end)
+        _ ->
+          []
+      end
 
-      _ ->
-        all_projects
-    end
+    # Tambah isu/tindakan untuk keserasian jadual (boleh dikembangkan kemudian)
+    Enum.map(projects, fn p ->
+      Map.merge(p, %{isu: nil, tindakan: nil})
+    end)
   end
 
   # Prepare data for Gantt chart
@@ -206,9 +107,17 @@ defmodule SppaWeb.JadualProjekLive do
   defp prepare_gantt_data(projects) do
     today = Date.utc_today()
 
+    # Guna tarikh lalai jika projek tiada tarikh_mula/tarikh_siap (supaya tidak crash)
+    projects_with_dates =
+      Enum.map(projects, fn p ->
+        t_mula = p.tarikh_mula || today
+        t_siap = p.tarikh_siap || Date.add(today, 30)
+        Map.merge(p, %{tarikh_mula: t_mula, tarikh_siap: t_siap})
+      end)
+
     # Find min and max dates
     dates =
-      projects
+      projects_with_dates
       |> Enum.flat_map(fn p -> [p.tarikh_mula, p.tarikh_siap] end)
       |> Enum.filter(&(&1 != nil))
 
@@ -222,7 +131,7 @@ defmodule SppaWeb.JadualProjekLive do
     total_days = Date.diff(max_date, min_date)
 
     projects_with_positions =
-      projects
+      projects_with_dates
       |> Enum.map(fn project ->
         start_offset = Date.diff(project.tarikh_mula, min_date)
         duration = Date.diff(project.tarikh_siap, project.tarikh_mula)
@@ -519,48 +428,55 @@ defmodule SppaWeb.JadualProjekLive do
   def handle_event("update_project", %{"project" => project_params}, socket) do
     if socket.assigns.is_developer && socket.assigns.selected_project do
       project_id = socket.assigns.selected_project.id
-
-      # Parse dates
       tarikh_mula = parse_date(project_params["tarikh_mula"])
       tarikh_siap = parse_date(project_params["tarikh_siap"])
 
-      updated_projects =
-        Enum.map(socket.assigns.projects, fn project ->
-          if project.id == project_id do
-            %{
-              project
-              | nama: project_params["nama"] || project.nama,
-                status: project_params["status"] || project.status,
-                fasa: project_params["fasa"] || project.fasa,
-                tarikh_mula: tarikh_mula,
-                tarikh_siap: tarikh_siap,
-                pengurus_projek: project_params["pengurus_projek"] || project.pengurus_projek,
-                isu: project_params["isu"] || project.isu,
-                tindakan: project_params["tindakan"] || project.tindakan
-            }
-          else
-            project
+      attrs = %{
+        "nama" => project_params["nama"] || socket.assigns.selected_project.nama,
+        "status" => project_params["status"] || socket.assigns.selected_project.status,
+        "fasa" => project_params["fasa"] || socket.assigns.selected_project.fasa,
+        "tarikh_mula" => tarikh_mula,
+        "tarikh_siap" => tarikh_siap
+      }
+
+      case Projects.get_project_by_id(project_id) do
+        nil ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Projek tidak dijumpai.")
+           |> assign(:show_edit_project_modal, false)
+           |> assign(:selected_project, nil)}
+
+        project ->
+          case Projects.update_project(project, attrs, socket.assigns.current_scope) do
+            {:ok, _updated} ->
+              projects = list_projects(socket.assigns.current_scope, socket.assigns.current_scope.user.role)
+              gantt_data = prepare_gantt_data(projects)
+              month_labels =
+                if length(gantt_data.projects) > 0 do
+                  generate_month_labels(gantt_data.min_date, gantt_data.max_date)
+                else
+                  []
+                end
+
+              {:noreply,
+               socket
+               |> assign(:projects, projects)
+               |> assign(:gantt_data, gantt_data)
+               |> assign(:month_labels, month_labels)
+               |> assign(:show_edit_project_modal, false)
+               |> assign(:selected_project, nil)
+               |> assign(:form, to_form(%{}, as: :project))
+               |> put_flash(:info, "Projek berjaya dikemaskini.")}
+
+            {:error, _changeset} ->
+              {:noreply,
+               socket
+               |> put_flash(:error, "Gagal mengemaskini projek.")
+               |> assign(:show_edit_project_modal, false)
+               |> assign(:selected_project, nil)}
           end
-        end)
-
-      gantt_data = prepare_gantt_data(updated_projects)
-
-      month_labels =
-        if length(gantt_data.projects) > 0 do
-          generate_month_labels(gantt_data.min_date, gantt_data.max_date)
-        else
-          []
-        end
-
-      {:noreply,
-       socket
-       |> assign(:projects, updated_projects)
-       |> assign(:gantt_data, gantt_data)
-       |> assign(:month_labels, month_labels)
-       |> assign(:show_edit_project_modal, false)
-       |> assign(:selected_project, nil)
-       |> assign(:form, to_form(%{}, as: :project))
-       |> put_flash(:info, "Projek berjaya dikemaskini.")}
+      end
     else
       {:noreply, socket}
     end
