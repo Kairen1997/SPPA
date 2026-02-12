@@ -1,6 +1,7 @@
 defmodule SppaWeb.ProjekTabNavigationLive do
   use SppaWeb, :live_view
 
+  alias Sppa.ActivityLogs
   alias Sppa.AnalisisDanRekabentuk
   alias Sppa.Penempatans
   alias Sppa.PermohonanPerubahan
@@ -100,7 +101,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
         activities =
           if connected?(socket) do
-            Projects.list_recent_activities(socket.assigns.current_scope, 10)
+            socket.assigns.current_scope
+            |> ActivityLogs.list_recent_activities(10)
+            |> Enum.map(fn a ->
+              Map.put(a, :action_label, ActivityLogs.action_label(a.action))
+            end)
           else
             []
           end
