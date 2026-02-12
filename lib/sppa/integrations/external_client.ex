@@ -1,7 +1,7 @@
 defmodule Sppa.Integrations.ExternalClient do
   require Logger
 
-  @external_url "http://10.71.67.140:4000/api/requests?status=Diluluskan"
+  @external_url "http://10.71.67.142:4000/api/requests?status=Diluluskan"
 
   defp requests_url do
     @external_url

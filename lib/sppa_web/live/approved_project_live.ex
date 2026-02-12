@@ -29,13 +29,21 @@ defmodule SppaWeb.ApprovedProjectLive do
 
           all_users = Accounts.list_users()
           all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
+          all_project_managers = Enum.filter(all_users, fn user -> user.role == "pengurus projek" end)
 
           stored_names = parse_pembangun_sistem(approved_project.pembangun_sistem)
           selected_developers = stored_names
 
+          stored_pm_names = parse_pengurus_projek(approved_project.pengurus_projek)
+          selected_project_managers = stored_pm_names
+
           available_developers =
             all_developers
             |> Enum.filter(fn dev -> dev.no_kp not in selected_developers end)
+
+          available_project_managers =
+            all_project_managers
+            |> Enum.filter(fn pm -> pm.no_kp not in selected_project_managers end)
 
           {:ok,
            socket
@@ -43,6 +51,9 @@ defmodule SppaWeb.ApprovedProjectLive do
            |> assign(:developers, all_developers)
            |> assign(:available_developers, available_developers)
            |> assign(:selected_developers, selected_developers)
+           |> assign(:project_managers, all_project_managers)
+           |> assign(:available_project_managers, available_project_managers)
+           |> assign(:selected_project_managers, selected_project_managers)
            |> assign(
              :form_pembangun,
              to_form(%{"pembangun_sistem" => selected_developers}, as: :project)
@@ -74,7 +85,7 @@ defmodule SppaWeb.ApprovedProjectLive do
 
   defp external_api_base_url do
     full_url = Application.get_env(:sppa, :system_permohonan_aplikasi, [])[:base_url] ||
-      "http://10.71.67.42:4000/api/requests?status=Diluluskan"
+      "http://10.71.67.142:4000/api/requests?status=Diluluskan"
 
     # Extract base URL (remove path and query string)
     case URI.parse(full_url) do
@@ -82,7 +93,7 @@ defmodule SppaWeb.ApprovedProjectLive do
         port_str = if port, do: ":#{port}", else: ""
         "#{scheme}://#{host}#{port_str}"
       _ ->
-        "http://10.71.67.42:4000"
+        "http://10.71.67.142:4000"
     end
   end
 
@@ -147,6 +158,26 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp format_pembangun_sistem([]), do: nil
 
   defp format_pembangun_sistem(list) when is_list(list) do
+    list
+    |> Enum.filter(&(&1 != ""))
+    |> Enum.join(", ")
+  end
+
+  defp parse_pengurus_projek(nil), do: []
+  defp parse_pengurus_projek(""), do: []
+
+  defp parse_pengurus_projek(str) when is_binary(str) do
+    str
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&(&1 != ""))
+  end
+
+  defp parse_pengurus_projek(_), do: []
+
+  defp format_pengurus_projek([]), do: nil
+
+  defp format_pengurus_projek(list) when is_list(list) do
     list
     |> Enum.filter(&(&1 != ""))
     |> Enum.join(", ")
@@ -228,6 +259,77 @@ defmodule SppaWeb.ApprovedProjectLive do
 
       :error ->
         {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("add_pengurus_projek", %{"project_manager_id" => pm_id_str}, socket) do
+    case Integer.parse(pm_id_str) do
+      {pm_id, _} ->
+        # Find the project manager
+        project_manager = Enum.find(socket.assigns.project_managers, fn pm -> pm.id == pm_id end)
+
+        if project_manager && project_manager.no_kp not in socket.assigns.selected_project_managers do
+          # Add to selected list
+          new_selected = socket.assigns.selected_project_managers ++ [project_manager.no_kp]
+
+          # Format as comma-separated string
+          pengurus_projek_str = format_pengurus_projek(new_selected)
+
+          # Update the approved project
+          case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+                 "pengurus_projek" => pengurus_projek_str
+               }) do
+            {:ok, updated_project} ->
+              # Update available project managers (exclude selected ones)
+              available_project_managers =
+                socket.assigns.project_managers
+                |> Enum.filter(fn pm -> pm.no_kp not in new_selected end)
+
+              {:noreply,
+               socket
+               |> assign(:approved_project, updated_project)
+               |> assign(:selected_project_managers, new_selected)
+               |> assign(:available_project_managers, available_project_managers)
+               |> put_flash(:info, "Pengurus projek telah ditambah.")}
+
+            {:error, _changeset} ->
+              {:noreply, put_flash(socket, :error, "Gagal menambah pengurus projek.")}
+          end
+        else
+          {:noreply, socket}
+        end
+
+      :error ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("remove_pengurus_projek", %{"no_kp" => no_kp}, socket) do
+    new_selected = List.delete(socket.assigns.selected_project_managers, no_kp)
+
+    pengurus_projek_str =
+      if new_selected == [], do: nil, else: format_pengurus_projek(new_selected)
+
+    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+           "pengurus_projek" => pengurus_projek_str
+         }) do
+      {:ok, updated_project} ->
+        # Update available project managers
+        available_project_managers =
+          socket.assigns.project_managers
+          |> Enum.filter(fn pm -> pm.no_kp not in new_selected end)
+
+        {:noreply,
+         socket
+         |> assign(:approved_project, updated_project)
+         |> assign(:selected_project_managers, new_selected)
+         |> assign(:available_project_managers, available_project_managers)
+         |> put_flash(:info, "Pengurus projek telah dikeluarkan.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Gagal mengeluarkan pengurus projek.")}
     end
   end
 
@@ -614,6 +716,81 @@ defmodule SppaWeb.ApprovedProjectLive do
                             <% else %>
                               <p class="text-sm text-gray-400 italic mt-2">
                                 Tiada pembangun sistem dipilih
+                              </p>
+                            <% end %>
+                          </div>
+                        </dd>
+                      </div>
+
+                      <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                        <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                          Pengurus Projek
+                        </dt>
+
+                        <dd>
+                          <div class="space-y-3">
+                            <%!-- Dropdown to add pengurus projek --%>
+                            <%= if @available_project_managers != [] do %>
+                              <.form
+                                for={%{}}
+                                phx-submit="add_pengurus_projek"
+                                id="add-pengurus-form"
+                                class="space-y-2"
+                              >
+                                <select
+                                  name="project_manager_id"
+                                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
+                                  required
+                                >
+                                  <option value="">Pilih Pengurus Projek</option>
+
+                                  <%= for project_manager <- @available_project_managers do %>
+                                    <option value={project_manager.id}>
+                                      {project_manager.name || project_manager.email || project_manager.no_kp || "Unknown"}
+                                    </option>
+                                  <% end %>
+                                </select>
+                                <button
+                                  type="submit"
+                                  class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all duration-200"
+                                >
+                                  <.icon name="hero-plus" class="w-4 h-4" /> <span>Tambah</span>
+                                </button>
+                              </.form>
+                            <% else %>
+                              <p class="text-sm text-gray-500 italic">
+                                Semua pengurus projek telah dipilih
+                              </p>
+                            <% end %>
+                             <%!-- Display selected pengurus projek --%>
+                            <%= if @selected_project_managers != [] do %>
+                              <div class="mt-4 space-y-2">
+                                 <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                                   Pengurus Projek Dipilih:
+                                 </p>
+
+                                <div class="flex flex-wrap gap-2">
+                                  <%= for no_kp <- @selected_project_managers do %>
+                                    <% project_manager = Enum.find(@project_managers, fn pm -> pm.no_kp == no_kp end) %>
+                                    <% display_name = if project_manager, do: (project_manager.name || project_manager.email || project_manager.no_kp || "Unknown"), else: no_kp %>
+                                    <div class="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1.5 text-sm text-purple-800">
+                                      <span>{display_name}</span>
+                                      <button
+                                        type="button"
+                                        phx-click="remove_pengurus_projek"
+                                        phx-value-no_kp={no_kp}
+                                        class="ml-1 rounded-full p-0.5 hover:bg-purple-200 transition-colors"
+                                        title="Keluarkan"
+                                      >
+                                        <.icon name="hero-x-mark" class="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  <% end %>
+                                </div>
+                              </div>
+                            <% else %>
+                              <p class="text-sm text-gray-400 italic mt-2">
+                                Tiada pengurus projek dipilih
                               </p>
                             <% end %>
                           </div>
