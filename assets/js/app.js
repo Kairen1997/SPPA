@@ -887,7 +887,9 @@ const AutoResizeTextarea = {
   }
 }
 
-// Prevent double-click / rapid re-click actions on buttons and links
+// Prevent double-click / rapid re-click actions on buttons and links.
+// Defer disabling to next tick so LiveView's phx-click can fire first
+// (LiveView ignores clicks on disabled elements).
 const SingleClick = {
   mounted() {
     this.handleClick = (e) => {
@@ -907,12 +909,14 @@ const SingleClick = {
 
       const delay = parseInt(button.dataset.singleClickMs || "700", 10)
 
-      button.disabled = true
-
+      // Defer disable so phx-click fires before button becomes disabled
       setTimeout(() => {
-        button.disabled = false
-        delete button.dataset.singleClickHandled
-      }, delay)
+        button.disabled = true
+        setTimeout(() => {
+          button.disabled = false
+          delete button.dataset.singleClickHandled
+        }, delay)
+      }, 0)
     }
 
     this.el.addEventListener("click", this.handleClick)
@@ -921,6 +925,34 @@ const SingleClick = {
   destroyed() {
     if (this.handleClick) {
       this.el.removeEventListener("click", this.handleClick)
+    }
+  }
+}
+
+// SubFunctionInputBlur - push update_sub_function_name on blur with current input value
+const SubFunctionInputBlur = {
+  mounted() {
+    this.handleBlur = () => {
+      const value = (this.el && this.el.value) || ""
+      const moduleId = this.el.getAttribute("phx-value-module_id")
+      const funcId = this.el.getAttribute("phx-value-func_id")
+      const subFuncId = this.el.getAttribute("phx-value-sub_func_id")
+      if (moduleId != null && funcId != null && subFuncId != null && typeof this.pushEvent === "function") {
+        const nameKey = "sub_function_name_" + subFuncId
+        this.pushEvent("update_sub_function_name", {
+          module_id: moduleId,
+          func_id: funcId,
+          sub_func_id: subFuncId,
+          value: value,
+          [nameKey]: value
+        })
+      }
+    }
+    this.el.addEventListener("blur", this.handleBlur)
+  },
+  destroyed() {
+    if (this.handleBlur && this.el) {
+      this.el.removeEventListener("blur", this.handleBlur)
     }
   }
 }
@@ -1168,6 +1200,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
   params: {_csrf_token: csrfToken},
   hooks: {
     ...colocatedHooks,
+    SubFunctionInputBlur,
     SingleClick,
     PreventEnterSubmit,
     OpenDatePicker,

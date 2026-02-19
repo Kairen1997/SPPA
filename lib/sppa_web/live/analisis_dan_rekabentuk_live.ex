@@ -510,10 +510,9 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         socket
       end
 
-    case persist_analisis_to_db(socket) do
-      {:ok, updated_socket} -> {:noreply, updated_socket}
-      {:error, updated_socket} -> {:noreply, updated_socket}
-    end
+    # Jangan simpan ke DB bila baru tambah fungsi (nama masih kosong); simpan hanya bila
+    # pengguna isi nama (update_function_name) atau klik Simpan
+    {:noreply, socket}
   end
 
   @impl true
@@ -553,8 +552,12 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   def handle_event("update_function_name", params, socket) do
     module_id = params["module_id"]
     func_id = params["func_id"]
-    # FunctionInputBlur hook sends "value"; phx-change sends "function_name"
-    name = params["function_name"] || params["value"] || ""
+    # Unique name per function: function_name_<func_id>; FunctionInputBlur hook sends "value"
+    name =
+      (func_id && params["function_name_#{func_id}"]) ||
+        params["function_name"] ||
+        params["value"] ||
+        ""
 
     # Normalize IDs for comparison (hook sends strings; in-memory ids may be string or from DB format)
     module_id_norm = module_id && to_string(module_id)
@@ -642,10 +645,9 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         socket
       end
 
-    case persist_analisis_to_db(socket) do
-      {:ok, updated_socket} -> {:noreply, updated_socket}
-      {:error, updated_socket} -> {:noreply, updated_socket}
-    end
+    # Jangan simpan ke DB bila baru tambah sub-fungsi (nama masih kosong); simpan hanya bila
+    # pengguna isi nama (update_sub_function_name) atau klik Simpan
+    {:noreply, socket}
   end
 
   @impl true
@@ -699,23 +701,27 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     module_id = params["module_id"]
     func_id = params["func_id"]
     sub_func_id = params["sub_func_id"]
-    # Value: from unique input name, or LiveView's "value" for the blurred input
+    # Hook sends "value" and "sub_function_name_<id>"; phx-change would send unique name
     name =
-      params["sub_function_name_#{sub_func_id}"] ||
+      (sub_func_id && params["sub_function_name_#{sub_func_id}"]) ||
         params["sub_function_name"] ||
         params["value"] ||
         ""
 
+    module_id_norm = module_id && to_string(module_id)
+    func_id_norm = func_id && to_string(func_id)
+    sub_func_id_norm = sub_func_id && to_string(sub_func_id)
+
     updated_modules =
       get_modules_from_stream(socket)
       |> Enum.map(fn module ->
-        if module.id == module_id do
+        if module_id_norm && to_string(module.id) == module_id_norm do
           updated_functions =
             Enum.map(module.functions, fn func ->
-              if func.id == func_id do
+              if func_id_norm && to_string(func.id) == func_id_norm do
                 updated_sub_functions =
                   Enum.map(func.sub_functions, fn sub_func ->
-                    if sub_func.id == sub_func_id do
+                    if sub_func_id_norm && to_string(sub_func.id) == sub_func_id_norm do
                       Map.put(sub_func, :name, name)
                     else
                       sub_func
@@ -741,7 +747,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
     # Refresh selected_module so the input shows the saved name
     socket =
-      if socket.assigns.selected_module_id == module_id do
+      if module_id_norm && to_string(socket.assigns.selected_module_id) == module_id_norm do
         selected_module = get_selected_module_by_id(socket, module_id)
         assign(socket, :selected_module, selected_module)
       else
@@ -765,6 +771,33 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     # Use the modules_list assign for processing instead of converting stream
     socket.assigns.modules_list || []
   end
+
+  # Buang fungsi tanpa nama dan sub-fungsi tanpa nama supaya tidak disimpan ke DB sebagai kotak kosong
+  defp filter_empty_functions_and_sub_functions(modules) when is_list(modules) do
+    Enum.map(modules, fn module ->
+      sub_functions_with_name = fn func ->
+        kept_sub = Enum.filter(func.sub_functions || [], fn sf -> string_present?(Map.get(sf, :name) || Map.get(sf, "name")) end)
+        Map.put(func, :sub_functions, kept_sub)
+      end
+
+      funcs_cleaned =
+        (module.functions || [])
+        |> Enum.map(sub_functions_with_name)
+        |> Enum.filter(fn func ->
+          name_ok = string_present?(Map.get(func, :name) || Map.get(func, "name"))
+          has_sub = length(func.sub_functions || []) > 0
+          name_ok || has_sub
+        end)
+
+      Map.put(module, :functions, funcs_cleaned)
+    end)
+  end
+
+  defp filter_empty_functions_and_sub_functions(_), do: []
+
+  defp string_present?(nil), do: false
+  defp string_present?(s) when is_binary(s), do: String.trim(s) != ""
+  defp string_present?(_), do: false
 
   defp get_next_module_number(socket) do
     # Use modules_count assign to get next number
@@ -874,6 +907,8 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
     project = socket.assigns.project
     params = socket.assigns.form.params || %{}
     modules = get_modules_from_stream(socket)
+    # Jangan simpan fungsi tanpa nama atau sub-fungsi tanpa nama ke DB (elak "kotak kosong")
+    modules_for_db = filter_empty_functions_and_sub_functions(modules)
 
     attrs =
       %{
@@ -890,7 +925,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         approved_by_position: Map.get(params, "approved_by_position", ""),
         approved_by_date: parse_date(Map.get(params, "approved_by_date")),
         project_id: if(project, do: project.id, else: nil),
-        modules: modules
+        modules: modules_for_db
       }
 
     result =

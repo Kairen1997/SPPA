@@ -220,6 +220,7 @@ defmodule SppaWeb.SoalSelidikLive do
   def handle_event("toggle_soal_selidik_category", %{"key" => key, "open" => open}, socket)
       when is_binary(key) do
     open? = open in [true, "true", "1"]
+
     ids =
       if open? do
         MapSet.put(socket.assigns.open_category_ids, key)
@@ -765,7 +766,10 @@ defmodule SppaWeb.SoalSelidikLive do
       {:noreply,
        socket
        |> assign(:form, form)
-       |> assign(:open_category_ids, MapSet.put(socket.assigns.open_category_ids || MapSet.new(), category_key))
+       |> assign(
+         :open_category_ids,
+         MapSet.put(socket.assigns.open_category_ids || MapSet.new(), category_key)
+       )
        |> Phoenix.LiveView.put_flash(
          :info,
          "Baris baru telah ditambah. Klik Simpan untuk menyimpan."

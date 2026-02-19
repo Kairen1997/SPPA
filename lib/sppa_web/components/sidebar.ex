@@ -42,7 +42,7 @@ defmodule SppaWeb.Components.Sidebar do
         >
           <.icon name="hero-bars-3" class="h-5 w-5" />
         </button>
-         <%!-- Left sidebar --%>
+        <%!-- Left sidebar --%>
         <aside class={[
           "w-64 flex-col bg-[#05243A] text-white shadow-xl transition-transform duration-300",
           if(@desktop_sidebar_visible, do: "hidden md:flex", else: "hidden")

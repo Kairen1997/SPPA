@@ -9,7 +9,7 @@
       phx-click="close_sidebar"
     >
     </div>
-     <%!-- Sidebar --%>
+    <%!-- Sidebar --%>
     <.dashboard_sidebar
       sidebar_open={@sidebar_open}
       dashboard_path={~p"/dashboard"}
@@ -28,11 +28,12 @@
             class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
           >
             <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
-          </button> <.header_logos />
+          </button>
+           <.header_logos />
         </div>
-        
+
         <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
-        
+
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <.header_actions
             notifications_open={@notifications_open}
@@ -43,7 +44,7 @@
           />
         </div>
       </header>
-       <%!-- Content --%>
+      <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
           <%!-- Back Button (without project title above tabs) --%>
@@ -57,8 +58,11 @@
               </.link>
             </div>
           </div>
-           <%!-- Navigation Tabs --%>
-          <div id="project-tabs-navigation" class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+          <%!-- Navigation Tabs --%>
+          <div
+            id="project-tabs-navigation"
+            class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden"
+          >
             <div class="bg-gray-50 border-b border-gray-200">
               <nav
                 class="flex flex-wrap gap-0.5 px-4 pt-2 pb-0"
@@ -197,7 +201,7 @@
               </nav>
             </div>
           </div>
-           <%!-- Tab Content --%>
+          <%!-- Tab Content --%>
           <%= cond do %>
             <% @current_tab == "Soal Selidik" -> %>
               <div class="space-y-6">
@@ -223,7 +227,7 @@
                     </button>
                   </div>
                 </div>
-                
+
                 <div
                   id="soal-selidik-document"
                   class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 print:shadow-none print:border-0"
@@ -236,7 +240,7 @@
                           {@soal_selidik_pdf_data.document_id}
                         </span>
                       </div>
-                      
+
                       <div class="flex justify-center mb-4">
                         <img
                           src={~p"/images/logojpkn.png"}
@@ -244,22 +248,24 @@
                           class="h-16 w-auto object-contain"
                         />
                       </div>
-                      
+
                       <h2 class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight">
                         Soal Selidik Kajian Keperluan Pembangunan Aplikasi
                       </h2>
-                      
+
                       <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
                         <span>Nama Sistem :</span>
-                        <span class="font-semibold text-gray-900">{@soal_selidik_pdf_data.nama_sistem}</span>
+                        <span class="font-semibold text-gray-900">
+                          {@soal_selidik_pdf_data.nama_sistem}
+                        </span>
                       </div>
                     </div>
-                     <%!-- Functional Requirements Section --%>
+                    <%!-- Functional Requirements Section --%>
                     <div class="mb-6">
                       <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
                         FUNCTIONAL REQUIREMENT
                       </h3>
-                      
+
                       <div class="space-y-4">
                         <%= for category <- @soal_selidik_pdf_data.fr_categories do %>
                           <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
@@ -268,7 +274,7 @@
                                 {category.title}
                               </h4>
                             </div>
-                            
+
                             <div class="p-2 overflow-x-auto">
                               <table class="w-full border-collapse text-xs">
                                 <thead>
@@ -279,21 +285,21 @@
                                     >
                                       No
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                       style="width: 40%;"
                                     >
                                       Soalan
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                       style="width: 27%;"
                                     >
                                       Maklumbalas
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700"
                                       style="width: 27%;"
@@ -302,7 +308,7 @@
                                     </th>
                                   </tr>
                                 </thead>
-                                
+
                                 <tbody class="divide-y divide-gray-300">
                                   <%= for question <- category.questions do %>
                                     <tr>
@@ -311,7 +317,7 @@
                                           {question.no}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 border-r border-gray-400 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-800">
                                           {question_data =
@@ -338,7 +344,7 @@
                                           end}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 border-r border-gray-400 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-700">
                                           {question_data =
@@ -373,7 +379,7 @@
                                           end}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-700">
                                           {question_data =
@@ -406,12 +412,12 @@
                         <% end %>
                       </div>
                     </div>
-                     <%!-- Non-Functional Requirements Section --%>
+                    <%!-- Non-Functional Requirements Section --%>
                     <div class="mb-6">
                       <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
                         NON-FUNCTIONAL REQUIREMENT
                       </h3>
-                      
+
                       <div class="space-y-4">
                         <%= for category <- @soal_selidik_pdf_data.nfr_categories do %>
                           <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
@@ -420,7 +426,7 @@
                                 {category.title}
                               </h4>
                             </div>
-                            
+
                             <div class="p-2 overflow-x-auto">
                               <table class="w-full border-collapse text-xs">
                                 <thead>
@@ -431,21 +437,21 @@
                                     >
                                       No
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                       style="width: 40%;"
                                     >
                                       Soalan
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                       style="width: 27%;"
                                     >
                                       Maklumbalas
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700"
                                       style="width: 27%;"
@@ -454,7 +460,7 @@
                                     </th>
                                   </tr>
                                 </thead>
-                                
+
                                 <tbody class="divide-y divide-gray-300">
                                   <%= for question <- category.questions do %>
                                     <tr>
@@ -463,7 +469,7 @@
                                           {question.no}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 border-r border-gray-400 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-800">
                                           {question_data =
@@ -490,7 +496,7 @@
                                           end}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 border-r border-gray-400 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-700">
                                           {question_data =
@@ -525,7 +531,7 @@
                                           end}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-700">
                                           {question_data =
@@ -558,14 +564,14 @@
                         <% end %>
                       </div>
                     </div>
-                     <%!-- Disediakan Oleh Section --%>
+                    <%!-- Disediakan Oleh Section --%>
                     <div class="mb-2">
                       <h3 class="text-lg font-bold text-gray-900 mb-4">Disediakan Oleh :</h3>
-                      
+
                       <p class="text-sm text-gray-600 mb-6 italic">
                         (Diisi oleh Pengurus Projek/Pembangun Sistem)
                       </p>
-                      
+
                       <div class="space-y-4">
                         <div>
                           <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -576,7 +582,7 @@
                               Map.get(@soal_selidik_pdf_data.disediakan_oleh, "nama") || ""}
                           </div>
                         </div>
-                        
+
                         <div>
                           <label class="block text-sm font-medium text-gray-700 mb-1">
                             Jawatan:
@@ -586,7 +592,7 @@
                               Map.get(@soal_selidik_pdf_data.disediakan_oleh, "jawatan") || ""}
                           </div>
                         </div>
-                        
+
                         <div>
                           <label class="block text-sm font-medium text-gray-700 mb-1">
                             Tarikh:
@@ -605,7 +611,7 @@
                         <p class="text-sm font-medium text-gray-600 mb-2">
                           Tiada data Soal Selidik untuk dipaparkan.
                         </p>
-                        
+
                         <p class="text-xs text-gray-500">
                           Sila klik butang "Edit Borang" di atas untuk menambah atau mengisi soal selidik untuk projek ini.
                         </p>
@@ -636,7 +642,7 @@
                     <.icon name="hero-printer" class="w-5 h-5" />
                   </button>
                 </div>
-                
+
                 <div
                   id="analisis-document"
                   class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 print:shadow-none print:border-0"
@@ -646,7 +652,7 @@
                     <div class="mb-6">
                       <div class="flex justify-between items-start mb-3">
                         <div class="flex-1"></div>
-                        
+
                         <div class="flex-1 flex justify-center">
                           <img
                             src={~p"/images/logojpkn.png"}
@@ -654,19 +660,19 @@
                             class="h-16 w-auto object-contain"
                           />
                         </div>
-                        
+
                         <div class="flex-1 flex justify-end">
                           <div class="text-gray-700 font-bold">
                             {@analisis_pdf_data.document_id}
                           </div>
                         </div>
                       </div>
-                      
+
                       <h2 class="text-center font-bold text-gray-900 mb-6 uppercase tracking-wide leading-tight">
                         BORANG VERIFIKASI SPESIFIKASI APLIKASI
                       </h2>
                     </div>
-                    
+
                     <div class="mb-6">
                       <table class="w-full border-collapse border border-gray-800">
                         <tbody>
@@ -677,47 +683,47 @@
                             >
                               Nama Projek
                             </td>
-                            
+
                             <td class="px-2 py-1.5 border border-gray-800 text-black">
                               {@analisis_pdf_data.nama_projek}
                             </td>
                           </tr>
-                          
+
                           <tr class="border-b border-gray-800">
                             <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
                               Nama Agensi
                             </td>
-                            
+
                             <td class="px-2 py-1.5 border border-gray-800 text-black">
                               {@analisis_pdf_data.nama_agensi}
                             </td>
                           </tr>
-                          
+
                           <tr class="border-b border-gray-800">
                             <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
                               Versi
                             </td>
-                            
+
                             <td class="px-2 py-1.5 border border-gray-800 text-black">
                               {@analisis_pdf_data.versi}
                             </td>
                           </tr>
-                          
+
                           <tr class="border-b border-gray-800">
                             <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
                               Tarikh Semakan (jika ada)
                             </td>
-                            
+
                             <td class="px-2 py-1.5 border border-gray-800 text-black">
                               {@analisis_pdf_data.tarikh_semakan}
                             </td>
                           </tr>
-                          
+
                           <tr>
                             <td class="px-2 py-1.5 font-semibold text-gray-900 bg-gray-100 border-r border-gray-800">
                               Rujukan Perubahan (jika ada)
                             </td>
-                            
+
                             <td class="px-2 py-1.5 border border-gray-800 text-black">
                               {@analisis_pdf_data.rujukan_perubahan}
                             </td>
@@ -725,16 +731,16 @@
                         </tbody>
                       </table>
                     </div>
-                    
+
                     <div class="mb-6">
                       <h3 class="font-bold text-gray-900 mb-2 uppercase">
                         SPESIFIKASI APLIKASI YANG AKAN DIBANGUNKAN
                       </h3>
-                      
+
                       <p class="text-gray-700 mb-2">
                         Nyatakan secara terperinci spesifikasi aplikasi yang akan dibangunkan seperti bilangan modul (nyatakan modul-modul terlibat), fungsi dan sebagainya.
                       </p>
-                      
+
                       <div class="space-y-4 mt-4">
                         <%= for module <- @analisis_pdf_data.modules do %>
                           <div class="mb-4">
@@ -743,7 +749,7 @@
                                 {module.number}. {module.name}
                               </strong>
                             </div>
-                            
+
                             <div class="ml-6 space-y-2">
                               <%= for {func, index} <- Enum.with_index(module.functions) do %>
                                 <div class="mb-1">
@@ -766,73 +772,73 @@
                           </div>
                         <% end %>
                       </div>
-                      
+
                       <p class="text-gray-600 mt-4 italic">
                         **spesifikasi aplikasi adalah mengikut kajian yang telah dibuat
                       </p>
                     </div>
-                    
+
                     <div class="mt-8">
                       <div class="grid grid-cols-2 gap-6">
                         <div>
                           <h4 class="font-bold text-gray-900 mb-2">Dipersetujui Oleh:</h4>
-                          
+
                           <p class="text-gray-700 mb-3 font-semibold">Pemohon</p>
-                          
+
                           <div class="space-y-3">
                             <div>
                               <p class="text-gray-600 mb-1">(Nama)</p>
-                              
+
                               <div class="h-8 text-black">
                                 {@analisis_pdf_data.approved_by_name}
                               </div>
                             </div>
-                            
+
                             <div>
                               <p class="text-gray-600 mb-1">Jawatan:</p>
-                              
+
                               <div class="h-8 text-black">
                                 {@analisis_pdf_data.approved_by_position}
                               </div>
                             </div>
-                            
+
                             <div>
                               <p class="text-gray-600 mb-1">Tarikh:</p>
-                              
+
                               <div class="h-8 text-black">
                                 {@analisis_pdf_data.approved_by_date}
                               </div>
                             </div>
                           </div>
                         </div>
-                        
+
                         <div>
                           <h4 class="font-bold text-gray-900 mb-2">Disediakan Oleh:</h4>
-                          
+
                           <p class="text-gray-700 mb-3 font-semibold">
                             Pengurus Projek / Pembangun
                           </p>
-                          
+
                           <div class="space-y-3">
                             <div>
                               <p class="text-gray-600 mb-1">(Nama)</p>
-                              
+
                               <div class="h-8 text-black" style="color: #000;">
                                 {@analisis_pdf_data.prepared_by_name}
                               </div>
                             </div>
-                            
+
                             <div>
                               <p class="text-gray-600 mb-1">Jawatan:</p>
-                              
+
                               <div class="h-8 text-black" style="color: #000;">
                                 {@analisis_pdf_data.prepared_by_position}
                               </div>
                             </div>
-                            
+
                             <div>
                               <p class="text-gray-600 mb-1">Tarikh:</p>
-                              
+
                               <div class="h-8 text-black" style="color: #000;">
                                 {@analisis_pdf_data.prepared_by_date}
                               </div>
@@ -859,7 +865,7 @@
                     <span>Halaman Penuh</span>
                   </.link>
                 </div>
-                
+
                 <%= if @jadual_gantt_data && length(@jadual_gantt_data.projects) > 0 do %>
                   <%!-- Gantt Chart Section --%>
                   <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-6">
@@ -867,10 +873,10 @@
                       <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                           <div class="w-2 h-2 rounded-full bg-blue-600"></div>
-                          
+
                           <h2 class="text-xl font-bold text-gray-900">Gantt Chart Projek</h2>
                         </div>
-                        
+
                         <div class="text-sm text-gray-600">
                           <span class="font-semibold">Tempoh:</span> {Calendar.strftime(
                             @jadual_gantt_data.min_date,
@@ -879,7 +885,7 @@
                         </div>
                       </div>
                     </div>
-                    
+
                     <div class="p-6 overflow-x-auto">
                       <div class="mb-4" style="min-width: 100%;">
                         <div
@@ -889,13 +895,13 @@
                           <div class="w-64 flex-shrink-0 font-semibold text-gray-700">
                             Nama Projek
                           </div>
-                          
+
                           <div class="flex-1 relative">
                             <div class="flex justify-between text-xs text-gray-600">
                               <%= for month <- @jadual_month_labels do %>
                                 <div class="text-center" style="width: {month.width_percent}%;">
                                   <div class="font-semibold">{month.month}</div>
-                                  
+
                                   <div class="text-gray-500">{month.year}</div>
                                 </div>
                               <% end %>
@@ -903,19 +909,19 @@
                           </div>
                         </div>
                       </div>
-                      
+
                       <%= for project <- @jadual_gantt_data.projects do %>
                         <div class="flex items-center h-12" style="min-width: 800px;">
                           <div class="w-64 flex-shrink-0 pr-4">
                             <div class="font-medium text-gray-900 truncate" title={project.nama}>
                               {project.nama}
                             </div>
-                            
+
                             <div class="text-xs text-gray-500">
                               {project.fasa || "-"} • {project.status || "-"}
                             </div>
                           </div>
-                          
+
                           <div class="flex-1 relative h-full">
                             <div class="relative h-full">
                               <div
@@ -923,7 +929,7 @@
                                 style={"left: #{project.start_percent}%; width: #{project.width_percent}%; background-color: #{@jadual_get_status_color.(project.status)};"}
                               >
                               </div>
-                              
+
                               <div
                                 class="absolute h-6 rounded-md transition-all duration-300"
                                 style={[
@@ -945,16 +951,16 @@
                       <% end %>
                     </div>
                   </div>
-                   <%!-- Timeline View Section --%>
+                  <%!-- Timeline View Section --%>
                   <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">
                       <div class="flex items-center gap-3">
                         <div class="w-2 h-2 rounded-full bg-indigo-600"></div>
-                        
+
                         <h2 class="text-xl font-bold text-gray-900">Timeline Projek</h2>
                       </div>
                     </div>
-                    
+
                     <div class="p-6">
                       <%= for project <- @jadual_gantt_data.projects do %>
                         <div
@@ -966,7 +972,7 @@
                               <h3 class="text-lg font-semibold text-gray-900 mb-1">
                                 {project.nama}
                               </h3>
-                              
+
                               <div class="flex items-center gap-4 text-sm text-gray-600 mb-2">
                                 <span class="flex items-center gap-1">
                                   <.icon name="hero-calendar" class="w-4 h-4" /> {Calendar.strftime(
@@ -981,7 +987,7 @@
                                 <% end %>
                               </div>
                             </div>
-                            
+
                             <div class="flex items-center gap-2">
                               <span class={[
                                 "px-3 py-1 rounded-full text-xs font-semibold",
@@ -994,7 +1000,7 @@
                               </span>
                             </div>
                           </div>
-                          
+
                           <div class="mb-3">
                             <div class="flex items-center justify-between mb-1">
                               <span class="text-sm font-medium text-gray-700">
@@ -1004,7 +1010,7 @@
                                 {project.progress}%
                               </span>
                             </div>
-                            
+
                             <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                               <div
                                 class="h-full rounded-full transition-all duration-500"
@@ -1013,13 +1019,13 @@
                               </div>
                             </div>
                           </div>
-                          
+
                           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div>
                               <span class="font-semibold text-gray-700">Tempoh:</span>
                               <span class="text-gray-600 ml-2">{project.duration} hari</span>
                             </div>
-                            
+
                             <div>
                               <span class="font-semibold text-gray-700">Baki:</span>
                               <span class="text-gray-600 ml-2">
@@ -1043,7 +1049,7 @@
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">
                       <h2 class="text-xl font-bold text-gray-900">Jadual Projek</h2>
                     </div>
-                    
+
                     <div class="p-8">
                       <div class="text-center py-12">
                         <.icon
@@ -1051,11 +1057,11 @@
                           class="w-16 h-16 text-gray-400 mb-4 mx-auto"
                         />
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">Tiada Jadual</h3>
-                        
+
                         <p class="text-gray-600 mb-6 max-w-md mx-auto">
                           Tarikh mula dan tarikh siap projek belum ditetapkan. Sila kemaskini projek untuk menambah maklumat jadual.
                         </p>
-                        
+
                         <.link
                           navigate={~p"/jadual-projek"}
                           class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
@@ -1074,7 +1080,7 @@
                   <p class="text-gray-600">
                     Senarai modul yang telah didaftarkan dalam Analisis dan Rekabentuk
                   </p>
-                  
+
                   <.link
                     navigate={~p"/pengaturcaraan?project_id=#{@project.id}"}
                     class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow"
@@ -1083,24 +1089,24 @@
                     <span>Halaman Penuh</span>
                   </.link>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h2 class="text-xl font-semibold text-white">Senarai Modul</h2>
-                    
+
                     <p class="text-sm text-blue-100 mt-1">{length(@modules)} Modul</p>
                   </div>
-                  
+
                   <%= if length(@modules) == 0 do %>
                     <div class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-gray-400">
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada modul didaftarkan</p>
-                        
+
                         <p class="text-xs mt-1">
                           Sila daftarkan modul di halaman Analisis dan Rekabentuk
                         </p>
-                        
+
                         <.link
                           navigate={~p"/analisis-dan-rekabentuk?project_id=#{@project.id}"}
                           class="mt-4 text-sm font-medium text-blue-600 hover:text-blue-800"
@@ -1117,37 +1123,37 @@
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
                               Bil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Nama Modul
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Versi
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Keutamaan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Status
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Mula
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Jangka Siap
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Fungsi Modul
                             </th>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{module, index} <- Enum.with_index(@modules, 1)}
@@ -1156,17 +1162,17 @@
                             <td class="px-3 py-2 text-center text-xs text-gray-600 font-medium">
                               {index}
                             </td>
-                            
+
                             <td class="px-3 py-2">
                               <div class="text-xs font-semibold text-gray-900">{module.name}</div>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 text-xs font-mono font-medium">
                                 {module.version}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <%= if module.priority && module.priority != "" do %>
                                 <span class={[
@@ -1194,7 +1200,7 @@
                                 <span class="text-xs text-gray-400">—</span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -1218,7 +1224,7 @@
                                 {module.status}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <%= if module.tarikh_mula do %>
                                 <span class="text-xs text-gray-700">
@@ -1228,7 +1234,7 @@
                                 <span class="text-xs text-gray-400">—</span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <%= if module.tarikh_jangka_siap do %>
                                 <span class="text-xs text-gray-700">
@@ -1238,7 +1244,7 @@
                                 <span class="text-xs text-gray-400">—</span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2">
                               <%= if length(module.functions) > 0 do %>
                                 <div class="space-y-1 max-h-24 overflow-y-auto">
@@ -1278,18 +1284,18 @@
                     <span>Halaman Penuh</span>
                   </.link>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h3 class="text-lg font-semibold text-white">Senarai Permohonan Perubahan</h3>
                   </div>
-                  
+
                   <%= if length(@perubahan) == 0 do %>
                     <div class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-gray-400">
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada permohonan perubahan</p>
-                        
+
                         <p class="text-xs mt-1">
                           Daftar atau kemaskini permohonan pada Halaman Penuh
                         </p>
@@ -1303,70 +1309,70 @@
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-14">
                               Bil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tajuk Perubahan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Jenis
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Modul Terlibat
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Status
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Dibuat
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Justifikasi
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Kesan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Catatan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tindakan
                             </th>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{perubahan, bil} <- Enum.with_index(@perubahan, 1)}
                             class="hover:bg-gray-50 transition-colors duration-150"
                           >
                             <td class="px-3 py-2 text-center text-gray-600 font-medium">{bil}</td>
-                            
+
                             <td class="px-3 py-2">
                               <div class="text-xs font-semibold text-gray-900">
                                 {perubahan.tajuk}
                               </div>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-xs font-medium">
                                 {perubahan.jenis}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2">
                               <span class="text-xs text-gray-700">
                                 {perubahan.modul_terlibat}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -1405,7 +1411,7 @@
                                 /> {perubahan.status}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <div class="flex items-center gap-1.5 justify-center">
                                 <.icon
@@ -1417,7 +1423,7 @@
                                 </span>
                               </div>
                             </td>
-                            
+
                             <td class="px-3 py-2">
                               <%= if perubahan.justifikasi do %>
                                 <div class="max-w-xs">
@@ -1429,7 +1435,7 @@
                                 <span class="text-xs text-gray-400 italic">-</span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2">
                               <%= if perubahan.kesan do %>
                                 <div class="max-w-xs">
@@ -1441,7 +1447,7 @@
                                 <span class="text-xs text-gray-400 italic">-</span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2">
                               <%= if perubahan.catatan do %>
                                 <div class="max-w-xs">
@@ -1453,7 +1459,7 @@
                                 <span class="text-xs text-gray-400 italic">-</span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <div class="flex items-center justify-center gap-1.5">
                                 <button
@@ -1474,7 +1480,7 @@
                   <% end %>
                 </div>
               </div>
-               <%!-- View Modal (Pengurus Perubahan tab) - paparan sahaja --%>
+              <%!-- View Modal (Pengurus Perubahan tab) - paparan sahaja --%>
               <%= if @show_view_modal && @selected_perubahan do %>
                 <div
                   class="fixed inset-0 z-50 overflow-y-auto"
@@ -1487,7 +1493,7 @@
                     phx-click="close_view_modal"
                   >
                   </div>
-                  
+
                   <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
                     <div class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
                       <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
@@ -1496,12 +1502,12 @@
                             <h2 class="text-2xl font-bold text-white">
                               Butiran Permohonan Perubahan
                             </h2>
-                            
+
                             <p class="mt-1 text-sm text-blue-100">
                               Maklumat lengkap permohonan perubahan
                             </p>
                           </div>
-                          
+
                           <button
                             type="button"
                             phx-click="close_view_modal"
@@ -1512,14 +1518,14 @@
                           </button>
                         </div>
                       </div>
-                      
+
                       <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
                         <div class="space-y-6">
                           <div class="space-y-4">
                             <div class="border-b border-gray-200 pb-2">
                               <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
                             </div>
-                            
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
@@ -1529,7 +1535,7 @@
                                   {@selected_perubahan.id}
                                 </span>
                               </div>
-                              
+
                               <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   ID Perubahan
@@ -1538,7 +1544,7 @@
                                   {@selected_perubahan.id}
                                 </p>
                               </div>
-                              
+
                               <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   Tajuk Perubahan
@@ -1547,7 +1553,7 @@
                                   {@selected_perubahan.tajuk}
                                 </p>
                               </div>
-                              
+
                               <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   Jenis
@@ -1556,7 +1562,7 @@
                                   {@selected_perubahan.jenis}
                                 </span>
                               </div>
-                              
+
                               <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   Modul Terlibat
@@ -1565,7 +1571,7 @@
                                   {@selected_perubahan.modul_terlibat}
                                 </p>
                               </div>
-                              
+
                               <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   Status
@@ -1595,7 +1601,7 @@
                                   {@selected_perubahan.status}
                                 </span>
                               </div>
-                              
+
                               <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   Keutamaan
@@ -1606,12 +1612,12 @@
                               </div>
                             </div>
                           </div>
-                          
+
                           <div class="space-y-4">
                             <div class="border-b border-gray-200 pb-2">
                               <h3 class="text-lg font-semibold text-gray-900">Jadual</h3>
                             </div>
-                            
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
@@ -1624,7 +1630,7 @@
                                   )}
                                 </span>
                               </div>
-                              
+
                               <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-1">
                                   Tarikh Dijangka Siap
@@ -1642,13 +1648,13 @@
                               </div>
                             </div>
                           </div>
-                          
+
                           <%= if @selected_perubahan.justifikasi do %>
                             <div class="space-y-4">
                               <div class="border-b border-gray-200 pb-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Justifikasi</h3>
                               </div>
-                              
+
                               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <p class="text-sm text-gray-700 whitespace-pre-wrap">
                                   {@selected_perubahan.justifikasi}
@@ -1656,13 +1662,13 @@
                               </div>
                             </div>
                           <% end %>
-                          
+
                           <%= if @selected_perubahan.kesan do %>
                             <div class="space-y-4">
                               <div class="border-b border-gray-200 pb-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Kesan</h3>
                               </div>
-                              
+
                               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <p class="text-sm text-gray-700 whitespace-pre-wrap">
                                   {@selected_perubahan.kesan}
@@ -1670,13 +1676,13 @@
                               </div>
                             </div>
                           <% end %>
-                          
+
                           <%= if @selected_perubahan.catatan do %>
                             <div class="space-y-4">
                               <div class="border-b border-gray-200 pb-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Catatan</h3>
                               </div>
-                              
+
                               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <p class="text-sm text-gray-700 whitespace-pre-wrap">
                                   {@selected_perubahan.catatan}
@@ -1686,7 +1692,7 @@
                           <% end %>
                         </div>
                       </div>
-                      
+
                       <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
                         <button
                           type="button"
@@ -1711,24 +1717,24 @@
                     <span>Halaman Penuh</span>
                   </.link>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h3 class="text-lg font-semibold text-white">
                       Senarai Ujian Penerimaan Pengguna
                     </h3>
-                    
+
                     <p class="text-sm text-blue-100">
                       Pantau status ujian mengikut modul dan tindakan susulan.
                     </p>
                   </div>
-                  
+
                   <%= if length(@ujian) == 0 do %>
                     <div class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-gray-400">
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada ujian penerimaan pengguna</p>
-                        
+
                         <p class="text-xs mt-1">
                           Klik butang "Daftar Ujian" untuk menambah ujian baharu
                         </p>
@@ -1742,33 +1748,33 @@
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
                               Bil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Modul
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Status
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Ujian
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Penguji
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Hasil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">
                               Catatan
                             </th>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{ujian, index} <- Enum.with_index(@ujian, 1)}
@@ -1777,11 +1783,11 @@
                             <td class="px-3 py-2 text-center text-xs font-semibold text-gray-700 align-middle">
                               {index}
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left align-middle">
                               <span class="text-xs text-gray-700">{ujian.modul}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -1816,7 +1822,7 @@
                                 /> {ujian.status}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
                               <%= if ujian.tarikh_ujian do %>
                                 <div class="flex items-center gap-1.5">
@@ -1832,11 +1838,11 @@
                                 <span class="text-xs text-gray-400">-</span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left align-middle">
                               <span class="text-xs text-gray-700">{ujian.penguji}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -1860,7 +1866,7 @@
                                 /> {ujian.hasil}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left align-middle h-12">
                               <div class="text-xs text-gray-700 text-left leading-tight line-clamp-2 max-w-[200px]">
                                 {if Map.get(ujian, :catatan), do: ujian.catatan, else: "-"}
@@ -1884,22 +1890,22 @@
                     <span>Halaman Penuh</span>
                   </.link>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h3 class="text-lg font-semibold text-white">Senarai Ujian Keselamatan</h3>
-                    
+
                     <p class="text-sm text-blue-100">
                       Pantau status ujian keselamatan mengikut modul dan tindakan susulan.
                     </p>
                   </div>
-                  
+
                   <%= if length(@ujian_keselamatan) == 0 do %>
                     <div class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-gray-400">
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada ujian keselamatan</p>
-                        
+
                         <p class="text-xs mt-1">
                           Klik "Halaman Penuh" untuk mendaftar ujian baharu
                         </p>
@@ -1913,33 +1919,33 @@
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
                               Bil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Modul
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Status
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Ujian
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Penguji
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Hasil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">
                               Catatan
                             </th>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{ujian, idx} <- Enum.with_index(@ujian_keselamatan, 1)}
@@ -1948,11 +1954,11 @@
                             <td class="px-3 py-2 text-center align-middle">
                               <span class="text-xs font-medium text-gray-700">{idx}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left align-middle">
                               <span class="text-xs text-gray-700">{ujian.modul}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -1987,7 +1993,7 @@
                                 /> {ujian.status}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
                               <%= if ujian.tarikh_ujian do %>
                                 <div class="flex items-center gap-1.5">
@@ -2003,11 +2009,11 @@
                                 <span class="text-xs text-gray-400">-</span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left align-middle">
                               <span class="text-xs text-gray-700">{ujian.penguji}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap text-left align-middle">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -2031,7 +2037,7 @@
                                 /> {ujian.hasil}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left align-middle h-12">
                               <div class="text-xs text-gray-700 text-left leading-tight line-clamp-2 max-w-[200px]">
                                 {if Map.get(ujian, :catatan), do: ujian.catatan, else: "-"}
@@ -2057,22 +2063,22 @@
                     </.link>
                   </div>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h3 class="text-lg font-semibold text-white">Senarai Penempatan</h3>
-                    
+
                     <p class="text-sm text-blue-100">
                       Pantau status penempatan mengikut versi dan persekitaran.
                     </p>
                   </div>
-                  
+
                   <%= if length(@penempatan) == 0 do %>
                     <div class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-gray-400">
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada penempatan</p>
-                        
+
                         <p class="text-xs mt-1">
                           Klik "Halaman Penuh" untuk mendaftar penempatan baharu
                         </p>
@@ -2086,41 +2092,41 @@
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
                               Bil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Nama Sistem
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Versi
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Lokasi
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Jenis
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Status
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Penempatan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[120px]">
                               Catatan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tindakan
                             </th>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{penempatan, index} <- Enum.with_index(@penempatan, 1)}
@@ -2129,21 +2135,21 @@
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-600 font-medium">{index}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <span class="text-xs text-gray-900 font-semibold">
                                 {penempatan.nama_sistem}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-700">{penempatan.versi}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <span class="text-xs text-gray-700">{penempatan.lokasi}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -2157,7 +2163,7 @@
                                 {penempatan.jenis}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -2192,7 +2198,7 @@
                                 /> {penempatan.status}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
                                 <.icon
@@ -2204,7 +2210,7 @@
                                 </span>
                               </div>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left min-w-[120px] max-w-[200px]">
                               <span
                                 class="text-xs text-gray-700 line-clamp-2 block"
@@ -2220,7 +2226,7 @@
                                 <% end %>
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
                                 <.link
@@ -2252,22 +2258,22 @@
                     </.link>
                   </div>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h3 class="text-lg font-semibold text-white">Senarai Penyerahan</h3>
-                    
+
                     <p class="text-sm text-blue-100">
                       Pantau status penyerahan mengikut versi dan penerima.
                     </p>
                   </div>
-                  
+
                   <%= if length(@penyerahan) == 0 do %>
                     <div class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-gray-400">
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada penyerahan</p>
-                        
+
                         <p class="text-xs mt-1">
                           Klik "Halaman Penyerahan Penuh" untuk mendaftar penyerahan baharu
                         </p>
@@ -2281,53 +2287,53 @@
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
                               Bil.
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Nama Sistem
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Versi
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Penerima
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Pembangun/Team
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Pengurus Projek
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Status
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Manual Pengguna
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Surat Akuan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Catatan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Penyerahan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tindakan
                             </th>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{penyerahan, idx} <- Enum.with_index(@penyerahan, 1)}
@@ -2336,21 +2342,21 @@
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-600 font-medium">{idx}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <span class="text-xs text-gray-900 font-semibold">
                                 {penyerahan.nama_sistem}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-700">{penyerahan.versi}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <span class="text-xs text-gray-700">{penyerahan.penerima}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-700">
                                 <%= if penyerahan.pembangun_team do %>
@@ -2360,7 +2366,7 @@
                                 <% end %>
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-700">
                                 <%= if penyerahan.pengurus_projek do %>
@@ -2370,7 +2376,7 @@
                                 <% end %>
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class={[
                                 "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
@@ -2405,7 +2411,7 @@
                                 /> {penyerahan.status}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <%= if penyerahan.manual_pengguna_bahagian_a do %>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
@@ -2419,7 +2425,7 @@
                                 </span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <%= if penyerahan.surat_akuan_penerimaan do %>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
@@ -2433,7 +2439,7 @@
                                 </span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <%= if penyerahan.catatan do %>
                                 <span class="text-xs text-gray-700 line-clamp-2">
@@ -2443,7 +2449,7 @@
                                 <span class="text-xs text-gray-400">-</span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
                                 <.icon
@@ -2459,7 +2465,7 @@
                                 </span>
                               </div>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
                                 <.link
@@ -2485,27 +2491,27 @@
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <h2 class="text-2xl font-bold text-gray-900">Maklumbalas Pelanggan</h2>
-                    
+
                     <p class="text-gray-600">
                       Urus dan pantau maklumbalas daripada pelanggan selepas penyerahan
                     </p>
                   </div>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h3 class="text-lg font-semibold text-white">Maklumbalas Pelanggan</h3>
-                    
+
                     <p class="text-sm text-blue-100">
                       Pantau maklumbalas, aduan dan cadangan penambahbaikan daripada pelanggan.
                     </p>
                   </div>
-                  
+
                   <div class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center justify-center text-gray-400">
                       <.icon name="hero-chat-bubble-left-right" class="w-12 h-12 mb-3" />
                       <p class="text-sm font-medium">Tiada maklumbalas</p>
-                      
+
                       <p class="text-xs mt-1">
                         Kandungan maklumbalas pelanggan akan dipaparkan di sini
                       </p>
