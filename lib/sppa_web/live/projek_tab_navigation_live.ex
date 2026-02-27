@@ -664,7 +664,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       modul_terlibat: perubahan_params["modul_terlibat"],
       tarikh_dibuat: tarikh_dibuat,
       tarikh_dijangka_siap: tarikh_dijangka_siap,
-      status: perubahan_params["status"],
+      status: selected.status,
       keutamaan: empty_to_nil(perubahan_params["keutamaan"]),
       justifikasi: empty_to_nil(perubahan_params["justifikasi"]),
       kesan: empty_to_nil(perubahan_params["kesan"]),
