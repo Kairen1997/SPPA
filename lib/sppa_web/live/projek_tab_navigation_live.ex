@@ -160,6 +160,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:jadual_get_status_color, &jadual_status_color/1)
          |> assign(:jadual_get_status_badge_class, &jadual_status_badge_class/1)
          |> assign(:perubahan, perubahan)
+         |> assign(:show_ujian_modal, false)
+         |> assign(:selected_ujian, nil)
          |> assign(:penempatan, penempatan)
          |> assign(:penyerahan, penyerahan)
          |> assign(:ujian, ujian)
@@ -441,6 +443,37 @@ defmodule SppaWeb.ProjekTabNavigationLive do
            |> put_flash(:error, "Gagal mengemaskini modul. Sila cuba lagi.")}
       end
     end
+  end
+
+  @impl true
+  def handle_event("open_ujian_modal", %{"ujian_id" => ujian_id}, socket) do
+    ujian_id_parsed =
+      case Integer.parse(to_string(ujian_id)) do
+        {int, _} -> int
+        _ -> ujian_id
+      end
+
+    ujian =
+      Enum.find(socket.assigns.ujian || [], fn u ->
+        Map.get(u, :id) == ujian_id_parsed || Map.get(u, :id) == ujian_id
+      end)
+
+    if ujian do
+      {:noreply,
+       socket
+       |> assign(:show_ujian_modal, true)
+       |> assign(:selected_ujian, ujian)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("close_ujian_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_ujian_modal, false)
+     |> assign(:selected_ujian, nil)}
   end
 
   # Perubahan (change management) modals and forms
