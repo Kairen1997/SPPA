@@ -9,8 +9,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   alias Sppa.SoalSelidiks
   alias Sppa.UjianKeselamatan
   alias Sppa.UjianPenerimaanPengguna
+  alias Sppa.ModulPengaturcaraan
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+  @module_page_size 10
 
   @tab_slug_to_label %{
     "soal-selidik" => "Soal Selidik",
@@ -146,6 +148,13 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:soal_selidik_pdf_data, soal_selidik_pdf_data)
          |> assign(:analisis_pdf_data, analisis_pdf_data)
          |> assign(:modules, modules)
+         |> assign(:module_page_size, @module_page_size)
+         |> assign(:module_page, 1)
+         |> assign(:module_view_mode, "table")
+         |> put_module_pagination_assigns()
+         |> assign(:module_show_edit_modal, false)
+         |> assign(:selected_module, nil)
+         |> assign(:module_form, to_form(%{}, as: :module))
          |> assign(:jadual_gantt_data, jadual_gantt_data)
          |> assign(:jadual_month_labels, jadual_month_labels)
          |> assign(:jadual_get_status_color, &jadual_status_color/1)
@@ -293,6 +302,145 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("change_view", %{"view" => view}, socket) do
+    {:noreply, assign(socket, :module_view_mode, view)}
+  end
+
+  @impl true
+  def handle_event("go_to_page", %{"page" => page_str}, socket) do
+    page =
+      case Integer.parse(to_string(page_str)) do
+        {p, ""} -> p
+        _ -> socket.assigns.module_page || 1
+      end
+
+    socket =
+      socket
+      |> assign(:module_page, page)
+      |> put_module_pagination_assigns()
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("open_module_edit_modal", %{"module_id" => module_id}, socket) do
+    module_id_str = to_string(module_id)
+
+    module =
+      Enum.find(socket.assigns.modules, fn m -> to_string(m.id) == module_id_str end) ||
+        Enum.find(socket.assigns.module_paginated_modules || [], fn m ->
+          to_string(m.id) == module_id_str
+        end)
+
+    if module do
+      form_data = %{
+        "priority" => module.priority || "",
+        "status" => module.status || "Belum Mula",
+        "tarikh_mula" =>
+          if(module.tarikh_mula, do: Calendar.strftime(module.tarikh_mula, "%Y-%m-%d"), else: ""),
+        "tarikh_jangka_siap" =>
+          if(module.tarikh_jangka_siap,
+            do: Calendar.strftime(module.tarikh_jangka_siap, "%Y-%m-%d"),
+            else: ""
+          ),
+        "catatan" => module.catatan || ""
+      }
+
+      form = to_form(form_data, as: :module)
+
+      {:noreply,
+       socket
+       |> assign(:module_show_edit_modal, true)
+       |> assign(:selected_module, module)
+       |> assign(:module_form, form)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("close_module_edit_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:module_show_edit_modal, false)
+     |> assign(:selected_module, nil)
+     |> assign(:module_form, to_form(%{}, as: :module))}
+  end
+
+  @impl true
+  def handle_event("update_module", %{"module" => module_params}, socket) do
+    selected = socket.assigns.selected_module
+    module_id_str = selected.id
+    project_id = selected.project_id
+
+    analisis_module_id =
+      case module_id_str do
+        "module_" <> id_str -> String.to_integer(id_str)
+        _ -> nil
+      end
+
+    if is_nil(project_id) or is_nil(analisis_module_id) do
+      {:noreply,
+       socket
+       |> put_flash(:error, "Projek atau modul tidak sah.")
+       |> assign(:module_show_edit_modal, false)
+       |> assign(:selected_module, nil)}
+    else
+      tarikh_mula =
+        if module_params["tarikh_mula"] && module_params["tarikh_mula"] != "" do
+          case Date.from_iso8601(module_params["tarikh_mula"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
+        end
+
+      tarikh_jangka_siap =
+        if module_params["tarikh_jangka_siap"] && module_params["tarikh_jangka_siap"] != "" do
+          case Date.from_iso8601(module_params["tarikh_jangka_siap"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
+        end
+
+      attrs = %{
+        keutamaan: module_params["priority"] || nil,
+        status: module_params["status"] || "Belum Mula",
+        tarikh_mula: tarikh_mula,
+        tarikh_jangka_siap: tarikh_jangka_siap,
+        catatan: if(module_params["catatan"] == "", do: nil, else: module_params["catatan"])
+      }
+
+      case ModulPengaturcaraan.upsert(project_id, analisis_module_id, attrs) do
+        {:ok, _} ->
+          modules =
+            AnalisisDanRekabentuk.list_modules_for_project(
+              project_id,
+              socket.assigns.current_scope
+            )
+
+          {:noreply,
+           socket
+           |> assign(:modules, modules)
+           |> assign(:module_page, 1)
+           |> put_module_pagination_assigns()
+           |> assign(:module_show_edit_modal, false)
+           |> assign(:selected_module, nil)
+           |> assign(:module_form, to_form(%{}, as: :module))
+           |> put_flash(:info, "Modul berjaya dikemaskini")}
+
+        {:error, _changeset} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Gagal mengemaskini modul. Sila cuba lagi.")}
+      end
+    end
   end
 
   # Perubahan (change management) modals and forms
@@ -526,6 +674,41 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   defp empty_to_nil(nil), do: nil
   defp empty_to_nil(s) when is_binary(s), do: s
   defp empty_to_nil(other), do: other
+
+  defp put_module_pagination_assigns(socket) do
+    modules = socket.assigns.modules || []
+    page_size = socket.assigns.module_page_size || @module_page_size
+    total = length(modules)
+    total_pages = if total == 0, do: 1, else: div(total + page_size - 1, page_size)
+    page = min(max(socket.assigns.module_page || 1, 1), total_pages)
+    start = (page - 1) * page_size
+    paginated = Enum.slice(modules, start, page_size)
+    page_numbers = module_page_numbers_for_pagination(page, total_pages)
+
+    socket
+    |> assign(:module_page, page)
+    |> assign(:module_total_modules, total)
+    |> assign(:module_total_pages, total_pages)
+    |> assign(:module_paginated_modules, paginated)
+    |> assign(:module_page_numbers, page_numbers)
+  end
+
+  defp module_page_numbers_for_pagination(_current, total_pages) when total_pages <= 7 do
+    1..total_pages |> Enum.to_list()
+  end
+
+  defp module_page_numbers_for_pagination(current, total_pages) do
+    cond do
+      current <= 3 ->
+        [1, 2, 3, 4, :ellipsis, total_pages]
+
+      current >= total_pages - 2 ->
+        [1, :ellipsis, total_pages - 3, total_pages - 2, total_pages - 1, total_pages]
+
+      true ->
+        [1, :ellipsis, current - 1, current, current + 1, :ellipsis, total_pages]
+    end
+  end
 
   # Senarai ujian keselamatan untuk tab projek
   # Menggunakan logik yang sama seperti di UjianKeselamatanLive:
