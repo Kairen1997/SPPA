@@ -248,6 +248,10 @@
               <table class="w-full border-collapse text-xs print-table">
                 <thead class="print-table-header">
                   <tr class="bg-gray-50 border-b-2 border-gray-300">
+                    <th class="px-4 py-3 text-center font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-10">
+                      Bil
+                    </th>
+                    
                     <th class="px-6 py-3 text-left font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-300">
                       Tugasan
                     </th>
@@ -285,7 +289,7 @@
                 <tbody class="bg-white divide-y divide-gray-200 print-table-body">
                   <%= if Enum.empty?(@tasks) do %>
                     <tr class="print-table-row">
-                      <td colspan="8" class="px-6 py-10 text-center">
+                      <td colspan="9" class="px-6 py-10 text-center">
                         <div class="flex flex-col items-center justify-center space-y-3">
                           <.icon name="hero-clipboard-document" class="w-12 h-12 text-gray-300" />
                           <p class="text-sm font-medium text-gray-500">
@@ -299,12 +303,16 @@
                       </td>
                     </tr>
                   <% else %>
-                    <%= for task <- @tasks do %>
+                    <%= for {task, index} <- Enum.with_index(@tasks, 1) do %>
                       <tr
                         class="hover:bg-blue-50/50 transition-colors duration-150 cursor-pointer group border-b border-gray-200 print-table-row"
                         phx-click="open_edit_task_modal"
                         phx-value-task_id={task.id}
                       >
+                        <td class="px-4 py-4 border-r border-gray-200 text-center text-sm font-semibold text-gray-700">
+                          {index}
+                        </td>
+                        
                         <td class="px-6 py-4 border-r border-gray-200">
                           <div class="flex items-center justify-between">
                             <span class="text-sm font-medium text-gray-900">

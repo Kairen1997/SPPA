@@ -47,7 +47,7 @@ defmodule SppaWeb.ModulProjekLive do
         tasks =
           ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
 
-        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+        sorted_tasks = sort_tasks_by_created_at(tasks)
 
         {:ok,
          socket
@@ -253,7 +253,7 @@ defmodule SppaWeb.ModulProjekLive do
               socket.assigns.project_id
             )
 
-          sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+          sorted_tasks = sort_tasks_by_created_at(tasks)
 
           socket =
             socket
@@ -358,7 +358,7 @@ defmodule SppaWeb.ModulProjekLive do
               socket.assigns.project_id
             )
 
-          sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+          sorted_tasks = sort_tasks_by_created_at(tasks)
 
           socket =
             socket
@@ -403,7 +403,7 @@ defmodule SppaWeb.ModulProjekLive do
             socket.assigns.project_id
           )
 
-        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+        sorted_tasks = sort_tasks_by_created_at(tasks)
 
         {:noreply,
          socket
@@ -432,7 +432,7 @@ defmodule SppaWeb.ModulProjekLive do
             socket.assigns.project_id
           )
 
-        sorted_tasks = sort_tasks_by_phase_and_version(tasks)
+        sorted_tasks = sort_tasks_by_created_at(tasks)
 
         {:noreply,
          socket
@@ -446,27 +446,10 @@ defmodule SppaWeb.ModulProjekLive do
     end
   end
 
-  # Sort tasks by phase first, then by version within each phase
-  # Ensures sequential ordering: Phase 1 (v1, v2, v3...) -> Phase 2 (v1, v2...) -> Phase 3...
-  defp sort_tasks_by_phase_and_version(tasks) do
-    Enum.sort_by(tasks, fn task ->
-      # Handle cases where fasa/versi might not be numeric strings
-      phase_num = parse_numeric(task.fasa)
-      version_num = parse_numeric(task.versi)
-      {phase_num, version_num}
-    end)
+  # Sort tasks by creation datetime so numbering follows creation order
+  defp sort_tasks_by_created_at(tasks) do
+    Enum.sort_by(tasks, fn task -> task.inserted_at end, {:asc, DateTime})
   end
-
-  # Safely parse numeric string to integer, defaulting to 0 if not numeric
-  defp parse_numeric(value) when is_binary(value) do
-    case Integer.parse(value) do
-      {num, _} -> num
-      :error -> 0
-    end
-  end
-
-  defp parse_numeric(value) when is_integer(value), do: value
-  defp parse_numeric(_), do: 0
 
   # Helper function to get tasks by status (public for template access)
   def tasks_by_status(tasks, status) do
