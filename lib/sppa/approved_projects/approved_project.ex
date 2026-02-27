@@ -12,6 +12,7 @@ defmodule Sppa.ApprovedProjects.ApprovedProject do
     field :tarikh_jangkaan_siap, :date
 
     field :pembangun_sistem, :string
+    field :pengurus_projek, :string
 
     field :latar_belakang, :string
     field :objektif, :string

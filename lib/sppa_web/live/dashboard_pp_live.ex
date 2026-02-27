@@ -3,6 +3,7 @@ defmodule SppaWeb.DashboardPPLive do
 
   alias Sppa.Projects
   alias Sppa.ApprovedProjects
+  alias Sppa.Accounts
 
   @impl true
   def mount(_params, _session, socket) do
@@ -112,6 +113,107 @@ defmodule SppaWeb.DashboardPPLive do
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
   end
+
+  # Helper function to get all team members (developers and project managers) with their roles
+  defp get_team_members(project) do
+    team_members = []
+
+    # Add main developer if exists
+    team_members =
+      if project.developer do
+        [%{user: project.developer, role: "pembangun sistem"} | team_members]
+      else
+        team_members
+      end
+
+    # Add main project manager if exists
+    team_members =
+      if project.project_manager do
+        [%{user: project.project_manager, role: "pengurus projek"} | team_members]
+      else
+        team_members
+      end
+
+    # Add developers from approved_project's pembangun_sistem
+    team_members =
+      if project.approved_project && project.approved_project.pembangun_sistem do
+        no_kps = parse_pembangun_sistem(project.approved_project.pembangun_sistem)
+
+        additional_developers =
+          no_kps
+          |> Enum.map(&Accounts.get_user_by_no_kp/1)
+          |> Enum.filter(&(&1 != nil))
+          |> Enum.filter(fn user -> user.role == "pembangun sistem" end)
+          |> Enum.map(fn user -> %{user: user, role: "pembangun sistem"} end)
+
+        team_members ++ additional_developers
+      else
+        team_members
+      end
+
+    # Add project managers from approved_project's pengurus_projek
+    team_members =
+      if project.approved_project && project.approved_project.pengurus_projek do
+        no_kps = parse_pengurus_projek(project.approved_project.pengurus_projek)
+
+        additional_pms =
+          no_kps
+          |> Enum.map(&Accounts.get_user_by_no_kp/1)
+          |> Enum.filter(&(&1 != nil))
+          |> Enum.filter(fn user -> user.role == "pengurus projek" end)
+          |> Enum.map(fn user -> %{user: user, role: "pengurus projek"} end)
+
+        team_members ++ additional_pms
+      else
+        team_members
+      end
+
+    # Remove duplicates by user id and return formatted list
+    team_members
+    |> Enum.uniq_by(fn %{user: user} -> user.id end)
+    |> Enum.map(fn %{user: user, role: role} ->
+      name =
+        cond do
+          user.name && user.name != "" -> user.name
+          user.email && user.email != "" -> user.email
+          user.no_kp && user.no_kp != "" -> user.no_kp
+          true -> "N/A"
+        end
+
+      %{name: name, role: role}
+    end)
+    |> Enum.filter(fn %{name: name} -> name != nil end)
+    |> Enum.sort_by(fn %{role: role} ->
+      # Sort: pengurus projek first (0), then pembangun sistem (1)
+      case role do
+        "pengurus projek" -> 0
+        "pembangun sistem" -> 1
+        _ -> 2
+      end
+    end)
+  end
+
+  # Parse comma-separated pengurus_projek string into list of no_kp values
+  defp parse_pengurus_projek(nil), do: []
+  defp parse_pengurus_projek(""), do: []
+  defp parse_pengurus_projek(str) when is_binary(str) do
+    str
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&(&1 != ""))
+  end
+  defp parse_pengurus_projek(_), do: []
+
+  # Parse comma-separated pembangun_sistem string into list of no_kp values
+  defp parse_pembangun_sistem(nil), do: []
+  defp parse_pembangun_sistem(""), do: []
+  defp parse_pembangun_sistem(str) when is_binary(str) do
+    str
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&(&1 != ""))
+  end
+  defp parse_pembangun_sistem(_), do: []
 
   @impl true
   def render(assigns) do
@@ -264,20 +366,27 @@ defmodule SppaWeb.DashboardPPLive do
                               </div>
                             </td>
 
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-6 py-4">
                               <div class="text-sm text-gray-600">
-                                <%= if activity.developer do %>
-                                  <div class="flex items-center gap-2 mb-1">
-                                    <.icon name="hero-code-bracket" class="w-4 h-4 text-gray-400" />
-                                    <span>{activity.developer.email}</span>
-                                  </div>
-                                <% end %>
-
-                                <%= if activity.project_manager do %>
-                                  <div class="flex items-center gap-2">
-                                    <.icon name="hero-user" class="w-4 h-4 text-gray-400" />
-                                    <span>{activity.project_manager.email}</span>
-                                  </div>
+                                <%= case get_team_members(activity) do %>
+                                  <% [] -> %>
+                                    <span class="text-gray-400">Tiada pembangun/pengurus projek</span>
+                                  <% team_members -> %>
+                                    <div class="flex flex-col gap-1">
+                                      <%= for member <- team_members do %>
+                                        <div class="flex items-center gap-2">
+                                          <%= if member.role == "pembangun sistem" do %>
+                                            <.icon name="hero-code-bracket" class="w-4 h-4 text-blue-500" />
+                                            <span class="font-medium text-gray-900">{member.name}</span>
+                                            <span class="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Pembangun</span>
+                                          <% else %>
+                                            <.icon name="hero-user-circle" class="w-4 h-4 text-purple-500" />
+                                            <span class="font-medium text-gray-900">{member.name}</span>
+                                            <span class="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded">Pengurus</span>
+                                          <% end %>
+                                        </div>
+                                      <% end %>
+                                    </div>
                                 <% end %>
                               </div>
                             </td>

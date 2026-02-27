@@ -158,70 +158,13 @@ defmodule Sppa.Projects do
   Project set is role-based (same as get_dashboard_stats).
   """
   def list_recent_activities(current_scope, limit \\ 10) do
-    role = current_scope.user && current_scope.user.role
-
-    projects =
-      case role do
-        "ketua penolong pengarah" ->
-          Project
-          |> where([p], p.status == "Dalam Pembangunan" or p.status == "Selesai")
-          |> preload([:developer, :project_manager, :user])
-          |> order_by([p], desc: p.last_updated)
-          |> limit(^limit)
-          |> Repo.all()
-
-        "pengurus projek" ->
-          Project
-          |> where([p], p.project_manager_id == ^current_scope.user.id)
-          |> where([p], p.status == "Dalam Pembangunan" or p.status == "Selesai")
-          |> preload([:developer, :project_manager, :user])
-          |> order_by([p], desc: p.last_updated)
-          |> limit(^limit)
-          |> Repo.all()
-
-        "pembangun sistem" ->
-          projects_for_pembangun_sistem(current_scope)
-          |> Enum.filter(fn p -> p.status in ["Dalam Pembangunan", "Selesai"] end)
-          |> Enum.take(limit)
-
-        _ ->
-          Project
-          |> where([p], p.user_id == ^current_scope.user.id)
-          |> where([p], p.status == "Dalam Pembangunan" or p.status == "Selesai")
-          |> preload([:developer, :project_manager, :user])
-          |> order_by([p], desc: p.last_updated)
-          |> limit(^limit)
-          |> Repo.all()
-      end
-
-    projects
-  end
-
-  @doc """
-  Returns list of project IDs that the current user can see (for activity log filtering).
-  Same role-based visibility as get_dashboard_stats.
-  """
-  def visible_project_ids(current_scope) do
-    role = current_scope.user && current_scope.user.role
-
-    case role do
-      "ketua penolong pengarah" ->
-        from(p in Project, select: p.id) |> Repo.all()
-
-      "pengurus projek" ->
-        from(p in Project,
-          where: p.project_manager_id == ^current_scope.user.id,
-          select: p.id
-        )
-        |> Repo.all()
-
-      "pembangun sistem" ->
-        projects_for_pembangun_sistem(current_scope) |> Enum.map(& &1.id)
-
-      _ ->
-        from(p in Project, where: p.user_id == ^current_scope.user.id, select: p.id)
-        |> Repo.all()
-    end
+    Project
+    |> where([p], p.user_id == ^current_scope.user.id)
+    |> where([p], p.status == "Dalam Pembangunan" or p.status == "Selesai")
+    |> preload([:developer, :project_manager, :user, :approved_project])
+    |> order_by([p], desc: p.last_updated)
+    |> limit(^limit)
+    |> Repo.all()
   end
 
   @doc """
