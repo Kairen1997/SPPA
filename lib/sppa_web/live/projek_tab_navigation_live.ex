@@ -1,6 +1,7 @@
 defmodule SppaWeb.ProjekTabNavigationLive do
   use SppaWeb, :live_view
 
+  alias Sppa.ActivityLogs
   alias Sppa.AnalisisDanRekabentuk
   alias Sppa.Penempatans
   alias Sppa.PermohonanPerubahan
@@ -100,7 +101,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
         activities =
           if connected?(socket) do
-            Projects.list_recent_activities(socket.assigns.current_scope, 10)
+            socket.assigns.current_scope
+            |> ActivityLogs.list_recent_activities(10)
+            |> Enum.map(fn a ->
+              Map.put(a, :action_label, ActivityLogs.action_label(a.action))
+            end)
           else
             []
           end
@@ -197,12 +202,19 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     {params_map, uri_string} = normalize_params_uri(params, uri)
     current_tab = tab_from_params(params_map, uri_string)
 
+    # Simpan fasa semasa projek berdasarkan tab yang dibuka (fasa di mana pembangun berada)
+    if socket.assigns[:project] && current_tab do
+      Projects.update_project_fasa(socket.assigns.project.id, current_tab)
+    end
+
     # Refresh penempatan from DB when user switches to Penempatan tab so changes from halaman penempatan are shown
     socket =
       if current_tab == "Penempatan" && socket.assigns[:project] do
         project = socket.assigns.project
+
         penempatan =
           get_penempatan_for_project(project.id, socket.assigns.current_scope, project)
+
         assign(socket, :penempatan, penempatan)
       else
         socket
@@ -802,7 +814,9 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         "pembangun sistem" ->
           # Developers can only view projects where their no_kp is in the approved_project's pembangun_sistem
           case Projects.get_project_by_id(project_id) do
-            nil -> nil
+            nil ->
+              nil
+
             p ->
               user_no_kp = current_scope.user.no_kp
               if Projects.has_access_to_project?(p, user_no_kp), do: p, else: nil

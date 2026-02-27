@@ -29,7 +29,7 @@
           >
             <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
-          <.header_logos />
+           <.header_logos />
         </div>
 
         <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
@@ -47,32 +47,35 @@
       <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
-          <%!-- Back Button and Project Title --%>
+          <%!-- Back Button (without project title above tabs) --%>
           <div class="mb-6">
-            <div class="flex items-center gap-4 mb-4">
+            <div class="flex items-center gap-4">
               <.link
                 navigate={~p"/projek"}
-                class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 hover:shadow"
               >
-                <.icon name="hero-arrow-left" class="w-4 h-4" />
-                <span>Kembali ke Senarai Projek</span>
+                <span>Kembali ke Senarai Sistem</span>
               </.link>
             </div>
-
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">{@project.nama}</h1>
           </div>
           <%!-- Navigation Tabs --%>
-          <div class="bg-white rounded-xl shadow-lg border border-gray-200 mb-6">
-            <div class="border-b border-gray-200">
-              <nav class="flex space-x-1 px-6 overflow-x-auto" aria-label="Tabs">
+          <div
+            id="project-tabs-navigation"
+            class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden"
+          >
+            <div class="bg-gray-50 border-b border-gray-200">
+              <nav
+                class="flex flex-wrap gap-0.5 px-4 pt-2 pb-0"
+                aria-label="Tab navigasi projek"
+              >
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=soal-selidik"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Soal Selidik",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -81,11 +84,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=analisis-dan-rekabentuk"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Analisis dan Rekabentuk",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -94,11 +97,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=jadual-projek"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Jadual Projek",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -107,11 +110,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=pengaturcaraan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Pengaturcaraan",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -120,11 +123,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=pengurus-perubahan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
-                    if(@current_tab == "Pengurus Perubahan",
-                      do: "border-green-500 text-green-600",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
+                    if(@current_tab == "Pengurusan Perubahan",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -133,11 +136,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=uat"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "UAT",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -146,11 +149,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=ujian-keselamatan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Ujian Keselamatan",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -159,11 +162,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=penempatan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Penempatan",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -172,11 +175,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=penyerahan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Penyerahan",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -185,11 +188,11 @@
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=maklumbalas-pelanggan"}
                   class={[
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
+                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
                     if(@current_tab == "Maklumbalas Pelanggan",
-                      do: "border-green-500 text-green-600",
+                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
                       else:
-                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
                     )
                   ]}
                 >
@@ -202,23 +205,27 @@
           <%= cond do %>
             <% @current_tab == "Soal Selidik" -> %>
               <div class="space-y-6">
-                <div class="flex justify-end gap-3 mb-4 print:hidden">
-                  <.link
-                    id="edit-soal-selidik-form"
-                    navigate={~p"/soal-selidik?project_id=#{@project.id}"}
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
-                  >
-                    <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
-                    <span>Edit Borang</span>
-                  </.link>
-                  <button
-                    id="print-soal-selidik-btn"
-                    phx-hook="PrintDocument"
-                    data-target="soal-selidik-document"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-                  >
-                    <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
-                  </button>
+                <div class="flex flex-wrap items-center justify-end gap-3 mb-4 print:hidden">
+                  <div class="flex gap-3">
+                    <.link
+                      id="edit-soal-selidik-form"
+                      navigate={~p"/soal-selidik?project_id=#{@project.id}"}
+                      class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
+                    >
+                      <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
+                      <span>Edit Borang</span>
+                    </.link>
+                    <button
+                      id="print-soal-selidik-btn"
+                      phx-hook="PrintDocument"
+                      data-target="soal-selidik-document"
+                      type="button"
+                      title="Cetak borang"
+                      class="inline-flex items-center justify-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                    >
+                      <.icon name="hero-printer" class="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
 
                 <div
@@ -248,7 +255,7 @@
 
                       <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
                         <span>Nama Sistem :</span>
-                        <span class="flex-1 px-2 py-1.5 text-sm border border-gray-400 rounded bg-gray-50">
+                        <span class="font-semibold text-gray-900">
                           {@soal_selidik_pdf_data.nama_sistem}
                         </span>
                       </div>
@@ -628,9 +635,11 @@
                     id="print-analisis-btn"
                     phx-hook="PrintDocument"
                     data-target="analisis-document"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                    type="button"
+                    title="Cetak borang"
+                    class="inline-flex items-center justify-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                   >
-                    <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
+                    <.icon name="hero-printer" class="w-5 h-5" />
                   </button>
                 </div>
 
@@ -853,7 +862,7 @@
                     class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow"
                   >
                     <.icon name="hero-calendar-days" class="w-5 h-5" />
-                    <span>Halaman Jadual Projek Penuh</span>
+                    <span>Halaman Penuh</span>
                   </.link>
                 </div>
 
@@ -1077,7 +1086,7 @@
                     class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow"
                   >
                     <.icon name="hero-code-bracket" class="w-5 h-5" />
-                    <span>Halaman Pengaturcaraan Penuh</span>
+                    <span>Halaman Penuh</span>
                   </.link>
                 </div>
 
@@ -1271,7 +1280,8 @@
                     navigate={~p"/pengurusan-perubahan?#{[project_id: @project.id]}"}
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
                   >
-                    <span>Halaman Pengurusan Perubahan</span>
+                    <.icon name="hero-arrow-path" class="w-5 h-5" />
+                    <span>Halaman Penuh</span>
                   </.link>
                 </div>
 
@@ -1287,7 +1297,7 @@
                         <p class="text-sm font-medium">Tiada permohonan perubahan</p>
 
                         <p class="text-xs mt-1">
-                          Daftar atau kemaskini permohonan pada Halaman Pengurusan Perubahan
+                          Daftar atau kemaskini permohonan pada Halaman Penuh
                         </p>
                       </div>
                     </div>
@@ -1703,8 +1713,8 @@
                     navigate={~p"/ujian-penerimaan-pengguna?#{[project_id: @project.id]}"}
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
                   >
-                    <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
-                    <span>Halaman Ujian Penuh</span>
+                    <.icon name="hero-clipboard-document-check" class="w-5 h-5" />
+                    <span>Halaman Penuh</span>
                   </.link>
                 </div>
 
@@ -1876,8 +1886,8 @@
                     navigate={~p"/projek/#{@project.id}/ujian-keselamatan"}
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
                   >
-                    <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
-                    <span>Halaman Ujian Penuh</span>
+                    <.icon name="hero-shield-check" class="w-5 h-5" />
+                    <span>Halaman Penuh</span>
                   </.link>
                 </div>
 
@@ -1897,7 +1907,7 @@
                         <p class="text-sm font-medium">Tiada ujian keselamatan</p>
 
                         <p class="text-xs mt-1">
-                          Klik "Halaman Ujian Penuh" untuk mendaftar ujian baharu
+                          Klik "Halaman Penuh" untuk mendaftar ujian baharu
                         </p>
                       </div>
                     </div>
@@ -2048,7 +2058,7 @@
                       navigate={~p"/penempatan?projek_id=#{@project.id}"}
                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
                     >
-                      <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
+                      <.icon name="hero-rocket-launch" class="w-5 h-5" />
                       <span>Halaman Penuh</span>
                     </.link>
                   </div>
@@ -2202,9 +2212,15 @@
                             </td>
 
                             <td class="px-3 py-2 text-left min-w-[120px] max-w-[200px]">
-                              <span class="text-xs text-gray-700 line-clamp-2 block" title={Map.get(penempatan, :catatan, "") || Map.get(penempatan, "catatan", "") || ""}>
+                              <span
+                                class="text-xs text-gray-700 line-clamp-2 block"
+                                title={
+                                  Map.get(penempatan, :catatan, "") ||
+                                    Map.get(penempatan, "catatan", "") || ""
+                                }
+                              >
                                 <%= if (v = Map.get(penempatan, :catatan) || Map.get(penempatan, "catatan")) && v != "" do %>
-                                  <%= v %>
+                                  {v}
                                 <% else %>
                                   -
                                 <% end %>
@@ -2237,7 +2253,7 @@
                       navigate={~p"/projek/#{@project.id}/penyerahan"}
                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
                     >
-                      <.icon name="hero-arrow-top-right-on-square" class="w-5 h-5" />
+                      <.icon name="hero-document-arrow-up" class="w-5 h-5" />
                       <span>Halaman Penuh</span>
                     </.link>
                   </div>
@@ -2453,7 +2469,9 @@
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
                                 <.link
-                                  navigate={~p"/projek/#{@project.id}/penyerahan/#{penyerahan.id}"}
+                                  navigate={
+                                    ~p"/projek/#{@project.id}/penyerahan/#{penyerahan.id}"
+                                  }
                                   class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
                                   title="Lihat"
                                 >

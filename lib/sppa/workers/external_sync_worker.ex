@@ -230,6 +230,7 @@ defmodule Sppa.Workers.ExternalSyncWorker do
 
   defp get_first_in_list(map, list_key, item_key) when is_map(map) do
     list = Map.get(map, list_key) || Map.get(map, to_string(list_key))
+
     case is_list(list) && List.first(list) do
       first when is_map(first) -> get_string(first, item_key)
       _ -> nil
