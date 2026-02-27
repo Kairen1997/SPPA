@@ -117,7 +117,17 @@ defmodule Sppa.Projects do
       pembangun_sistem: coalesce_pembangun(project.developer, ap && ap.pembangun_sistem),
       developer_id: project.developer_id,
       project_manager_id: project.project_manager_id,
-      dokumen_sokongan: project.dokumen_sokongan || 0
+      dokumen_sokongan:
+        cond do
+          approved_project &&
+              Map.has_key?(approved_project, :kertas_kerja_path) &&
+              approved_project.kertas_kerja_path &&
+              approved_project.kertas_kerja_path != "" ->
+            1
+
+          true ->
+            project.dokumen_sokongan || 0
+        end
     }
   end
 
@@ -414,6 +424,20 @@ defmodule Sppa.Projects do
         error
     end
   end
+
+  @doc """
+  Updates only the fasa (phase) field for a project.
+  Used to reflect the phase where the developer is currently working (tab navigation).
+  When the user has not started any phase, fasa remains nil and the list shows it blank.
+  """
+  def update_project_fasa(project_id, fasa) when is_integer(project_id) and is_binary(fasa) do
+    case get_project_by_id(project_id) do
+      nil -> {:error, :not_found}
+      project -> update_project(project, %{fasa: fasa})
+    end
+  end
+
+  def update_project_fasa(_project_id, _fasa), do: {:error, :invalid}
 
   @doc """
   Updates a project.

@@ -78,7 +78,7 @@ config :sppa, Oban,
   plugins: [
     {Oban.Plugins.Cron,
      crontab: [
-       {"*/5 * * * *", Sppa.Workers.ExternalSyncWorker}
+       {"0 */6 * * *", Sppa.Workers.ExternalSyncWorker}
      ]}
   ],
   queues: [default: 10]
