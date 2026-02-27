@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pelan Modul Projek - {@project.nama}</title>
-    
+
     <style>
       * {
         margin: 0;
@@ -346,14 +346,14 @@
       }
     </style>
   </head>
-  
+
   <body style="background: #ffffff !important; background-image: none !important;">
     <!-- Document Header -->
     <div class="document-header">
       <div class="agency">SISTEM PENGURUSAN PROJEK APLIKASI</div>
-      
+
       <div class="title">PELAN MODUL PROJEK</div>
-      
+
       <div class="subtitle">CARTA GANTT MODUL</div>
     </div>
     <!-- Project Information -->
@@ -361,19 +361,19 @@
       <table>
         <tr>
           <td>Nama Sistem:</td>
-          
+
           <td><strong>{@project.nama}</strong></td>
         </tr>
-        
+
         <tr>
           <td>Jabatan:</td>
-          
+
           <td>{@project.jabatan || "-"}</td>
         </tr>
-        
+
         <tr>
           <td>Tempoh Projek:</td>
-          
+
           <td>
             <strong>
               {Calendar.strftime(@gantt_data.start_date, "%d/%m/%Y")} hingga {Calendar.strftime(
@@ -383,16 +383,16 @@
             </strong>
           </td>
         </tr>
-        
+
         <tr>
           <td>Bilangan Modul:</td>
-          
+
           <td><strong>{length(@gantt_data.modules)} modul</strong></td>
         </tr>
-        
+
         <tr>
           <td>Tarikh Dijana:</td>
-          
+
           <td><strong>{Calendar.strftime(Date.utc_today(), "%d/%m/%Y")}</strong></td>
         </tr>
       </table>
@@ -438,11 +438,11 @@
             <div class="phase-label">Fasa {module.fasa}</div>
           </div>
         <% end %>
-        
+
         <div class="module-row">
           <div class="module-info">
             <div class="module-title">{module.title}</div>
-            
+
             <div class="module-details">
               <span><strong>Fasa:</strong> {module.fasa}</span>
               <span><strong>Versi:</strong> {module.versi}</span>
@@ -450,7 +450,7 @@
               <span><strong>Keutamaan:</strong> {@priority_label.(module.priority)}</span>
             </div>
           </div>
-          
+
           <div class="gantt-bar-container">
             <div
               class={"gantt-bar #{bar_color_class}"}
@@ -458,10 +458,10 @@
             >
             </div>
           </div>
-          
+
           <div class="date-info">
             <div class="start-date">{Calendar.strftime(module.start_date, "%d/%m/%Y")}</div>
-            
+
             <div class="end-date">
               hingga<br /> {Calendar.strftime(module.end_date, "%d/%m/%Y")}
             </div>
@@ -472,12 +472,12 @@
     <!-- Document Footer -->
     <div class="document-footer">
       <div>Dokumen ini dijana secara automatik oleh Sistem Pengurusan Projek Aplikasi</div>
-      
+
       <div class="generated-date">
         Tarikh Dijana: {Calendar.strftime(Date.utc_today(), "%d %B %Y")}
       </div>
     </div>
-    
+
     <script>
       // Ensure no background images are applied
       document.documentElement.style.background = '#ffffff';

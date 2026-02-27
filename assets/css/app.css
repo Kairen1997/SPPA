@@ -169,6 +169,12 @@
     visibility: hidden !important;
   }
 
+  /* When printing Soal Selidik, hide tab navigation - only the form document is printed */
+  body.printing[data-print-target="soal-selidik-document"] #project-tabs-navigation {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
   /* Landscape orientation for specific documents is controlled via .print-landscape on body */
 
   /* Ensure parent containers of documents don't constrain content */

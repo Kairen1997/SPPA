@@ -139,6 +139,8 @@ defmodule Sppa.SoalSelidiks do
   """
   # Susunan Functional Requirement dari atas ke bawah (untuk normalize dari map)
   @fr_category_key_order ~w(pendaftaran_login pengurusan_data proses_kerja laporan integrasi role_akses peraturan_polisi lain_lain_ciri)
+  # Susunan Non-Functional Requirement: Keselamatan, Akses/Capaian, Usability
+  @nfr_category_key_order ~w(keselamatan akses_capaian usability)
 
   def to_liveview_format(%SoalSelidik{} = soal_selidik) do
     fr_data_normalized = normalize_data(soal_selidik.fr_data || %{})
@@ -213,10 +215,25 @@ defmodule Sppa.SoalSelidiks do
   end
 
   defp normalize_categories(categories, :nfr) when is_map(categories) do
-    categories
-    |> Map.values()
-    |> Enum.map(&normalize_category/1)
-    |> Enum.sort_by(& &1.key)
+    order = @nfr_category_key_order
+
+    ordered =
+      Enum.map(order, fn key ->
+        case Map.get(categories, key) || Map.get(categories, to_string(key)) do
+          nil -> nil
+          c -> normalize_category(c)
+        end
+      end)
+      |> Enum.reject(&is_nil/1)
+
+    known_keys = MapSet.new(order)
+
+    extra =
+      categories
+      |> Enum.reject(fn {k, _} -> MapSet.member?(known_keys, to_string(k)) end)
+      |> Enum.map(fn {_, v} -> normalize_category(v) end)
+
+    ordered ++ extra
   end
 
   defp normalize_categories(_, _), do: []
