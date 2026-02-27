@@ -298,7 +298,7 @@ defmodule SppaWeb.ProjectListLive do
           phx-click="close_sidebar"
         >
         </div>
-         <%!-- Sidebar --%>
+        <%!-- Sidebar --%>
         <.dashboard_sidebar
           sidebar_open={@sidebar_open}
           dashboard_path={~p"/dashboard-pp"}
@@ -316,7 +316,8 @@ defmodule SppaWeb.ProjectListLive do
                 class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
               >
                 <.icon name="hero-bars-3" class="w-6 h-6" />
-              </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+              </button>
+               <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
 
             <.header_actions
@@ -327,7 +328,7 @@ defmodule SppaWeb.ProjectListLive do
               current_scope={@current_scope}
             />
           </header>
-           <%!-- Content --%>
+          <%!-- Content --%>
           <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8 print:overflow-visible print:p-0 print:bg-white">
             <%!-- Projek List Content --%>
             <div class="max-w-7xl mx-auto print:max-w-none print:mx-0">
@@ -341,7 +342,7 @@ defmodule SppaWeb.ProjectListLive do
                     Senarai lengkap semua projek yang diluluskan
                   </p>
                 </div>
-                 <%!-- Print Button --%>
+                <%!-- Print Button --%>
                 <div class="print:hidden">
                   <.link
                     href={~p"/senarai-projek-diluluskan/pdf"}
@@ -352,7 +353,7 @@ defmodule SppaWeb.ProjectListLive do
                   </.link>
                 </div>
               </div>
-               <%!-- Filter section --%>
+              <%!-- Filter section --%>
               <div class="rounded-xl bg-white p-6 shadow-sm print:hidden">
                 <.form
                   for={%{}}
@@ -370,7 +371,7 @@ defmodule SppaWeb.ProjectListLive do
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     />
                   </div>
-                   <%!-- Status Projek dropdown (now second) --%>
+                  <%!-- Status Projek dropdown (now second) --%>
                   <div class="flex-1 min-w-[200px]">
                     <label class="mb-2 block text-sm font-medium text-gray-700">Status Projek</label>
                     <select
@@ -384,7 +385,7 @@ defmodule SppaWeb.ProjectListLive do
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
-                   <%!-- Action buttons --%>
+                  <%!-- Action buttons --%>
                   <div class="flex-shrink-0 flex gap-3">
                     <button
                       type="button"
@@ -403,7 +404,7 @@ defmodule SppaWeb.ProjectListLive do
                   </div>
                 </.form>
               </div>
-               <%!-- Projects table (main printable content) --%>
+              <%!-- Projects table (main printable content) --%>
               <div
                 id="senarai-projek-document"
                 class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none print:border-0 print:overflow-visible"
@@ -491,7 +492,7 @@ defmodule SppaWeb.ProjectListLive do
                   </tbody>
                 </table>
               </div>
-               <%!-- Pagination --%>
+              <%!-- Pagination --%>
               <div :if={@total_pages > 1} class="flex justify-center">
                 <nav class="flex items-center gap-2" aria-label="Pagination">
                   <button
@@ -536,7 +537,7 @@ defmodule SppaWeb.ProjectListLive do
               </div>
             </div>
           </main>
-           <%!-- New Project Modal --%>
+          <%!-- New Project Modal --%>
           <div
             :if={@show_modal}
             class="fixed inset-0 z-50 overflow-y-auto"
@@ -547,7 +548,7 @@ defmodule SppaWeb.ProjectListLive do
           >
             <%!-- Backdrop --%>
             <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
-             <%!-- Modal container --%>
+            <%!-- Modal container --%>
             <div class="flex min-h-full items-center justify-center p-4">
               <div
                 class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -574,7 +575,7 @@ defmodule SppaWeb.ProjectListLive do
                     </button>
                   </div>
                 </div>
-                 <%!-- Modal body --%>
+                <%!-- Modal body --%>
                 <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
                   <.form
                     for={@form}
@@ -591,7 +592,7 @@ defmodule SppaWeb.ProjectListLive do
 
                         <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
                       </div>
-                       <%!-- Nama Sistem --%>
+                      <%!-- Nama Sistem --%>
                       <div>
                         <.input
                           field={@form[:name]}
@@ -602,7 +603,7 @@ defmodule SppaWeb.ProjectListLive do
                           class="w-full"
                         />
                       </div>
-                       <%!-- Jabatan/Agensi --%>
+                      <%!-- Jabatan/Agensi --%>
                       <div>
                         <.input
                           field={@form[:department]}
@@ -613,7 +614,7 @@ defmodule SppaWeb.ProjectListLive do
                         />
                       </div>
                     </div>
-                     <%!-- Team Assignment Section --%>
+                    <%!-- Team Assignment Section --%>
                     <div class="space-y-5">
                       <div class="border-b border-gray-200 pb-2">
                         <h3 class="text-lg font-semibold text-gray-900">Penugasan Pasukan</h3>
@@ -639,7 +640,7 @@ defmodule SppaWeb.ProjectListLive do
                             class="w-full"
                           />
                         </div>
-                         <%!-- Pembangun Sistem --%>
+                        <%!-- Pembangun Sistem --%>
                         <div>
                           <.input
                             field={@form[:developer_id]}
@@ -656,7 +657,7 @@ defmodule SppaWeb.ProjectListLive do
                         </div>
                       </div>
                     </div>
-                     <%!-- Timeline Section --%>
+                    <%!-- Timeline Section --%>
                     <div class="space-y-5">
                       <div class="border-b border-gray-200 pb-2">
                         <h3 class="text-lg font-semibold text-gray-900">Jadual Projek</h3>
@@ -676,7 +677,7 @@ defmodule SppaWeb.ProjectListLive do
                             class="w-full"
                           />
                         </div>
-                         <%!-- Tarikh Jangkaan Siap --%>
+                        <%!-- Tarikh Jangkaan Siap --%>
                         <div>
                           <.input
                             field={@form[:expected_completion_date]}
@@ -687,7 +688,7 @@ defmodule SppaWeb.ProjectListLive do
                         </div>
                       </div>
                     </div>
-                     <%!-- Documents Section --%>
+                    <%!-- Documents Section --%>
                     <div class="space-y-5">
                       <div class="border-b border-gray-200 pb-2">
                         <h3 class="text-lg font-semibold text-gray-900">Dokumen Sokongan</h3>
@@ -733,7 +734,7 @@ defmodule SppaWeb.ProjectListLive do
                         </div>
                       </div>
                     </div>
-                     <%!-- Form Actions --%>
+                    <%!-- Form Actions --%>
                     <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
                       <button
                         type="button"

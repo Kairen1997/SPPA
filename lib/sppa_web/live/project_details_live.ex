@@ -48,7 +48,9 @@ defmodule SppaWeb.ProjectDetailsLive do
     # For pembangun sistem, check access via approved_project.pembangun_sistem
     db_project =
       case Projects.get_project_by_id(project_id) do
-        nil -> nil
+        nil ->
+          nil
+
         project ->
           if Projects.has_access_to_project?(project, user_no_kp) do
             project

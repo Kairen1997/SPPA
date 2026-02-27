@@ -273,9 +273,7 @@
                     <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                     <p class="text-sm font-medium">Tiada penempatan</p>
 
-                    <p class="text-xs mt-1">
-                      Tiada penempatan setakat ini
-                    </p>
+                    <p class="text-xs mt-1">Tiada penempatan setakat ini</p>
                   </div>
                 </div>
               <% else %>
@@ -395,8 +393,13 @@
                         </td>
 
                         <td class="px-3 py-2 text-left max-w-[200px]">
-                          <span class="text-xs text-gray-700 line-clamp-2" title={penempatan.catatan || ""}>
-                            {if penempatan.catatan && penempatan.catatan != "", do: penempatan.catatan, else: "-"}
+                          <span
+                            class="text-xs text-gray-700 line-clamp-2"
+                            title={penempatan.catatan || ""}
+                          >
+                            {if penempatan.catatan && penempatan.catatan != "",
+                              do: penempatan.catatan,
+                              else: "-"}
                           </span>
                         </td>
 
@@ -419,6 +422,7 @@
                                 <.icon name="hero-eye" class="w-4 h-4" />
                               </.link>
                             <% end %>
+
                             <button
                               type="button"
                               phx-click="open_edit_modal"

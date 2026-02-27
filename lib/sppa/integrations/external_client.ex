@@ -46,6 +46,7 @@ defmodule Sppa.Integrations.ExternalClient do
         Logger.error(
           "Req timeout when fetching external documents (attempts_left=#{attempts_left - 1}): #{inspect(err)}"
         )
+
         Process.sleep(2_000)
         do_fetch(url, attempts_left - 1)
 
@@ -64,7 +65,9 @@ defmodule Sppa.Integrations.ExternalClient do
   # Otherwise body is binary and we must decode with Jason.
   defp normalize_body_to_list(body) when is_binary(body) do
     case Jason.decode(body) do
-      {:ok, decoded} -> unwrap_to_list(decoded)
+      {:ok, decoded} ->
+        unwrap_to_list(decoded)
+
       {:error, reason} ->
         Logger.error("Failed to decode JSON: #{inspect(reason)}")
         {:error, {:json_decode_error, reason}}
