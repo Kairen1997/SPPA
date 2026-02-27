@@ -119,10 +119,10 @@ defmodule Sppa.Projects do
       project_manager_id: project.project_manager_id,
       dokumen_sokongan:
         cond do
-          approved_project &&
-              Map.has_key?(approved_project, :kertas_kerja_path) &&
-              approved_project.kertas_kerja_path &&
-              approved_project.kertas_kerja_path != "" ->
+          ap &&
+              Map.has_key?(ap, :kertas_kerja_path) &&
+              ap.kertas_kerja_path &&
+              ap.kertas_kerja_path != "" ->
             1
 
           true ->
