@@ -776,7 +776,11 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   defp filter_empty_functions_and_sub_functions(modules) when is_list(modules) do
     Enum.map(modules, fn module ->
       sub_functions_with_name = fn func ->
-        kept_sub = Enum.filter(func.sub_functions || [], fn sf -> string_present?(Map.get(sf, :name) || Map.get(sf, "name")) end)
+        kept_sub =
+          Enum.filter(func.sub_functions || [], fn sf ->
+            string_present?(Map.get(sf, :name) || Map.get(sf, "name"))
+          end)
+
         Map.put(func, :sub_functions, kept_sub)
       end
 

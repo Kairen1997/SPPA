@@ -14,6 +14,7 @@ defmodule Sppa.UjianPenerimaanPengguna.UjianPenerimaanPengguna do
     field :penguji, :string
     field :hasil, :string, default: "Belum Selesai"
     field :catatan, :string
+    field :extra_columns, :string, default: "[]"
 
     belongs_to :project, Sppa.Projects.Project
     has_many :kes_ujian, Sppa.UjianPenerimaanPengguna.KesUjian

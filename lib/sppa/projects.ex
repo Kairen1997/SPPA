@@ -120,8 +120,8 @@ defmodule Sppa.Projects do
       dokumen_sokongan:
         cond do
           ap &&
-              Map.has_key?(ap, :kertas_kerja_path) &&
-              ap.kertas_kerja_path &&
+            Map.has_key?(ap, :kertas_kerja_path) &&
+            ap.kertas_kerja_path &&
               ap.kertas_kerja_path != "" ->
             1
 

@@ -125,7 +125,18 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         perubahan = PermohonanPerubahan.list_by_project(project_id)
         penempatan = get_penempatan_for_project(project_id, socket.assigns.current_scope, project)
         penyerahan = get_penyerahan()
-        ujian = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
+        ujian = build_uat_list(project_id, socket.assigns.current_scope)
+        uat_per_page = 10
+        uat_total = length(ujian)
+        uat_total_pages = uat_total_pages(uat_total, uat_per_page)
+        uat_page = 1
+        uat_paginated_ujian = uat_paginate(ujian, uat_page, uat_per_page)
+        senarai_nama_modul = AnalisisDanRekabentuk.list_module_names(socket.assigns.current_scope)
+
+        senarai_nama_modul_ordered =
+          socket.assigns.current_scope
+          |> AnalisisDanRekabentuk.list_modules_id_name()
+          |> Enum.map(& &1.name)
 
         # Untuk tab "Ujian Keselamatan", kita mahu paparkan data yang sama
         # seperti di halaman penuh UjianKeselamatanLive, iaitu:
@@ -165,6 +176,27 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:penempatan, penempatan)
          |> assign(:penyerahan, penyerahan)
          |> assign(:ujian, ujian)
+         |> assign(:uat_paginated_ujian, uat_paginated_ujian)
+         |> assign(:uat_ujian_total, uat_total)
+         |> assign(:uat_page, uat_page)
+         |> assign(:uat_per_page, uat_per_page)
+         |> assign(:uat_total_pages, uat_total_pages)
+         |> assign(:uat_show_create_modal, false)
+         |> assign(:uat_show_edit_modal, false)
+         |> assign(:uat_show_edit_kes_modal, false)
+         |> assign(:uat_show_add_kes_modal, false)
+         |> assign(:uat_show_add_column_modal, false)
+         |> assign(:uat_selected_ujian, nil)
+         |> assign(:uat_selected_kes, nil)
+         |> assign(:uat_editing_ujian, nil)
+         |> assign(:uat_expanded_ujian_id, nil)
+         |> assign(:uat_expanded_ujian, nil)
+         |> assign(:uat_add_kes_ujian_id, nil)
+         |> assign(:uat_form, to_form(%{}, as: :ujian))
+         |> assign(:uat_kes_form, to_form(%{}, as: :kes))
+         |> assign(:uat_kes_column_form, to_form(%{}, as: :column))
+         |> assign(:senarai_nama_modul, senarai_nama_modul)
+         |> assign(:senarai_nama_modul_ordered, senarai_nama_modul_ordered)
          |> assign(:ujian_keselamatan, ujian_keselamatan_rows)
          |> assign(:show_view_modal, false)
          |> assign(:show_edit_modal, false)
@@ -227,6 +259,28 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           get_penempatan_for_project(project.id, socket.assigns.current_scope, project)
 
         assign(socket, :penempatan, penempatan)
+      else
+        socket
+      end
+
+    # Refresh UAT list and pagination when user switches to UAT tab
+    socket =
+      if current_tab == "UAT" && socket.assigns[:project] &&
+           is_nil(socket.assigns[:uat_selected_ujian]) do
+        project_id = socket.assigns.project.id
+        ujian = build_uat_list(project_id, socket.assigns.current_scope)
+        per_page = socket.assigns[:uat_per_page] || 10
+        total = length(ujian)
+        tp = uat_total_pages(total, per_page)
+        page = 1
+        paginated = uat_paginate(ujian, page, per_page)
+
+        socket
+        |> assign(:ujian, ujian)
+        |> assign(:uat_paginated_ujian, paginated)
+        |> assign(:uat_ujian_total, total)
+        |> assign(:uat_page, page)
+        |> assign(:uat_total_pages, tp)
       else
         socket
       end
@@ -447,22 +501,16 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
   @impl true
   def handle_event("open_ujian_modal", %{"ujian_id" => ujian_id}, socket) do
-    ujian_id_parsed =
-      case Integer.parse(to_string(ujian_id)) do
-        {int, _} -> int
-        _ -> ujian_id
-      end
+    ujian_id_parsed = parse_ujian_id(to_string(ujian_id))
+    ujian_struct = UjianPenerimaanPengguna.get_ujian(ujian_id_parsed)
 
-    ujian =
-      Enum.find(socket.assigns.ujian || [], fn u ->
-        Map.get(u, :id) == ujian_id_parsed || Map.get(u, :id) == ujian_id
-      end)
+    if ujian_struct do
+      selected = UjianPenerimaanPengguna.format_ujian_for_display(ujian_struct)
 
-    if ujian do
       {:noreply,
        socket
-       |> assign(:show_ujian_modal, true)
-       |> assign(:selected_ujian, ujian)}
+       |> assign(:show_ujian_modal, false)
+       |> assign(:uat_selected_ujian, selected)}
     else
       {:noreply, socket}
     end
@@ -473,7 +521,649 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     {:noreply,
      socket
      |> assign(:show_ujian_modal, false)
-     |> assign(:selected_ujian, nil)}
+     |> assign(:uat_selected_ujian, nil)}
+  end
+
+  @impl true
+  def handle_event("uat_back_to_list", _params, socket) do
+    {:noreply, assign(socket, :uat_selected_ujian, nil)}
+  end
+
+  @impl true
+  def handle_event("uat_toggle_expand", params, socket) do
+    # Accept both "ujian_id" and "ujian-id"; coerce to integer for consistent comparison
+    raw_id = params["ujian_id"] || params["ujian-id"]
+    id = raw_id && parse_ujian_id(to_string(raw_id))
+
+    socket =
+      if is_nil(id) do
+        socket
+      else
+        current = socket.assigns[:uat_expanded_ujian_id]
+
+        if current == id do
+          socket
+          |> assign(:uat_expanded_ujian_id, nil)
+          |> assign(:uat_expanded_ujian, nil)
+        else
+          ujian_struct = UjianPenerimaanPengguna.get_ujian(id)
+
+          if ujian_struct do
+            formatted = UjianPenerimaanPengguna.format_ujian_for_display(ujian_struct)
+
+            socket
+            |> assign(:uat_expanded_ujian_id, id)
+            |> assign(:uat_expanded_ujian, formatted)
+          else
+            socket
+          end
+        end
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("uat_next_page", _params, socket) do
+    %{uat_page: page, uat_total_pages: total_pages, uat_per_page: per_page, ujian: ujian} =
+      socket.assigns
+
+    new_page = min(page + 1, total_pages)
+    paginated = uat_paginate(ujian, new_page, per_page)
+
+    {:noreply,
+     socket
+     |> assign(:uat_page, new_page)
+     |> assign(:uat_paginated_ujian, paginated)}
+  end
+
+  @impl true
+  def handle_event("uat_prev_page", _params, socket) do
+    %{uat_page: page, uat_per_page: per_page, ujian: ujian} = socket.assigns
+
+    new_page = max(page - 1, 1)
+    paginated = uat_paginate(ujian, new_page, per_page)
+
+    {:noreply,
+     socket
+     |> assign(:uat_page, new_page)
+     |> assign(:uat_paginated_ujian, paginated)}
+  end
+
+  @impl true
+  def handle_event("uat_go_to_page", %{"page" => page_param}, socket) do
+    %{uat_total_pages: total_pages, uat_per_page: per_page, ujian: ujian} = socket.assigns
+
+    new_page =
+      case Integer.parse(page_param) do
+        {int, _} when int >= 1 and int <= total_pages -> int
+        _ -> socket.assigns.uat_page
+      end
+
+    paginated = uat_paginate(ujian, new_page, per_page)
+
+    {:noreply,
+     socket
+     |> assign(:uat_page, new_page)
+     |> assign(:uat_paginated_ujian, paginated)}
+  end
+
+  @impl true
+  def handle_event("open_uat_create_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:uat_show_create_modal, true)
+     |> assign(:uat_form, to_form(%{}, as: :ujian))}
+  end
+
+  @impl true
+  def handle_event("close_uat_create_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:uat_show_create_modal, false)
+     |> assign(:uat_form, to_form(%{}, as: :ujian))}
+  end
+
+  @impl true
+  def handle_event("open_uat_edit_modal", %{"ujian_id" => ujian_id}, socket) do
+    ujian_id_int = parse_ujian_id(ujian_id)
+
+    ujian =
+      if socket.assigns[:ujian] && length(socket.assigns.ujian) > 0 do
+        Enum.find(socket.assigns.ujian, fn u -> u.id == ujian_id_int end)
+      else
+        UjianPenerimaanPengguna.get_ujian(ujian_id_int)
+      end
+
+    if ujian do
+      form_data = %{
+        "tajuk" => ujian.tajuk,
+        "modul" => ujian.modul,
+        "tarikh_ujian" => Calendar.strftime(ujian.tarikh_ujian, "%Y-%m-%d"),
+        "tarikh_dijangka_siap" => Calendar.strftime(ujian.tarikh_dijangka_siap, "%Y-%m-%d"),
+        "status" => ujian.status,
+        "penguji" => ujian.penguji || "",
+        "hasil" => ujian.hasil || "",
+        "catatan" => ujian.catatan || ""
+      }
+
+      form = to_form(form_data, as: :ujian)
+
+      {:noreply,
+       socket
+       |> assign(:uat_show_edit_modal, true)
+       |> assign(:uat_editing_ujian, ujian)
+       |> assign(:uat_form, form)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("close_uat_edit_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:uat_show_edit_modal, false)
+     |> assign(:uat_editing_ujian, nil)
+     |> assign(:uat_form, to_form(%{}, as: :ujian))}
+  end
+
+  @impl true
+  def handle_event("validate_uat_ujian", %{"ujian" => ujian_params}, socket) do
+    form = to_form(ujian_params, as: :ujian)
+    {:noreply, assign(socket, :uat_form, form)}
+  end
+
+  @impl true
+  def handle_event("create_uat_ujian", %{"ujian" => ujian_params}, socket) do
+    project_id = socket.assigns.project.id
+
+    attrs = %{
+      project_id: project_id,
+      tajuk: ujian_params["tajuk"],
+      modul: ujian_params["modul"],
+      tarikh_ujian: uat_parse_date(ujian_params["tarikh_ujian"], Date.utc_today()),
+      tarikh_dijangka_siap:
+        uat_parse_date(ujian_params["tarikh_dijangka_siap"], Date.utc_today()),
+      status: ujian_params["status"] || "Menunggu",
+      penguji: uat_empty_to_nil(ujian_params["penguji"]),
+      hasil: ujian_params["hasil"] || "Belum Selesai",
+      catatan: uat_empty_to_nil(ujian_params["catatan"])
+    }
+
+    case UjianPenerimaanPengguna.create_ujian(attrs) do
+      {:ok, _ujian} ->
+        ujian = build_uat_list(project_id, socket.assigns.current_scope)
+        per_page = socket.assigns.uat_per_page
+        total = length(ujian)
+        total_pages_val = uat_total_pages(total, per_page)
+        page = 1
+        paginated_ujian = uat_paginate(ujian, page, per_page)
+
+        {:noreply,
+         socket
+         |> assign(:ujian, ujian)
+         |> assign(:uat_paginated_ujian, paginated_ujian)
+         |> assign(:uat_ujian_total, total)
+         |> assign(:uat_page, page)
+         |> assign(:uat_total_pages, total_pages_val)
+         |> assign(:uat_show_create_modal, false)
+         |> assign(:uat_form, to_form(%{}, as: :ujian))
+         |> put_flash(:info, "Ujian penerimaan pengguna berjaya didaftarkan")}
+
+      {:error, changeset} ->
+        {:noreply,
+         socket
+         |> assign(:uat_form, to_form(changeset, as: :ujian))
+         |> put_flash(:error, "Gagal mendaftar. Sila semak maklumat.")}
+    end
+  end
+
+  @impl true
+  def handle_event("update_uat_ujian", %{"ujian" => ujian_params}, socket) do
+    editing_ujian = socket.assigns[:uat_editing_ujian]
+
+    if editing_ujian do
+      attrs = %{
+        tajuk: ujian_params["tajuk"] || editing_ujian.tajuk,
+        modul: ujian_params["modul"],
+        tarikh_ujian: uat_parse_date(ujian_params["tarikh_ujian"], editing_ujian.tarikh_ujian),
+        tarikh_dijangka_siap:
+          uat_parse_date(ujian_params["tarikh_dijangka_siap"], editing_ujian.tarikh_dijangka_siap),
+        status: ujian_params["status"],
+        penguji: uat_empty_to_nil(ujian_params["penguji"]),
+        hasil: ujian_params["hasil"],
+        catatan: uat_empty_to_nil(ujian_params["catatan"])
+      }
+
+      case UjianPenerimaanPengguna.update_ujian(editing_ujian, attrs) do
+        {:ok, _} ->
+          ujian_id = editing_ujian.id
+          project_id = socket.assigns.project.id
+
+          updated_ujian_list = build_uat_list(project_id, socket.assigns.current_scope)
+
+          per_page = socket.assigns.uat_per_page
+          total = length(updated_ujian_list)
+          tp = uat_total_pages(total, per_page)
+          p = min(socket.assigns[:uat_page] || 1, max(tp, 1))
+          paginated_ujian = uat_paginate(updated_ujian_list, p, per_page)
+
+          updated_socket =
+            socket
+            |> assign(:ujian, updated_ujian_list)
+            |> assign(:uat_paginated_ujian, paginated_ujian)
+            |> assign(:uat_ujian_total, total)
+            |> assign(:uat_page, p)
+            |> assign(:uat_total_pages, tp)
+            |> assign(:uat_show_edit_modal, false)
+            |> assign(:uat_editing_ujian, nil)
+            |> assign(:uat_form, to_form(%{}, as: :ujian))
+            |> put_flash(:info, "Ujian penerimaan pengguna berjaya dikemaskini")
+
+          final_socket =
+            if socket.assigns[:uat_selected_ujian] &&
+                 socket.assigns.uat_selected_ujian.id == ujian_id do
+              ujian = UjianPenerimaanPengguna.get_ujian(ujian_id)
+
+              assign(
+                updated_socket,
+                :uat_selected_ujian,
+                UjianPenerimaanPengguna.format_ujian_for_display(ujian)
+              )
+            else
+              updated_socket
+            end
+
+          {:noreply, final_socket}
+
+        {:error, changeset} ->
+          {:noreply,
+           socket
+           |> assign(:uat_form, to_form(changeset, as: :ujian))
+           |> put_flash(:error, "Gagal mengemaskini. Sila semak maklumat.")}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("edit_kes_ujian", %{"kes_id" => kes_id}, socket) do
+    kes_id_parsed = parse_kes_id(kes_id)
+
+    senarai =
+      cond do
+        socket.assigns[:uat_selected_ujian] && socket.assigns.uat_selected_ujian.senarai_kes_ujian ->
+          socket.assigns.uat_selected_ujian.senarai_kes_ujian
+
+        socket.assigns[:uat_expanded_ujian] && socket.assigns.uat_expanded_ujian.senarai_kes_ujian ->
+          socket.assigns.uat_expanded_ujian.senarai_kes_ujian
+
+        true ->
+          nil
+      end
+
+    if senarai do
+      kes = Enum.find(senarai, fn k -> k.id == kes_id_parsed end)
+
+      if kes do
+        form_data = %{
+          "senario" => kes.senario || "",
+          "langkah" => kes.langkah || "",
+          "keputusan_dijangka" => kes.keputusan_dijangka || "",
+          "keputusan_sebenar" => kes.keputusan_sebenar || "",
+          "hasil" => kes.hasil || "",
+          "penguji" => Map.get(kes, :penguji, "") || "",
+          "tarikh_ujian" =>
+            if(kes.tarikh_ujian, do: Calendar.strftime(kes.tarikh_ujian, "%Y-%m-%d"), else: ""),
+          "disahkan_oleh" => Map.get(kes, :disahkan_oleh, "") || "",
+          "tarikh_pengesahan" =>
+            if(kes.tarikh_pengesahan,
+              do: Calendar.strftime(kes.tarikh_pengesahan, "%Y-%m-%d"),
+              else: ""
+            )
+        }
+
+        form = to_form(form_data, as: :kes)
+
+        {:noreply,
+         socket
+         |> assign(:uat_show_edit_kes_modal, true)
+         |> assign(:uat_selected_kes, kes)
+         |> assign(:uat_kes_form, form)}
+      else
+        {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("close_edit_kes_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:uat_show_edit_kes_modal, false)
+     |> assign(:uat_selected_kes, nil)
+     |> assign(:uat_kes_form, to_form(%{}, as: :kes))}
+  end
+
+  @impl true
+  def handle_event("validate_kes", %{"kes" => kes_params}, socket) do
+    form = to_form(kes_params, as: :kes)
+    {:noreply, assign(socket, :uat_kes_form, form)}
+  end
+
+  @impl true
+  def handle_event("update_kes", %{"kes" => kes_params}, socket) do
+    kes_id = socket.assigns.uat_selected_kes.id
+    kes_struct = UjianPenerimaanPengguna.get_kes(kes_id)
+
+    if kes_struct do
+      attrs = %{
+        senario: kes_params["senario"],
+        langkah: uat_empty_to_nil(kes_params["langkah"]),
+        keputusan_dijangka: uat_empty_to_nil(kes_params["keputusan_dijangka"]),
+        keputusan_sebenar: uat_empty_to_nil(kes_params["keputusan_sebenar"]),
+        hasil: uat_empty_to_nil(kes_params["hasil"]),
+        penguji: uat_empty_to_nil(kes_params["penguji"]),
+        tarikh_ujian: uat_parse_date(kes_params["tarikh_ujian"], nil),
+        disahkan_oleh: uat_empty_to_nil(kes_params["disahkan_oleh"]),
+        tarikh_pengesahan: uat_parse_date(kes_params["tarikh_pengesahan"], nil)
+      }
+
+      case UjianPenerimaanPengguna.update_kes(kes_struct, attrs) do
+        {:ok, _} ->
+          ujian_id = kes_struct.ujian_penerimaan_pengguna_id
+          ujian = UjianPenerimaanPengguna.get_ujian(ujian_id)
+          selected = UjianPenerimaanPengguna.format_ujian_for_display(ujian)
+
+          socket =
+            socket
+            |> assign(:uat_selected_kes, nil)
+            |> assign(:uat_show_edit_kes_modal, false)
+            |> assign(:uat_kes_form, to_form(%{}, as: :kes))
+            |> put_flash(:info, "Kes ujian berjaya dikemaskini")
+
+          socket =
+            if socket.assigns[:uat_selected_ujian] &&
+                 socket.assigns.uat_selected_ujian.id == ujian_id do
+              assign(socket, :uat_selected_ujian, selected)
+            else
+              socket
+            end
+
+          socket =
+            if socket.assigns[:uat_expanded_ujian_id] == ujian_id do
+              assign(socket, :uat_expanded_ujian, selected)
+            else
+              socket
+            end
+
+          {:noreply, socket}
+
+        {:error, changeset} ->
+          {:noreply,
+           socket
+           |> assign(:uat_kes_form, to_form(changeset, as: :kes))
+           |> put_flash(:error, "Gagal mengemaskini kes. Sila semak maklumat.")}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_kes_ujian", %{"kes_id" => kes_id}, socket) do
+    kes_struct = UjianPenerimaanPengguna.get_kes(parse_kes_id(kes_id))
+
+    if kes_struct do
+      ujian_id = kes_struct.ujian_penerimaan_pengguna_id
+
+      case UjianPenerimaanPengguna.delete_kes(kes_struct) do
+        {:ok, _} ->
+          ujian = UjianPenerimaanPengguna.get_ujian(ujian_id)
+          selected = UjianPenerimaanPengguna.format_ujian_for_display(ujian)
+
+          socket =
+            socket
+            |> assign(:uat_selected_kes, nil)
+            |> assign(:uat_show_edit_kes_modal, false)
+            |> put_flash(:info, "Kes ujian berjaya dipadam")
+
+          socket =
+            if socket.assigns[:uat_selected_ujian] &&
+                 socket.assigns.uat_selected_ujian.id == ujian_id do
+              assign(socket, :uat_selected_ujian, selected)
+            else
+              socket
+            end
+
+          socket =
+            if socket.assigns[:uat_expanded_ujian_id] == ujian_id do
+              assign(socket, :uat_expanded_ujian, selected)
+            else
+              socket
+            end
+
+          {:noreply, socket}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Gagal memadam kes ujian.")}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("open_add_kes_modal", params, socket) do
+    default_kes = %{
+      "senario" => "",
+      "langkah" => "",
+      "keputusan_dijangka" => "",
+      "keputusan_sebenar" => "",
+      "hasil" => "",
+      "penguji" => "",
+      "tarikh_ujian" => "",
+      "disahkan_oleh" => "",
+      "tarikh_pengesahan" => ""
+    }
+
+    ujian_id = if params["ujian_id"], do: parse_ujian_id(params["ujian_id"]), else: nil
+
+    socket =
+      socket
+      |> assign(:uat_show_add_kes_modal, true)
+      |> assign(:uat_kes_form, to_form(default_kes, as: :kes))
+      |> then(fn s ->
+        if ujian_id, do: assign(s, :uat_add_kes_ujian_id, ujian_id), else: s
+      end)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("close_add_kes_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:uat_show_add_kes_modal, false)
+     |> assign(:uat_kes_form, to_form(%{}, as: :kes))
+     |> assign(:uat_add_kes_ujian_id, nil)}
+  end
+
+  @impl true
+  def handle_event("validate_add_kes", %{"kes" => kes_params}, socket) do
+    form = to_form(kes_params, as: :kes)
+    {:noreply, assign(socket, :uat_kes_form, form)}
+  end
+
+  @impl true
+  def handle_event("create_kes", %{"kes" => kes_params}, socket) do
+    parent_id =
+      socket.assigns[:uat_add_kes_ujian_id] ||
+        (socket.assigns[:uat_selected_ujian] && socket.assigns.uat_selected_ujian.id)
+
+    if parent_id do
+      parent_ujian = UjianPenerimaanPengguna.get_ujian(parent_id)
+
+      selected_parent =
+        parent_ujian && UjianPenerimaanPengguna.format_ujian_for_display(parent_ujian)
+
+      senarai = (selected_parent && selected_parent.senarai_kes_ujian) || []
+
+      new_number =
+        senarai
+        |> Enum.map(fn k ->
+          kod = Map.get(k, :kod, k.id)
+          kod_str = if is_binary(kod), do: kod, else: to_string(kod)
+
+          case Regex.run(~r/REG-(\d+)/, kod_str) do
+            [_, num_str] -> String.to_integer(num_str)
+            _ -> 0
+          end
+        end)
+        |> (fn list -> if list == [], do: [0], else: list end).()
+        |> Enum.max()
+        |> Kernel.+(1)
+
+      kod = "REG-#{String.pad_leading(Integer.to_string(new_number), 3, "0")}"
+
+      attrs = %{
+        ujian_penerimaan_pengguna_id: parent_id,
+        kod: kod,
+        senario: kes_params["senario"] || "",
+        langkah: uat_empty_to_nil(kes_params["langkah"]),
+        keputusan_dijangka: uat_empty_to_nil(kes_params["keputusan_dijangka"]),
+        keputusan_sebenar: uat_empty_to_nil(kes_params["keputusan_sebenar"]),
+        hasil: uat_empty_to_nil(kes_params["hasil"]),
+        penguji: uat_empty_to_nil(kes_params["penguji"]),
+        tarikh_ujian: uat_parse_date(kes_params["tarikh_ujian"], nil),
+        disahkan_oleh: uat_empty_to_nil(kes_params["disahkan_oleh"]),
+        tarikh_pengesahan: uat_parse_date(kes_params["tarikh_pengesahan"], nil)
+      }
+
+      case UjianPenerimaanPengguna.create_kes(attrs) do
+        {:ok, _} ->
+          ujian = UjianPenerimaanPengguna.get_ujian(parent_id)
+          selected = UjianPenerimaanPengguna.format_ujian_for_display(ujian)
+
+          socket =
+            socket
+            |> assign(:uat_show_add_kes_modal, false)
+            |> assign(:uat_kes_form, to_form(%{}, as: :kes))
+            |> assign(:uat_add_kes_ujian_id, nil)
+            |> put_flash(:info, "Kes ujian berjaya ditambah")
+
+          socket =
+            if socket.assigns[:uat_selected_ujian] &&
+                 socket.assigns.uat_selected_ujian.id == parent_id do
+              assign(socket, :uat_selected_ujian, selected)
+            else
+              socket
+            end
+
+          socket =
+            if socket.assigns[:uat_expanded_ujian_id] == parent_id do
+              assign(socket, :uat_expanded_ujian, selected)
+            else
+              socket
+            end
+
+          {:noreply, socket}
+
+        {:error, changeset} ->
+          {:noreply,
+           socket
+           |> assign(:uat_kes_form, to_form(changeset, as: :kes))
+           |> put_flash(:error, "Gagal menambah kes. Sila semak maklumat.")}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("open_uat_add_column_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:uat_show_add_column_modal, true)
+     |> assign(:uat_kes_column_form, to_form(%{"label" => ""}, as: :column))}
+  end
+
+  @impl true
+  def handle_event("close_uat_add_column_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:uat_show_add_column_modal, false)
+     |> assign(:uat_kes_column_form, to_form(%{}, as: :column))}
+  end
+
+  @impl true
+  def handle_event("validate_uat_column", %{"column" => params}, socket) do
+    {:noreply, assign(socket, :uat_kes_column_form, to_form(params, as: :column))}
+  end
+
+  @impl true
+  def handle_event("add_uat_column", %{"column" => %{"label" => label}}, socket) do
+    label = String.trim(label || "")
+    ujian_id = socket.assigns[:uat_expanded_ujian_id]
+
+    if label == "" do
+      {:noreply,
+       socket
+       |> assign(:uat_kes_column_form, to_form(%{"label" => label}, as: :column))
+       |> put_flash(:error, "Sila masukkan nama lajur.")}
+    else
+      if is_nil(ujian_id) do
+        {:noreply,
+         put_flash(socket, :error, "Sesi tidak sah. Sila kembangkan baris ujian dahulu.")}
+      else
+        case UjianPenerimaanPengguna.add_column_to_ujian(ujian_id, label) do
+          {:ok, ujian} ->
+            formatted = UjianPenerimaanPengguna.format_ujian_for_display(ujian)
+
+            {:noreply,
+             socket
+             |> assign(:uat_show_add_column_modal, false)
+             |> assign(:uat_kes_column_form, to_form(%{}, as: :column))
+             |> assign(:uat_expanded_ujian, formatted)
+             |> put_flash(:info, "Lajur berjaya ditambah.")}
+
+          {:error, _} ->
+            {:noreply,
+             socket
+             |> put_flash(:error, "Gagal menambah lajur.")}
+        end
+      end
+    end
+  end
+
+  @impl true
+  def handle_event(
+        "remove_uat_column",
+        %{"column_id" => column_id, "ujian_id" => ujian_id_param},
+        socket
+      ) do
+    ujian_id = parse_ujian_id(ujian_id_param)
+
+    if ujian_id && column_id != "" do
+      case UjianPenerimaanPengguna.remove_column_from_ujian(ujian_id, column_id) do
+        {:ok, ujian} ->
+          formatted = UjianPenerimaanPengguna.format_ujian_for_display(ujian)
+
+          {:noreply,
+           socket
+           |> assign(:uat_expanded_ujian, formatted)
+           |> put_flash(:info, "Lajur telah dialih keluar.")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Gagal mengalih keluar lajur.")}
+      end
+    else
+      {:noreply, socket}
+    end
   end
 
   # Perubahan (change management) modals and forms
@@ -1057,4 +1747,70 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       nil
     end
   end
+
+  # UAT tab: build ujian list (merge modules with ujian, ensure one per module)
+  defp build_uat_list(project_id, current_scope) when is_integer(project_id) do
+    modules = AnalisisDanRekabentuk.list_modules_for_project(project_id, current_scope)
+    ujian_list = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
+    ujian_by_modul = Map.new(ujian_list, fn u -> {String.trim(u.modul || ""), u} end)
+
+    Enum.map(modules, fn mod ->
+      name = String.trim(mod.name || "")
+      ujian = Map.get(ujian_by_modul, name)
+
+      if ujian do
+        ujian
+      else
+        UjianPenerimaanPengguna.ensure_ujian_for_module(project_id, name)
+      end
+    end)
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp uat_paginate(ujian, page, per_page) do
+    start_index = (page - 1) * per_page
+    Enum.slice(ujian, start_index, per_page)
+  end
+
+  defp uat_total_pages(0, _per_page), do: 1
+
+  defp uat_total_pages(total, per_page) do
+    pages = div(total, per_page)
+    if rem(total, per_page) == 0, do: pages, else: pages + 1
+  end
+
+  defp parse_ujian_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int, _} -> int
+      :error -> id
+    end
+  end
+
+  defp parse_ujian_id(id) when is_integer(id), do: id
+  defp parse_ujian_id(_), do: nil
+
+  defp parse_kes_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int, _} -> int
+      :error -> id
+    end
+  end
+
+  defp parse_kes_id(id) when is_integer(id), do: id
+  defp parse_kes_id(_), do: nil
+
+  defp uat_parse_date(nil, default), do: default
+  defp uat_parse_date("", default), do: default
+
+  defp uat_parse_date(str, default) when is_binary(str) do
+    case Date.from_iso8601(str) do
+      {:ok, date} -> date
+      _ -> default
+    end
+  end
+
+  defp uat_empty_to_nil(""), do: nil
+  defp uat_empty_to_nil(nil), do: nil
+  defp uat_empty_to_nil(s) when is_binary(s), do: if(String.trim(s) == "", do: nil, else: s)
+  defp uat_empty_to_nil(other), do: other
 end
