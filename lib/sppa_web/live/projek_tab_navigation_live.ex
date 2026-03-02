@@ -6,6 +6,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   alias Sppa.Penempatans
   alias Sppa.PermohonanPerubahan
   alias Sppa.Projects
+  alias Sppa.ProjectModules
   alias Sppa.SoalSelidiks
   alias Sppa.UjianKeselamatan
   alias Sppa.UjianPenerimaanPengguna
@@ -143,6 +144,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:notifications_open, false)
          |> assign(:profile_menu_open, false)
          |> assign(:project, project)
+         |> assign(:project_modules, ProjectModules.list_modules_by_project_id(project_id))
          |> assign(:soal_selidik_pdf_data, soal_selidik_pdf_data)
          |> assign(:analisis_pdf_data, analisis_pdf_data)
          |> assign(:modules, modules)

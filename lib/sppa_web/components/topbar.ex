@@ -33,7 +33,7 @@ defmodule SppaWeb.Components.Topbar do
             class="h-24 w-auto object-contain"
           />
         </div>
-
+        
         <div class="flex items-center gap-5">
           <div class="hidden flex-col items-end text-xs text-blue-100 sm:flex">
             <span class="uppercase tracking-wide opacity-80">Pengguna Log Masuk</span>
@@ -42,7 +42,7 @@ defmodule SppaWeb.Components.Topbar do
                 "Nama Pengguna"}
             </span>
           </div>
-
+          
           <div class="flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm shadow-sm">
             <.icon name="hero-user-circle" class="h-5 w-5 text-white" />
             <span class="text-white sm:hidden">
@@ -50,7 +50,7 @@ defmodule SppaWeb.Components.Topbar do
                 "Nama Pengguna"}
             </span>
           </div>
-
+          
           <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
             <button
               type="submit"

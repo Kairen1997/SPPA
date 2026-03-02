@@ -8,6 +8,20 @@ defmodule Sppa.ProjectModules do
   alias Sppa.ProjectModules.ProjectModule
 
   @doc """
+  List all modules for a given project by project_id (no user filter).
+  Used for display on Analisis dan Rekabentuk page so pembangun sistem can see
+  modul created by pengurus projek (tajuk tugasan, penerangan).
+  """
+  def list_modules_by_project_id(project_id) when is_integer(project_id) do
+    ProjectModule
+    |> where([m], m.project_id == ^project_id)
+    |> order_by([m], asc: m.fasa, asc: m.versi, asc: m.inserted_at)
+    |> Repo.all()
+  end
+
+  def list_modules_by_project_id(_), do: []
+
+  @doc """
   List all modules for a given project that belong to the current scope's owner.
   """
   def list_modules_for_project(current_scope, project_id) do
