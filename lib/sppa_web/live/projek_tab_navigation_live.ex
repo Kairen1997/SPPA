@@ -1400,8 +1400,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
     upload_file =
       consume_uploaded_entries(socket, :kes_file, fn %{path: path}, entry ->
-        ext = Path.extname(entry.client_name)
-        filename = "ujian_kes_#{project_id}_#{System.unique_integer([:positive])}#{ext}"
+        filename = kes_upload_filename(project_id, entry)
         dest_dir = Path.join(File.cwd!(), "priv/static/uploads/ujian_keselamatan")
         File.mkdir_p!(dest_dir)
         dest = Path.join(dest_dir, filename)
@@ -1472,9 +1471,9 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
   @impl true
   def handle_event("kes_close_edit_modal", _params, socket) do
-    entries = get_in(socket.assigns, [:uploads, :kes_edit_file, :entries]) || []
     socket =
-      Enum.reduce(entries, socket, fn entry, acc -> cancel_upload(acc, :kes_edit_file, entry.ref) end)
+      socket
+      |> maybe_cancel_kes_edit_file_uploads()
       |> assign(:kes_show_edit_modal, false)
       |> assign(:kes_editing_ujian, nil)
       |> assign(:kes_editing_ujian_raw_id, nil)
@@ -1506,8 +1505,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
       upload_file_from_entries =
         consume_uploaded_entries(socket, :kes_edit_file, fn %{path: path}, entry ->
-          ext = Path.extname(entry.client_name)
-          filename = "ujian_kes_#{project_id}_#{System.unique_integer([:positive])}#{ext}"
+          filename = kes_upload_filename(project_id, entry)
           dest_dir = Path.join(File.cwd!(), "priv/static/uploads/ujian_keselamatan")
           File.mkdir_p!(dest_dir)
           dest = Path.join(dest_dir, filename)
@@ -1543,6 +1541,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         catatan: editing_ujian[:catatan] || editing_ujian["catatan"]
       }
 
+      parsed_id = kes_parse_ujian_id(raw_id)
+
       result =
         cond do
           is_binary(raw_id) && String.starts_with?(to_string(raw_id), "module_") ->
@@ -1550,8 +1550,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
             attrs = Map.put(attrs, :analisis_dan_rekabentuk_module_id, module_id)
             UjianKeselamatan.create_ujian(attrs)
 
-          is_integer(raw_id) ->
-            case UjianKeselamatan.get_ujian(raw_id) do
+          is_integer(parsed_id) ->
+            case UjianKeselamatan.get_ujian(parsed_id) do
               nil -> {:error, :not_found}
               ujian -> UjianKeselamatan.update_ujian(ujian, attrs)
             end
@@ -2015,6 +2015,15 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     _ -> socket
   end
 
+  defp maybe_cancel_kes_edit_file_uploads(socket) do
+    entries = get_in(socket.assigns, [:uploads, :kes_edit_file, :entries]) || []
+    Enum.reduce(entries, socket, fn entry, acc ->
+      cancel_upload(acc, :kes_edit_file, entry.ref)
+    end)
+  rescue
+    _ -> socket
+  end
+
   defp kes_get_ujian_by_id(ujian_id, _ujian_id_str, _socket) when is_integer(ujian_id) do
     UjianKeselamatan.get_ujian_formatted(ujian_id)
   end
@@ -2043,6 +2052,26 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   defp kes_format_date_for_form(nil), do: ""
   defp kes_format_date_for_form(%Date{} = d), do: Calendar.strftime(d, "%Y-%m-%d")
   defp kes_format_date_for_form(_), do: ""
+
+  # Builds a unique filename that keeps the original document name (sanitized).
+  defp kes_upload_filename(project_id, entry) do
+    ext = Path.extname(entry.client_name)
+    base = entry.client_name |> Path.basename() |> Path.rootname()
+    safe = base |> String.replace(~r/[^\p{L}\p{N}\s\-_.]/u, "") |> String.replace(~r/\s+/, "_") |> String.slice(0, 120)
+    name_part = if safe == "", do: "dokumen", else: safe
+    "#{project_id}_#{System.unique_integer([:positive])}_#{name_part}#{ext}"
+  end
+
+  # Returns display name for upload file (hides project_id and unique number prefix).
+  def kes_display_filename(path) when is_binary(path) do
+    base = Path.basename(path)
+    case Regex.run(~r/^\d+_\d+_(.+)$/, base) do
+      [_, rest] -> rest
+      nil -> base
+    end
+  end
+
+  def kes_display_filename(_), do: ""
 
   def kes_upload_error_to_string(:too_many_files), do: "Terlalu banyak fail dipilih (maks 1)"
   def kes_upload_error_to_string(:too_large), do: "Fail terlalu besar (maks 10MB)"

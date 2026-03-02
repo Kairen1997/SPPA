@@ -3730,7 +3730,7 @@
               </div>
             <% @current_tab == "Ujian Keselamatan" -> %>
               <div class="space-y-6">
-                <%= if assigns[:kes_selected_ujian] do %>
+                <%= if false && assigns[:kes_selected_ujian] do %>
                   <%!-- Detail Ujian --%>
                   <div class="mb-6">
                     <div class="flex items-center gap-4 mb-4">
@@ -3934,7 +3934,7 @@
                                     rel="noopener noreferrer"
                                     class="text-xs text-blue-600 hover:text-blue-800 underline"
                                   >
-                                    {Path.basename(upload)}
+                                    {kes_display_filename(upload)}
                                   </a>
                                 <% else %>
                                   <span class="text-xs text-gray-400">—</span>
@@ -3960,13 +3960,6 @@
                               <td class="px-3 py-2 whitespace-nowrap text-left">
                                 <div class="flex items-center gap-1.5">
                                   <%= if is_integer(ujian.id) do %>
-                                    <.link
-                                      patch={~p"/projek/#{@project.id}?tab=ujian-keselamatan&ujian_id=#{ujian.id}"}
-                                      class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
-                                      title="Lihat"
-                                    >
-                                      <.icon name="hero-eye" class="w-4 h-4" />
-                                    </.link>
                                     <button
                                       type="button"
                                       phx-click="kes_open_edit_modal"
@@ -4632,7 +4625,7 @@
                         rel="noopener noreferrer"
                         class="text-blue-600 hover:text-blue-800 underline ml-1"
                       >
-                        {Path.basename(@kes_form[:upload_file].value)}
+                        {kes_display_filename(@kes_form[:upload_file].value)}
                       </a>
                     </p>
                   <% end %>
