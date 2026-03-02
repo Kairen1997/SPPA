@@ -138,14 +138,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           |> AnalisisDanRekabentuk.list_modules_id_name()
           |> Enum.map(& &1.name)
 
-        # Untuk tab "Ujian Keselamatan", kita mahu paparkan data yang sama
-        # seperti di halaman penuh UjianKeselamatanLive, iaitu:
-        # - satu baris bagi setiap modul projek
-        # - data ujian (jika wujud) akan dipadankan mengikut index modul
+        # Tab "Ujian Keselamatan": data sama seperti bekas UjianKeselamatanLive
         ujian_keselamatan_rows =
-          build_ujian_keselamatan_rows_for_project(
-            modules,
-            UjianKeselamatan.list_ujian()
+          UjianKeselamatan.list_ujian_rows_for_project(
+            project_id,
+            socket.assigns.current_scope
           )
 
         {:ok,
@@ -198,6 +195,15 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:senarai_nama_modul, senarai_nama_modul)
          |> assign(:senarai_nama_modul_ordered, senarai_nama_modul_ordered)
          |> assign(:ujian_keselamatan, ujian_keselamatan_rows)
+         |> assign(:kes_show_create_modal, false)
+         |> assign(:kes_show_edit_modal, false)
+         |> assign(:kes_show_edit_kes_modal, false)
+         |> assign(:kes_selected_ujian, nil)
+         |> assign(:kes_form, to_form(%{}, as: :ujian))
+         |> assign(:kes_kes_form, to_form(%{}, as: :kes))
+         |> assign(:kes_editing_ujian, nil)
+         |> assign(:kes_editing_ujian_raw_id, nil)
+         |> assign(:kes_selected_kes, nil)
          |> assign(:show_view_modal, false)
          |> assign(:show_edit_modal, false)
          |> assign(:show_create_modal, false)
@@ -205,7 +211,15 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:form, to_form(%{}, as: :perubahan))
          |> assign(:current_tab, "Soal Selidik")
          |> assign(:activities, activities)
-         |> assign(:notifications_count, notifications_count)}
+         |> assign(:notifications_count, notifications_count)
+         |> allow_upload(:kes_file,
+           accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
+           max_entries: 1,
+           max_file_size: 10_000_000)
+         |> allow_upload(:kes_edit_file,
+           accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
+           max_entries: 1,
+           max_file_size: 10_000_000)}
       else
         socket =
           socket
@@ -250,15 +264,53 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       Projects.update_project_fasa(socket.assigns.project.id, current_tab)
     end
 
-    # Refresh penempatan from DB when user switches to Penempatan tab so changes from halaman penempatan are shown
+    # Refresh penempatan from DB when user switches to Penempatan or Maklumbalas Pelanggan tab
     socket =
-      if current_tab == "Penempatan" && socket.assigns[:project] do
+      if current_tab in ["Penempatan", "Maklumbalas Pelanggan"] && socket.assigns[:project] do
         project = socket.assigns.project
 
         penempatan =
           get_penempatan_for_project(project.id, socket.assigns.current_scope, project)
 
         assign(socket, :penempatan, penempatan)
+      else
+        socket
+      end
+
+    # Apabila pengguna membuka tab Maklumbalas Pelanggan, semak sama ada semua bahagian
+    # dari Soal Selidik sehingga Maklumbalas Pelanggan telah lengkap; jika ya, kemas kini
+    # status projek kepada "Selesai".
+    socket =
+      if current_tab == "Maklumbalas Pelanggan" && socket.assigns[:project] do
+        project = socket.assigns.project
+
+        if all_sections_soal_selidik_to_maklumbalas_complete?(socket) &&
+             project.status != "Selesai" do
+          project_struct = Projects.get_project_by_id(project.id)
+
+          if project_struct do
+            case Projects.update_project(
+                   project_struct,
+                   %{"status" => "Selesai"},
+                   socket.assigns.current_scope
+                 ) do
+              {:ok, updated} ->
+                socket
+                |> assign(:project, Projects.format_project_for_display(updated))
+                |> Phoenix.LiveView.put_flash(
+                  :info,
+                  "Semua bahagian telah lengkap. Projek telah ditandakan sebagai Selesai."
+                )
+
+              _ ->
+                socket
+            end
+          else
+            socket
+          end
+        else
+          socket
+        end
       else
         socket
       end
@@ -281,6 +333,33 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         |> assign(:uat_ujian_total, total)
         |> assign(:uat_page, page)
         |> assign(:uat_total_pages, tp)
+      else
+        socket
+      end
+
+    # Refresh Ujian Keselamatan tab and load detail when ujian_id in params
+    socket =
+      if current_tab == "Ujian Keselamatan" && socket.assigns[:project] do
+        project_id = socket.assigns.project.id
+        ujian_list =
+          UjianKeselamatan.list_ujian_rows_for_project(
+            project_id,
+            socket.assigns.current_scope
+          )
+
+        kes_selected =
+          case params_map["ujian_id"] do
+            nil -> nil
+            id_str ->
+              case Integer.parse(id_str) do
+                {id, _} -> UjianKeselamatan.get_ujian_formatted(id)
+                :error -> nil
+              end
+          end
+
+        socket
+        |> assign(:ujian_keselamatan, ujian_list)
+        |> assign(:kes_selected_ujian, kes_selected)
       else
         socket
       end
@@ -322,6 +401,26 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       %{query: nil} -> nil
       %{query: query} -> URI.decode_query(query)["tab"]
     end
+  end
+
+  # Semak sama ada semua bahagian dari tab Soal Selidik sehingga Maklumbalas Pelanggan
+  # telah lengkap. Jika ya, projek layak ditandakan sebagai Selesai.
+  defp all_sections_soal_selidik_to_maklumbalas_complete?(socket) do
+    project = socket.assigns[:project]
+    if is_nil(project), do: false, else: do_all_sections_complete?(socket, project)
+  end
+
+  defp do_all_sections_complete?(socket, project) do
+    soal_selidik_ok = socket.assigns[:soal_selidik_pdf_data] != nil
+    modules = socket.assigns[:modules] || []
+    modules_ok = modules != []
+    jadual_ok = project[:tarikh_mula] != nil and project[:tarikh_siap] != nil
+    penempatan = socket.assigns[:penempatan] || []
+    penempatan_ok = penempatan != []
+    ujian = socket.assigns[:ujian] || []
+    uat_ok = ujian != []
+
+    soal_selidik_ok and modules_ok and jadual_ok and penempatan_ok and uat_ok
   end
 
   @impl true
@@ -1256,6 +1355,488 @@ defmodule SppaWeb.ProjekTabNavigationLive do
      |> assign(:form, to_form(%{}, as: :perubahan))}
   end
 
+  # --- Ujian Keselamatan (tab) events (prefix kes_ to avoid clash with UAT) ---
+  @impl true
+  def handle_event("open_kes_create_modal", _params, socket) do
+    form_data = %{
+      "tarikh_permohonan" => "",
+      "tarikh_kelulusan" => "",
+      "upload_file" => "",
+      "status_kelulusan" => "Lulus"
+    }
+    {:noreply,
+     socket
+     |> assign(:kes_show_create_modal, true)
+     |> assign(:kes_form, to_form(form_data, as: :ujian))}
+  end
+
+  @impl true
+  def handle_event("close_kes_create_modal", _params, socket) do
+    socket =
+      socket
+      |> maybe_cancel_kes_file_uploads()
+      |> assign(:kes_show_create_modal, false)
+      |> assign(:kes_form, to_form(%{}, as: :ujian))
+
+    {:noreply, socket}
+  end
+
+  defp maybe_cancel_kes_file_uploads(socket) do
+    entries = get_in(socket.assigns, [:uploads, :kes_file, :entries]) || []
+    Enum.reduce(entries, socket, fn entry, acc ->
+      cancel_upload(acc, :kes_file, entry.ref)
+    end)
+  rescue
+    _ -> socket
+  end
+
+  @impl true
+  def handle_event("kes_create_ujian", %{"ujian" => ujian_params}, socket) do
+    project_id = socket.assigns.project.id
+    modul_name = (ujian_params["modul"] || "") |> String.trim() |> then(fn m -> if m == "", do: "-", else: m end)
+    tajuk = (ujian_params["tajuk"] || "") |> String.trim() |> then(fn t -> if t == "", do: "Ujian Keselamatan", else: t end)
+
+    module_id =
+      socket.assigns[:modules]
+      |> List.wrap()
+      |> Enum.find(fn m -> (m[:name] || m["name"]) == modul_name end)
+      |> then(fn m -> m && (m[:id] || m["id"]) end)
+      |> then(fn id -> id && kes_parse_module_id_from_placeholder(to_string(id)) end)
+
+    tarikh_permohonan = kes_parse_date_param(ujian_params["tarikh_permohonan"])
+    tarikh_kelulusan = kes_parse_date_param(ujian_params["tarikh_kelulusan"])
+    status_kelulusan = (ujian_params["status_kelulusan"] || "Lulus") |> String.trim() |> then(fn s -> if s == "", do: nil, else: s end)
+
+    upload_file =
+      consume_uploaded_entries(socket, :kes_file, fn %{path: path}, entry ->
+        ext = Path.extname(entry.client_name)
+        filename = "ujian_kes_#{project_id}_#{System.unique_integer([:positive])}#{ext}"
+        dest_dir = Path.join(File.cwd!(), "priv/static/uploads/ujian_keselamatan")
+        File.mkdir_p!(dest_dir)
+        dest = Path.join(dest_dir, filename)
+        File.cp!(path, dest)
+        {:ok, "ujian_keselamatan/#{filename}"}
+      end)
+      |> List.first()
+
+    attrs = %{
+      project_id: project_id,
+      modul: modul_name,
+      tajuk: tajuk,
+      analisis_dan_rekabentuk_module_id: module_id,
+      tarikh_permohonan: tarikh_permohonan,
+      tarikh_kelulusan: tarikh_kelulusan,
+      upload_file: upload_file,
+      status_kelulusan: status_kelulusan
+    }
+
+    case UjianKeselamatan.create_ujian(attrs) do
+      {:ok, _ujian} ->
+        ujian_list =
+          UjianKeselamatan.list_ujian_rows_for_project(
+            project_id,
+            socket.assigns.current_scope
+          )
+
+        {:noreply,
+         socket
+         |> assign(:ujian_keselamatan, ujian_list)
+         |> assign(:kes_show_create_modal, false)
+         |> assign(:kes_form, to_form(%{}, as: :ujian))
+         |> put_flash(:info, "Ujian keselamatan berjaya didaftarkan")}
+
+      {:error, changeset} ->
+        {:noreply,
+         socket
+         |> assign(:kes_form, to_form(changeset, as: :ujian))
+         |> put_flash(:error, "Gagal mendaftar ujian keselamatan. Sila semak maklumat.")}
+    end
+  end
+
+  @impl true
+  def handle_event("kes_open_edit_modal", %{"ujian_id" => ujian_id_str}, socket) do
+    ujian_id = kes_parse_ujian_id(ujian_id_str)
+    ujian = kes_get_ujian_by_id(ujian_id, ujian_id_str, socket)
+
+    if ujian do
+      form_data = %{
+        "tarikh_permohonan" => kes_format_date_for_form(ujian[:tarikh_permohonan]),
+        "tarikh_kelulusan" => kes_format_date_for_form(ujian[:tarikh_kelulusan]),
+        "upload_file" => ujian[:upload_file] || "",
+        "status_kelulusan" => ujian[:status_kelulusan] || "Lulus"
+      }
+
+      form = to_form(form_data, as: :ujian)
+
+      {:noreply,
+       socket
+       |> assign(:kes_show_edit_modal, true)
+       |> assign(:kes_editing_ujian, ujian)
+       |> assign(:kes_editing_ujian_raw_id, ujian_id_str)
+       |> assign(:kes_form, form)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("kes_close_edit_modal", _params, socket) do
+    entries = get_in(socket.assigns, [:uploads, :kes_edit_file, :entries]) || []
+    socket =
+      Enum.reduce(entries, socket, fn entry, acc -> cancel_upload(acc, :kes_edit_file, entry.ref) end)
+      |> assign(:kes_show_edit_modal, false)
+      |> assign(:kes_editing_ujian, nil)
+      |> assign(:kes_editing_ujian_raw_id, nil)
+      |> assign(:kes_form, to_form(%{}, as: :ujian))
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("kes_validate_ujian", %{"ujian" => ujian_params}, socket) do
+    # Strip LiveView _unused_* keys so form state is not polluted (e.g. when file input triggers phx-change)
+    params =
+      Map.drop(ujian_params, Map.keys(ujian_params) |> Enum.filter(&String.starts_with?(&1, "_unused_")))
+
+    form = to_form(params, as: :ujian)
+    {:noreply, assign(socket, :kes_form, form)}
+  end
+
+  @impl true
+  def handle_event("kes_update_ujian", %{"ujian" => ujian_params}, socket) do
+    editing_ujian = socket.assigns[:kes_editing_ujian] || socket.assigns[:kes_selected_ujian]
+    raw_id = socket.assigns[:kes_editing_ujian_raw_id] || (editing_ujian && editing_ujian.id)
+    project_id = socket.assigns.project.id
+
+    if editing_ujian && project_id do
+      tarikh_permohonan = kes_parse_date_param(ujian_params["tarikh_permohonan"])
+      tarikh_kelulusan = kes_parse_date_param(ujian_params["tarikh_kelulusan"])
+      status_kelulusan = (ujian_params["status_kelulusan"] || "Lulus") |> String.trim() |> then(fn s -> if s == "", do: nil, else: s end)
+
+      upload_file_from_entries =
+        consume_uploaded_entries(socket, :kes_edit_file, fn %{path: path}, entry ->
+          ext = Path.extname(entry.client_name)
+          filename = "ujian_kes_#{project_id}_#{System.unique_integer([:positive])}#{ext}"
+          dest_dir = Path.join(File.cwd!(), "priv/static/uploads/ujian_keselamatan")
+          File.mkdir_p!(dest_dir)
+          dest = Path.join(dest_dir, filename)
+          File.cp!(path, dest)
+          {:ok, "ujian_keselamatan/#{filename}"}
+        end)
+        |> List.first()
+
+      upload_file =
+        if upload_file_from_entries do
+          upload_file_from_entries
+        else
+          (ujian_params["upload_file"] || "") |> String.trim() |> then(fn s -> if s == "", do: nil, else: s end)
+        end
+
+      modul = editing_ujian[:modul] || editing_ujian["modul"] || "-"
+      tajuk = editing_ujian[:tajuk] || editing_ujian["tajuk"] || "Ujian Keselamatan"
+
+      attrs = %{
+        project_id: project_id,
+        modul: modul,
+        tajuk: tajuk,
+        tarikh_permohonan: tarikh_permohonan,
+        tarikh_kelulusan: tarikh_kelulusan,
+        upload_file: upload_file,
+        status_kelulusan: status_kelulusan,
+        tarikh_ujian: editing_ujian[:tarikh_ujian] || editing_ujian["tarikh_ujian"],
+        tarikh_dijangka_siap: editing_ujian[:tarikh_dijangka_siap] || editing_ujian["tarikh_dijangka_siap"],
+        status: editing_ujian[:status] || editing_ujian["status"] || "Menunggu",
+        penguji: editing_ujian[:penguji] || editing_ujian["penguji"],
+        hasil: editing_ujian[:hasil] || editing_ujian["hasil"] || "Belum Selesai",
+        disahkan_oleh: editing_ujian[:disahkan_oleh] || editing_ujian["disahkan_oleh"],
+        catatan: editing_ujian[:catatan] || editing_ujian["catatan"]
+      }
+
+      result =
+        cond do
+          is_binary(raw_id) && String.starts_with?(to_string(raw_id), "module_") ->
+            module_id = kes_parse_module_id_from_placeholder(to_string(raw_id))
+            attrs = Map.put(attrs, :analisis_dan_rekabentuk_module_id, module_id)
+            UjianKeselamatan.create_ujian(attrs)
+
+          is_integer(raw_id) ->
+            case UjianKeselamatan.get_ujian(raw_id) do
+              nil -> {:error, :not_found}
+              ujian -> UjianKeselamatan.update_ujian(ujian, attrs)
+            end
+
+          true ->
+            {:error, :invalid_id}
+        end
+
+      case result do
+        {:ok, _ujian} ->
+          ujian =
+            UjianKeselamatan.list_ujian_rows_for_project(
+              project_id,
+              socket.assigns.current_scope
+            )
+
+          {:noreply,
+           socket
+           |> assign(:ujian_keselamatan, ujian)
+           |> assign(:kes_show_edit_modal, false)
+           |> assign(:kes_editing_ujian, nil)
+           |> assign(:kes_editing_ujian_raw_id, nil)
+           |> assign(:kes_form, to_form(%{}, as: :ujian))
+           |> put_flash(:info, "Ujian keselamatan berjaya dikemaskini")}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, _} -> msg end)
+          msg = if map_size(errors) > 0 do
+            detail = errors |> Enum.map(fn {f, _} -> to_string(f) end) |> Enum.join(", ")
+            "Gagal menyimpan ujian keselamatan (#{detail}). Sila semak data dan cuba lagi."
+          else
+            "Gagal menyimpan ujian keselamatan. Sila semak data dan cuba lagi."
+          end
+          {:noreply, socket |> put_flash(:error, msg)}
+
+        {:error, _} ->
+          {:noreply,
+           socket
+           |> put_flash(
+             :error,
+             "Gagal menyimpan ujian keselamatan. Sila semak data dan cuba lagi."
+           )}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("kes_edit_kes_ujian", %{"kes_id" => kes_id_str}, socket) do
+    kes_id = kes_parse_kes_id(kes_id_str)
+    if socket.assigns[:kes_selected_ujian] && socket.assigns.kes_selected_ujian.senarai_kes_ujian do
+      kes =
+        Enum.find(socket.assigns.kes_selected_ujian.senarai_kes_ujian, fn k ->
+          k.id == kes_id || k.id == kes_id_str
+        end)
+
+      if kes do
+        form_data = %{
+          "senario" => kes.senario || "",
+          "langkah" => kes.langkah || "",
+          "keputusan_dijangka" => kes.keputusan_dijangka || "",
+          "keputusan_sebenar" => kes.keputusan_sebenar || "",
+          "hasil" => kes.hasil || "",
+          "penguji" => Map.get(kes, :penguji, "") || "",
+          "tarikh_ujian" =>
+            if(kes.tarikh_ujian, do: Calendar.strftime(kes.tarikh_ujian, "%Y-%m-%d"), else: ""),
+          "disahkan" => if(Map.get(kes, :disahkan, false), do: "true", else: ""),
+          "disahkan_oleh" => Map.get(kes, :disahkan_oleh, "") || "",
+          "tarikh_pengesahan" =>
+            if(kes.tarikh_pengesahan,
+              do: Calendar.strftime(kes.tarikh_pengesahan, "%Y-%m-%d"),
+              else: ""
+            )
+        }
+
+        form = to_form(form_data, as: :kes)
+
+        {:noreply,
+         socket
+         |> assign(:kes_show_edit_kes_modal, true)
+         |> assign(:kes_selected_kes, kes)
+         |> assign(:kes_kes_form, form)}
+      else
+        {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("kes_close_edit_kes_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:kes_show_edit_kes_modal, false)
+     |> assign(:kes_selected_kes, nil)
+     |> assign(:kes_kes_form, to_form(%{}, as: :kes))}
+  end
+
+  @impl true
+  def handle_event("kes_validate_kes", %{"kes" => kes_params}, socket) do
+    form = to_form(kes_params, as: :kes)
+    {:noreply, assign(socket, :kes_kes_form, form)}
+  end
+
+  @impl true
+  def handle_event("kes_update_kes", %{"kes" => kes_params}, socket) do
+    kes_id = socket.assigns.kes_selected_kes.id
+    kes = UjianKeselamatan.get_kes(kes_id)
+
+    if kes && is_integer(kes_id) do
+      tarikh_ujian = kes_parse_date_param(kes_params["tarikh_ujian"])
+      tarikh_pengesahan = kes_parse_date_param(kes_params["tarikh_pengesahan"])
+
+      attrs = %{
+        senario: kes_params["senario"] || kes.senario,
+        langkah: kes_params["langkah"] || "",
+        keputusan_dijangka: kes_params["keputusan_dijangka"] || "",
+        keputusan_sebenar:
+          if(kes_params["keputusan_sebenar"] == "", do: nil, else: kes_params["keputusan_sebenar"]),
+        hasil: if(kes_params["hasil"] == "", do: nil, else: kes_params["hasil"]),
+        penguji: if(kes_params["penguji"] == "", do: nil, else: kes_params["penguji"]),
+        tarikh_ujian: tarikh_ujian,
+        disahkan: kes_params["disahkan"] == "true",
+        disahkan_oleh:
+          if(kes_params["disahkan_oleh"] == "", do: nil, else: kes_params["disahkan_oleh"]),
+        tarikh_pengesahan: tarikh_pengesahan
+      }
+
+      case UjianKeselamatan.update_kes(kes, attrs) do
+        {:ok, _} ->
+          ujian_id = socket.assigns.kes_selected_ujian.id
+          updated = UjianKeselamatan.get_ujian_formatted(ujian_id)
+
+          {:noreply,
+           socket
+           |> assign(:kes_selected_ujian, updated)
+           |> assign(:kes_selected_kes, nil)
+           |> assign(:kes_show_edit_kes_modal, false)
+           |> assign(:kes_kes_form, to_form(%{}, as: :kes))
+           |> put_flash(:info, "Kes ujian berjaya dikemaskini")}
+
+        {:error, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Gagal menyimpan kes ujian. Sila semak data dan cuba lagi.")}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("kes_add_new_kes", _params, socket) do
+    try do
+      selected = socket.assigns[:kes_selected_ujian]
+      ujian_id = selected && (Map.get(selected, :id) || Map.get(selected, "id"))
+
+      if selected && is_integer(ujian_id) do
+        senarai =
+          Map.get(selected, :senarai_kes_ujian, []) || Map.get(selected, "senarai_kes_ujian", [])
+
+        existing_kods = Enum.map(senarai, fn k -> Map.get(k, :kod) || Map.get(k, "kod") end)
+
+        new_number =
+          existing_kods
+          |> Enum.map(fn kod ->
+            case kod && Regex.run(~r/SEC-(\d+)/, to_string(kod)) do
+              [_, num_str] -> String.to_integer(num_str)
+              _ -> 0
+            end
+          end)
+          |> (fn list -> if list == [], do: [0], else: list end).()
+          |> Enum.max()
+          |> Kernel.+(1)
+
+        kod = "SEC-#{String.pad_leading(Integer.to_string(new_number), 3, "0")}"
+
+        attrs = %{
+          ujian_keselamatan_id: ujian_id,
+          kod: kod,
+          senario: "",
+          langkah: "",
+          keputusan_dijangka: "",
+          keputusan_sebenar: nil,
+          hasil: nil,
+          penguji: nil,
+          tarikh_ujian: nil,
+          disahkan: false,
+          disahkan_oleh: nil,
+          tarikh_pengesahan: nil
+        }
+
+        case UjianKeselamatan.create_kes(attrs) do
+          {:ok, _} ->
+            updated = UjianKeselamatan.get_ujian_formatted(ujian_id)
+            if updated do
+              {:noreply,
+               socket
+               |> assign(:kes_selected_ujian, updated)
+               |> put_flash(:info, "Kes ujian baru berjaya ditambah")}
+            else
+              {:noreply,
+               socket
+               |> put_flash(
+                 :error,
+                 "Kes ujian ditambah tetapi data tidak dapat dimuat semula. Sila refresh halaman."
+               )}
+            end
+
+          {:error, changeset} ->
+            errors =
+              try do
+                Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
+                |> Enum.flat_map(fn {_field, msgs} -> msgs end)
+                |> Enum.join(", ")
+              rescue
+                _e -> ""
+              end
+
+            msg =
+              if errors != "" do
+                "Gagal menambah kes ujian: #{errors}"
+              else
+                "Gagal menambah kes ujian. Sila cuba lagi."
+              end
+
+            {:noreply, socket |> put_flash(:error, msg)}
+        end
+      else
+        {:noreply,
+         socket
+         |> put_flash(:error, "Ujian tidak dijumpai. Sila kembali ke senarai dan cuba lagi.")}
+      end
+    rescue
+      e ->
+        require Logger
+        Logger.error("kes_add_new_kes crashed: #{inspect(e)}")
+        Logger.error(Exception.format(:error, e, __STACKTRACE__))
+        err_msg = Exception.message(e)
+        flash_msg =
+          if String.length(err_msg) < 120 do
+            "Ralat menambah kes ujian: #{err_msg}"
+          else
+            "Ralat menambah kes ujian. Sila cuba lagi atau hubungi pentadbir."
+          end
+        {:noreply, socket |> put_flash(:error, flash_msg)}
+    end
+  end
+
+  @impl true
+  def handle_event("kes_delete_kes_ujian", %{"kes_id" => kes_id_str}, socket) do
+    kes_id = kes_parse_kes_id(kes_id_str)
+    kes = is_integer(kes_id) && UjianKeselamatan.get_kes(kes_id)
+
+    if kes do
+      case UjianKeselamatan.delete_kes(kes) do
+        {:ok, _} ->
+          ujian_id = socket.assigns.kes_selected_ujian.id
+          updated = UjianKeselamatan.get_ujian_formatted(ujian_id)
+          {:noreply,
+           socket
+           |> assign(:kes_selected_ujian, updated)
+           |> put_flash(:info, "Kes ujian berjaya dipadam")}
+
+        {:error, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Gagal memadam kes ujian. Sila cuba lagi.")}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
   @impl true
   def handle_event("validate_perubahan", %{"perubahan" => perubahan_params}, socket) do
     form = to_form(perubahan_params, as: :perubahan)
@@ -1433,43 +2014,67 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     end
   end
 
-  # Senarai ujian keselamatan untuk tab projek
-  # Menggunakan logik yang sama seperti di UjianKeselamatanLive:
-  # satu baris per modul, dan data ujian (jika ada) akan digabung
-  # mengikut index modul.
-  defp build_ujian_keselamatan_rows_for_project(modules_from_analisis, ujian_raw) do
-    Enum.with_index(modules_from_analisis, 0)
-    |> Enum.map(fn {mod, idx} ->
-      ujian = Enum.at(ujian_raw, idx)
+  # Ujian Keselamatan (tab) helpers
+  defp kes_get_ujian_by_id(ujian_id, _ujian_id_str, _socket) when is_integer(ujian_id) do
+    UjianKeselamatan.get_ujian_formatted(ujian_id)
+  end
 
-      modul_name = mod[:name] || Map.get(mod, :name) || Map.get(mod, :nama_modul) || ""
-      modul_id = mod[:id] || Map.get(mod, :id) || "module_#{idx}"
+  defp kes_get_ujian_by_id(_ujian_id, ujian_id_str, socket) when is_binary(ujian_id_str) do
+    if socket.assigns[:ujian_keselamatan] && length(socket.assigns.ujian_keselamatan) > 0 do
+      Enum.find(socket.assigns.ujian_keselamatan, fn u -> u.id == ujian_id_str end)
+    else
+      nil
+    end
+  end
 
-      if ujian do
-        ujian
-        |> Map.put(:modul, modul_name)
-        |> Map.put(:nama_modul, modul_name)
-        |> Map.put_new(:id, modul_id)
-        |> Map.put_new(:status, "Menunggu")
-        |> Map.put_new(:tarikh_ujian, nil)
-        |> Map.put_new(:tarikh_dijangka_siap, nil)
-        |> Map.put_new(:penguji, nil)
-        |> Map.put_new(:hasil, "Belum Selesai")
-        |> Map.put_new(:catatan, nil)
-      else
-        %{
-          id: modul_id,
-          modul: modul_name,
-          nama_modul: modul_name,
-          status: "Menunggu",
-          tarikh_ujian: nil,
-          tarikh_dijangka_siap: nil,
-          penguji: nil,
-          hasil: "Belum Selesai",
-          catatan: nil
-        }
-      end
-    end)
+  defp kes_get_ujian_by_id(_, _, _), do: nil
+
+  defp kes_parse_ujian_id(id) when is_integer(id), do: id
+
+  defp kes_parse_ujian_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int_id, _} -> int_id
+      :error -> id
+    end
+  end
+
+  defp kes_parse_ujian_id(_), do: nil
+
+  defp kes_format_date_for_form(nil), do: ""
+  defp kes_format_date_for_form(%Date{} = d), do: Calendar.strftime(d, "%Y-%m-%d")
+  defp kes_format_date_for_form(_), do: ""
+
+  def kes_upload_error_to_string(:too_many_files), do: "Terlalu banyak fail dipilih (maks 1)"
+  def kes_upload_error_to_string(:too_large), do: "Fail terlalu besar (maks 10MB)"
+  def kes_upload_error_to_string(:not_accepted), do: "Jenis fail tidak diterima"
+  def kes_upload_error_to_string(:external_client_failure), do: "Muat naik gagal"
+  def kes_upload_error_to_string({:writer_failure, _}), do: "Gagal menyimpan fail"
+  def kes_upload_error_to_string(other), do: "Ralat: #{inspect(other)}"
+
+  defp kes_parse_date_param(""), do: nil
+  defp kes_parse_date_param(nil), do: nil
+
+  defp kes_parse_date_param(str) when is_binary(str) do
+    case Date.from_iso8601(str) do
+      {:ok, date} -> date
+      _ -> nil
+    end
+  end
+
+  defp kes_parse_module_id_from_placeholder("module_" <> rest) do
+    case Integer.parse(rest) do
+      {id, _} -> id
+      :error -> nil
+    end
+  end
+
+  defp kes_parse_kes_id(kes_id) when is_integer(kes_id), do: kes_id
+
+  defp kes_parse_kes_id(kes_id) when is_binary(kes_id) do
+    case Integer.parse(kes_id) do
+      {int_id, _} -> int_id
+      :error -> kes_id
+    end
   end
 
   # Penyerahan (delivery) - same data as PenyerahanLive for tab display

@@ -72,14 +72,10 @@ defmodule SppaWeb.Router do
       get "/projek/:project_id/modul/pdf", ModulProjekPdfController, :show
       live "/projek/:project_id/pelan-modul", PelanModulLive, :index
       get "/pelan-modul/:project_id/pdf", PelanModulPdfController, :show
-      live "/projek/:project_id/ujian-keselamatan", UjianKeselamatanLive, :index
-      live "/projek/:project_id/ujian-keselamatan/:id", UjianKeselamatanLive, :show
       live "/analisis-dan-rekabentuk", AnalisisDanRekabentukLive, :index
 
       # Dashboard modules referenced by the sidebar (must exist for VerifiedRoutes ~p)
       live "/jadual-projek", JadualProjekLive, :index
-      live "/ujian-keselamatan", UjianKeselamatanLive, :index
-      live "/ujian-keselamatan/:id", UjianKeselamatanLive, :show
       live "/penempatan", PenempatanLive, :index
       live "/penempatan/:id", PenempatanLive, :show
       live "/projek/:project_id/penyerahan", PenyerahanLive, :index
