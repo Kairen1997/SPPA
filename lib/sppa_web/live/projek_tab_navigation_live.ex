@@ -1381,15 +1381,6 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     {:noreply, socket}
   end
 
-  defp maybe_cancel_kes_file_uploads(socket) do
-    entries = get_in(socket.assigns, [:uploads, :kes_file, :entries]) || []
-    Enum.reduce(entries, socket, fn entry, acc ->
-      cancel_upload(acc, :kes_file, entry.ref)
-    end)
-  rescue
-    _ -> socket
-  end
-
   @impl true
   def handle_event("kes_create_ujian", %{"ujian" => ujian_params}, socket) do
     project_id = socket.assigns.project.id
@@ -2015,6 +2006,15 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   end
 
   # Ujian Keselamatan (tab) helpers
+  defp maybe_cancel_kes_file_uploads(socket) do
+    entries = get_in(socket.assigns, [:uploads, :kes_file, :entries]) || []
+    Enum.reduce(entries, socket, fn entry, acc ->
+      cancel_upload(acc, :kes_file, entry.ref)
+    end)
+  rescue
+    _ -> socket
+  end
+
   defp kes_get_ujian_by_id(ujian_id, _ujian_id_str, _socket) when is_integer(ujian_id) do
     UjianKeselamatan.get_ujian_formatted(ujian_id)
   end
