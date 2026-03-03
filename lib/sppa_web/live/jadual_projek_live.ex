@@ -1,7 +1,9 @@
 defmodule SppaWeb.JadualProjekLive do
   use SppaWeb, :live_view
 
+  alias Sppa.GanttData
   alias Sppa.Projects
+  alias Sppa.ProjectModules
 
   @allowed_roles ["pengurus projek", "pembangun sistem", "ketua penolong pengarah"]
 
@@ -24,13 +26,25 @@ defmodule SppaWeb.JadualProjekLive do
 
       # Sentiasa muat projek dari DB (sama bila connected atau tidak) supaya data tidak hilang selepas refresh
       projects = list_projects(socket.assigns.current_scope, user_role)
-      gantt_data = prepare_gantt_data(projects)
+
+      # Pembangun sistem: use Gantt from Pelan Modul (project modules by project_id) per project
+      {gantt_data, project_gantt_list, use_pelan_style_gantt} =
+        if user_role == "pembangun sistem" do
+          {nil, build_project_gantt_list(projects), true}
+        else
+          gd = prepare_gantt_data(projects)
+          {gd, [], false}
+        end
 
       month_labels =
-        if length(gantt_data.projects) > 0 do
-          generate_month_labels(gantt_data.min_date, gantt_data.max_date)
-        else
+        if use_pelan_style_gantt do
           []
+        else
+          if gantt_data && length(gantt_data.projects) > 0 do
+            generate_month_labels(gantt_data.min_date, gantt_data.max_date)
+          else
+            []
+          end
         end
 
       activities =
@@ -47,6 +61,8 @@ defmodule SppaWeb.JadualProjekLive do
        socket
        |> assign(:projects, projects)
        |> assign(:gantt_data, gantt_data)
+       |> assign(:project_gantt_list, project_gantt_list)
+       |> assign(:use_pelan_style_gantt, use_pelan_style_gantt)
        |> assign(:month_labels, month_labels)
        |> assign(:get_status_color, &get_status_color_value/1)
        |> assign(:activities, activities)
@@ -68,6 +84,17 @@ defmodule SppaWeb.JadualProjekLive do
 
       {:ok, socket}
     end
+  end
+
+  # Build Pelan-Modul-style Gantt list for pembangun sistem (one Gantt per project from project modules)
+  defp build_project_gantt_list(projects) when is_list(projects) do
+    projects
+    |> Enum.map(fn p ->
+      raw = Projects.get_project_by_id(p.id)
+      modules = if raw, do: ProjectModules.list_modules_by_project_id(p.id), else: []
+      if raw, do: GanttData.build_project_gantt(raw, modules), else: nil
+    end)
+    |> Enum.reject(&is_nil/1)
   end
 
   # Get projects list from DB (sama seperti Senarai Sistem) supaya data konsisten dan tidak hilang selepas refresh
@@ -457,20 +484,31 @@ defmodule SppaWeb.JadualProjekLive do
                   socket.assigns.current_scope.user.role
                 )
 
-              gantt_data = prepare_gantt_data(projects)
-
-              month_labels =
-                if length(gantt_data.projects) > 0 do
-                  generate_month_labels(gantt_data.min_date, gantt_data.max_date)
+              socket =
+                if socket.assigns.use_pelan_style_gantt do
+                  socket
+                  |> assign(:projects, projects)
+                  |> assign(:project_gantt_list, build_project_gantt_list(projects))
+                  |> assign(:gantt_data, nil)
+                  |> assign(:month_labels, [])
                 else
-                  []
+                  gantt_data = prepare_gantt_data(projects)
+
+                  month_labels =
+                    if length(gantt_data.projects) > 0 do
+                      generate_month_labels(gantt_data.min_date, gantt_data.max_date)
+                    else
+                      []
+                    end
+
+                  socket
+                  |> assign(:projects, projects)
+                  |> assign(:gantt_data, gantt_data)
+                  |> assign(:month_labels, month_labels)
                 end
 
               {:noreply,
                socket
-               |> assign(:projects, projects)
-               |> assign(:gantt_data, gantt_data)
-               |> assign(:month_labels, month_labels)
                |> assign(:show_edit_project_modal, false)
                |> assign(:selected_project, nil)
                |> assign(:form, to_form(%{}, as: :project))
@@ -495,20 +533,31 @@ defmodule SppaWeb.JadualProjekLive do
       project_id = String.to_integer(project_id)
       updated_projects = Enum.reject(socket.assigns.projects, fn p -> p.id == project_id end)
 
-      gantt_data = prepare_gantt_data(updated_projects)
-
-      month_labels =
-        if length(gantt_data.projects) > 0 do
-          generate_month_labels(gantt_data.min_date, gantt_data.max_date)
+      socket =
+        if socket.assigns.use_pelan_style_gantt do
+          socket
+          |> assign(:projects, updated_projects)
+          |> assign(:project_gantt_list, build_project_gantt_list(updated_projects))
+          |> assign(:gantt_data, nil)
+          |> assign(:month_labels, [])
         else
-          []
+          gantt_data = prepare_gantt_data(updated_projects)
+
+          month_labels =
+            if length(gantt_data.projects) > 0 do
+              generate_month_labels(gantt_data.min_date, gantt_data.max_date)
+            else
+              []
+            end
+
+          socket
+          |> assign(:projects, updated_projects)
+          |> assign(:gantt_data, gantt_data)
+          |> assign(:month_labels, month_labels)
         end
 
       {:noreply,
        socket
-       |> assign(:projects, updated_projects)
-       |> assign(:gantt_data, gantt_data)
-       |> assign(:month_labels, month_labels)
        |> put_flash(:info, "Projek berjaya dipadam.")}
     else
       {:noreply, socket}
@@ -528,4 +577,25 @@ defmodule SppaWeb.JadualProjekLive do
 
   defp parse_date(%Date{} = date), do: date
   defp parse_date(_), do: Date.utc_today()
+
+  # Helpers for Pelan-style Gantt (module rows) when logged in as pembangun sistem
+  def days_between(start_date, end_date), do: Date.diff(end_date, start_date) + 1
+
+  def module_status_color("in_progress"), do: "bg-blue-100 text-blue-800 border border-blue-200"
+  def module_status_color("done"), do: "bg-green-100 text-green-800 border border-green-200"
+  def module_status_color(_), do: "bg-gray-100 text-gray-800 border border-gray-200"
+
+  def module_status_label("in_progress"), do: "Dalam Proses"
+  def module_status_label("done"), do: "Selesai"
+  def module_status_label(_), do: "Dalam Proses"
+
+  def priority_color("high"), do: "bg-orange-100 text-orange-800 border-orange-200"
+  def priority_color("medium"), do: "bg-amber-100 text-amber-800 border-amber-200"
+  def priority_color("low"), do: "bg-pink-100 text-pink-800 border-pink-200"
+  def priority_color(_), do: "bg-gray-100 text-gray-800 border-gray-200"
+
+  def priority_label("high"), do: "Tinggi"
+  def priority_label("medium"), do: "Sederhana"
+  def priority_label("low"), do: "Rendah"
+  def priority_label(_), do: "Sederhana"
 end

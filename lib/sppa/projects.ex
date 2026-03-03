@@ -120,8 +120,8 @@ defmodule Sppa.Projects do
       dokumen_sokongan:
         cond do
           ap &&
-              Map.has_key?(ap, :kertas_kerja_path) &&
-              ap.kertas_kerja_path &&
+            Map.has_key?(ap, :kertas_kerja_path) &&
+            ap.kertas_kerja_path &&
               ap.kertas_kerja_path != "" ->
             1
 
@@ -208,6 +208,44 @@ defmodule Sppa.Projects do
       |> Repo.one()
 
     map_result(result)
+  end
+
+  @doc """
+  Returns the list of project IDs visible to the given `current_scope`,
+  based on the user's role. Used by activity logging and dashboards to
+  filter to only projects the user is allowed to see.
+  """
+  def visible_project_ids(current_scope) do
+    role = current_scope.user && current_scope.user.role
+
+    ids =
+      case role do
+        "ketua penolong pengarah" ->
+          from(p in Project, select: p.id)
+          |> Repo.all()
+
+        "pengurus projek" ->
+          from(p in Project,
+            where: p.project_manager_id == ^current_scope.user.id,
+            select: p.id
+          )
+          |> Repo.all()
+
+        "pembangun sistem" ->
+          projects_for_pembangun_sistem(current_scope)
+          |> Enum.map(& &1.id)
+
+        _ ->
+          from(p in Project,
+            where: p.user_id == ^current_scope.user.id,
+            select: p.id
+          )
+          |> Repo.all()
+      end
+
+    ids
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
   end
 
   defp get_dashboard_stats_by_project_manager(current_scope) do
