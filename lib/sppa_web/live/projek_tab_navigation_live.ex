@@ -124,7 +124,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
         perubahan = PermohonanPerubahan.list_by_project(project_id)
         penempatan = get_penempatan_for_project(project_id, socket.assigns.current_scope, project)
-        penyerahan = get_penyerahan()
+        penyerahan = get_penyerahan_for_project(project)
         ujian = build_uat_list(project_id, socket.assigns.current_scope)
         uat_per_page = 10
         uat_total = length(ujian)
@@ -172,6 +172,18 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:selected_ujian, nil)
          |> assign(:penempatan, penempatan)
          |> assign(:penyerahan, penyerahan)
+         # Penyerahan tab state (modals & forms)
+         |> assign(:penyerahan_show_create_modal, false)
+         |> assign(:penyerahan_show_edit_modal, false)
+         |> assign(:penyerahan_show_upload_modal, false)
+         |> assign(:penyerahan_editing_penyerahan, nil)
+         |> assign(:penyerahan_selected_penyerahan, nil)
+         |> assign(:penyerahan_uploading_penyerahan_id, nil)
+         |> assign(:penyerahan_uploading_penyerahan, nil)
+         |> assign(:penyerahan_form, to_form(%{}, as: :penyerahan))
+         |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))
+         |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))
+         |> assign(:penyerahan_expanded_catatan, MapSet.new())
          |> assign(:ujian, ujian)
          |> assign(:uat_paginated_ujian, uat_paginated_ujian)
          |> assign(:uat_ujian_total, uat_total)
@@ -1447,6 +1459,335 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     end
   end
 
+  # =========================
+  # Penyerahan tab events
+  # =========================
+
+  @impl true
+  def handle_event("penyerahan_open_create_modal", _params, socket) do
+    form = to_form(%{}, as: :penyerahan)
+
+    {:noreply,
+     socket
+     |> assign(:penyerahan_show_create_modal, true)
+     |> assign(:penyerahan_form, form)}
+  end
+
+  @impl true
+  def handle_event("penyerahan_close_create_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:penyerahan_show_create_modal, false)
+     |> assign(:penyerahan_form, to_form(%{}, as: :penyerahan))}
+  end
+
+  @impl true
+  def handle_event("penyerahan_validate", %{"penyerahan" => penyerahan_params}, socket) do
+    form = to_form(penyerahan_params, as: :penyerahan)
+    {:noreply, assign(socket, :penyerahan_form, form)}
+  end
+
+  @impl true
+  def handle_event("penyerahan_create", %{"penyerahan" => penyerahan_params}, socket) do
+    new_id = "penyerahan_#{length(socket.assigns.penyerahan) + 1}"
+    new_number = length(socket.assigns.penyerahan) + 1
+
+    tarikh_penyerahan =
+      if penyerahan_params["tarikh_penyerahan"] && penyerahan_params["tarikh_penyerahan"] != "" do
+        case Date.from_iso8601(penyerahan_params["tarikh_penyerahan"]) do
+          {:ok, date} -> date
+          _ -> nil
+        end
+      else
+        nil
+      end
+
+    tarikh_dijangka =
+      if penyerahan_params["tarikh_dijangka"] && penyerahan_params["tarikh_dijangka"] != "" do
+        case Date.from_iso8601(penyerahan_params["tarikh_dijangka"]) do
+          {:ok, date} -> date
+          _ -> nil
+        end
+      else
+        nil
+      end
+
+    new_penyerahan = %{
+      id: new_id,
+      number: new_number,
+      nama_sistem: penyerahan_params["nama_sistem"],
+      versi: penyerahan_params["versi"] || "",
+      tarikh_penyerahan: tarikh_penyerahan,
+      tarikh_dijangka: tarikh_dijangka,
+      status: penyerahan_params["status"] || "Menunggu",
+      penerima: penyerahan_params["penerima"],
+      pembangun_team:
+        if(penyerahan_params["pembangun_team"] == "",
+          do: nil,
+          else: penyerahan_params["pembangun_team"]
+        ),
+      pengurus_projek:
+        if(penyerahan_params["pengurus_projek"] == "",
+          do: nil,
+          else: penyerahan_params["pengurus_projek"]
+        ),
+      lokasi: penyerahan_params["lokasi"],
+      catatan:
+        if(penyerahan_params["catatan"] == "", do: nil, else: penyerahan_params["catatan"]),
+      manual_pengguna_bahagian_a: nil,
+      surat_akuan_penerimaan: nil,
+      diserahkan_oleh:
+        if(penyerahan_params["diserahkan_oleh"] == "",
+          do: nil,
+          else: penyerahan_params["diserahkan_oleh"]
+        ),
+      diterima_oleh:
+        if(penyerahan_params["diterima_oleh"] == "",
+          do: nil,
+          else: penyerahan_params["diterima_oleh"]
+        ),
+      tarikh_diserahkan: tarikh_penyerahan,
+      tarikh_diterima: nil
+    }
+
+    updated_penyerahan = [new_penyerahan | socket.assigns.penyerahan]
+
+    {:noreply,
+     socket
+     |> assign(:penyerahan, updated_penyerahan)
+     |> assign(:penyerahan_show_create_modal, false)
+     |> assign(:penyerahan_form, to_form(%{}, as: :penyerahan))
+     |> put_flash(:info, "Penyerahan berjaya didaftarkan")}
+  end
+
+  @impl true
+  def handle_event("penyerahan_open_edit_modal", %{"penyerahan_id" => penyerahan_id}, socket) do
+    penyerahan =
+      Enum.find(socket.assigns.penyerahan, fn p -> p.id == penyerahan_id end)
+
+    if penyerahan do
+      form_data = %{
+        "nama_sistem" => penyerahan.nama_sistem,
+        "versi" => penyerahan.versi || "",
+        "penerima" => penyerahan.penerima,
+        "pembangun_team" => penyerahan.pembangun_team || "",
+        "pengurus_projek" => penyerahan.pengurus_projek || "",
+        "lokasi" => penyerahan.lokasi,
+        "status" => penyerahan.status,
+        "tarikh_dijangka" =>
+          if(penyerahan.tarikh_dijangka,
+            do: Calendar.strftime(penyerahan.tarikh_dijangka, "%Y-%m-%d"),
+            else: ""
+          ),
+        "tarikh_penyerahan" =>
+          if(penyerahan.tarikh_penyerahan,
+            do: Calendar.strftime(penyerahan.tarikh_penyerahan, "%Y-%m-%d"),
+            else: ""
+          ),
+        "diserahkan_oleh" => penyerahan.diserahkan_oleh || "",
+        "diterima_oleh" => penyerahan.diterima_oleh || "",
+        "catatan" => penyerahan.catatan || ""
+      }
+
+      form = to_form(form_data, as: :penyerahan)
+
+      {:noreply,
+       socket
+       |> assign(:penyerahan_show_edit_modal, true)
+       |> assign(:penyerahan_editing_penyerahan, penyerahan)
+       |> assign(:penyerahan_form, form)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("penyerahan_close_edit_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:penyerahan_show_edit_modal, false)
+     |> assign(:penyerahan_editing_penyerahan, nil)
+     |> assign(:penyerahan_form, to_form(%{}, as: :penyerahan))}
+  end
+
+  @impl true
+  def handle_event("penyerahan_update", %{"penyerahan" => penyerahan_params}, socket) do
+    editing_penyerahan = socket.assigns[:penyerahan_editing_penyerahan]
+
+    if editing_penyerahan do
+      penyerahan_id = editing_penyerahan.id
+
+      tarikh_penyerahan =
+        if penyerahan_params["tarikh_penyerahan"] && penyerahan_params["tarikh_penyerahan"] != "" do
+          case Date.from_iso8601(penyerahan_params["tarikh_penyerahan"]) do
+            {:ok, date} -> date
+            _ -> editing_penyerahan.tarikh_penyerahan
+          end
+        else
+          editing_penyerahan.tarikh_penyerahan
+        end
+
+      tarikh_dijangka =
+        if penyerahan_params["tarikh_dijangka"] && penyerahan_params["tarikh_dijangka"] != "" do
+          case Date.from_iso8601(penyerahan_params["tarikh_dijangka"]) do
+            {:ok, date} -> date
+            _ -> editing_penyerahan.tarikh_dijangka
+          end
+        else
+          editing_penyerahan.tarikh_dijangka
+        end
+
+      updated_penyerahan_data = %{
+        editing_penyerahan
+        | nama_sistem: penyerahan_params["nama_sistem"] || editing_penyerahan.nama_sistem,
+          versi: penyerahan_params["versi"] || "",
+          penerima: penyerahan_params["penerima"] || editing_penyerahan.penerima,
+          pembangun_team:
+            if(penyerahan_params["pembangun_team"] == "",
+              do: nil,
+              else: penyerahan_params["pembangun_team"]
+            ),
+          pengurus_projek:
+            if(penyerahan_params["pengurus_projek"] == "",
+              do: nil,
+              else: penyerahan_params["pengurus_projek"]
+            ),
+          lokasi: penyerahan_params["lokasi"] || editing_penyerahan.lokasi,
+          status: penyerahan_params["status"] || editing_penyerahan.status,
+          tarikh_penyerahan: tarikh_penyerahan,
+          tarikh_dijangka: tarikh_dijangka,
+          catatan:
+            if(penyerahan_params["catatan"] == "", do: nil, else: penyerahan_params["catatan"]),
+          diserahkan_oleh:
+            if(penyerahan_params["diserahkan_oleh"] == "",
+              do: nil,
+              else: penyerahan_params["diserahkan_oleh"]
+            ),
+          diterima_oleh:
+            if(penyerahan_params["diterima_oleh"] == "",
+              do: nil,
+              else: penyerahan_params["diterima_oleh"]
+            )
+      }
+
+      updated_penyerahan_list =
+        Enum.map(socket.assigns.penyerahan, fn penyerahan ->
+          if penyerahan.id == penyerahan_id, do: updated_penyerahan_data, else: penyerahan
+        end)
+
+      {:noreply,
+       socket
+       |> assign(:penyerahan, updated_penyerahan_list)
+       |> assign(:penyerahan_show_edit_modal, false)
+       |> assign(:penyerahan_editing_penyerahan, nil)
+       |> assign(:penyerahan_form, to_form(%{}, as: :penyerahan))
+       |> put_flash(:info, "Penyerahan berjaya dikemaskini")}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("penyerahan_open_upload_modal", %{"penyerahan_id" => penyerahan_id}, socket) do
+    penyerahan =
+      Enum.find(socket.assigns.penyerahan, fn p -> p.id == penyerahan_id end)
+
+    if penyerahan do
+      {:noreply,
+       socket
+       |> assign(:penyerahan_show_upload_modal, true)
+       |> assign(:penyerahan_uploading_penyerahan_id, penyerahan_id)
+       |> assign(:penyerahan_uploading_penyerahan, penyerahan)
+       |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))
+       |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("penyerahan_close_upload_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:penyerahan_show_upload_modal, false)
+     |> assign(:penyerahan_uploading_penyerahan_id, nil)
+     |> assign(:penyerahan_uploading_penyerahan, nil)
+     |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))
+     |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
+  end
+
+  @impl true
+  def handle_event("penyerahan_upload_manual", %{"upload_manual" => upload_params}, socket) do
+    penyerahan_id =
+      upload_params["penyerahan_id"] ||
+        socket.assigns[:penyerahan_uploading_penyerahan_id]
+
+    if penyerahan_id do
+      updated_penyerahan =
+        Enum.map(socket.assigns.penyerahan, fn penyerahan ->
+          if penyerahan.id == penyerahan_id do
+            %{penyerahan | manual_pengguna_bahagian_a: "manual_pengguna_#{penyerahan_id}.pdf"}
+          else
+            penyerahan
+          end
+        end)
+
+      {:noreply,
+       socket
+       |> assign(:penyerahan, updated_penyerahan)
+       |> put_flash(:info, "Manual pengguna bahagian A berjaya dimuat naik")
+       |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))}
+    else
+      {:noreply,
+       socket
+       |> put_flash(:error, "Sila pilih penyerahan terlebih dahulu")
+       |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))}
+    end
+  end
+
+  @impl true
+  def handle_event("penyerahan_upload_surat", %{"upload_surat" => upload_params}, socket) do
+    penyerahan_id =
+      upload_params["penyerahan_id"] ||
+        socket.assigns[:penyerahan_uploading_penyerahan_id]
+
+    if penyerahan_id do
+      updated_penyerahan =
+        Enum.map(socket.assigns.penyerahan, fn penyerahan ->
+          if penyerahan.id == penyerahan_id do
+            %{penyerahan | surat_akuan_penerimaan: "surat_akuan_#{penyerahan_id}.pdf"}
+          else
+            penyerahan
+          end
+        end)
+
+      {:noreply,
+       socket
+       |> assign(:penyerahan, updated_penyerahan)
+       |> put_flash(:info, "Surat Akuan Penerimaan Aplikasi berjaya dimuat naik")
+       |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
+    else
+      {:noreply,
+       socket
+       |> put_flash(:error, "Sila pilih penyerahan terlebih dahulu")
+       |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
+    end
+  end
+
+  @impl true
+  def handle_event("penyerahan_toggle_catatan", %{"penyerahan_id" => penyerahan_id}, socket) do
+    expanded = socket.assigns.penyerahan_expanded_catatan || MapSet.new()
+
+    expanded =
+      if MapSet.member?(expanded, penyerahan_id) do
+        MapSet.delete(expanded, penyerahan_id)
+      else
+        MapSet.put(expanded, penyerahan_id)
+      end
+
+    {:noreply, assign(socket, :penyerahan_expanded_catatan, expanded)}
+  end
+
   @impl true
   def handle_event("kes_open_edit_modal", %{"ujian_id" => ujian_id_str}, socket) do
     ujian_id = kes_parse_ujian_id(ujian_id_str)
@@ -2358,70 +2699,69 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     end
   end
 
-  # Penyerahan (delivery) - same data as PenyerahanLive for tab display
-  defp get_penyerahan do
-    [
-      %{
-        id: "penyerahan_1",
-        number: 1,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.0.0",
-        tarikh_penyerahan: ~D[2024-12-20],
-        tarikh_dijangka: ~D[2024-12-18],
-        status: "Selesai",
-        penerima: "Jabatan Teknologi Maklumat",
-        pembangun_team: "Team Alpha",
-        pengurus_projek: "Siti binti Hassan",
-        lokasi: "Pejabat Utama JPKN",
-        catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
-        manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
-        surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
-        diserahkan_oleh: "Ahmad bin Abdullah",
-        diterima_oleh: "Siti binti Hassan",
-        tarikh_diserahkan: ~D[2024-12-20],
-        tarikh_diterima: ~D[2024-12-20]
-      },
-      %{
-        id: "penyerahan_2",
-        number: 2,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.1.0",
-        tarikh_penyerahan: ~D[2024-12-25],
-        tarikh_dijangka: ~D[2024-12-22],
-        status: "Dalam Proses",
-        penerima: "Jabatan Teknologi Maklumat",
-        pembangun_team: "Team Beta",
-        pengurus_projek: "Ahmad bin Abdullah",
-        lokasi: "Pejabat Utama JPKN",
-        catatan: "Penyerahan untuk versi 1.1.0",
-        manual_pengguna_bahagian_a: nil,
-        surat_akuan_penerimaan: nil,
-        diserahkan_oleh: "Ahmad bin Abdullah",
-        diterima_oleh: nil,
-        tarikh_diserahkan: ~D[2024-12-25],
-        tarikh_diterima: nil
-      },
-      %{
-        id: "penyerahan_3",
-        number: 3,
-        nama_sistem: "Sistem Pengurusan Permohonan",
-        versi: "1.2.0",
-        tarikh_penyerahan: nil,
-        tarikh_dijangka: ~D[2024-12-28],
-        status: "Menunggu",
-        penerima: "Jabatan Teknologi Maklumat",
-        pembangun_team: nil,
-        pengurus_projek: nil,
-        lokasi: "Pejabat Utama JPKN",
-        catatan: "Penyerahan untuk versi 1.2.0",
-        manual_pengguna_bahagian_a: nil,
-        surat_akuan_penerimaan: nil,
-        diserahkan_oleh: nil,
-        diterima_oleh: nil,
-        tarikh_diserahkan: nil,
-        tarikh_diterima: nil
-      }
-    ]
+  # Penyerahan (delivery) - selaraskan dengan PenyerahanLive untuk tab projek
+  defp versi_for_project(nil), do: "1.0.0"
+
+  defp versi_for_project(project) do
+    AnalisisDanRekabentuk.get_versi_by_project_ids([project.id])
+    |> Map.get(project.id, "1.0.0")
+  end
+
+  defp get_penyerahan_for_project(project) do
+    nama_sistem =
+      if project,
+        do: project.nama || "Sistem Pengurusan Permohonan",
+        else: "Sistem Pengurusan Permohonan"
+
+    versi = versi_for_project(project)
+
+    if project do
+      [
+        %{
+          id: "penyerahan_1",
+          number: 1,
+          nama_sistem: nama_sistem,
+          versi: versi,
+          tarikh_penyerahan: ~D[2024-12-20],
+          tarikh_dijangka: ~D[2024-12-18],
+          status: "Selesai",
+          penerima: "Jabatan Teknologi Maklumat",
+          pembangun_team: "Team Alpha",
+          pengurus_projek: "Siti binti Hassan",
+          lokasi: "Pejabat Utama JPKN",
+          catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
+          manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
+          surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
+          diserahkan_oleh: "Ahmad bin Abdullah",
+          diterima_oleh: "Siti binti Hassan",
+          tarikh_diserahkan: ~D[2024-12-20],
+          tarikh_diterima: ~D[2024-12-20]
+        }
+      ]
+    else
+      [
+        %{
+          id: "penyerahan_1",
+          number: 1,
+          nama_sistem: nama_sistem,
+          versi: versi,
+          tarikh_penyerahan: ~D[2024-12-20],
+          tarikh_dijangka: ~D[2024-12-18],
+          status: "Selesai",
+          penerima: "Jabatan Teknologi Maklumat",
+          pembangun_team: "Team Alpha",
+          pengurus_projek: "Siti binti Hassan",
+          lokasi: "Pejabat Utama JPKN",
+          catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
+          manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
+          surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
+          diserahkan_oleh: "Ahmad bin Abdullah",
+          diterima_oleh: "Siti binti Hassan",
+          tarikh_diserahkan: ~D[2024-12-20],
+          tarikh_diterima: ~D[2024-12-20]
+        }
+      ]
+    end
   end
 
   # Penempatan (deployment) - data from DB, same source as halaman penempatan (PenempatanLive)
