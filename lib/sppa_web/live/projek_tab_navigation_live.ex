@@ -1521,11 +1521,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       tarikh_dijangka: tarikh_dijangka,
       status: penyerahan_params["status"] || "Menunggu",
       penerima: penyerahan_params["penerima"],
-      pembangun_team:
-        if(penyerahan_params["pembangun_team"] == "",
-          do: nil,
-          else: penyerahan_params["pembangun_team"]
-        ),
+      pembangun_team: nil,
       pengurus_projek:
         if(penyerahan_params["pengurus_projek"] == "",
           do: nil,
@@ -1642,11 +1638,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         | nama_sistem: penyerahan_params["nama_sistem"] || editing_penyerahan.nama_sistem,
           versi: penyerahan_params["versi"] || "",
           penerima: penyerahan_params["penerima"] || editing_penyerahan.penerima,
-          pembangun_team:
-            if(penyerahan_params["pembangun_team"] == "",
-              do: nil,
-              else: penyerahan_params["pembangun_team"]
-            ),
+          pembangun_team: editing_penyerahan.pembangun_team,
           pengurus_projek:
             if(penyerahan_params["pengurus_projek"] == "",
               do: nil,
@@ -2726,10 +2718,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           tarikh_dijangka: ~D[2024-12-18],
           status: "Selesai",
           penerima: "Jabatan Teknologi Maklumat",
-          pembangun_team: "Team Alpha",
+          pembangun_team: nil,
           pengurus_projek: "Siti binti Hassan",
           lokasi: "Pejabat Utama JPKN",
-          catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
+          catatan: nil,
           manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
           surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
           diserahkan_oleh: "Ahmad bin Abdullah",
@@ -2749,10 +2741,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           tarikh_dijangka: ~D[2024-12-18],
           status: "Selesai",
           penerima: "Jabatan Teknologi Maklumat",
-          pembangun_team: "Team Alpha",
+          pembangun_team: nil,
           pengurus_projek: "Siti binti Hassan",
           lokasi: "Pejabat Utama JPKN",
-          catatan: "Penyerahan pertama untuk sistem pengurusan permohonan",
+          catatan: nil,
           manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
           surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
           diserahkan_oleh: "Ahmad bin Abdullah",
