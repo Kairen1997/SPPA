@@ -16,6 +16,7 @@ defmodule Sppa.ProjectModules do
     ProjectModule
     |> where([m], m.project_id == ^project_id)
     |> order_by([m], asc: m.fasa, asc: m.versi, asc: m.inserted_at)
+    |> preload([m], [:developer, :project])
     |> Repo.all()
   end
 

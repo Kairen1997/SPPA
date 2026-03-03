@@ -119,6 +119,17 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         modules =
           AnalisisDanRekabentuk.list_modules_for_project(project_id, socket.assigns.current_scope)
 
+        project_modules = ProjectModules.list_modules_by_project_id(project_id)
+
+        developer_tasks =
+          case socket.assigns.current_scope && socket.assigns.current_scope.user do
+            %{role: "pembangun sistem", id: user_id} ->
+              Enum.filter(project_modules, fn m -> m.developer_id == user_id end)
+
+            _ ->
+              project_modules
+          end
+
         {jadual_gantt_data, jadual_month_labels} = prepare_jadual_data_for_project(project)
 
         perubahan = PermohonanPerubahan.list_by_project(project_id)
@@ -144,7 +155,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:notifications_open, false)
          |> assign(:profile_menu_open, false)
          |> assign(:project, project)
-         |> assign(:project_modules, ProjectModules.list_modules_by_project_id(project_id))
+         |> assign(:project_modules, project_modules)
+         |> assign(:developer_tasks, developer_tasks)
          |> assign(:soal_selidik_pdf_data, soal_selidik_pdf_data)
          |> assign(:analisis_pdf_data, analisis_pdf_data)
          |> assign(:modules, modules)

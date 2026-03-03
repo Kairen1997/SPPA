@@ -867,15 +867,6 @@
               </div>
             <% @current_tab == "Jadual Projek" -> %>
               <div class="space-y-6">
-                <div class="flex justify-end gap-3 mb-4">
-                  <.link
-                    navigate={~p"/jadual-projek"}
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow"
-                  >
-                    <.icon name="hero-calendar-days" class="w-5 h-5" /> <span>Halaman Penuh</span>
-                  </.link>
-                </div>
-                
                 <%= if @jadual_gantt_data && length(@jadual_gantt_data.projects) > 0 do %>
                   <%!-- Gantt Chart Section --%>
                   <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-6">
@@ -1086,201 +1077,165 @@
               </div>
             <% @current_tab == "Pengaturcaraan" -> %>
               <div class="space-y-6">
-                <div class="flex items-center justify-between mb-4">
-                  <p class="text-gray-600">
-                    Senarai modul yang telah didaftarkan dalam Analisis dan Rekabentuk
-                  </p>
-                  
+                <div class="flex items-center justify-between mb-2">
+                  <div>
+                    <h2 class="text-lg font-semibold text-gray-900">Modul Projek</h2>
+                    <p class="mt-1 text-sm text-gray-500">
+                      Senarai modul projek yang telah ditetapkan oleh Pengurus Projek
+                      untuk projek ini.
+                      <%= if @current_scope && @current_scope.user &&
+                            @current_scope.user.role == "pembangun sistem" do %>
+                        Hanya modul yang ditugaskan kepada anda dipaparkan di sini.
+                      <% end %>
+                    </p>
+                  </div>
+
                   <.link
-                    navigate={~p"/pengaturcaraan?project_id=#{@project.id}"}
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow"
+                    navigate={~p"/projek/#{@project.id}/pelan-modul"}
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm hover:shadow transition-colors duration-200 text-sm"
                   >
-                    <.icon name="hero-code-bracket" class="w-5 h-5" /> <span>Halaman Penuh</span>
+                    <.icon name="hero-chart-bar-square" class="w-5 h-5" />
+                    <span>Pelan Modul</span>
                   </.link>
                 </div>
-                
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-                  <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
-                    <h2 class="text-xl font-semibold text-white">Senarai Modul</h2>
-                    
-                    <p class="text-sm text-blue-100 mt-1">{length(@modules)} Modul</p>
+
+                <%= if @developer_tasks == [] do %>
+                  <div class="bg-white rounded-xl border border-gray-200 px-6 py-10 text-center">
+                    <div class="flex flex-col items-center justify-center text-gray-400">
+                      <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
+                      <p class="text-sm font-medium">
+                        Tiada modul projek ditetapkan
+                      </p>
+                      <p class="mt-1 text-xs text-gray-500 max-w-md">
+                        Modul projek akan dipaparkan di sini selepas Pengurus Projek
+                        menambah dan menetapkan modul kepada pembangun sistem di halaman Modul Projek.
+                      </p>
+                    </div>
                   </div>
-                  
-                  <%= if length(@modules) == 0 do %>
-                    <div class="px-6 py-12 text-center">
-                      <div class="flex flex-col items-center justify-center text-gray-400">
-                        <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
-                        <p class="text-sm font-medium">Tiada modul didaftarkan</p>
-                        
-                        <p class="text-xs mt-1">
-                          Sila daftarkan modul di halaman Analisis dan Rekabentuk
+                <% else %>
+                  <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-between">
+                      <div>
+                        <h3 class="text-sm font-semibold text-gray-900">
+                          Senarai Modul Projek
+                        </h3>
+                        <p class="mt-0.5 text-xs text-gray-500">
+                          {length(@developer_tasks)} modul direkodkan
                         </p>
-                        
-                        <.link
-                          navigate={~p"/analisis-dan-rekabentuk?project_id=#{@project.id}"}
-                          class="mt-4 text-sm font-medium text-blue-600 hover:text-blue-800"
-                        >
-                          Pergi ke Analisis dan Rekabentuk →
-                        </.link>
                       </div>
                     </div>
-                  <% else %>
+
                     <div class="overflow-x-auto">
                       <table class="w-full text-sm">
                         <thead class="bg-gray-50 border-b border-gray-200">
                           <tr>
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-10">
                               Bil
                             </th>
-                            
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                              Nama Modul
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Tajuk Modul
                             </th>
-                            
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                              Versi
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                              Pembangun
                             </th>
-                            
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Keutamaan
                             </th>
-                            
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Status
                             </th>
-                            
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Mula
                             </th>
-                            
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                              Tarikh Jangka Siap
-                            </th>
-                            
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                              Fungsi Modul
+                              Tarikh Akhir
                             </th>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
-                            :for={{module, index} <- Enum.with_index(@modules, 1)}
+                            :for={{task, index} <- Enum.with_index(@developer_tasks, 1)}
                             class="hover:bg-gray-50 transition-colors duration-150"
                           >
                             <td class="px-3 py-2 text-center text-xs text-gray-600 font-medium">
                               {index}
                             </td>
-                            
-                            <td class="px-3 py-2">
-                              <div class="text-xs font-semibold text-gray-900">{module.name}</div>
-                            </td>
-                            
-                            <td class="px-3 py-2 whitespace-nowrap">
-                              <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 text-xs font-mono font-medium">
-                                {module.version}
-                              </span>
-                            </td>
-                            
-                            <td class="px-3 py-2 whitespace-nowrap">
-                              <%= if module.priority && module.priority != "" do %>
-                                <span class={[
-                                  "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
-                                  case module.priority do
-                                    "Sangat Tinggi" ->
-                                      "bg-red-100 text-red-800 border-red-200"
-
-                                    "Tinggi" ->
-                                      "bg-orange-100 text-orange-800 border-orange-200"
-
-                                    "Sederhana" ->
-                                      "bg-yellow-100 text-yellow-800 border-yellow-200"
-
-                                    "Rendah" ->
-                                      "bg-blue-100 text-blue-800 border-blue-200"
-
-                                    _ ->
-                                      "bg-gray-100 text-gray-800 border-gray-200"
-                                  end
-                                ]}>
-                                  {module.priority}
-                                </span>
-                              <% else %>
-                                <span class="text-xs text-gray-400">—</span>
+                            <td class="px-3 py-2 align-top">
+                              <div class="text-xs font-semibold text-gray-900">
+                                {task.title}
+                              </div>
+                              <%= if task.description do %>
+                                <p class="mt-0.5 text-xs text-gray-500 line-clamp-2">
+                                  {task.description}
+                                </p>
                               <% end %>
                             </td>
-                            
-                            <td class="px-3 py-2 whitespace-nowrap">
+                            <td class="px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
+                              <%= if task.developer do %>
+                                {task.developer.name}
+                              <% else %>
+                                <span class="text-gray-400 italic">Belum ditetapkan</span>
+                              <% end %>
+                            </td>
+                            <td class="px-3 py-2 text-center">
                               <span class={[
-                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border",
-                                case module.status do
-                                  "Belum Mula" ->
-                                    "bg-gray-100 text-gray-700 border-gray-200"
-
-                                  "Sedang Dibangunkan" ->
-                                    "bg-blue-100 text-blue-800 border-blue-200"
-
-                                  "Selesai" ->
-                                    "bg-green-100 text-green-800 border-green-200"
-
-                                  "Dalam Ujian" ->
-                                    "bg-purple-100 text-purple-800 border-purple-200"
-
-                                  _ ->
-                                    "bg-gray-100 text-gray-700 border-gray-200"
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border",
+                                case task.priority do
+                                  "high" -> "bg-red-50 text-red-700 border-red-200"
+                                  "low" -> "bg-pink-50 text-pink-700 border-pink-200"
+                                  _ -> "bg-amber-50 text-amber-700 border-amber-200"
                                 end
                               ]}>
-                                {module.status}
+                                <%= case task.priority do %>
+                                  <% "high" -> %>
+                                    Tinggi
+                                  <% "low" -> %>
+                                    Rendah
+                                  <% _ -> %>
+                                    Sederhana
+                                <% end %>
                               </span>
                             </td>
-                            
-                            <td class="px-3 py-2 whitespace-nowrap">
-                              <%= if module.tarikh_mula do %>
-                                <span class="text-xs text-gray-700">
-                                  {Calendar.strftime(module.tarikh_mula, "%d/%m/%Y")}
-                                </span>
+                            <td class="px-3 py-2 text-center">
+                              <span class={[
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border",
+                                case task.status do
+                                  "done" -> "bg-green-50 text-green-700 border-green-200"
+                                  "in_progress" -> "bg-blue-50 text-blue-700 border-blue-200"
+                                  _ -> "bg-gray-50 text-gray-700 border-gray-200"
+                                end
+                              ]}>
+                                <%= case task.status do %>
+                                  <% "done" -> %>
+                                    Selesai
+                                  <% "in_progress" -> %>
+                                    Dalam Proses
+                                  <% _ -> %>
+                                    Dalam Proses
+                                <% end %>
+                              </span>
+                            </td>
+                            <td class="px-3 py-2 text-center text-xs text-gray-700 whitespace-nowrap">
+                              <%= if task.tarikh_mula do %>
+                                {Calendar.strftime(task.tarikh_mula, "%d/%m/%Y")}
                               <% else %>
-                                <span class="text-xs text-gray-400">—</span>
+                                <span class="text-gray-400">—</span>
                               <% end %>
                             </td>
-                            
-                            <td class="px-3 py-2 whitespace-nowrap">
-                              <%= if module.tarikh_jangka_siap do %>
-                                <span class="text-xs text-gray-700">
-                                  {Calendar.strftime(module.tarikh_jangka_siap, "%d/%m/%Y")}
-                                </span>
+                            <td class="px-3 py-2 text-center text-xs text-gray-700 whitespace-nowrap">
+                              <%= if task.due_date do %>
+                                {Calendar.strftime(task.due_date, "%d/%m/%Y")}
                               <% else %>
-                                <span class="text-xs text-gray-400">—</span>
-                              <% end %>
-                            </td>
-                            
-                            <td class="px-3 py-2">
-                              <%= if length(module.functions) > 0 do %>
-                                <div class="space-y-1 max-h-24 overflow-y-auto">
-                                  <div :for={func <- module.functions} class="text-xs">
-                                    <span class="text-gray-900 font-medium">{func.name}</span>
-                                    <%= if length(func.sub_functions) > 0 do %>
-                                      <div class="ml-3 mt-0.5 space-y-0.5">
-                                        <div
-                                          :for={sub_func <- func.sub_functions}
-                                          class="text-gray-600"
-                                        >
-                                          • {sub_func.name}
-                                        </div>
-                                      </div>
-                                    <% end %>
-                                  </div>
-                                </div>
-                              <% else %>
-                                <span class="text-xs text-gray-400 italic">—</span>
+                                <span class="text-gray-400">—</span>
                               <% end %>
                             </td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
-                  <% end %>
-                </div>
+                  </div>
+                <% end %>
               </div>
             <% @current_tab == "Pengurus Perubahan" -> %>
               <div class="space-y-6">

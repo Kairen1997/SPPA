@@ -10,9 +10,16 @@
     >
     </div>
      <%!-- Sidebar --%>
+    <% dashboard_path =
+      if @current_scope && @current_scope.user &&
+           @current_scope.user.role == "pengurus projek" do
+        ~p"/dashboard-pp"
+      else
+        ~p"/dashboard"
+      end %>
     <.dashboard_sidebar
       sidebar_open={@sidebar_open}
-      dashboard_path={~p"/dashboard-pp"}
+      dashboard_path={dashboard_path}
       logo_src={~p"/images/logojpkn.png"}
       current_scope={@current_scope}
       current_path={"/projek/#{@project_id}/pelan-modul"}
@@ -56,14 +63,21 @@
         <div class="max-w-[1800px] mx-auto space-y-6 print:max-w-none print:mx-0 print:space-y-0">
           <%!-- Back Button --%>
           <div class="mb-2 print:hidden">
+            <% back_path =
+              if @current_scope && @current_scope.user &&
+                   @current_scope.user.role == "pengurus projek" do
+                ~p"/projek/#{@project_id}/modul"
+              else
+                ~p"/projek/#{@project_id}?tab=pengaturcaraan"
+              end %>
             <.link
-              navigate={~p"/projek/#{@project_id}/modul"}
+              navigate={back_path}
               class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 group"
             >
               <.icon
                 name="hero-arrow-left"
                 class="w-4 h-4 group-hover:-translate-x-1 transition-transform"
-              /> <span>Kembali ke Modul Projek</span>
+              /> <span>Kembali ke Projek</span>
             </.link>
           </div>
            <%!-- Page Header Section --%>
@@ -96,16 +110,19 @@
                   </div>
                 <% end %>
               </div>
-               <%!-- Print Button --%>
-              <div class="print:hidden">
-                <.link
-                  href={~p"/pelan-modul/#{@project_id}/pdf"}
-                  target="_blank"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-                >
-                  <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
-                </.link>
-              </div>
+               <%!-- Print Button (hidden for pembangun sistem) --%>
+              <%= if @current_scope && @current_scope.user &&
+                    @current_scope.user.role != "pembangun sistem" do %>
+                <div class="print:hidden">
+                  <.link
+                    href={~p"/pelan-modul/#{@project_id}/pdf"}
+                    target="_blank"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  >
+                    <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
+                  </.link>
+                </div>
+              <% end %>
             </div>
           </div>
            <%!-- Gantt Chart Section --%>
@@ -128,7 +145,9 @@
                     Tiada data modul untuk dipaparkan
                   </p>
                   
-                  <p class="text-xs text-gray-400">Tambah modul melalui halaman Modul Projek</p>
+                  <p class="text-xs text-gray-400">
+                    Tambah modul melalui halaman Modul Projek oleh Pengurus Projek.
+                  </p>
                 </div>
               </div>
             <% end %>
