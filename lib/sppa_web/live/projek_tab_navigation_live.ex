@@ -209,6 +209,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:show_create_modal, false)
          |> assign(:selected_perubahan, nil)
          |> assign(:form, to_form(%{}, as: :perubahan))
+         |> assign(:penempatan_show_create_modal, false)
+         |> assign(:penempatan_form, to_form(%{}, as: :penempatan))
+         |> assign(:penempatan_mode, "create")
+         |> assign(:penempatan_editing_id, nil)
          |> assign(:current_tab, "Soal Selidik")
          |> assign(:activities, activities)
          |> assign(:notifications_count, notifications_count)
@@ -1952,6 +1956,254 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          socket
          |> assign(:form, form)
          |> put_flash(:error, "Gagal mengemaskini. Sila semak maklumat.")}
+    end
+  end
+
+  # --- Penempatan (tab) create modal ---
+  def handle_event("open_penempatan_create_modal", _params, socket) do
+    project = socket.assigns.project
+    form_data = %{
+      "nama_sistem" => project.nama || "",
+      "versi" => "1.0.0",
+      "lokasi" => "",
+      "jenis" => "Produksi",
+      "status" => "Menunggu",
+      "tarikh_penempatan" => "",
+      "tarikh_dijangka" => "",
+      "url" => "",
+      "catatan" => "",
+      "dibina_oleh" => ""
+    }
+    {:noreply,
+     socket
+     |> assign(:penempatan_show_create_modal, true)
+     |> assign(:penempatan_form, to_form(form_data, as: :penempatan))
+     |> assign(:penempatan_mode, "create")
+     |> assign(:penempatan_editing_id, nil)}
+  end
+
+  def handle_event("close_penempatan_create_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:penempatan_show_create_modal, false)
+     |> assign(:penempatan_form, to_form(%{}, as: :penempatan))
+     |> assign(:penempatan_mode, "create")
+     |> assign(:penempatan_editing_id, nil)}
+  end
+
+  def handle_event("validate_penempatan", %{"penempatan" => params}, socket) do
+    form = to_form(params, as: :penempatan)
+    {:noreply, assign(socket, :penempatan_form, form)}
+  end
+
+  @impl true
+  def handle_event("open_penempatan_edit_modal", %{"id" => id}, socket) do
+    project = socket.assigns.project
+
+    penempatan =
+      case Integer.parse(to_string(id)) do
+        {int_id, _} -> Penempatans.get_penempatan(int_id)
+        :error -> nil
+      end
+
+    if penempatan do
+      form_data = %{
+        "nama_sistem" => penempatan.nama_sistem || project.nama || "",
+        "versi" => penempatan.versi || "1.0.0",
+        "lokasi" => penempatan.lokasi || "",
+        "jenis" => penempatan.jenis || "Produksi",
+        "status" => penempatan.status || "Menunggu",
+        "tarikh_penempatan" =>
+          if(penempatan.tarikh_penempatan,
+            do: Calendar.strftime(penempatan.tarikh_penempatan, "%Y-%m-%d"),
+            else: Date.utc_today() |> Date.to_iso8601()
+          ),
+        "tarikh_dijangka" =>
+          if(penempatan.tarikh_dijangka,
+            do: Calendar.strftime(penempatan.tarikh_dijangka, "%Y-%m-%d"),
+            else: ""
+          ),
+        "url" => penempatan.url || "",
+        "catatan" => penempatan.catatan || "",
+        "dibina_oleh" => penempatan.dibina_oleh || ""
+      }
+
+      form = to_form(form_data, as: :penempatan)
+
+      {:noreply,
+       socket
+       |> assign(:penempatan_show_create_modal, true)
+       |> assign(:penempatan_form, form)
+       |> assign(:penempatan_mode, "edit")
+       |> assign(:penempatan_editing_id, penempatan.id)}
+    else
+      {:noreply, put_flash(socket, :error, "Penempatan tidak ditemui.")}
+    end
+  end
+
+  def handle_event("create_penempatan", %{"penempatan" => params}, socket) do
+    project_id = socket.assigns.project.id
+    project = socket.assigns.project
+
+    tarikh_penempatan = parse_date_param(params["tarikh_penempatan"])
+
+    tarikh_dijangka = parse_date_param(params["tarikh_dijangka"])
+    tarikh_dibina = parse_date_param(params["tarikh_dibina"])
+
+    attrs = %{
+      project_id: project_id,
+      nama_sistem: params["nama_sistem"] || project.nama,
+      versi: params["versi"] || "1.0.0",
+      lokasi: params["lokasi"] || "",
+      jenis: params["jenis"] || "Produksi",
+      status: params["status"] || "Menunggu",
+      persekitaran: empty_to_nil(params["persekitaran"]),
+      tarikh_penempatan: tarikh_penempatan,
+      tarikh_dijangka: tarikh_dijangka,
+      tarikh_dibina: tarikh_dibina,
+      url: empty_to_nil(params["url"]),
+      catatan: empty_to_nil(params["catatan"]),
+      dibina_oleh: empty_to_nil(params["dibina_oleh"])
+    }
+
+    case Penempatans.create_penempatan(attrs) do
+      {:ok, _} ->
+        penempatan =
+          get_penempatan_for_project(project_id, socket.assigns.current_scope, project)
+
+        {:noreply,
+         socket
+         |> assign(:penempatan, penempatan)
+         |> assign(:penempatan_show_create_modal, false)
+         |> assign(:penempatan_form, to_form(%{}, as: :penempatan))
+         |> assign(:penempatan_mode, "create")
+         |> assign(:penempatan_editing_id, nil)
+         |> put_flash(:info, "Penempatan berjaya didaftarkan")}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        form = to_form(changeset, as: :penempatan)
+
+        {:noreply,
+         socket
+         |> assign(:penempatan_form, form)
+         |> put_flash(:error, "Gagal mendaftar penempatan. Sila semak maklumat.")}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_penempatan", %{"id" => id}, socket) do
+    project = socket.assigns.project
+    project_id = project.id
+
+    penempatan =
+      case Integer.parse(to_string(id)) do
+        {int_id, _} -> Penempatans.get_penempatan(int_id)
+        :error -> nil
+      end
+
+    socket =
+      if penempatan do
+        case Penempatans.delete_penempatan(penempatan) do
+          {:ok, _} ->
+            penempatan_list =
+              get_penempatan_for_project(project_id, socket.assigns.current_scope, project)
+
+            socket
+            |> assign(:penempatan, penempatan_list)
+            |> put_flash(:info, "Penempatan berjaya dipadam.")
+
+          {:error, _} ->
+            put_flash(socket, :error, "Gagal memadam penempatan. Sila cuba lagi.")
+        end
+      else
+        put_flash(socket, :error, "Penempatan tidak ditemui.")
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("update_penempatan", %{"penempatan" => params}, socket) do
+    project = socket.assigns.project
+    project_id = project.id
+    editing_id = socket.assigns[:penempatan_editing_id]
+
+    penempatan =
+      case editing_id do
+        nil ->
+          nil
+
+        int when is_integer(int) ->
+          Penempatans.get_penempatan(int)
+
+        other ->
+          case Integer.parse(to_string(other)) do
+            {int_id, _} -> Penempatans.get_penempatan(int_id)
+            :error -> nil
+          end
+      end
+
+    if penempatan do
+      tarikh_penempatan =
+        parse_date_param(params["tarikh_penempatan"]) ||
+          penempatan.tarikh_penempatan ||
+          Date.utc_today()
+
+      tarikh_dijangka =
+        parse_date_param(params["tarikh_dijangka"]) || penempatan.tarikh_dijangka
+
+      tarikh_dibina =
+        parse_date_param(params["tarikh_dibina"]) || penempatan.tarikh_dibina
+
+      attrs = %{
+        nama_sistem: params["nama_sistem"] || penempatan.nama_sistem || project.nama,
+        versi: params["versi"] || penempatan.versi || "1.0.0",
+        lokasi: params["lokasi"] || penempatan.lokasi || "",
+        jenis: params["jenis"] || penempatan.jenis || "Produksi",
+        status: params["status"] || penempatan.status || "Menunggu",
+        tarikh_penempatan: tarikh_penempatan,
+        tarikh_dijangka: tarikh_dijangka,
+        tarikh_dibina: tarikh_dibina,
+        url: empty_to_nil(params["url"]),
+        catatan: empty_to_nil(params["catatan"]),
+        dibina_oleh: empty_to_nil(params["dibina_oleh"])
+      }
+
+      case Penempatans.update_penempatan(penempatan, attrs) do
+        {:ok, _} ->
+          penempatan_list =
+            get_penempatan_for_project(project_id, socket.assigns.current_scope, project)
+
+          {:noreply,
+           socket
+           |> assign(:penempatan, penempatan_list)
+           |> assign(:penempatan_show_create_modal, false)
+           |> assign(:penempatan_form, to_form(%{}, as: :penempatan))
+           |> assign(:penempatan_mode, "create")
+           |> assign(:penempatan_editing_id, nil)
+           |> put_flash(:info, "Penempatan berjaya dikemaskini.")}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          form = to_form(changeset, as: :penempatan)
+
+          {:noreply,
+           socket
+           |> assign(:penempatan_form, form)
+           |> assign(:penempatan_mode, "edit")
+           |> put_flash(:error, "Gagal mengemaskini penempatan. Sila semak maklumat.")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Penempatan tidak ditemui.")}
+    end
+  end
+
+  defp parse_date_param(nil), do: nil
+  defp parse_date_param(""), do: nil
+
+  defp parse_date_param(str) when is_binary(str) do
+    case Date.from_iso8601(str) do
+      {:ok, date} -> date
+      _ -> nil
     end
   end
 

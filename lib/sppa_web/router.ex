@@ -76,8 +76,6 @@ defmodule SppaWeb.Router do
 
       # Dashboard modules referenced by the sidebar (must exist for VerifiedRoutes ~p)
       live "/jadual-projek", JadualProjekLive, :index
-      live "/penempatan", PenempatanLive, :index
-      live "/penempatan/:id", PenempatanLive, :show
       live "/projek/:project_id/penyerahan", PenyerahanLive, :index
       live "/projek/:project_id/penyerahan/:id", PenyerahanLive, :show
       live "/penyerahan", PenyerahanLive, :index
