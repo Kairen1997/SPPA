@@ -3742,7 +3742,9 @@
                         <span>Kembali ke Senarai Ujian</span>
                       </.link>
                     </div>
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">{@kes_selected_ujian.tajuk}</h2>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                      {@kes_selected_ujian.tajuk}
+                    </h2>
                     <p class="text-gray-600">Butiran lengkap ujian keselamatan</p>
                   </div>
                   <%!-- Maklumat Ujian Table --%>
@@ -3761,17 +3763,39 @@
                       <table class="w-full text-sm table-auto">
                         <thead class="bg-gray-50 border-b border-gray-200">
                           <tr>
-                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">ID Kes Ujian</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">Senario Ujian</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[150px]">Langkah Ujian</th>
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">Keputusan Dijangka</th>
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">Keputusan Sebenar</th>
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">Hasil</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[120px]">Di Uji Oleh</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">Tarikh Ujian</th>
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">Disahkan Oleh</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">Tarikh Pengesahan</th>
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">Tindakan</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
+                              ID Kes Ujian
+                            </th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">
+                              Senario Ujian
+                            </th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[150px]">
+                              Langkah Ujian
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
+                              Keputusan Dijangka
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
+                              Keputusan Sebenar
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
+                              Hasil
+                            </th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[120px]">
+                              Di Uji Oleh
+                            </th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
+                              Tarikh Ujian
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">
+                              Disahkan Oleh
+                            </th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
+                              Tarikh Pengesahan
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">
+                              Tindakan
+                            </th>
                           </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -3789,11 +3813,29 @@
                               :for={kes <- Map.get(@kes_selected_ujian, :senarai_kes_ujian, [])}
                               class="hover:bg-gray-50 transition-colors duration-150"
                             >
-                              <td class="px-3 py-3"><span class="text-gray-900 font-mono text-xs">{kes[:kod] || kes.id}</span></td>
-                              <td class="px-3 py-3"><span class="text-gray-900 font-semibold">{kes.senario}</span></td>
-                              <td class="px-3 py-3"><span class="text-gray-900 text-xs whitespace-pre-wrap font-mono tabular-nums leading-relaxed">{kes.langkah}</span></td>
-                              <td class="px-3 py-3"><span class="text-gray-900 text-xs whitespace-pre-wrap">{kes.keputusan_dijangka}</span></td>
-                              <td class="px-3 py-3"><span class="text-gray-500 text-xs whitespace-pre-wrap">{if kes.keputusan_sebenar, do: kes.keputusan_sebenar, else: ""}</span></td>
+                              <td class="px-3 py-3">
+                                <span class="text-gray-900 font-mono text-xs">
+                                  {kes[:kod] || kes.id}
+                                </span>
+                              </td>
+                              <td class="px-3 py-3">
+                                <span class="text-gray-900 font-semibold">{kes.senario}</span>
+                              </td>
+                              <td class="px-3 py-3">
+                                <span class="text-gray-900 text-xs whitespace-pre-wrap font-mono tabular-nums leading-relaxed">
+                                  {kes.langkah}
+                                </span>
+                              </td>
+                              <td class="px-3 py-3">
+                                <span class="text-gray-900 text-xs whitespace-pre-wrap">
+                                  {kes.keputusan_dijangka}
+                                </span>
+                              </td>
+                              <td class="px-3 py-3">
+                                <span class="text-gray-500 text-xs whitespace-pre-wrap">
+                                  {if kes.keputusan_sebenar, do: kes.keputusan_sebenar, else: ""}
+                                </span>
+                              </td>
                               <td class="px-3 py-3 text-center">
                                 <%= if kes.hasil do %>
                                   <span class={[
@@ -3804,17 +3846,37 @@
                                       _ -> "bg-gray-100 text-gray-800 border-gray-200"
                                     end
                                   ]}>
-                                    <.icon name={if kes.hasil == "Lulus", do: "hero-check-circle", else: if(kes.hasil == "Gagal", do: "hero-x-circle", else: "hero-information-circle")} class="w-3 h-3 mr-1" />
+                                    <.icon
+                                      name={
+                                        if kes.hasil == "Lulus",
+                                          do: "hero-check-circle",
+                                          else:
+                                            if(kes.hasil == "Gagal",
+                                              do: "hero-x-circle",
+                                              else: "hero-information-circle"
+                                            )
+                                      }
+                                      class="w-3 h-3 mr-1"
+                                    />
                                     {kes.hasil}
                                   </span>
                                 <% end %>
                               </td>
-                              <td class="px-3 py-3"><span class="text-gray-900 text-xs">{Map.get(kes, :penguji, "")}</span></td>
+                              <td class="px-3 py-3">
+                                <span class="text-gray-900 text-xs">
+                                  {Map.get(kes, :penguji, "")}
+                                </span>
+                              </td>
                               <td class="px-3 py-3">
                                 <%= if Map.get(kes, :tarikh_ujian) do %>
                                   <div class="flex items-center gap-1.5">
-                                    <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                    <span class="text-gray-900 text-xs">{Calendar.strftime(kes.tarikh_ujian, "%d/%m/%Y")}</span>
+                                    <.icon
+                                      name="hero-calendar-days"
+                                      class="w-3.5 h-3.5 text-gray-400 flex-shrink-0"
+                                    />
+                                    <span class="text-gray-900 text-xs">
+                                      {Calendar.strftime(kes.tarikh_ujian, "%d/%m/%Y")}
+                                    </span>
                                   </div>
                                 <% end %>
                               </td>
@@ -3828,8 +3890,13 @@
                               <td class="px-3 py-3">
                                 <%= if Map.get(kes, :tarikh_pengesahan) do %>
                                   <div class="flex items-center gap-1.5">
-                                    <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                    <span class="text-gray-900 text-xs">{Calendar.strftime(kes.tarikh_pengesahan, "%d/%m/%Y")}</span>
+                                    <.icon
+                                      name="hero-calendar-days"
+                                      class="w-3.5 h-3.5 text-gray-400 flex-shrink-0"
+                                    />
+                                    <span class="text-gray-900 text-xs">
+                                      {Calendar.strftime(kes.tarikh_pengesahan, "%d/%m/%Y")}
+                                    </span>
                                   </div>
                                 <% end %>
                               </td>
@@ -3864,7 +3931,9 @@
                   <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <h2 class="text-4xl font-bold text-gray-900 mb-2">Ujian Keselamatan</h2>
-                      <p class="text-gray-600">Urus dan pantau ujian keselamatan untuk modul sistem</p>
+                      <p class="text-gray-600">
+                        Urus dan pantau ujian keselamatan untuk modul sistem
+                      </p>
                     </div>
                     <div class="flex-shrink-0">
                       <button
@@ -3880,13 +3949,22 @@
                     <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800 flex items-center justify-between">
                       <h3 class="text-xl font-semibold text-white">Senarai Ujian Keselamatan</h3>
                     </div>
-                    <% ujian_keselamatan_display = Enum.filter(@ujian_keselamatan, fn u -> Map.get(u, :tarikh_permohonan) != nil or Map.get(u, :tarikh_kelulusan) != nil or (v = Map.get(u, :upload_file)) != nil and v != "" or (s = Map.get(u, :status_kelulusan)) != nil and String.trim(s || "") != "" end) %>
+                    <% ujian_keselamatan_display =
+                      Enum.filter(@ujian_keselamatan, fn u ->
+                        Map.get(u, :tarikh_permohonan) != nil or
+                          Map.get(u, :tarikh_kelulusan) != nil or
+                          ((v = Map.get(u, :upload_file)) != nil and v != "") or
+                          ((s = Map.get(u, :status_kelulusan)) != nil and
+                             String.trim(s || "") != "")
+                      end) %>
                     <%= if length(ujian_keselamatan_display) == 0 do %>
                       <div class="px-6 py-12 text-center">
                         <div class="flex flex-col items-center justify-center text-gray-400">
                           <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                           <p class="text-sm font-medium">Tiada ujian keselamatan</p>
-                          <p class="text-xs mt-1">Klik butang "Daftar Ujian" untuk menambah ujian baharu</p>
+                          <p class="text-xs mt-1">
+                            Klik butang "Daftar Ujian" untuk menambah ujian baharu
+                          </p>
                         </div>
                       </div>
                     <% else %>
@@ -3894,11 +3972,21 @@
                         <table class="w-full text-sm">
                           <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
-                              <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tarikh Permohonan</th>
-                              <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tarikh Kelulusan</th>
-                              <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Upload File</th>
-                              <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status Kelulusan</th>
-                              <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Tindakan</th>
+                              <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Tarikh Permohonan
+                              </th>
+                              <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Tarikh Kelulusan
+                              </th>
+                              <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Upload File
+                              </th>
+                              <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Status Kelulusan
+                              </th>
+                              <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Tindakan
+                              </th>
                             </tr>
                           </thead>
                           <tbody class="bg-white divide-y divide-gray-200">
@@ -3909,8 +3997,13 @@
                               <td class="px-3 py-2 whitespace-nowrap text-left">
                                 <%= if Map.get(ujian, :tarikh_permohonan) do %>
                                   <div class="flex items-center gap-1.5">
-                                    <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400" />
-                                    <span class="text-xs text-gray-700">{Calendar.strftime(ujian.tarikh_permohonan, "%d/%m/%Y")}</span>
+                                    <.icon
+                                      name="hero-calendar-days"
+                                      class="w-3.5 h-3.5 text-gray-400"
+                                    />
+                                    <span class="text-xs text-gray-700">
+                                      {Calendar.strftime(ujian.tarikh_permohonan, "%d/%m/%Y")}
+                                    </span>
                                   </div>
                                 <% else %>
                                   <span class="text-xs text-gray-400">—</span>
@@ -3919,8 +4012,13 @@
                               <td class="px-3 py-2 whitespace-nowrap text-left">
                                 <%= if Map.get(ujian, :tarikh_kelulusan) do %>
                                   <div class="flex items-center gap-1.5">
-                                    <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400" />
-                                    <span class="text-xs text-gray-700">{Calendar.strftime(ujian.tarikh_kelulusan, "%d/%m/%Y")}</span>
+                                    <.icon
+                                      name="hero-calendar-days"
+                                      class="w-3.5 h-3.5 text-gray-400"
+                                    />
+                                    <span class="text-xs text-gray-700">
+                                      {Calendar.strftime(ujian.tarikh_kelulusan, "%d/%m/%Y")}
+                                    </span>
                                   </div>
                                 <% else %>
                                   <span class="text-xs text-gray-400">—</span>
@@ -3953,7 +4051,19 @@
                                     _ -> "bg-gray-100 text-gray-800 border-gray-200"
                                   end
                                 ]}>
-                                  <.icon name={case status_kel do "Lulus" -> "hero-check-circle"; "Diluluskan" -> "hero-check-circle"; "Gagal" -> "hero-x-circle"; "Ditolak" -> "hero-x-circle"; "Menunggu" -> "hero-clock"; _ -> "hero-information-circle" end} class="w-3 h-3 mr-1" />
+                                  <.icon
+                                    name={
+                                      case status_kel do
+                                        "Lulus" -> "hero-check-circle"
+                                        "Diluluskan" -> "hero-check-circle"
+                                        "Gagal" -> "hero-x-circle"
+                                        "Ditolak" -> "hero-x-circle"
+                                        "Menunggu" -> "hero-clock"
+                                        _ -> "hero-information-circle"
+                                      end
+                                    }
+                                    class="w-3 h-3 mr-1"
+                                  />
                                   {status_kel}
                                 </span>
                               </td>
@@ -4013,9 +4123,9 @@
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada penempatan</p>
 
-                      <p class="text-xs mt-1">
-                        Sila daftar penempatan baharu di modul Penempatan.
-                      </p>
+                        <p class="text-xs mt-1">
+                          Sila daftar penempatan baharu di modul Penempatan.
+                        </p>
                       </div>
                     </div>
                   <% else %>
@@ -4104,7 +4214,10 @@
 
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
-                                <.icon name="hero-calendar-days" class="w-3.5 h-3.5 text-gray-400" />
+                                <.icon
+                                  name="hero-calendar-days"
+                                  class="w-3.5 h-3.5 text-gray-400"
+                                />
                                 <span class="text-xs text-gray-700">
                                   {Calendar.strftime(penempatan.tarikh_penempatan, "%d/%m/%Y")}
                                 </span>
@@ -4224,10 +4337,12 @@
                           <.form
                             for={@penempatan_form}
                             phx-change="validate_penempatan"
-                            phx-submit={if(@penempatan_mode == "edit",
-                              do: "update_penempatan",
-                              else: "create_penempatan"
-                            )}
+                            phx-submit={
+                              if(@penempatan_mode == "edit",
+                                do: "update_penempatan",
+                                else: "create_penempatan"
+                              )
+                            }
                             id="create-penempatan-form"
                             class="space-y-4"
                           >
@@ -4263,14 +4378,31 @@
                                 />
                               </div>
                               <div>
-                                <label class="block text-sm font-medium text-gray-800 mb-1.5">Jenis</label>
+                                <label class="block text-sm font-medium text-gray-800 mb-1.5">
+                                  Jenis
+                                </label>
                                 <select
                                   name="penempatan[jenis]"
                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 >
-                                  <option value="Produksi" selected={@penempatan_form[:jenis].value == "Produksi"}>Produksi</option>
-                                  <option value="Staging" selected={@penempatan_form[:jenis].value == "Staging"}>Staging</option>
-                                  <option value="Development" selected={@penempatan_form[:jenis].value == "Development"}>Development</option>
+                                  <option
+                                    value="Produksi"
+                                    selected={@penempatan_form[:jenis].value == "Produksi"}
+                                  >
+                                    Produksi
+                                  </option>
+                                  <option
+                                    value="Staging"
+                                    selected={@penempatan_form[:jenis].value == "Staging"}
+                                  >
+                                    Staging
+                                  </option>
+                                  <option
+                                    value="Development"
+                                    selected={@penempatan_form[:jenis].value == "Development"}
+                                  >
+                                    Development
+                                  </option>
                                 </select>
                               </div>
                               <div>
@@ -4365,8 +4497,8 @@
                       Urus dan pantau penyerahan sistem kepada jabatan.
                     </p>
                   </div>
-
-                  <!-- Penyerahan Baharu button removed as per request -->
+                  
+<!-- Penyerahan Baharu button removed as per request -->
                 </div>
 
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -4466,30 +4598,55 @@
                             </td>
 
                             <td class="px-3 py-2 text-center">
-                              <%= if penyerahan.manual_pengguna_bahagian_a do %>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                                  <.icon name="hero-document-check" class="w-3 h-3 mr-1" />
-                                  <span>Ada</span>
-                                </span>
+                              <%= if penyerahan.manual_pengguna do %>
+                                <a
+                                  href={"/uploads/penyerahan/" <> penyerahan.manual_pengguna}
+                                  target="_blank"
+                                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-800 border border-green-200 hover:bg-green-100 hover:text-green-900 transition-colors"
+                                >
+                                  <.icon name="hero-document-text" class="w-3 h-3 mr-1" />
+                                  <span>
+                                    {penyerahan.manual_pengguna_nama || penyerahan.manual_pengguna}
+                                  </span>
+                                </a>
                               <% else %>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                  <.icon name="hero-minus-circle" class="w-3 h-3 mr-1" />
-                                  <span>Belum Ada</span>
-                                </span>
+                                <button
+                                  type="button"
+                                  phx-click="penyerahan_open_upload_modal"
+                                  phx-value-penyerahan_id={penyerahan.id}
+                                  phx-value-target="manual"
+                                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                                >
+                                  <.icon name="hero-arrow-up-tray" class="w-3 h-3 mr-1" />
+                                  <span>Muat naik dokumen</span>
+                                </button>
                               <% end %>
                             </td>
 
                             <td class="px-3 py-2 text-center">
                               <%= if penyerahan.surat_akuan_penerimaan do %>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                                  <.icon name="hero-document-check" class="w-3 h-3 mr-1" />
-                                  <span>Ada</span>
-                                </span>
+                                <a
+                                  href={"/uploads/penyerahan/" <> penyerahan.surat_akuan_penerimaan}
+                                  target="_blank"
+                                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-800 border border-green-200 hover:bg-green-100 hover:text-green-900 transition-colors"
+                                >
+                                  <.icon name="hero-document-text" class="w-3 h-3 mr-1" />
+                                  <span>
+                                    {penyerahan.surat_akuan_nama ||
+                                      penyerahan.surat_akuan_penerimaan}
+                                  </span>
+                                </a>
                               <% else %>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                  <.icon name="hero-minus-circle" class="w-3 h-3 mr-1" />
-                                  <span>Belum Ada</span>
-                                </span>
+                                <button
+                                  type="button"
+                                  phx-click="penyerahan_open_upload_modal"
+                                  phx-value-penyerahan_id={penyerahan.id}
+                                  phx-value-target="surat"
+                                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                                >
+                                  <.icon name="hero-arrow-up-tray" class="w-3 h-3 mr-1" />
+                                  <span>Muat naik dokumen</span>
+                                </button>
                               <% end %>
                             </td>
 
@@ -4503,7 +4660,7 @@
                                   <%= if penyerahan.tarikh_penyerahan do %>
                                     {Calendar.strftime(penyerahan.tarikh_penyerahan, "%d/%m/%Y")}
                                   <% else %>
-                                    <span class="text-gray-400">-</span>
+                                    <span class="text-gray-400 italic">Pilih tarikh</span>
                                   <% end %>
                                 </span>
                               </div>
@@ -4513,21 +4670,22 @@
                               <div class="flex items-center justify-center gap-1.5">
                                 <button
                                   type="button"
+                                  phx-click="penyerahan_open_upload_modal"
+                                  phx-value-penyerahan_id={penyerahan.id}
+                                  phx-value-target="all"
+                                  class="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-md transition-colors duration-200"
+                                  title="Muat naik"
+                                >
+                                  <.icon name="hero-arrow-up-tray" class="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
                                   phx-click="penyerahan_open_edit_modal"
                                   phx-value-penyerahan_id={penyerahan.id}
                                   class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
                                   title="Edit"
                                 >
                                   <.icon name="hero-pencil" class="w-4 h-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  phx-click="penyerahan_open_upload_modal"
-                                  phx-value-penyerahan_id={penyerahan.id}
-                                  class="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200"
-                                  title="Muat Naik Dokumen"
-                                >
-                                  <.icon name="hero-arrow-up-tray" class="w-4 h-4" />
                                 </button>
                               </div>
                             </td>
@@ -4585,18 +4743,18 @@
   <%= if @penyerahan_show_edit_modal do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="penyerahan_close_edit_modal"
-      phx-click-away="penyerahan_close_edit_modal"
       role="dialog"
       aria-modal="true"
     >
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="penyerahan_close_edit_modal"
+      >
+      </div>
 
       <div class="flex min-h-full items-center justify-center p-4">
-        <div
-          class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-          phx-click-away="penyerahan_close_edit_modal"
-        >
+        <div class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
@@ -4629,9 +4787,8 @@
                     field={@penyerahan_form[:nama_sistem]}
                     type="text"
                     label="Nama Sistem"
-                    required
-                    placeholder="Masukkan nama sistem"
-                    class="w-full"
+                    disabled
+                    class="w-full bg-gray-50 text-gray-700"
                   />
                 </div>
 
@@ -4640,8 +4797,8 @@
                     field={@penyerahan_form[:versi]}
                     type="text"
                     label="Versi"
-                    placeholder="Contoh: 1.0.0"
-                    class="w-full"
+                    disabled
+                    class="w-full bg-gray-50 text-gray-700"
                   />
                 </div>
 
@@ -4650,19 +4807,8 @@
                     field={@penyerahan_form[:penerima]}
                     type="text"
                     label="Jabatan"
-                    required
-                    placeholder="Masukkan nama jabatan"
-                    class="w-full"
-                  />
-                </div>
-
-                <div>
-                  <.input
-                    field={@penyerahan_form[:pembangun_team]}
-                    type="text"
-                    label="Pembangun"
-                    placeholder="Masukkan nama pembangun"
-                    class="w-full"
+                    disabled
+                    class="w-full bg-gray-50 text-gray-700"
                   />
                 </div>
 
@@ -4671,28 +4817,8 @@
                     field={@penyerahan_form[:pengurus_projek]}
                     type="text"
                     label="Pengurus"
-                    placeholder="Masukkan nama pengurus"
-                    class="w-full"
-                  />
-                </div>
-
-                <div>
-                  <.input
-                    field={@penyerahan_form[:lokasi]}
-                    type="text"
-                    label="Lokasi"
-                    required
-                    placeholder="Masukkan lokasi"
-                    class="w-full"
-                  />
-                </div>
-
-                <div>
-                  <.input
-                    field={@penyerahan_form[:tarikh_dijangka]}
-                    type="date"
-                    label="Tarikh Dijangka"
-                    class="w-full"
+                    disabled
+                    class="w-full bg-gray-50 text-gray-700"
                   />
                 </div>
 
@@ -4701,14 +4827,15 @@
                     field={@penyerahan_form[:tarikh_penyerahan]}
                     type="date"
                     label="Tarikh Penyerahan"
+                    placeholder="Pilih tarikh"
                     class="w-full"
                   />
                 </div>
-
-                <!-- Catatan field removed as per request -->
+                
+<!-- Catatan field removed as per request -->
               </div>
 
-              <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
+              <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6 mt-6">
                 <button
                   type="button"
                   phx-click="penyerahan_close_edit_modal"
@@ -4734,24 +4861,37 @@
   <%= if @penyerahan_show_upload_modal do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
-      phx-click="penyerahan_close_upload_modal"
-      phx-click-away="penyerahan_close_upload_modal"
       role="dialog"
       aria-modal="true"
     >
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true"></div>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="penyerahan_close_upload_modal"
+      >
+      </div>
 
-      <div class="flex min-h-full items-center justify-center p-4">
+      <div class="flex min-h-full items-center justify-center px-4 py-6">
         <div
-          class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+          class="relative w-full max-w-xl md:max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
           phx-click-away="penyerahan_close_upload_modal"
         >
-          <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+          <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-4">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Muat Naik Dokumen</h2>
                 <p class="mt-1 text-sm text-blue-100">
-                  Muat naik Manual Pengguna Bahagian A dan Surat Akuan Penerimaan Aplikasi
+                  <%= case @penyerahan_upload_target do %>
+                    <% "surat" -> %>
+                      Muat naik Surat Akuan Penerimaan Aplikasi
+                    <% "manual" -> %>
+                      Muat naik Manual Pengguna
+                    <% _ -> %>
+                      Muat naik Manual Pengguna dan/atau Surat Akuan
+                  <% end %>
+                </p>
+                <p class="mt-0.5 text-xs text-blue-200/90">
+                  Pilih fail kemudian klik Muat naik. PDF, DOC atau DOCX sehingga 10MB.
                 </p>
               </div>
 
@@ -4766,141 +4906,109 @@
             </div>
           </div>
 
-          <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">
-                  Manual Pengguna Bahagian A
-                </h3>
+          <.form
+            for={%{}}
+            action={~p"/projek/#{@project.id}/penyerahan/upload"}
+            method="post"
+            multipart={true}
+            id="projek-tab-penyerahan-upload-form"
+            class="contents"
+          >
+            <div class="max-h-[calc(100vh-180px)] overflow-y-auto px-5 py-5">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <%= if @penyerahan_upload_target != "surat" do %>
+                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                      Manual Pengguna
+                    </h3>
 
-                <%= if @penyerahan_uploading_penyerahan &&
-                      @penyerahan_uploading_penyerahan.manual_pengguna_bahagian_a do %>
-                  <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div class="flex items-center gap-2">
-                      <.icon name="hero-document-check" class="w-5 h-5 text-blue-600" />
-                      <div class="flex-1">
-                        <p class="text-sm font-medium text-blue-900">Dokumen sedia ada</p>
-                        <p class="text-xs text-blue-700 mt-1">
-                          {@penyerahan_uploading_penyerahan.manual_pengguna_bahagian_a}
-                        </p>
-                        <p class="text-xs text-blue-600 mt-1 italic">
-                          Muat naik dokumen baharu akan menggantikan dokumen sedia ada
-                        </p>
+                    <%= if @penyerahan_uploading_penyerahan &&
+                          @penyerahan_uploading_penyerahan.manual_pengguna do %>
+                      <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center gap-2">
+                          <.icon name="hero-document-check" class="w-5 h-5 text-blue-600" />
+                          <div class="flex-1">
+                            <p class="text-sm font-medium text-blue-900">Dokumen sedia ada</p>
+                            <p class="text-xs text-blue-700 mt-1">
+                              {@penyerahan_uploading_penyerahan.manual_pengguna}
+                            </p>
+                            <p class="text-xs text-blue-600 mt-1 italic">
+                              Muat naik dokumen baharu akan menggantikan dokumen sedia ada
+                            </p>
+                          </div>
+                        </div>
                       </div>
+                    <% end %>
+
+                    <div class="space-y-4">
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Pilih Fail
+                      </label>
+                      <input
+                        type="file"
+                        name="manual_file"
+                        accept=".pdf,.doc,.docx"
+                        class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer"
+                      />
+                      <p class="text-xs leading-5 text-gray-600">
+                        PDF, DOC, DOCX sehingga 10MB
+                      </p>
                     </div>
                   </div>
                 <% end %>
 
-                <.form
-                  for={@penyerahan_upload_manual_form}
-                  phx-change="penyerahan_validate_upload_manual"
-                  phx-submit="penyerahan_upload_manual"
-                  id="projek-tab-penyerahan-upload-manual-form"
-                  multipart={true}
-                  class="space-y-4"
-                >
-                  <input
-                    type="hidden"
-                    name="upload_manual[penyerahan_id]"
-                    value={@penyerahan_uploading_penyerahan_id}
-                  />
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Fail</label>
-                    <div class="mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-4 transition hover:border-blue-600 hover:bg-gray-50">
-                      <div class="text-center">
-                        <.icon name="hero-document-arrow-up" class="mx-auto h-10 w-10 text-gray-400" />
-                        <div class="mt-3 flex text-sm leading-6 text-gray-600">
-                          <label
-                            for="projek-tab-manual-upload"
-                            class="relative cursor-pointer rounded-md bg-white font-semibold text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2"
-                          >
-                            <span>Pilih fail</span>
-                            <input
-                              id="projek-tab-manual-upload"
-                              name="upload_manual[file]"
-                              type="file"
-                              accept=".pdf,.doc,.docx"
-                              class="sr-only"
-                            />
-                          </label>
-                          <p class="pl-1">atau seret dan lepaskan</p>
+                <%= if @penyerahan_upload_target != "manual" do %>
+                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                      Surat Akuan Penerimaan Aplikasi
+                    </h3>
+
+                    <%= if @penyerahan_uploading_penyerahan &&
+                          @penyerahan_uploading_penyerahan.surat_akuan_penerimaan do %>
+                      <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center gap-2">
+                          <.icon name="hero-document-check" class="w-5 h-5 text-blue-600" />
+                          <div class="flex-1">
+                            <p class="text-sm font-medium text-blue-900">Dokumen sedia ada</p>
+                            <p class="text-xs text-blue-700 mt-1">
+                              {@penyerahan_uploading_penyerahan.surat_akuan_penerimaan}
+                            </p>
+                            <p class="text-xs text-blue-600 mt-1 italic">
+                              Muat naik dokumen baharu akan menggantikan dokumen sedia ada
+                            </p>
+                          </div>
                         </div>
-                        <p class="mt-2 text-xs leading-5 text-gray-600">
-                          PDF, DOC, DOCX sehingga 10MB
-                        </p>
                       </div>
+                    <% end %>
+
+                    <div class="space-y-4">
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Pilih Fail
+                      </label>
+                      <input
+                        type="file"
+                        name="surat_file"
+                        accept=".pdf,.doc,.docx"
+                        class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer"
+                      />
+                      <p class="text-xs leading-5 text-gray-600">
+                        PDF, DOC, DOCX sehingga 10MB
+                      </p>
                     </div>
                   </div>
-                </.form>
+                <% end %>
               </div>
 
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">
-                  Surat Akuan Penerimaan Aplikasi
-                </h3>
-
-                <%= if @penyerahan_uploading_penyerahan &&
-                      @penyerahan_uploading_penyerahan.surat_akuan_penerimaan do %>
-                  <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div class="flex items-center gap-2">
-                      <.icon name="hero-document-check" class="w-5 h-5 text-blue-600" />
-                      <div class="flex-1">
-                        <p class="text-sm font-medium text-blue-900">Dokumen sedia ada</p>
-                        <p class="text-xs text-blue-700 mt-1">
-                          {@penyerahan_uploading_penyerahan.surat_akuan_penerimaan}
-                        </p>
-                        <p class="text-xs text-blue-600 mt-1 italic">
-                          Muat naik dokumen baharu akan menggantikan dokumen sedia ada
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                <% end %>
-
-                <.form
-                  for={@penyerahan_upload_surat_form}
-                  phx-change="penyerahan_validate_upload_surat"
-                  phx-submit="penyerahan_upload_surat"
-                  id="projek-tab-penyerahan-upload-surat-form"
-                  multipart={true}
-                  class="space-y-4"
+              <div class="flex justify-end pt-4 pb-2">
+                <button
+                  type="submit"
+                  class="inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-lg shadow-sm transition-colors duration-200 text-white bg-blue-600 hover:bg-blue-700 hover:shadow-md"
                 >
-                  <input
-                    type="hidden"
-                    name="upload_surat[penyerahan_id]"
-                    value={@penyerahan_uploading_penyerahan_id}
-                  />
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Fail</label>
-                    <div class="mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-4 transition hover:border-blue-600 hover:bg-gray-50">
-                      <div class="text-center">
-                        <.icon name="hero-document-arrow-up" class="mx-auto h-10 w-10 text-gray-400" />
-                        <div class="mt-3 flex text-sm leading-6 text-gray-600">
-                          <label
-                            for="projek-tab-surat-upload"
-                            class="relative cursor-pointer rounded-md bg-white font-semibold text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2"
-                          >
-                            <span>Pilih fail</span>
-                            <input
-                              id="projek-tab-surat-upload"
-                              name="upload_surat[file]"
-                              type="file"
-                              accept=".pdf,.doc,.docx"
-                              class="sr-only"
-                            />
-                          </label>
-                          <p class="pl-1">atau seret dan lepaskan</p>
-                        </div>
-                        <p class="mt-2 text-xs leading-5 text-gray-600">
-                          PDF, DOC, DOCX sehingga 10MB
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </.form>
+                  <.icon name="hero-arrow-up-tray" class="w-5 h-5 mr-2" /> Muat naik
+                </button>
               </div>
             </div>
-          </div>
+          </.form>
         </div>
       </div>
     </div>
@@ -4935,7 +5043,9 @@
             <div class="grid grid-cols-1 gap-4">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Tarikh Permohonan</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Tarikh Permohonan
+                  </label>
                   <input
                     type="date"
                     name="ujian[tarikh_permohonan]"
@@ -4944,7 +5054,9 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Tarikh Kelulusan</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Tarikh Kelulusan
+                  </label>
                   <input
                     type="date"
                     name="ujian[tarikh_kelulusan]"
@@ -4979,16 +5091,18 @@
                   </span>
                 </div>
                 <%= for err <- upload_errors(@uploads.kes_file) do %>
-                  <p class="mt-1 text-sm text-red-600"><%= kes_upload_error_to_string(err) %></p>
+                  <p class="mt-1 text-sm text-red-600">{kes_upload_error_to_string(err)}</p>
                 <% end %>
                 <%= for entry <- @uploads.kes_file.entries do %>
                   <%= for err <- upload_errors(@uploads.kes_file, entry) do %>
-                    <p class="mt-1 text-sm text-red-600"><%= kes_upload_error_to_string(err) %></p>
+                    <p class="mt-1 text-sm text-red-600">{kes_upload_error_to_string(err)}</p>
                   <% end %>
                 <% end %>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Status Kelulusan</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  Status Kelulusan
+                </label>
                 <select
                   name="ujian[status_kelulusan]"
                   class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 text-gray-900"
@@ -5023,7 +5137,12 @@
   <%!-- Ujian Keselamatan: Edit Ujian Modal --%>
   <%= if assigns[:kes_show_edit_modal] && assigns[:kes_editing_ujian] do %>
     <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true" phx-click="kes_close_edit_modal"></div>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="kes_close_edit_modal"
+      >
+      </div>
       <div class="flex min-h-full items-center justify-center p-4 pointer-events-none">
         <div class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
@@ -5032,16 +5151,32 @@
                 <h2 class="text-2xl font-bold text-white">Kemaskini Ujian Keselamatan</h2>
                 <p class="mt-1 text-sm text-blue-100">Edit maklumat ujian keselamatan</p>
               </div>
-              <button type="button" phx-click="kes_close_edit_modal" class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50" aria-label="Tutup">
+              <button
+                type="button"
+                phx-click="kes_close_edit_modal"
+                class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                aria-label="Tutup"
+              >
                 <.icon name="hero-x-mark" class="h-6 w-6" />
               </button>
             </div>
           </div>
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6 text-gray-900">
-            <.form for={@kes_form} phx-change="kes_validate_ujian" phx-submit="kes_update_ujian" id="kes-edit-ujian-form" class="space-y-6">
+            <.form
+              for={@kes_form}
+              phx-change="kes_validate_ujian"
+              phx-submit="kes_update_ujian"
+              id="kes-edit-ujian-form"
+              class="space-y-6"
+            >
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label for="kes-edit-tarikh-permohonan" class="block text-sm font-medium text-gray-700 mb-1">Tarikh Permohonan</label>
+                  <label
+                    for="kes-edit-tarikh-permohonan"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Tarikh Permohonan
+                  </label>
                   <input
                     type="date"
                     name="ujian[tarikh_permohonan]"
@@ -5051,7 +5186,12 @@
                   />
                 </div>
                 <div>
-                  <label for="kes-edit-tarikh-kelulusan" class="block text-sm font-medium text-gray-700 mb-1">Tarikh Kelulusan</label>
+                  <label
+                    for="kes-edit-tarikh-kelulusan"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Tarikh Kelulusan
+                  </label>
                   <input
                     type="date"
                     name="ujian[tarikh_kelulusan]"
@@ -5061,7 +5201,11 @@
                   />
                 </div>
                 <div class="md:col-span-2">
-                  <input type="hidden" name="ujian[upload_file]" value={@kes_form[:upload_file].value || ""} />
+                  <input
+                    type="hidden"
+                    name="ujian[upload_file]"
+                    value={@kes_form[:upload_file].value || ""}
+                  />
                   <label class="block text-sm font-medium text-gray-700 mb-1">Upload File</label>
                   <%= if @kes_form[:upload_file].value && @kes_form[:upload_file].value != "" do %>
                     <p class="text-sm text-gray-600 mb-2">
@@ -5080,7 +5224,9 @@
                     <.live_file_input upload={@uploads.kes_edit_file} class="hidden" />
                     <button
                       type="button"
-                      phx-click={JS.dispatch("click", to: "#" <> to_string(@uploads.kes_edit_file.ref))}
+                      phx-click={
+                        JS.dispatch("click", to: "#" <> to_string(@uploads.kes_edit_file.ref))
+                      }
                       class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
                     >
                       <.icon name="hero-arrow-up-tray" class="w-5 h-5" />
@@ -5100,31 +5246,52 @@
                     </span>
                   </div>
                   <%= for err <- upload_errors(@uploads.kes_edit_file) do %>
-                    <p class="mt-1 text-sm text-red-600"><%= kes_upload_error_to_string(err) %></p>
+                    <p class="mt-1 text-sm text-red-600">{kes_upload_error_to_string(err)}</p>
                   <% end %>
                   <%= for entry <- @uploads.kes_edit_file.entries do %>
                     <%= for err <- upload_errors(@uploads.kes_edit_file, entry) do %>
-                      <p class="mt-1 text-sm text-red-600"><%= kes_upload_error_to_string(err) %></p>
+                      <p class="mt-1 text-sm text-red-600">{kes_upload_error_to_string(err)}</p>
                     <% end %>
                   <% end %>
                 </div>
                 <div>
-                  <label for="kes-edit-status-kelulusan" class="block text-sm font-medium text-gray-700 mb-1">Status Kelulusan</label>
+                  <label
+                    for="kes-edit-status-kelulusan"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Status Kelulusan
+                  </label>
                   <select
                     name="ujian[status_kelulusan]"
                     id="kes-edit-status-kelulusan"
                     class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 text-gray-900"
                   >
-                    <option value="Lulus" selected={@kes_form[:status_kelulusan].value == "Lulus"}>Lulus</option>
-                    <option value="Gagal" selected={@kes_form[:status_kelulusan].value == "Gagal"}>Gagal</option>
+                    <option value="Lulus" selected={@kes_form[:status_kelulusan].value == "Lulus"}>
+                      Lulus
+                    </option>
+                    <option value="Gagal" selected={@kes_form[:status_kelulusan].value == "Gagal"}>
+                      Gagal
+                    </option>
                   </select>
                 </div>
               </div>
             </.form>
           </div>
           <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
-            <button type="button" phx-click="kes_close_edit_modal" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium">Batal</button>
-            <button type="submit" form="kes-edit-ujian-form" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium">Simpan Perubahan</button>
+            <button
+              type="button"
+              phx-click="kes_close_edit_modal"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              form="kes-edit-ujian-form"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+            >
+              Simpan Perubahan
+            </button>
           </div>
         </div>
       </div>
@@ -5134,56 +5301,145 @@
   <%!-- Ujian Keselamatan: Edit Kes Ujian Modal --%>
   <%= if assigns[:kes_show_edit_kes_modal] && assigns[:kes_selected_kes] do %>
     <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-      <div class="fixed inset-0 bg-black/60 transition-opacity" aria-hidden="true" phx-click="kes_close_edit_kes_modal"></div>
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="kes_close_edit_kes_modal"
+      >
+      </div>
       <div class="flex min-h-full items-center justify-center p-4 pointer-events-none">
         <div class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Kes Ujian</h2>
-                <p class="mt-1 text-sm text-blue-100">Edit maklumat kes ujian: {@kes_selected_kes[:kod] || @kes_selected_kes.id}</p>
+                <p class="mt-1 text-sm text-blue-100">
+                  Edit maklumat kes ujian: {@kes_selected_kes[:kod] || @kes_selected_kes.id}
+                </p>
               </div>
-              <button type="button" phx-click="kes_close_edit_kes_modal" class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50" aria-label="Tutup">
+              <button
+                type="button"
+                phx-click="kes_close_edit_kes_modal"
+                class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                aria-label="Tutup"
+              >
                 <.icon name="hero-x-mark" class="h-6 w-6" />
               </button>
             </div>
           </div>
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
-            <.form for={@kes_kes_form} phx-change="kes_validate_kes" phx-submit="kes_update_kes" id="kes-edit-kes-form" class="space-y-6">
+            <.form
+              for={@kes_kes_form}
+              phx-change="kes_validate_kes"
+              phx-submit="kes_update_kes"
+              id="kes-edit-kes-form"
+              class="space-y-6"
+            >
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="md:col-span-2">
-                  <.input field={@kes_kes_form[:senario]} type="text" label="Senario Ujian" required placeholder="Masukkan senario ujian" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                  <.input
+                    field={@kes_kes_form[:senario]}
+                    type="text"
+                    label="Senario Ujian"
+                    required
+                    placeholder="Masukkan senario ujian"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  />
                 </div>
                 <div class="md:col-span-2">
-                  <.input field={@kes_kes_form[:langkah]} type="textarea" label="Langkah Ujian" rows="4" placeholder="Masukkan langkah ujian..." class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none" />
+                  <.input
+                    field={@kes_kes_form[:langkah]}
+                    type="textarea"
+                    label="Langkah Ujian"
+                    rows="4"
+                    placeholder="Masukkan langkah ujian..."
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                  />
                 </div>
                 <div class="md:col-span-2">
-                  <.input field={@kes_kes_form[:keputusan_dijangka]} type="textarea" label="Keputusan Dijangka" rows="3" placeholder="Masukkan keputusan dijangka..." class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none" />
+                  <.input
+                    field={@kes_kes_form[:keputusan_dijangka]}
+                    type="textarea"
+                    label="Keputusan Dijangka"
+                    rows="3"
+                    placeholder="Masukkan keputusan dijangka..."
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                  />
                 </div>
                 <div class="md:col-span-2">
-                  <.input field={@kes_kes_form[:keputusan_sebenar]} type="textarea" label="Keputusan Sebenar" rows="3" placeholder="Masukkan keputusan sebenar..." class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none" />
+                  <.input
+                    field={@kes_kes_form[:keputusan_sebenar]}
+                    type="textarea"
+                    label="Keputusan Sebenar"
+                    rows="3"
+                    placeholder="Masukkan keputusan sebenar..."
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                  />
                 </div>
                 <div>
-                  <.input field={@kes_kes_form[:hasil]} type="select" label="Hasil" prompt="Belum Selesai" options={["Lulus", "Gagal"]} class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                  <.input
+                    field={@kes_kes_form[:hasil]}
+                    type="select"
+                    label="Hasil"
+                    prompt="Belum Selesai"
+                    options={["Lulus", "Gagal"]}
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  />
                 </div>
                 <div>
-                  <.input field={@kes_kes_form[:penguji]} type="text" label="Di Uji Oleh" placeholder="Masukkan nama penguji" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                  <.input
+                    field={@kes_kes_form[:penguji]}
+                    type="text"
+                    label="Di Uji Oleh"
+                    placeholder="Masukkan nama penguji"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  />
                 </div>
                 <div>
-                  <.input field={@kes_kes_form[:tarikh_ujian]} type="date" id="kes-kes-tarikh-ujian" label="Tarikh Ujian" class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                  <.input
+                    field={@kes_kes_form[:tarikh_ujian]}
+                    type="date"
+                    id="kes-kes-tarikh-ujian"
+                    label="Tarikh Ujian"
+                    class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  />
                 </div>
                 <div>
-                  <.input field={@kes_kes_form[:disahkan_oleh]} type="text" label="Disahkan Oleh" placeholder="Masukkan nama pegawai yang mengesahkan" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                  <.input
+                    field={@kes_kes_form[:disahkan_oleh]}
+                    type="text"
+                    label="Disahkan Oleh"
+                    placeholder="Masukkan nama pegawai yang mengesahkan"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  />
                 </div>
                 <div>
-                  <.input field={@kes_kes_form[:tarikh_pengesahan]} type="date" id="kes-kes-tarikh-pengesahan" label="Tarikh Pengesahan" class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                  <.input
+                    field={@kes_kes_form[:tarikh_pengesahan]}
+                    type="date"
+                    id="kes-kes-tarikh-pengesahan"
+                    label="Tarikh Pengesahan"
+                    class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  />
                 </div>
               </div>
             </.form>
           </div>
           <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
-            <button type="button" phx-click="kes_close_edit_kes_modal" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium">Batal</button>
-            <button type="submit" form="kes-edit-kes-form" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium">Simpan</button>
+            <button
+              type="button"
+              phx-click="kes_close_edit_kes_modal"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              form="kes-edit-kes-form"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+            >
+              Simpan
+            </button>
           </div>
         </div>
       </div>

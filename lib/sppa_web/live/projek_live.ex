@@ -16,7 +16,7 @@ defmodule SppaWeb.ProjekLive do
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
 
-    user_role = raw_role && (raw_role |> String.trim() |> String.downcase())
+    user_role = raw_role && raw_role |> String.trim() |> String.downcase()
 
     if user_role && user_role in @allowed_roles do
       socket =

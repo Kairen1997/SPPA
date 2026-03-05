@@ -65,53 +65,53 @@ defmodule Sppa.Projects do
       if is_nil(user_id) && (is_nil(user_no_kp) || user_no_kp == "") do
         []
       else
-      # Project IDs where user is manager or developer (DB-level, no unassigned loaded)
-      ids_manager_or_developer =
-        if is_nil(user_id) do
-          []
-        else
-          Project
-          |> where([p], p.project_manager_id == ^user_id or p.developer_id == ^user_id)
-          |> select([p], p.id)
-          |> Repo.all()
-        end
-
-      # Project IDs where user is in approved_project.pembangun_sistem
-      ids_via_pembangun =
-        if is_binary(user_no_kp) and user_no_kp != "" do
-          ap_ids_with_user =
-            ApprovedProject
-            |> Repo.all()
-            |> Enum.filter(fn ap ->
-              ap.pembangun_sistem && user_no_kp in parse_pembangun_sistem(ap.pembangun_sistem)
-            end)
-            |> Enum.map(& &1.id)
-
-          if ap_ids_with_user == [] do
+        # Project IDs where user is manager or developer (DB-level, no unassigned loaded)
+        ids_manager_or_developer =
+          if is_nil(user_id) do
             []
           else
             Project
-            |> where([p], p.approved_project_id in ^ap_ids_with_user)
+            |> where([p], p.project_manager_id == ^user_id or p.developer_id == ^user_id)
             |> select([p], p.id)
             |> Repo.all()
           end
-        else
+
+        # Project IDs where user is in approved_project.pembangun_sistem
+        ids_via_pembangun =
+          if is_binary(user_no_kp) and user_no_kp != "" do
+            ap_ids_with_user =
+              ApprovedProject
+              |> Repo.all()
+              |> Enum.filter(fn ap ->
+                ap.pembangun_sistem && user_no_kp in parse_pembangun_sistem(ap.pembangun_sistem)
+              end)
+              |> Enum.map(& &1.id)
+
+            if ap_ids_with_user == [] do
+              []
+            else
+              Project
+              |> where([p], p.approved_project_id in ^ap_ids_with_user)
+              |> select([p], p.id)
+              |> Repo.all()
+            end
+          else
+            []
+          end
+
+        all_ids = (ids_manager_or_developer ++ ids_via_pembangun) |> Enum.uniq()
+
+        if all_ids == [] do
           []
+        else
+          # Hanya projek dari admin (ada approved_project_id) dipaparkan
+          Project
+          |> where([p], p.id in ^all_ids and not is_nil(p.approved_project_id))
+          |> preload([:developer, :project_manager, :approved_project])
+          |> order_by([p], desc: p.last_updated)
+          |> Repo.all()
+          |> Enum.map(&format_project_for_display/1)
         end
-
-      all_ids = (ids_manager_or_developer ++ ids_via_pembangun) |> Enum.uniq()
-
-      if all_ids == [] do
-        []
-      else
-        # Hanya projek dari admin (ada approved_project_id) dipaparkan
-        Project
-        |> where([p], p.id in ^all_ids and not is_nil(p.approved_project_id))
-        |> preload([:developer, :project_manager, :approved_project])
-        |> order_by([p], desc: p.last_updated)
-        |> Repo.all()
-        |> Enum.map(&format_project_for_display/1)
-      end
       end
     end
   end
@@ -601,6 +601,7 @@ defmodule Sppa.Projects do
            Enum.each(dummy, fn project ->
              Repo.delete!(project)
            end)
+
            count
          end) do
       {:ok, n} -> {:ok, n}

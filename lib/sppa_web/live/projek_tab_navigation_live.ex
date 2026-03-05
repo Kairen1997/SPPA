@@ -4,6 +4,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   alias Sppa.ActivityLogs
   alias Sppa.AnalisisDanRekabentuk
   alias Sppa.Penempatans
+  alias Sppa.Penyerahans
   alias Sppa.PermohonanPerubahan
   alias Sppa.Projects
   alias Sppa.SoalSelidiks
@@ -176,6 +177,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:penyerahan_show_create_modal, false)
          |> assign(:penyerahan_show_edit_modal, false)
          |> assign(:penyerahan_show_upload_modal, false)
+         |> assign(:penyerahan_upload_target, "manual")
          |> assign(:penyerahan_editing_penyerahan, nil)
          |> assign(:penyerahan_selected_penyerahan, nil)
          |> assign(:penyerahan_uploading_penyerahan_id, nil)
@@ -231,11 +233,25 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> allow_upload(:kes_file,
            accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
            max_entries: 1,
-           max_file_size: 10_000_000)
+           max_file_size: 10_000_000
+         )
          |> allow_upload(:kes_edit_file,
            accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
            max_entries: 1,
-           max_file_size: 10_000_000)}
+           max_file_size: 10_000_000
+         )
+         |> allow_upload(:penyerahan_manual,
+           accept: ~w(.pdf .doc .docx),
+           max_entries: 1,
+           max_file_size: 10_000_000,
+           chunk_size: 64_000
+         )
+         |> allow_upload(:penyerahan_surat,
+           accept: ~w(.pdf .doc .docx),
+           max_entries: 1,
+           max_file_size: 10_000_000,
+           chunk_size: 64_000
+         )}
       else
         socket =
           socket
@@ -357,6 +373,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     socket =
       if current_tab == "Ujian Keselamatan" && socket.assigns[:project] do
         project_id = socket.assigns.project.id
+
         ujian_list =
           UjianKeselamatan.list_ujian_rows_for_project(
             project_id,
@@ -365,7 +382,9 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
         kes_selected =
           case params_map["ujian_id"] do
-            nil -> nil
+            nil ->
+              nil
+
             id_str ->
               case Integer.parse(id_str) do
                 {id, _} -> UjianKeselamatan.get_ujian_formatted(id)
@@ -1380,6 +1399,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       "upload_file" => "",
       "status_kelulusan" => "Lulus"
     }
+
     {:noreply,
      socket
      |> assign(:kes_show_create_modal, true)
@@ -1400,8 +1420,16 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   @impl true
   def handle_event("kes_create_ujian", %{"ujian" => ujian_params}, socket) do
     project_id = socket.assigns.project.id
-    modul_name = (ujian_params["modul"] || "") |> String.trim() |> then(fn m -> if m == "", do: "-", else: m end)
-    tajuk = (ujian_params["tajuk"] || "") |> String.trim() |> then(fn t -> if t == "", do: "Ujian Keselamatan", else: t end)
+
+    modul_name =
+      (ujian_params["modul"] || "")
+      |> String.trim()
+      |> then(fn m -> if m == "", do: "-", else: m end)
+
+    tajuk =
+      (ujian_params["tajuk"] || "")
+      |> String.trim()
+      |> then(fn t -> if t == "", do: "Ujian Keselamatan", else: t end)
 
     module_id =
       socket.assigns[:modules]
@@ -1412,7 +1440,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
     tarikh_permohonan = kes_parse_date_param(ujian_params["tarikh_permohonan"])
     tarikh_kelulusan = kes_parse_date_param(ujian_params["tarikh_kelulusan"])
-    status_kelulusan = (ujian_params["status_kelulusan"] || "Lulus") |> String.trim() |> then(fn s -> if s == "", do: nil, else: s end)
+
+    status_kelulusan =
+      (ujian_params["status_kelulusan"] || "Lulus")
+      |> String.trim()
+      |> then(fn s -> if s == "", do: nil, else: s end)
 
     upload_file =
       consume_uploaded_entries(socket, :kes_file, fn %{path: path}, entry ->
@@ -1530,7 +1562,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       lokasi: penyerahan_params["lokasi"],
       catatan:
         if(penyerahan_params["catatan"] == "", do: nil, else: penyerahan_params["catatan"]),
-      manual_pengguna_bahagian_a: nil,
+      manual_pengguna: nil,
       surat_akuan_penerimaan: nil,
       diserahkan_oleh:
         if(penyerahan_params["diserahkan_oleh"] == "",
@@ -1559,30 +1591,19 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   @impl true
   def handle_event("penyerahan_open_edit_modal", %{"penyerahan_id" => penyerahan_id}, socket) do
     penyerahan =
-      Enum.find(socket.assigns.penyerahan, fn p -> p.id == penyerahan_id end)
+      Enum.find(socket.assigns.penyerahan, fn p -> to_string(p.id) == to_string(penyerahan_id) end)
 
     if penyerahan do
       form_data = %{
-        "nama_sistem" => penyerahan.nama_sistem,
+        "nama_sistem" => penyerahan.nama_sistem || "",
         "versi" => penyerahan.versi || "",
-        "penerima" => penyerahan.penerima,
-        "pembangun_team" => penyerahan.pembangun_team || "",
+        "penerima" => penyerahan.penerima || "",
         "pengurus_projek" => penyerahan.pengurus_projek || "",
-        "lokasi" => penyerahan.lokasi,
-        "status" => penyerahan.status,
-        "tarikh_dijangka" =>
-          if(penyerahan.tarikh_dijangka,
-            do: Calendar.strftime(penyerahan.tarikh_dijangka, "%Y-%m-%d"),
-            else: ""
-          ),
         "tarikh_penyerahan" =>
           if(penyerahan.tarikh_penyerahan,
             do: Calendar.strftime(penyerahan.tarikh_penyerahan, "%Y-%m-%d"),
             else: ""
-          ),
-        "diserahkan_oleh" => penyerahan.diserahkan_oleh || "",
-        "diterima_oleh" => penyerahan.diterima_oleh || "",
-        "catatan" => penyerahan.catatan || ""
+          )
       }
 
       form = to_form(form_data, as: :penyerahan)
@@ -1612,6 +1633,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
     if editing_penyerahan do
       penyerahan_id = editing_penyerahan.id
+      project_id = socket.assigns.project && socket.assigns.project.id
 
       tarikh_penyerahan =
         if penyerahan_params["tarikh_penyerahan"] && penyerahan_params["tarikh_penyerahan"] != "" do
@@ -1623,49 +1645,30 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           editing_penyerahan.tarikh_penyerahan
         end
 
-      tarikh_dijangka =
-        if penyerahan_params["tarikh_dijangka"] && penyerahan_params["tarikh_dijangka"] != "" do
-          case Date.from_iso8601(penyerahan_params["tarikh_dijangka"]) do
-            {:ok, date} -> date
-            _ -> editing_penyerahan.tarikh_dijangka
-          end
-        else
-          editing_penyerahan.tarikh_dijangka
-        end
-
       updated_penyerahan_data = %{
         editing_penyerahan
-        | nama_sistem: penyerahan_params["nama_sistem"] || editing_penyerahan.nama_sistem,
-          versi: penyerahan_params["versi"] || "",
-          penerima: penyerahan_params["penerima"] || editing_penyerahan.penerima,
-          pembangun_team: editing_penyerahan.pembangun_team,
-          pengurus_projek:
-            if(penyerahan_params["pengurus_projek"] == "",
-              do: nil,
-              else: penyerahan_params["pengurus_projek"]
-            ),
-          lokasi: penyerahan_params["lokasi"] || editing_penyerahan.lokasi,
-          status: penyerahan_params["status"] || editing_penyerahan.status,
-          tarikh_penyerahan: tarikh_penyerahan,
-          tarikh_dijangka: tarikh_dijangka,
-          catatan:
-            if(penyerahan_params["catatan"] == "", do: nil, else: penyerahan_params["catatan"]),
-          diserahkan_oleh:
-            if(penyerahan_params["diserahkan_oleh"] == "",
-              do: nil,
-              else: penyerahan_params["diserahkan_oleh"]
-            ),
-          diterima_oleh:
-            if(penyerahan_params["diterima_oleh"] == "",
-              do: nil,
-              else: penyerahan_params["diterima_oleh"]
-            )
+        | tarikh_penyerahan: tarikh_penyerahan
       }
 
       updated_penyerahan_list =
         Enum.map(socket.assigns.penyerahan, fn penyerahan ->
           if penyerahan.id == penyerahan_id, do: updated_penyerahan_data, else: penyerahan
         end)
+
+      # Persist to DB (create/update by project_id)
+      if project_id do
+        db_attrs = %{
+          project_id: project_id,
+          tarikh_penyerahan: tarikh_penyerahan,
+          manual_pengguna: updated_penyerahan_data.manual_pengguna,
+          surat_akuan_penerimaan: updated_penyerahan_data.surat_akuan_penerimaan
+        }
+
+        case Penyerahans.get_penyerahan_by_project_id(project_id) do
+          nil -> Penyerahans.create_penyerahan(db_attrs)
+          penyerahan -> Penyerahans.update_penyerahan(penyerahan, db_attrs)
+        end
+      end
 
       {:noreply,
        socket
@@ -1680,14 +1683,22 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   end
 
   @impl true
-  def handle_event("penyerahan_open_upload_modal", %{"penyerahan_id" => penyerahan_id}, socket) do
+  def handle_event(
+        "penyerahan_open_upload_modal",
+        %{"penyerahan_id" => penyerahan_id} = params,
+        socket
+      ) do
+    target = Map.get(params, "target", "manual")
+    penyerahan_list = socket.assigns.penyerahan || []
+
     penyerahan =
-      Enum.find(socket.assigns.penyerahan, fn p -> p.id == penyerahan_id end)
+      Enum.find(penyerahan_list, fn p -> to_string(p.id) == to_string(penyerahan_id) end)
 
     if penyerahan do
       {:noreply,
        socket
        |> assign(:penyerahan_show_upload_modal, true)
+       |> assign(:penyerahan_upload_target, target)
        |> assign(:penyerahan_uploading_penyerahan_id, penyerahan_id)
        |> assign(:penyerahan_uploading_penyerahan, penyerahan)
        |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))
@@ -1701,11 +1712,151 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   def handle_event("penyerahan_close_upload_modal", _params, socket) do
     {:noreply,
      socket
+     |> maybe_cancel_penyerahan_uploads()
      |> assign(:penyerahan_show_upload_modal, false)
+     |> assign(:penyerahan_upload_target, "manual")
      |> assign(:penyerahan_uploading_penyerahan_id, nil)
      |> assign(:penyerahan_uploading_penyerahan, nil)
      |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))
      |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
+  end
+
+  @impl true
+  def handle_event("penyerahan_validate_upload_manual", _params, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("penyerahan_validate_upload_surat", _params, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("penyerahan_validate_upload_documents", _params, socket) do
+    # Diperlukan supaya live_file_input menghantar fail ke pelayan apabila pengguna pilih fail
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("penyerahan_upload_documents", params, socket) do
+    penyerahan_id =
+      params["penyerahan_id"] || socket.assigns[:penyerahan_uploading_penyerahan_id]
+
+    if not penyerahan_id do
+      {:noreply,
+       socket
+       |> put_flash(:error, "Sila pilih penyerahan terlebih dahulu")
+       |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))
+       |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
+    else
+      try do
+        dest_dir = Path.join(File.cwd!(), "priv/static/uploads/penyerahan")
+        File.mkdir_p!(dest_dir)
+
+        saved_manual =
+          consume_uploaded_entries(socket, :penyerahan_manual, fn %{path: path}, entry ->
+            ext = Path.extname(entry.client_name) |> String.downcase()
+            ext = if ext in [".pdf", ".doc", ".docx"], do: ext, else: ".pdf"
+            filename = "manual_pengguna_#{penyerahan_id}#{ext}"
+            dest = Path.join(dest_dir, filename)
+            File.cp!(path, dest)
+            {:ok, filename}
+          end)
+          |> List.first()
+
+        saved_surat =
+          consume_uploaded_entries(socket, :penyerahan_surat, fn %{path: path}, entry ->
+            ext = Path.extname(entry.client_name) |> String.downcase()
+            ext = if ext in [".pdf", ".doc", ".docx"], do: ext, else: ".pdf"
+            filename = "surat_akuan_#{penyerahan_id}#{ext}"
+            dest = Path.join(dest_dir, filename)
+            File.cp!(path, dest)
+            {:ok, filename}
+          end)
+          |> List.first()
+
+        if saved_manual || saved_surat do
+          current_penyerahan =
+            Enum.find(socket.assigns.penyerahan, fn p ->
+              to_string(p.id) == to_string(penyerahan_id)
+            end) || editing_penyerahan_fallback(socket, penyerahan_id)
+
+          updated_penyerahan =
+            Enum.map(socket.assigns.penyerahan, fn penyerahan ->
+              if to_string(penyerahan.id) == to_string(penyerahan_id) do
+                penyerahan
+                |> maybe_update(:manual_pengguna, saved_manual)
+                |> maybe_update(:surat_akuan_penerimaan, saved_surat)
+              else
+                penyerahan
+              end
+            end)
+
+          project_id = socket.assigns.project && socket.assigns.project.id
+
+          if project_id do
+            current =
+              Enum.find(updated_penyerahan, fn p ->
+                to_string(p.id) == to_string(penyerahan_id)
+              end) || current_penyerahan
+
+            db_attrs = %{
+              project_id: project_id,
+              tarikh_penyerahan: current && current.tarikh_penyerahan,
+              manual_pengguna: current && current.manual_pengguna,
+              surat_akuan_penerimaan: current && current.surat_akuan_penerimaan
+            }
+
+            case Penyerahans.get_penyerahan_by_project_id(project_id) do
+              nil -> Penyerahans.create_penyerahan(db_attrs)
+              penyerahan -> Penyerahans.update_penyerahan(penyerahan, db_attrs)
+            end
+          end
+
+          updated_uploading_penyerahan =
+            Enum.find(updated_penyerahan, fn p ->
+              to_string(p.id) == to_string(penyerahan_id)
+            end) || socket.assigns[:penyerahan_uploading_penyerahan]
+
+          msg =
+            cond do
+              saved_manual && saved_surat -> "Manual pengguna dan Surat Akuan berjaya dimuat naik"
+              saved_manual -> "Manual pengguna berjaya dimuat naik"
+              true -> "Surat Akuan Penerimaan Aplikasi berjaya dimuat naik"
+            end
+
+          {:noreply,
+           socket
+           |> assign(:penyerahan, updated_penyerahan)
+           |> assign(:penyerahan_uploading_penyerahan, updated_uploading_penyerahan)
+           |> put_flash(:info, msg)
+           |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))
+           |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
+        else
+          {:noreply,
+           socket
+           |> put_flash(
+             :error,
+             "Sila tunggu muat naik selesai atau pilih sekurang-kurangnya satu fail."
+           )
+           |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))
+           |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
+        end
+      rescue
+        e ->
+          require Logger
+          Logger.error("penyerahan_upload_documents failed: #{inspect(e)}")
+
+          {:noreply,
+           socket
+           |> put_flash(
+             :error,
+             "Muat naik gagal. Sila pastikan fail selesai dimuat naik (100%) dan cuba lagi."
+           )
+           |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))
+           |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
+      end
+    end
   end
 
   @impl true
@@ -1714,26 +1865,74 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       upload_params["penyerahan_id"] ||
         socket.assigns[:penyerahan_uploading_penyerahan_id]
 
-    if penyerahan_id do
-      updated_penyerahan =
-        Enum.map(socket.assigns.penyerahan, fn penyerahan ->
-          if penyerahan.id == penyerahan_id do
-            %{penyerahan | manual_pengguna_bahagian_a: "manual_pengguna_#{penyerahan_id}.pdf"}
-          else
-            penyerahan
-          end
-        end)
-
-      {:noreply,
-       socket
-       |> assign(:penyerahan, updated_penyerahan)
-       |> put_flash(:info, "Manual pengguna bahagian A berjaya dimuat naik")
-       |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))}
-    else
+    if not penyerahan_id do
       {:noreply,
        socket
        |> put_flash(:error, "Sila pilih penyerahan terlebih dahulu")
        |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))}
+    else
+      saved_filename =
+        consume_uploaded_entries(socket, :penyerahan_manual, fn %{path: path}, entry ->
+          ext = Path.extname(entry.client_name) |> String.downcase()
+          ext = if ext in [".pdf", ".doc", ".docx"], do: ext, else: ".pdf"
+          filename = "manual_pengguna_#{penyerahan_id}#{ext}"
+          dest_dir = Path.join(File.cwd!(), "priv/static/uploads/penyerahan")
+          File.mkdir_p!(dest_dir)
+          dest = Path.join(dest_dir, filename)
+          File.cp!(path, dest)
+          {:ok, filename}
+        end)
+        |> List.first()
+
+      if saved_filename do
+        updated_penyerahan =
+          Enum.map(socket.assigns.penyerahan, fn penyerahan ->
+            if to_string(penyerahan.id) == to_string(penyerahan_id) do
+              %{penyerahan | manual_pengguna: saved_filename}
+            else
+              penyerahan
+            end
+          end)
+
+        project_id = socket.assigns.project && socket.assigns.project.id
+
+        if project_id do
+          current =
+            Enum.find(updated_penyerahan, fn p ->
+              to_string(p.id) == to_string(penyerahan_id)
+            end) ||
+              editing_penyerahan_fallback(socket, penyerahan_id)
+
+          db_attrs = %{
+            project_id: project_id,
+            tarikh_penyerahan: current && current.tarikh_penyerahan,
+            manual_pengguna: current && current.manual_pengguna,
+            surat_akuan_penerimaan: current && current.surat_akuan_penerimaan
+          }
+
+          case Penyerahans.get_penyerahan_by_project_id(project_id) do
+            nil -> Penyerahans.create_penyerahan(db_attrs)
+            penyerahan -> Penyerahans.update_penyerahan(penyerahan, db_attrs)
+          end
+        end
+
+        updated_uploading_penyerahan =
+          Enum.find(updated_penyerahan, fn p ->
+            to_string(p.id) == to_string(penyerahan_id)
+          end) || socket.assigns[:penyerahan_uploading_penyerahan]
+
+        {:noreply,
+         socket
+         |> assign(:penyerahan, updated_penyerahan)
+         |> assign(:penyerahan_uploading_penyerahan, updated_uploading_penyerahan)
+         |> put_flash(:info, "Manual pengguna berjaya dimuat naik")
+         |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))}
+      else
+        {:noreply,
+         socket
+         |> put_flash(:error, "Sila pilih fail untuk dimuat naik")
+         |> assign(:penyerahan_upload_manual_form, to_form(%{}, as: :upload_manual))}
+      end
     end
   end
 
@@ -1743,41 +1942,75 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       upload_params["penyerahan_id"] ||
         socket.assigns[:penyerahan_uploading_penyerahan_id]
 
-    if penyerahan_id do
-      updated_penyerahan =
-        Enum.map(socket.assigns.penyerahan, fn penyerahan ->
-          if penyerahan.id == penyerahan_id do
-            %{penyerahan | surat_akuan_penerimaan: "surat_akuan_#{penyerahan_id}.pdf"}
-          else
-            penyerahan
-          end
-        end)
-
-      {:noreply,
-       socket
-       |> assign(:penyerahan, updated_penyerahan)
-       |> put_flash(:info, "Surat Akuan Penerimaan Aplikasi berjaya dimuat naik")
-       |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
-    else
+    if not penyerahan_id do
       {:noreply,
        socket
        |> put_flash(:error, "Sila pilih penyerahan terlebih dahulu")
        |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
-    end
-  end
+    else
+      saved_filename =
+        consume_uploaded_entries(socket, :penyerahan_surat, fn %{path: path}, entry ->
+          ext = Path.extname(entry.client_name) |> String.downcase()
+          ext = if ext in [".pdf", ".doc", ".docx"], do: ext, else: ".pdf"
+          filename = "surat_akuan_#{penyerahan_id}#{ext}"
+          dest_dir = Path.join(File.cwd!(), "priv/static/uploads/penyerahan")
+          File.mkdir_p!(dest_dir)
+          dest = Path.join(dest_dir, filename)
+          File.cp!(path, dest)
+          {:ok, filename}
+        end)
+        |> List.first()
 
-  @impl true
-  def handle_event("penyerahan_toggle_catatan", %{"penyerahan_id" => penyerahan_id}, socket) do
-    expanded = socket.assigns.penyerahan_expanded_catatan || MapSet.new()
+      if saved_filename do
+        updated_penyerahan =
+          Enum.map(socket.assigns.penyerahan, fn penyerahan ->
+            if to_string(penyerahan.id) == to_string(penyerahan_id) do
+              %{penyerahan | surat_akuan_penerimaan: saved_filename}
+            else
+              penyerahan
+            end
+          end)
 
-    expanded =
-      if MapSet.member?(expanded, penyerahan_id) do
-        MapSet.delete(expanded, penyerahan_id)
+        project_id = socket.assigns.project && socket.assigns.project.id
+
+        if project_id do
+          current =
+            Enum.find(updated_penyerahan, fn p ->
+              to_string(p.id) == to_string(penyerahan_id)
+            end) ||
+              editing_penyerahan_fallback(socket, penyerahan_id)
+
+          db_attrs = %{
+            project_id: project_id,
+            tarikh_penyerahan: current && current.tarikh_penyerahan,
+            manual_pengguna: current && current.manual_pengguna,
+            surat_akuan_penerimaan: current && current.surat_akuan_penerimaan
+          }
+
+          case Penyerahans.get_penyerahan_by_project_id(project_id) do
+            nil -> Penyerahans.create_penyerahan(db_attrs)
+            penyerahan -> Penyerahans.update_penyerahan(penyerahan, db_attrs)
+          end
+        end
+
+        updated_uploading_penyerahan =
+          Enum.find(updated_penyerahan, fn p ->
+            to_string(p.id) == to_string(penyerahan_id)
+          end) || socket.assigns[:penyerahan_uploading_penyerahan]
+
+        {:noreply,
+         socket
+         |> assign(:penyerahan, updated_penyerahan)
+         |> assign(:penyerahan_uploading_penyerahan, updated_uploading_penyerahan)
+         |> put_flash(:info, "Surat Akuan Penerimaan Aplikasi berjaya dimuat naik")
+         |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
       else
-        MapSet.put(expanded, penyerahan_id)
+        {:noreply,
+         socket
+         |> put_flash(:error, "Sila pilih fail untuk dimuat naik")
+         |> assign(:penyerahan_upload_surat_form, to_form(%{}, as: :upload_surat))}
       end
-
-    {:noreply, assign(socket, :penyerahan_expanded_catatan, expanded)}
+    end
   end
 
   @impl true
@@ -1823,7 +2056,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   def handle_event("kes_validate_ujian", %{"ujian" => ujian_params}, socket) do
     # Strip LiveView _unused_* keys so form state is not polluted (e.g. when file input triggers phx-change)
     params =
-      Map.drop(ujian_params, Map.keys(ujian_params) |> Enum.filter(&String.starts_with?(&1, "_unused_")))
+      Map.drop(
+        ujian_params,
+        Map.keys(ujian_params) |> Enum.filter(&String.starts_with?(&1, "_unused_"))
+      )
 
     form = to_form(params, as: :ujian)
     {:noreply, assign(socket, :kes_form, form)}
@@ -1838,7 +2074,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     if editing_ujian && project_id do
       tarikh_permohonan = kes_parse_date_param(ujian_params["tarikh_permohonan"])
       tarikh_kelulusan = kes_parse_date_param(ujian_params["tarikh_kelulusan"])
-      status_kelulusan = (ujian_params["status_kelulusan"] || "Lulus") |> String.trim() |> then(fn s -> if s == "", do: nil, else: s end)
+
+      status_kelulusan =
+        (ujian_params["status_kelulusan"] || "Lulus")
+        |> String.trim()
+        |> then(fn s -> if s == "", do: nil, else: s end)
 
       upload_file_from_entries =
         consume_uploaded_entries(socket, :kes_edit_file, fn %{path: path}, entry ->
@@ -1855,7 +2095,9 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         if upload_file_from_entries do
           upload_file_from_entries
         else
-          (ujian_params["upload_file"] || "") |> String.trim() |> then(fn s -> if s == "", do: nil, else: s end)
+          (ujian_params["upload_file"] || "")
+          |> String.trim()
+          |> then(fn s -> if s == "", do: nil, else: s end)
         end
 
       modul = editing_ujian[:modul] || editing_ujian["modul"] || "-"
@@ -1870,7 +2112,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         upload_file: upload_file,
         status_kelulusan: status_kelulusan,
         tarikh_ujian: editing_ujian[:tarikh_ujian] || editing_ujian["tarikh_ujian"],
-        tarikh_dijangka_siap: editing_ujian[:tarikh_dijangka_siap] || editing_ujian["tarikh_dijangka_siap"],
+        tarikh_dijangka_siap:
+          editing_ujian[:tarikh_dijangka_siap] || editing_ujian["tarikh_dijangka_siap"],
         status: editing_ujian[:status] || editing_ujian["status"] || "Menunggu",
         penguji: editing_ujian[:penguji] || editing_ujian["penguji"],
         hasil: editing_ujian[:hasil] || editing_ujian["hasil"] || "Belum Selesai",
@@ -1916,12 +2159,15 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
         {:error, %Ecto.Changeset{} = changeset} ->
           errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, _} -> msg end)
-          msg = if map_size(errors) > 0 do
-            detail = errors |> Enum.map(fn {f, _} -> to_string(f) end) |> Enum.join(", ")
-            "Gagal menyimpan ujian keselamatan (#{detail}). Sila semak data dan cuba lagi."
-          else
-            "Gagal menyimpan ujian keselamatan. Sila semak data dan cuba lagi."
-          end
+
+          msg =
+            if map_size(errors) > 0 do
+              detail = errors |> Enum.map(fn {f, _} -> to_string(f) end) |> Enum.join(", ")
+              "Gagal menyimpan ujian keselamatan (#{detail}). Sila semak data dan cuba lagi."
+            else
+              "Gagal menyimpan ujian keselamatan. Sila semak data dan cuba lagi."
+            end
+
           {:noreply, socket |> put_flash(:error, msg)}
 
         {:error, _} ->
@@ -1940,6 +2186,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   @impl true
   def handle_event("kes_edit_kes_ujian", %{"kes_id" => kes_id_str}, socket) do
     kes_id = kes_parse_kes_id(kes_id_str)
+
     if socket.assigns[:kes_selected_ujian] && socket.assigns.kes_selected_ujian.senarai_kes_ujian do
       kes =
         Enum.find(socket.assigns.kes_selected_ujian.senarai_kes_ujian, fn k ->
@@ -2009,7 +2256,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         langkah: kes_params["langkah"] || "",
         keputusan_dijangka: kes_params["keputusan_dijangka"] || "",
         keputusan_sebenar:
-          if(kes_params["keputusan_sebenar"] == "", do: nil, else: kes_params["keputusan_sebenar"]),
+          if(kes_params["keputusan_sebenar"] == "",
+            do: nil,
+            else: kes_params["keputusan_sebenar"]
+          ),
         hasil: if(kes_params["hasil"] == "", do: nil, else: kes_params["hasil"]),
         penguji: if(kes_params["penguji"] == "", do: nil, else: kes_params["penguji"]),
         tarikh_ujian: tarikh_ujian,
@@ -2086,6 +2336,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         case UjianKeselamatan.create_kes(attrs) do
           {:ok, _} ->
             updated = UjianKeselamatan.get_ujian_formatted(ujian_id)
+
             if updated do
               {:noreply,
                socket
@@ -2130,12 +2381,14 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         Logger.error("kes_add_new_kes crashed: #{inspect(e)}")
         Logger.error(Exception.format(:error, e, __STACKTRACE__))
         err_msg = Exception.message(e)
+
         flash_msg =
           if String.length(err_msg) < 120 do
             "Ralat menambah kes ujian: #{err_msg}"
           else
             "Ralat menambah kes ujian. Sila cuba lagi atau hubungi pentadbir."
           end
+
         {:noreply, socket |> put_flash(:error, flash_msg)}
     end
   end
@@ -2150,6 +2403,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         {:ok, _} ->
           ujian_id = socket.assigns.kes_selected_ujian.id
           updated = UjianKeselamatan.get_ujian_formatted(ujian_id)
+
           {:noreply,
            socket
            |> assign(:kes_selected_ujian, updated)
@@ -2163,12 +2417,6 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     else
       {:noreply, socket}
     end
-  end
-
-  @impl true
-  def handle_event("validate_perubahan", %{"perubahan" => perubahan_params}, socket) do
-    form = to_form(perubahan_params, as: :perubahan)
-    {:noreply, assign(socket, :form, form)}
   end
 
   @impl true
@@ -2295,6 +2543,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   # --- Penempatan (tab) create modal ---
   def handle_event("open_penempatan_create_modal", _params, socket) do
     project = socket.assigns.project
+
     form_data = %{
       "nama_sistem" => project.nama || "",
       "versi" => "1.0.0",
@@ -2307,6 +2556,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       "catatan" => "",
       "dibina_oleh" => ""
     }
+
     {:noreply,
      socket
      |> assign(:penempatan_show_create_modal, true)
@@ -2555,6 +2805,16 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   defp empty_to_nil(s) when is_binary(s), do: s
   defp empty_to_nil(other), do: other
 
+  defp maybe_update(map, _key, nil), do: map
+  defp maybe_update(map, key, value), do: Map.put(map, key, value)
+
+  defp editing_penyerahan_fallback(socket, penyerahan_id) do
+    Enum.find(socket.assigns.penyerahan || [], fn p ->
+      to_string(p.id) == to_string(penyerahan_id)
+    end) ||
+      socket.assigns[:penyerahan_editing_penyerahan]
+  end
+
   defp put_module_pagination_assigns(socket) do
     modules = socket.assigns.modules || []
     page_size = socket.assigns.module_page_size || @module_page_size
@@ -2593,6 +2853,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   # Ujian Keselamatan (tab) helpers
   defp maybe_cancel_kes_file_uploads(socket) do
     entries = get_in(socket.assigns, [:uploads, :kes_file, :entries]) || []
+
     Enum.reduce(entries, socket, fn entry, acc ->
       cancel_upload(acc, :kes_file, entry.ref)
     end)
@@ -2602,11 +2863,28 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
   defp maybe_cancel_kes_edit_file_uploads(socket) do
     entries = get_in(socket.assigns, [:uploads, :kes_edit_file, :entries]) || []
+
     Enum.reduce(entries, socket, fn entry, acc ->
       cancel_upload(acc, :kes_edit_file, entry.ref)
     end)
   rescue
     _ -> socket
+  end
+
+  defp maybe_cancel_penyerahan_uploads(socket) do
+    socket
+    |> cancel_penyerahan_upload_entries(:penyerahan_manual)
+    |> cancel_penyerahan_upload_entries(:penyerahan_surat)
+  rescue
+    _ -> socket
+  end
+
+  defp cancel_penyerahan_upload_entries(socket, name) do
+    entries = get_in(socket.assigns, [:uploads, name, :entries]) || []
+
+    Enum.reduce(entries, socket, fn entry, acc ->
+      cancel_upload(acc, name, entry.ref)
+    end)
   end
 
   defp kes_get_ujian_by_id(ujian_id, _ujian_id_str, _socket) when is_integer(ujian_id) do
@@ -2642,7 +2920,13 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   defp kes_upload_filename(project_id, entry) do
     ext = Path.extname(entry.client_name)
     base = entry.client_name |> Path.basename() |> Path.rootname()
-    safe = base |> String.replace(~r/[^\p{L}\p{N}\s\-_.]/u, "") |> String.replace(~r/\s+/, "_") |> String.slice(0, 120)
+
+    safe =
+      base
+      |> String.replace(~r/[^\p{L}\p{N}\s\-_.]/u, "")
+      |> String.replace(~r/\s+/, "_")
+      |> String.slice(0, 120)
+
     name_part = if safe == "", do: "dokumen", else: safe
     "#{project_id}_#{System.unique_integer([:positive])}_#{name_part}#{ext}"
   end
@@ -2650,6 +2934,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   # Returns display name for upload file (hides project_id and unique number prefix).
   def kes_display_filename(path) when is_binary(path) do
     base = Path.basename(path)
+
     case Regex.run(~r/^\d+_\d+_(.+)$/, base) do
       [_, rest] -> rest
       nil -> base
@@ -2707,53 +2992,44 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
     versi = versi_for_project(project)
 
-    if project do
-      [
-        %{
-          id: "penyerahan_1",
-          number: 1,
-          nama_sistem: nama_sistem,
-          versi: versi,
-          tarikh_penyerahan: ~D[2024-12-20],
-          tarikh_dijangka: ~D[2024-12-18],
-          status: "Selesai",
-          penerima: "Jabatan Teknologi Maklumat",
-          pembangun_team: nil,
-          pengurus_projek: "Siti binti Hassan",
-          lokasi: "Pejabat Utama JPKN",
-          catatan: nil,
-          manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
-          surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
-          diserahkan_oleh: "Ahmad bin Abdullah",
-          diterima_oleh: "Siti binti Hassan",
-          tarikh_diserahkan: ~D[2024-12-20],
-          tarikh_diterima: ~D[2024-12-20]
-        }
-      ]
-    else
-      [
-        %{
-          id: "penyerahan_1",
-          number: 1,
-          nama_sistem: nama_sistem,
-          versi: versi,
-          tarikh_penyerahan: ~D[2024-12-20],
-          tarikh_dijangka: ~D[2024-12-18],
-          status: "Selesai",
-          penerima: "Jabatan Teknologi Maklumat",
-          pembangun_team: nil,
-          pengurus_projek: "Siti binti Hassan",
-          lokasi: "Pejabat Utama JPKN",
-          catatan: nil,
-          manual_pengguna_bahagian_a: "manual_pengguna_bahagian_a_v1.0.0.pdf",
-          surat_akuan_penerimaan: "surat_akuan_penerimaan_v1.0.0.pdf",
-          diserahkan_oleh: "Ahmad bin Abdullah",
-          diterima_oleh: "Siti binti Hassan",
-          tarikh_diserahkan: ~D[2024-12-20],
-          tarikh_diterima: ~D[2024-12-20]
-        }
-      ]
-    end
+    jabatan =
+      if project && Map.get(project, :jabatan) && project.jabatan != "" do
+        project.jabatan
+      else
+        "Tidak Ditetapkan"
+      end
+
+    pengurus_projek =
+      if project && Map.get(project, :pengurus_projek) && project.pengurus_projek != "" do
+        project.pengurus_projek
+      else
+        "Tidak Ditetapkan"
+      end
+
+    project_id = project && Map.get(project, :id)
+
+    penyerahans_from_db =
+      if project_id do
+        Penyerahans.list_penyerahans_by_project_id(project_id)
+      else
+        []
+      end
+
+    Enum.map(penyerahans_from_db, fn p ->
+      %{
+        id: p.id,
+        nama_sistem: nama_sistem,
+        versi: versi,
+        tarikh_penyerahan: p.tarikh_penyerahan,
+        penerima: jabatan,
+        pembangun_team: nil,
+        pengurus_projek: pengurus_projek,
+        manual_pengguna: p.manual_pengguna,
+        manual_pengguna_nama: p.manual_pengguna_nama || p.manual_pengguna,
+        surat_akuan_penerimaan: p.surat_akuan_penerimaan,
+        surat_akuan_nama: p.surat_akuan_nama || p.surat_akuan_penerimaan
+      }
+    end)
   end
 
   # Penempatan (deployment) - data from DB, same source as halaman penempatan (PenempatanLive)
