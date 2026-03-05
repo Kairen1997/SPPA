@@ -10,6 +10,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   alias Sppa.SoalSelidiks
   alias Sppa.UjianKeselamatan
   alias Sppa.UjianPenerimaanPengguna
+  alias Sppa.Maklumbalas
   alias Sppa.ModulPengaturcaraan
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
@@ -227,6 +228,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:penempatan_form, to_form(%{}, as: :penempatan))
          |> assign(:penempatan_mode, "create")
          |> assign(:penempatan_editing_id, nil)
+         |> assign(:maklumbalas_list, [])
+         |> assign(:maklumbalas_show_create_modal, false)
+         |> assign(:maklumbalas_show_edit_modal, false)
+         |> assign(:maklumbalas_editing, nil)
+         |> assign(:maklumbalas_form, to_form(%{}, as: :maklumbalas))
          |> assign(:current_tab, "Soal Selidik")
          |> assign(:activities, activities)
          |> assign(:notifications_count, notifications_count)
@@ -305,6 +311,16 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           get_penempatan_for_project(project.id, socket.assigns.current_scope, project)
 
         assign(socket, :penempatan, penempatan)
+      else
+        socket
+      end
+
+    # Muat senarai maklumbalas dari DB apabila tab Maklumbalas Pelanggan dibuka
+    socket =
+      if current_tab == "Maklumbalas Pelanggan" && socket.assigns[:project] do
+        project_id = socket.assigns.project.id
+        list = Maklumbalas.list_by_project_id(project_id)
+        assign(socket, :maklumbalas_list, list)
       else
         socket
       end
@@ -2572,6 +2588,169 @@ defmodule SppaWeb.ProjekTabNavigationLive do
      |> assign(:penempatan_form, to_form(%{}, as: :penempatan))
      |> assign(:penempatan_mode, "create")
      |> assign(:penempatan_editing_id, nil)}
+  end
+
+  def handle_event("maklumbalas_open_create_modal", _params, socket) do
+    project = socket.assigns.project
+    project_id = project && project.id
+    jabatan_from_project = (project && Map.get(project, :jabatan)) || ""
+
+    default =
+      %{
+        "project_id" => to_string(project_id),
+        "tarikh_maklumbalas" => Date.utc_today() |> Date.to_iso8601(),
+        "jabatan" => jabatan_from_project,
+        "responden" => "",
+        "butiran" => ""
+      }
+    form = to_form(default, as: :maklumbalas)
+    {:noreply,
+     socket
+     |> assign(:maklumbalas_show_create_modal, true)
+     |> assign(:maklumbalas_form, form)}
+  end
+
+  def handle_event("maklumbalas_close_create_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:maklumbalas_show_create_modal, false)
+     |> assign(:maklumbalas_form, to_form(%{}, as: :maklumbalas))}
+  end
+
+  def handle_event("validate_maklumbalas", %{"maklumbalas" => params}, socket) do
+    form = to_form(params, as: :maklumbalas)
+    {:noreply, assign(socket, :maklumbalas_form, form)}
+  end
+
+  def handle_event("maklumbalas_create", %{"maklumbalas" => params}, socket) do
+    project = socket.assigns.project
+    project_id = project && project.id
+
+    tarikh_maklumbalas =
+      if params["tarikh_maklumbalas"] && params["tarikh_maklumbalas"] != "" do
+        case Date.from_iso8601(params["tarikh_maklumbalas"]) do
+          {:ok, date} -> date
+          _ -> nil
+        end
+      else
+        nil
+      end
+
+    # Jabatan dari projek (penugasan / approved_projects)
+    jabatan_from_project = (project && Map.get(project, :jabatan)) || ""
+
+    attrs = %{
+      project_id: project_id,
+      tarikh_maklumbalas: tarikh_maklumbalas,
+      jabatan: params["jabatan"] || jabatan_from_project,
+      responden: params["responden"] || "",
+      butiran: params["butiran"] || ""
+    }
+
+    case Maklumbalas.create_maklumbalas(attrs) do
+      {:ok, _maklumbalas} ->
+        list = Maklumbalas.list_by_project_id(project_id)
+        {:noreply,
+         socket
+         |> assign(:maklumbalas_list, list)
+         |> assign(:maklumbalas_show_create_modal, false)
+         |> assign(:maklumbalas_form, to_form(%{}, as: :maklumbalas))
+         |> put_flash(:info, "Maklumbalas berjaya didaftarkan.")}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        form = to_form(changeset, as: :maklumbalas)
+        {:noreply,
+         socket
+         |> assign(:maklumbalas_form, form)
+         |> put_flash(:error, "Sila betulkan ralat dalam borang.")}
+    end
+  end
+
+  def handle_event("maklumbalas_open_edit_modal", %{"id" => id}, socket) do
+    maklumbalas =
+      case Integer.parse(to_string(id)) do
+        {int_id, _} -> Maklumbalas.get_maklumbalas(int_id)
+        :error -> nil
+      end
+
+    if maklumbalas && maklumbalas.project_id == socket.assigns.project.id do
+      form_data = %{
+        "tarikh_maklumbalas" =>
+          if(maklumbalas.tarikh_maklumbalas,
+            do: Calendar.strftime(maklumbalas.tarikh_maklumbalas, "%Y-%m-%d"),
+            else: ""
+          ),
+        "jabatan" => maklumbalas.jabatan || "",
+        "responden" => maklumbalas.responden || "",
+        "butiran" => maklumbalas.butiran || ""
+      }
+
+      form = to_form(form_data, as: :maklumbalas)
+
+      {:noreply,
+       socket
+       |> assign(:maklumbalas_show_edit_modal, true)
+       |> assign(:maklumbalas_editing, maklumbalas)
+       |> assign(:maklumbalas_form, form)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("maklumbalas_close_edit_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:maklumbalas_show_edit_modal, false)
+     |> assign(:maklumbalas_editing, nil)
+     |> assign(:maklumbalas_form, to_form(%{}, as: :maklumbalas))}
+  end
+
+  def handle_event("maklumbalas_update", %{"maklumbalas" => params}, socket) do
+    editing = socket.assigns[:maklumbalas_editing]
+    project = socket.assigns.project
+    project_id = project && project.id
+
+    if editing && project_id do
+      tarikh_maklumbalas =
+        if params["tarikh_maklumbalas"] && params["tarikh_maklumbalas"] != "" do
+          case Date.from_iso8601(params["tarikh_maklumbalas"]) do
+            {:ok, date} -> date
+            _ -> editing.tarikh_maklumbalas
+          end
+        else
+          editing.tarikh_maklumbalas
+        end
+
+      jabatan_from_project = (project && Map.get(project, :jabatan)) || ""
+
+      attrs = %{
+        tarikh_maklumbalas: tarikh_maklumbalas,
+        jabatan: params["jabatan"] || jabatan_from_project || editing.jabatan,
+        responden: params["responden"] || "",
+        butiran: params["butiran"] || ""
+      }
+
+      case Maklumbalas.update_maklumbalas(editing, attrs) do
+        {:ok, _updated} ->
+          list = Maklumbalas.list_by_project_id(project_id)
+          {:noreply,
+           socket
+           |> assign(:maklumbalas_list, list)
+           |> assign(:maklumbalas_show_edit_modal, false)
+           |> assign(:maklumbalas_editing, nil)
+           |> assign(:maklumbalas_form, to_form(%{}, as: :maklumbalas))
+           |> put_flash(:info, "Maklumbalas berjaya dikemaskini.")}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          form = to_form(changeset, as: :maklumbalas)
+          {:noreply,
+           socket
+           |> assign(:maklumbalas_form, form)
+           |> put_flash(:error, "Sila betulkan ralat dalam borang.")}
+      end
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("validate_penempatan", %{"penempatan" => params}, socket) do
