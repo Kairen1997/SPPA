@@ -1,14 +1,15 @@
 defmodule Sppa.Integrations.ExternalClient do
   require Logger
 
-  @external_url "http://10.71.70.121:4000/api/requests?status=Diluluskan"
+  @default_external_url "http://10.71.69.152:4000/api/requests?status=Diluluskan"
 
   defp requests_url do
-    @external_url
+    config = Application.get_env(:sppa, :system_permohonan_aplikasi, [])
+    config[:base_url] || @default_external_url
   end
 
   # Keys the external API might use to wrap the list of requests (try in order)
-  @response_list_keys ["data", "requests", "permohonan", "results"]
+  @response_list_keys ["data", "requests", "permohonan", "results", "items", "applications", "records", "list"]
 
   # Public API used by the worker
   def fetch_documents do
@@ -20,6 +21,7 @@ defmodule Sppa.Integrations.ExternalClient do
 
   defp do_fetch(url, attempts_left) when attempts_left > 0 do
     opts = [
+      headers: build_headers(),
       receive_timeout: 120_000,
       retry: :transient,
       retry_delay: 2_000
@@ -61,6 +63,21 @@ defmodule Sppa.Integrations.ExternalClient do
     {:error, {:http_error, :timeout}}
   end
 
+  defp build_headers do
+    config = Application.get_env(:sppa, :system_permohonan_aplikasi, [])
+
+    api_client =
+      config[:api_client] || "sistem_pengurusan_pembangunan_aplikasi"
+
+    api_key =
+      config[:api_key] || "dev-change-me-sppa-api-key"
+
+    [
+      {"x-api-client", api_client},
+      {"x-api-key", api_key}
+    ]
+  end
+
   # Req may return body already decoded (map/list) when Content-Type is application/json.
   # Otherwise body is binary and we must decode with Jason.
   defp normalize_body_to_list(body) when is_binary(body) do
@@ -75,7 +92,11 @@ defmodule Sppa.Integrations.ExternalClient do
   end
 
   defp normalize_body_to_list(body) when is_list(body), do: {:ok, body}
-  defp normalize_body_to_list(body) when is_map(body), do: unwrap_to_list(body)
+  defp normalize_body_to_list(body) when is_map(body) do
+    keys = Map.keys(body)
+    Logger.info("External API response top-level keys: #{inspect(keys)}")
+    unwrap_to_list(body)
+  end
 
   defp normalize_body_to_list(other) do
     Logger.error("Unexpected response body type: #{inspect(other)}")
@@ -83,6 +104,7 @@ defmodule Sppa.Integrations.ExternalClient do
   end
 
   # Unwrap common API response shapes to a list of items.
+  # Handles: direct list, top-level key (data/requests/...), or nested (e.g. data.requests).
   defp unwrap_to_list(list) when is_list(list), do: {:ok, list}
 
   defp unwrap_to_list(map) when is_map(map) do
@@ -90,6 +112,7 @@ defmodule Sppa.Integrations.ExternalClient do
       Enum.find_value(@response_list_keys, fn key ->
         case map[key] do
           list when is_list(list) -> list
+          nested when is_map(nested) -> find_list_in_map(nested)
           _ -> nil
         end
       end)
@@ -98,9 +121,18 @@ defmodule Sppa.Integrations.ExternalClient do
       {:ok, found}
     else
       # Single object wrapped as response (e.g. %{"request" => %{...}})
-      single = map["request"] || map["request_id"]
+      single = map["request"] || map["request_id"] || map["application"]
       if is_map(single), do: {:ok, [single]}, else: {:ok, [map]}
     end
+  end
+
+  defp find_list_in_map(map) when is_map(map) do
+    Enum.find_value(@response_list_keys, fn key ->
+      case map[key] do
+        list when is_list(list) -> list
+        _ -> nil
+      end
+    end)
   end
 
   defp log_body_sample(body) when is_binary(body) do

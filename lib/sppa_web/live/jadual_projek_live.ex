@@ -5,7 +5,7 @@ defmodule SppaWeb.JadualProjekLive do
   alias Sppa.Projects
   alias Sppa.ProjectModules
 
-  @allowed_roles ["pengurus projek", "pembangun sistem", "ketua penolong pengarah"]
+  @allowed_roles ["pengurus projek", "pembangun sistem", "ketua unit", "ketua penolong pengarah"]
 
   @impl true
   def mount(_params, _session, socket) do
@@ -107,7 +107,7 @@ defmodule SppaWeb.JadualProjekLive do
         "pembangun sistem" ->
           Projects.list_projects_for_pembangun_sistem(current_scope)
 
-        "pengurus projek" ->
+        role when role in ["pengurus projek", "ketua unit"] ->
           Projects.list_projects_for_pengurus_projek(current_scope)
 
         _ ->

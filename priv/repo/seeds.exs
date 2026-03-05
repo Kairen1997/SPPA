@@ -50,15 +50,17 @@ create_confirmed_user = fn no_kp, password, email, role_name, name ->
       end
 
     existing_user ->
-      # Update existing user with name if it's missing or different
+      # Update existing user with name/role/email/confirmation if needed
       needs_name_update = is_nil(existing_user.name) || existing_user.name != name
       needs_email_update = existing_user.email != email
+      needs_role_update = existing_user.role != role_name
       needs_confirm = is_nil(existing_user.confirmed_at)
 
-      if needs_name_update || needs_email_update || needs_confirm do
+      if needs_name_update || needs_email_update || needs_role_update || needs_confirm do
         updates = %{}
         updates = if needs_name_update, do: Map.put(updates, :name, name), else: updates
         updates = if needs_email_update, do: Map.put(updates, :email, email), else: updates
+        updates = if needs_role_update, do: Map.put(updates, :role, role_name), else: updates
 
         changeset = Ecto.Changeset.change(existing_user, updates)
 
@@ -126,6 +128,22 @@ create_confirmed_user.(
   "Athur Pendragon"
 )
 
+create_confirmed_user.(
+  "800202020203",
+  "projek12345678",
+  "pengurus.projek2@sppa.gov.my",
+  "pengurus projek",
+  "Kyle Lorren"
+)
+
+create_confirmed_user.(
+  "800202020204",
+  "projek12345678",
+  "pengurus.projek3@sppa.gov.my",
+  "pengurus projek",
+  "Luke Skywalker"
+)
+
 # Create Ketua Penolong Pengarah (Deputy Director Head)
 IO.puts("\nCreating Ketua Penolong Pengarah...")
 
@@ -135,6 +153,32 @@ create_confirmed_user.(
   "ketua.penolong.pengarah@sppa.gov.my",
   "ketua penolong pengarah",
   "Yshtolla Harvey"
+)
+
+IO.puts("\nCreating Ketua Unit...")
+
+create_confirmed_user.(
+  "00123567890",
+  "KetuaUnit123456",
+  "unit1@sistem.test",
+  "ketua unit",
+  "Richard Valentine"
+)
+
+create_confirmed_user.(
+  "00123567891",
+  "KetuaUnit123456",
+  "unit2@sistem.test",
+  "ketua unit",
+  "Dinn Djarin"
+)
+
+create_confirmed_user.(
+  "00123567892",
+  "KetuaUnit123456",
+  "unit3@sistem.test",
+  "ketua unit",
+  "Ahsoka Khano"
 )
 
 IO.puts("\n=== Seed users creation completed ===\n")

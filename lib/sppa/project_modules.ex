@@ -23,15 +23,14 @@ defmodule Sppa.ProjectModules do
   def list_modules_by_project_id(_), do: []
 
   @doc """
-  List all modules for a given project that belong to the current scope's owner.
+  List all modules for a given project.
+
+  Access control is enforced at the project level (for example in
+  `Projects.get_project!/2`), so this function simply returns all
+  modules for the given project_id.
   """
-  def list_modules_for_project(current_scope, project_id) do
-    ProjectModule
-    |> join(:inner, [m], p in assoc(m, :project))
-    |> where([m, p], m.project_id == ^project_id and p.user_id == ^current_scope.user.id)
-    |> preload([m, p], [:developer, project: p])
-    |> order_by([m, _p], asc: m.fasa, asc: m.versi, asc: m.inserted_at)
-    |> Repo.all()
+  def list_modules_for_project(_current_scope, project_id) do
+    list_modules_by_project_id(project_id)
   end
 
   @doc """

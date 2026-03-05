@@ -1,0 +1,220 @@
+<Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+  <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
+    <%!-- Overlay --%>
+    <div
+      class={[
+        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+      ]}
+      phx-click="close_sidebar"
+    >
+    </div>
+
+    <%!-- Sidebar --%>
+    <.dashboard_sidebar
+      sidebar_open={@sidebar_open}
+      dashboard_path={~p"/dashboard-kk"}
+      logo_src={~p"/images/logojpkn.png"}
+      current_scope={@current_scope}
+      current_path="/penyerahan-projek"
+    />
+
+    <%!-- Main Content --%>
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <%!-- Header --%>
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-md relative gap-2 sm:gap-4">
+        <div
+          class="flex items-center gap-2 sm:gap-4 flex-shrink-0"
+          style="max-width: min(30%, 200px);"
+        >
+          <button
+            phx-click="toggle_sidebar"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
+          >
+            <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+        </div>
+
+        <div class="flex-1 flex justify-center min-w-0">
+          <.system_title />
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <.header_actions
+            notifications_open={@notifications_open}
+            notifications_count={@notifications_count}
+            activities={@activities}
+            profile_menu_open={@profile_menu_open}
+            current_scope={@current_scope}
+          />
+        </div>
+      </header>
+
+      <%!-- Content --%>
+      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
+        <div class="max-w-7xl mx-auto">
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+              Penyerahan
+            </h1>
+
+            <p class="text-gray-600">
+              Senarai projek dari pautan luar. Sinkronkan data untuk kemaskini terkini.
+            </p>
+          </div>
+
+          <%!-- Filter section --%>
+          <div class="rounded-xl bg-white p-6 shadow-sm">
+            <.form
+              for={%{}}
+              phx-change="filter"
+              id="penyerahan-filter-form"
+              class="flex flex-wrap items-end gap-4"
+            >
+              <div class="flex-1 min-w-[200px]">
+                <label class="mb-2 block text-sm font-medium text-gray-700">Carian</label>
+                <input
+                  type="text"
+                  name="search"
+                  value={@search_query}
+                  placeholder="Carian projek..."
+                  class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+
+              <div class="flex-1 min-w-[200px]">
+                <label class="mb-2 block text-sm font-medium text-gray-700">Status Projek</label>
+                <select
+                  name="status"
+                  class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
+                >
+                  <option value="" selected={@status_filter == ""}>Semua</option>
+                  <option value="Dalam Pembangunan" selected={@status_filter == "Dalam Pembangunan"}>Dalam Pembangunan</option>
+                  <option value="Selesai" selected={@status_filter == "Selesai"}>Selesai</option>
+                </select>
+              </div>
+
+              <div class="flex-shrink-0">
+                <button
+                  type="button"
+                  phx-click="sync_external_data"
+                  class="rounded-lg bg-green-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center gap-2"
+                >
+                  <.icon name="hero-arrow-path" class="w-4 h-4" />
+                  <span>Sync Data</span>
+                </button>
+              </div>
+            </.form>
+          </div>
+
+          <%!-- Projects table --%>
+          <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Nama Sistem
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Emel
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Kementerian/Jabatan
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Tarikh
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Tindakan
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody class="divide-y divide-gray-200 bg-white">
+                <tr :for={project <- @projects} class="hover:bg-gray-50 transition-colors duration-150">
+                  <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                    {project.nama_projek}
+                  </td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                    {project.pengurus_email || "-"}
+                  </td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                    {project.jabatan || "-"}
+                  </td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                    <%= if project.tarikh_mula do %>
+                      {Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}
+                    <% else %>
+                      <span class="text-gray-400">-</span>
+                    <% end %>
+                  </td>
+                  <td class="whitespace-nowrap px-6 py-4 text-sm">
+                    <.link
+                      navigate={~p"/senarai-projek-diluluskan/#{project.id}"}
+                      class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200"
+                    >
+                      <.icon name="hero-eye" class="w-4 h-4" />
+                      <span class="hidden lg:inline">Lihat</span>
+                    </.link>
+                  </td>
+                </tr>
+
+                <tr :if={@projects == []}>
+                  <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">
+                    Tiada projek dijumpai
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <%!-- Pagination --%>
+          <div :if={@total_pages > 1} class="mt-6 flex justify-center">
+            <nav class="flex items-center gap-2" aria-label="Pagination">
+              <button
+                :if={@page > 1}
+                phx-click="paginate"
+                phx-value-page={@page - 1}
+                class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              >
+                Sebelum
+              </button>
+              <span
+                :for={page_num <- @pagination_pages}
+                :if={page_num == :ellipsis}
+                class="rounded-lg px-3 py-2 text-sm font-medium text-gray-500"
+              >
+                ...
+              </span>
+              <button
+                :for={page_num <- @pagination_pages}
+                :if={page_num != :ellipsis}
+                phx-click="paginate"
+                phx-value-page={page_num}
+                class={[
+                  "rounded-lg px-3 py-2 text-sm font-medium transition",
+                  if(page_num == @page,
+                    do: "bg-blue-600 text-white",
+                    else: "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  )
+                ]}
+              >
+                {page_num}
+              </button>
+              <button
+                :if={@page < @total_pages}
+                phx-click="paginate"
+                phx-value-page={@page + 1}
+                class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              >
+                Seterus
+              </button>
+            </nav>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</Layouts.app>

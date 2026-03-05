@@ -1,0 +1,187 @@
+<Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+  <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
+    <%!-- Overlay --%>
+    <div
+      class={[
+        "fixed inset-0 bg-blue-900/60 z-40 transition-opacity duration-300",
+        if(@sidebar_open, do: "opacity-100", else: "opacity-0 pointer-events-none")
+      ]}
+      phx-click="close_sidebar"
+    >
+    </div>
+
+    <%!-- Sidebar --%>
+    <.dashboard_sidebar
+      sidebar_open={@sidebar_open}
+      dashboard_path={~p"/dashboard-kk"}
+      logo_src={~p"/images/logojpkn.png"}
+      current_scope={@current_scope}
+      current_path="/dashboard-kk"
+    />
+
+    <%!-- Main Content --%>
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <%!-- Header --%>
+      <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-md relative gap-2 sm:gap-4">
+        <div
+          class="flex items-center gap-2 sm:gap-4 flex-shrink-0"
+          style="max-width: min(30%, 200px);"
+        >
+          <button
+            phx-click="toggle_sidebar"
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
+          >
+            <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+        </div>
+
+        <div class="flex-1 flex justify-center min-w-0">
+          <.system_title />
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <.header_actions
+            notifications_open={@notifications_open}
+            notifications_count={@notifications_count}
+            activities={@activities}
+            profile_menu_open={@profile_menu_open}
+            current_scope={@current_scope}
+          />
+        </div>
+      </header>
+
+      <%!-- Dashboard Content --%>
+      <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
+        <div class="max-w-7xl mx-auto space-y-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900 mb-1">
+                Dashboard Ketua Unit
+              </h1>
+
+              <p class="text-gray-600">
+                Gambaran keseluruhan projek di bawah unit anda dan status semasa.
+              </p>
+            </div>
+          </div>
+
+          <%!-- Summary Cards --%>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-semibold text-sky-100">Jumlah Projek</span>
+                <.icon name="hero-folder-open" class="w-7 h-7 text-sky-100/90" />
+              </div>
+
+              <div class="text-4xl font-bold text-white mb-1">
+                {@stats[:total_projects] || 0}
+              </div>
+
+              <p class="text-sm text-sky-100/90">
+                Semua projek yang boleh diakses oleh Ketua Unit.
+              </p>
+            </div>
+
+            <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-semibold text-emerald-100">
+                  Dalam Pembangunan
+                </span>
+                <.icon name="hero-cog-6-tooth" class="w-7 h-7 text-emerald-100/90" />
+              </div>
+
+              <div class="text-4xl font-bold text-white mb-1">
+                {@stats[:in_development] || 0}
+              </div>
+
+              <p class="text-sm text-emerald-100/90">
+                Projek yang sedang aktif dibangunkan oleh pasukan.
+              </p>
+            </div>
+
+            <div class="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-semibold text-amber-100">Selesai</span>
+                <.icon name="hero-check-badge" class="w-7 h-7 text-amber-100/90" />
+              </div>
+
+              <div class="text-4xl font-bold text-white mb-1">
+                {@stats[:completed] || 0}
+              </div>
+
+              <p class="text-sm text-amber-100/90">
+                Projek yang telah siap dan diserahkan kepada pelanggan.
+              </p>
+            </div>
+          </div>
+
+          <%!-- Latest Activities --%>
+          <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <.icon name="hero-clock" class="w-5 h-5 text-gray-600" />
+                  <h2 class="text-xl font-semibold text-gray-900">Aktiviti Terkini Unit</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Nama Projek
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Tindakan
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Tarikh Kemaskini
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <%= if Enum.empty?(@activities) do %>
+                    <tr>
+                      <td colspan="3" class="px-6 py-10 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                          <.icon name="hero-inbox" class="w-10 h-10 text-gray-400 mb-3" />
+                          <p class="text-gray-500 font-medium">
+                            Tiada aktiviti terkini untuk unit anda.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  <% else %>
+                    <%= for activity <- @activities do %>
+                      <tr class="hover:bg-gray-50 transition-colors duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {activity.nama}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {activity.action_label || activity.action}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <%= if activity.inserted_at do %>
+                            {Calendar.strftime(activity.inserted_at, "%d/%m/%Y %H:%M")}
+                          <% else %>
+                            <span class="text-gray-400">-</span>
+                          <% end %>
+                        </td>
+                      </tr>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</Layouts.app>
+

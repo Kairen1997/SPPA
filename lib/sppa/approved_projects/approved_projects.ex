@@ -7,6 +7,13 @@ defmodule Sppa.ApprovedProjects do
   alias Sppa.Repo
   alias Sppa.ApprovedProjects.ApprovedProject
 
+  # Fields to update when external sync finds an existing record (do not overwrite id, inserted_at, or project_id)
+  @sync_upsert_replace_fields [
+    :nama_projek, :jabatan, :pengurus_email, :tarikh_mula, :tarikh_jangkaan_siap,
+    :pembangun_sistem, :pengurus_projek, :latar_belakang, :objektif, :skop,
+    :kumpulan_pengguna, :implikasi, :kertas_kerja_path, :external_updated_at
+  ]
+
   @doc """
   Insert approved project data coming from sistem permohonan aplikasi (Internal API).
   Uses on_conflict: :nothing to handle duplicates gracefully.
@@ -27,6 +34,29 @@ defmodule Sppa.ApprovedProjects do
 
       {:error, error_changeset} ->
         # Validation or other error
+        {:error, error_changeset}
+    end
+  end
+
+  @doc """
+  Sync one approved project from external API: insert if new, update if existing (by external_application_id).
+  Keeps project_id (link to internal project) unchanged on conflict.
+  Returns {:ok, project} for insert, {:ok, project} for update, {:error, changeset} on validation error.
+  """
+  def sync_approved_project(attrs) do
+    changeset = ApprovedProject.changeset(%ApprovedProject{}, attrs)
+
+    opts = [
+      conflict_target: :external_application_id,
+      on_conflict: {:replace, @sync_upsert_replace_fields}
+    ]
+
+    case Repo.insert(changeset, opts) do
+      {:ok, project} ->
+        Phoenix.PubSub.broadcast(Sppa.PubSub, "approved_projects", {:updated, project})
+        {:ok, project}
+
+      {:error, error_changeset} ->
         {:error, error_changeset}
     end
   end

@@ -40,6 +40,9 @@ defmodule SppaWeb.UserAuth do
         user_return_to ->
           user_return_to
 
+        user && user.role == "ketua unit" ->
+          ~p"/dashboard-kk"
+
         user && user.role == "pengurus projek" ->
           ~p"/dashboard-pp"
 
@@ -266,11 +269,11 @@ defmodule SppaWeb.UserAuth do
   end
 
   # Handles mounting and authenticating the current_scope in LiveViews with role-based access.
-  # Only allows access to users with roles: "pembangun sistem", "pengurus projek", or "ketua penolong pengarah".
+  # Only allows access to users with roles: "pembangun sistem", "pengurus projek", "ketua unit", or "ketua penolong pengarah".
   def on_mount(:require_dashboard_role, _params, session, socket) do
     socket = mount_current_scope(socket, session)
 
-    allowed_roles = ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+    allowed_roles = ["pembangun sistem", "pengurus projek", "ketua unit", "ketua penolong pengarah"]
 
     cond do
       !socket.assigns.current_scope || !socket.assigns.current_scope.user ->
@@ -321,7 +324,7 @@ defmodule SppaWeb.UserAuth do
   end
 
   @doc "Returns the path to redirect to after log in."
-  # Redirect pembangun sistem directly to dashboard
+  # Redirect roles directly to appropriate dashboards
   def signed_in_path(%Plug.Conn{
         assigns: %{current_scope: %Scope{user: %Accounts.User{role: "pembangun sistem"}}}
       }) do
@@ -332,6 +335,12 @@ defmodule SppaWeb.UserAuth do
         assigns: %{current_scope: %Scope{user: %Accounts.User{role: "pengurus projek"}}}
       }) do
     ~p"/dashboard-pp"
+  end
+
+  def signed_in_path(%Plug.Conn{
+        assigns: %{current_scope: %Scope{user: %Accounts.User{role: "ketua unit"}}}
+      }) do
+    ~p"/dashboard-kk"
   end
 
   def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %Accounts.User{}}}}) do

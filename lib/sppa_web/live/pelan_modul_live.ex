@@ -5,7 +5,7 @@ defmodule SppaWeb.PelanModulLive do
   alias Sppa.Projects
   alias Sppa.ProjectModules
 
-  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua unit", "ketua penolong pengarah"]
 
   @impl true
   def mount(%{"project_id" => project_id}, _session, socket) do

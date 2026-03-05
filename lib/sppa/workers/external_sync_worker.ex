@@ -5,6 +5,7 @@ defmodule Sppa.Workers.ExternalSyncWorker do
 
   alias Sppa.Integrations.ExternalClient
   alias Sppa.ApprovedProjects
+  alias Sppa.Projects
 
   @impl Oban.Worker
   def perform(_job) do
@@ -37,24 +38,33 @@ defmodule Sppa.Workers.ExternalSyncWorker do
 
               false
             else
-              case ApprovedProjects.create_approved_project(attrs) do
-                {:ok, project} when not is_nil(project) ->
+              case ApprovedProjects.sync_approved_project(attrs) do
+                {:ok, approved_project} ->
+                  # Ensure an internal project exists for this approved project
+                  case Projects.ensure_internal_project_for_approved(approved_project) do
+                    {:ok, _internal_project} ->
+                      :ok
+
+                    {:error, changeset} ->
+                      errors =
+                        Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+                          Enum.reduce(opts, msg, fn {key, value}, acc ->
+                            String.replace(acc, "%{#{key}}", to_string(value))
+                          end)
+                        end)
+
+                      Logger.warning(
+                        "Error creating internal project for approved project #{approved_project.id}: #{inspect(errors)}"
+                      )
+                  end
+
                   Logger.info(
-                    "Successfully created approved project: ID=#{project.id}, external_id=#{project.external_application_id}"
+                    "Synced approved project: external_id=#{attrs["external_application_id"]}, nama=#{attrs["nama_projek"]}"
                   )
 
                   true
 
-                {:ok, nil} ->
-                  # Duplicate - already exists
-                  Logger.debug(
-                    "Skipping duplicate approved project (external_id=#{attrs["external_application_id"]})"
-                  )
-
-                  false
-
                 {:error, changeset} ->
-                  # Log error but don't fail the job - might be duplicate
                   errors =
                     Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
                       Enum.reduce(opts, msg, fn {key, value}, acc ->
@@ -62,15 +72,8 @@ defmodule Sppa.Workers.ExternalSyncWorker do
                       end)
                     end)
 
-                  if changeset.data.external_application_id do
-                    Logger.debug(
-                      "Skipping duplicate approved project (external_id=#{changeset.data.external_application_id}): #{inspect(errors)}"
-                    )
-                  else
-                    Logger.warning("Error creating approved project: #{inspect(errors)}")
-                    Logger.warning("Attributes were: #{inspect(attrs)}")
-                  end
-
+                  Logger.warning("Error syncing approved project: #{inspect(errors)}")
+                  Logger.warning("Attributes were: #{inspect(attrs)}")
                   false
               end
             end
@@ -107,13 +110,21 @@ defmodule Sppa.Workers.ExternalSyncWorker do
   defp map_to_approved_project(document) when is_map(document) do
     Logger.debug("Mapping document: #{inspect(Map.keys(document))}")
 
-    external_id = get_integer(document, "id")
+    external_id =
+      get_integer(document, "id") ||
+        get_integer(document, "application_id") ||
+        get_integer(document, "request_id") ||
+        get_integer(document, "external_application_id")
 
     nama_projek =
       get_string(document, "nama_sistem") ||
         get_string(document, "nama sistem") ||
         get_string(document, "nama_projek") ||
         get_string(document, "name") ||
+        get_string(document, "system_name") ||
+        get_string(document, "project_name") ||
+        get_string(document, "application_name") ||
+        get_string(document, "nama_projek_sistem") ||
         ""
 
     if nama_projek == "" do

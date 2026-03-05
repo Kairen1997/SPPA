@@ -5,7 +5,7 @@ defmodule SppaWeb.PenempatanLive do
   alias Sppa.Penempatans
   alias Sppa.Projects
 
-  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua unit", "ketua penolong pengarah"]
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -170,7 +170,7 @@ defmodule SppaWeb.PenempatanLive do
     projects =
       case current_scope.user.role do
         "ketua penolong pengarah" -> Projects.list_all_projects()
-        "pengurus projek" -> Projects.list_projects_for_pengurus_projek(current_scope)
+        role when role in ["pengurus projek", "ketua unit"] -> Projects.list_projects_for_pengurus_projek(current_scope)
         "pembangun sistem" -> Projects.list_projects_for_pembangun_sistem(current_scope)
         _ -> Projects.list_projects(current_scope)
       end

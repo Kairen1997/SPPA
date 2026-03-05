@@ -11,7 +11,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   alias Sppa.UjianKeselamatan
   alias Sppa.UjianPenerimaanPengguna
 
-  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua unit", "ketua penolong pengarah"]
 
   @tab_slug_to_label %{
     "soal-selidik" => "Soal Selidik",
