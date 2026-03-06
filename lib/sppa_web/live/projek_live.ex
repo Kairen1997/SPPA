@@ -12,10 +12,11 @@ defmodule SppaWeb.ProjekLive do
   end
 
   defp mount_index(socket) do
-    # Verify user has required role (defense in depth - router already checks this)
-    user_role =
+    raw_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
+
+    user_role = raw_role && raw_role |> String.trim() |> String.downcase()
 
     if user_role && user_role in @allowed_roles do
       socket =
@@ -178,32 +179,12 @@ defmodule SppaWeb.ProjekLive do
      |> assign(:total_count, length(socket.assigns.all_projects))}
   end
 
-  # Fetches projects from database based on user role:
-  # - Developers see projects where they are assigned as developer
-  # - Project managers see projects where they are assigned as project manager
-  # - Directors/Admins see all projects
-  defp list_projects(current_scope, user_role) do
-    projects =
-      case user_role do
-        "ketua penolong pengarah" ->
-          # Directors/Admins see all projects
-          Projects.list_all_projects()
-
-        "pembangun sistem" ->
-          # Developers see projects where they are assigned as developer
-          Projects.list_projects_for_pembangun_sistem(current_scope)
-
-        "pengurus projek" ->
-          # Project managers see projects where they are assigned as project manager
-          Projects.list_projects_for_pengurus_projek(current_scope)
-
-        _ ->
-          # Default: return empty list for unknown roles
-          []
-      end
-
-    # Normalize status for consistency
-    Enum.map(projects, &normalize_project_status/1)
+  # Senarai Sistem: hanya papar projek yang ditugaskan kepada pengguna semasa.
+  # Semua peranan guna fungsi yang sama supaya sistem yang tidak ditugaskan tidak dipaparkan.
+  defp list_projects(current_scope, _user_role) do
+    current_scope
+    |> Projects.list_projects_assigned_to_user()
+    |> Enum.map(&normalize_project_status/1)
   end
 
   defp normalize_project_status(project) do

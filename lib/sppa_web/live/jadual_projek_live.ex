@@ -97,12 +97,13 @@ defmodule SppaWeb.JadualProjekLive do
     |> Enum.reject(&is_nil/1)
   end
 
-  # Get projects list from DB (sama seperti Senarai Sistem) supaya data konsisten dan tidak hilang selepas refresh
+  # Get projects list from DB (sama seperti Senarai Sistem) supaya data konsisten dan tidak hilang selepas refresh.
+  # Hanya sistem yang ditugaskan kepada pengguna dipaparkan.
   defp list_projects(current_scope, user_role) do
     projects =
       case user_role do
         "ketua penolong pengarah" ->
-          Projects.list_all_projects()
+          Projects.list_projects_assigned_to_user(current_scope)
 
         "pembangun sistem" ->
           Projects.list_projects_for_pembangun_sistem(current_scope)

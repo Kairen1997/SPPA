@@ -7,7 +7,7 @@ defmodule Sppa.Penempatans.Penempatan do
     field :versi, :string, default: "1.0.0"
     field :lokasi, :string
     field :jenis, :string
-    field :status, :string, default: "Menunggu"
+    field :status, :string
     field :persekitaran, :string
     field :tarikh_penempatan, :date
     field :tarikh_dijangka, :date
@@ -47,7 +47,7 @@ defmodule Sppa.Penempatans.Penempatan do
       :tarikh_diluluskan,
       :project_id
     ])
-    |> validate_required([:nama_sistem, :versi, :lokasi, :tarikh_penempatan, :jenis, :status])
+    |> validate_required([:nama_sistem, :versi, :lokasi, :tarikh_penempatan, :jenis])
     |> foreign_key_constraint(:project_id)
   end
 end

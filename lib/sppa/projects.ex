@@ -7,6 +7,7 @@ defmodule Sppa.Projects do
   import Ecto.Changeset
   alias Sppa.Repo
   alias Sppa.Projects.Project
+  alias Sppa.ApprovedProjects.ApprovedProject
   alias Sppa.ActivityLogs
 
   @doc """
@@ -25,8 +26,13 @@ defmodule Sppa.Projects do
   Projects where the current user is assigned as project manager.
   """
   def list_projects_for_pengurus_projek(current_scope) do
+    user_id = current_scope.user && current_scope.user.id
+    if is_nil(user_id), do: [], else: list_projects_for_pengurus_projek_by_id(user_id)
+  end
+
+  defp list_projects_for_pengurus_projek_by_id(user_id) do
     Project
-    |> where([p], p.project_manager_id == ^current_scope.user.id)
+    |> where([p], p.project_manager_id == ^user_id and not is_nil(p.approved_project_id))
     |> preload([:developer, :project_manager, :approved_project])
     |> order_by([p], desc: p.last_updated)
     |> Repo.all()
@@ -45,24 +51,96 @@ defmodule Sppa.Projects do
   end
 
   @doc """
+  Returns only projects assigned to the current user (as project manager or developer).
+  Used so that Senarai Sistem shows "sistem yang ditugaskan sahaja" for all roles including ketua penolong pengarah.
+  Filters at database level so unassigned systems are never loaded or displayed.
+  """
+  def list_projects_assigned_to_user(current_scope) do
+    if is_nil(current_scope) or is_nil(current_scope.user) do
+      []
+    else
+      user_id = current_scope.user.id
+      user_no_kp = current_scope.user.no_kp
+
+      if is_nil(user_id) && (is_nil(user_no_kp) || user_no_kp == "") do
+        []
+      else
+        # Project IDs where user is manager or developer (DB-level, no unassigned loaded)
+        ids_manager_or_developer =
+          if is_nil(user_id) do
+            []
+          else
+            Project
+            |> where([p], p.project_manager_id == ^user_id or p.developer_id == ^user_id)
+            |> select([p], p.id)
+            |> Repo.all()
+          end
+
+        # Project IDs where user is in approved_project.pembangun_sistem
+        ids_via_pembangun =
+          if is_binary(user_no_kp) and user_no_kp != "" do
+            ap_ids_with_user =
+              ApprovedProject
+              |> Repo.all()
+              |> Enum.filter(fn ap ->
+                ap.pembangun_sistem && user_no_kp in parse_pembangun_sistem(ap.pembangun_sistem)
+              end)
+              |> Enum.map(& &1.id)
+
+            if ap_ids_with_user == [] do
+              []
+            else
+              Project
+              |> where([p], p.approved_project_id in ^ap_ids_with_user)
+              |> select([p], p.id)
+              |> Repo.all()
+            end
+          else
+            []
+          end
+
+        all_ids = (ids_manager_or_developer ++ ids_via_pembangun) |> Enum.uniq()
+
+        if all_ids == [] do
+          []
+        else
+          # Hanya projek dari admin (ada approved_project_id) dipaparkan
+          Project
+          |> where([p], p.id in ^all_ids and not is_nil(p.approved_project_id))
+          |> preload([:developer, :project_manager, :approved_project])
+          |> order_by([p], desc: p.last_updated)
+          |> Repo.all()
+          |> Enum.map(&format_project_for_display/1)
+        end
+      end
+    end
+  end
+
+  @doc """
   Returns the list of projects for a pembangun sistem (developer).
   Returns projects where the developer is assigned, i.e.:
   - project.developer_id is the current user, OR
   - project has an approved_project and the developer's no_kp is in approved_project.pembangun_sistem.
   """
   def list_projects_for_pembangun_sistem(current_scope) do
-    user_id = current_scope.user.id
-    user_no_kp = current_scope.user.no_kp
+    user_id = current_scope.user && current_scope.user.id
+    user_no_kp = current_scope.user && current_scope.user.no_kp
 
-    Project
-    |> preload([:developer, :project_manager, :approved_project])
-    |> order_by([p], desc: p.last_updated)
-    |> Repo.all()
-    |> Enum.filter(fn project ->
-      # Assigned as developer on the project, or listed in approved_project's pembangun_sistem
-      project.developer_id == user_id or has_access_to_project?(project, user_no_kp)
-    end)
-    |> Enum.map(&format_project_for_display/1)
+    if is_nil(user_id) && (is_nil(user_no_kp) || user_no_kp == "") do
+      []
+    else
+      Project
+      |> where([p], not is_nil(p.approved_project_id))
+      |> preload([:developer, :project_manager, :approved_project])
+      |> order_by([p], desc: p.last_updated)
+      |> Repo.all()
+      |> Enum.filter(fn project ->
+        assigned_as_developer = not is_nil(user_id) and project.developer_id == user_id
+        assigned_via_pembangun_sistem = has_access_to_project?(project, user_no_kp)
+        assigned_as_developer or assigned_via_pembangun_sistem
+      end)
+      |> Enum.map(&format_project_for_display/1)
+    end
   end
 
   @doc """
@@ -485,5 +563,30 @@ defmodule Sppa.Projects do
   """
   def delete_project(%Project{} = project) do
     Repo.delete(project)
+  end
+
+  @doc """
+  Deletes all "dummy" projects: projects that have no approved_project_id
+  (i.e. not created from Senarai Projek Diluluskan / admin).
+  Returns `{:ok, count}` with the number of projects deleted, or `{:error, reason}`.
+  """
+  def delete_dummy_projects do
+    dummy =
+      Project
+      |> where([p], is_nil(p.approved_project_id))
+      |> Repo.all()
+
+    count = length(dummy)
+
+    case Repo.transaction(fn ->
+           Enum.each(dummy, fn project ->
+             Repo.delete!(project)
+           end)
+
+           count
+         end) do
+      {:ok, n} -> {:ok, n}
+      {:error, _} = err -> err
+    end
   end
 end
