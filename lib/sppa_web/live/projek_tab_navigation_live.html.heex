@@ -739,6 +739,41 @@
                       </table>
                     </div>
                     
+                    <%!-- Modul Sistem: senarai modul yang dicipta oleh pengurus projek (tajuk tugasan + penerangan sahaja, read-only) --%>
+                    <div class="mb-6">
+                      <h3 class="text-base font-bold text-gray-900 uppercase border-b-2 border-gray-400 pb-2">
+                        Modul Sistem
+                      </h3>
+                      
+                      <%= if @project_modules != [] do %>
+                        <p class="text-sm text-gray-600 mb-3">
+                          Modul berikut telah dicipta oleh pengurus projek untuk projek ini. Paparan hanya baca (tajuk tugasan dan penerangan).
+                        </p>
+                        
+                        <div class="space-y-3 mt-4">
+                          <%= for {pm, index} <- Enum.with_index(@project_modules) do %>
+                            <div class="border border-gray-300 rounded p-3 bg-gray-50">
+                              <div class="text-sm font-semibold text-gray-900 mb-1">
+                                <span class="text-gray-500">{index + 1}.</span> Tajuk Tugasan
+                              </div>
+                              
+                              <p class="text-sm text-black mb-2">{pm.title || "—"}</p>
+                              
+                              <div class="text-sm font-semibold text-gray-900 mb-1">Penerangan</div>
+                              
+                              <p class="text-sm text-gray-700 whitespace-pre-wrap">
+                                {pm.description || "—"}
+                              </p>
+                            </div>
+                          <% end %>
+                        </div>
+                      <% else %>
+                        <p class="text-sm text-gray-500 italic mt-2">
+                          Tiada modul dicipta oleh pengurus projek untuk projek ini.
+                        </p>
+                      <% end %>
+                    </div>
+                    
                     <div class="mb-6">
                       <h3 class="font-bold text-gray-900 mb-2 uppercase">
                         SPESIFIKASI APLIKASI YANG AKAN DIBANGUNKAN
