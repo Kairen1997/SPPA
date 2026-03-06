@@ -15,6 +15,7 @@ defmodule SppaWeb.Components.SettingsModalLive do
       if socket.assigns[:password_form] == nil && socket.assigns.current_scope do
         user = socket.assigns.current_scope.user
         cs = Accounts.change_user_password(user, %{}, hash_password: false)
+
         socket
         |> assign(:password_form, to_form(cs))
         |> assign(:trigger_submit, false)
@@ -44,9 +45,10 @@ defmodule SppaWeb.Components.SettingsModalLive do
       >
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 sm:px-8 py-5 text-center">
           <h2 class="text-xl font-semibold text-white">Account Settings</h2>
+          
           <p class="mt-1 text-sm text-blue-100">Manage your account password settings</p>
         </div>
-
+        
         <div class="p-6 sm:p-8 space-y-6">
           <.form
             :if={@password_form}

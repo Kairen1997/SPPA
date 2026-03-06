@@ -2,15 +2,26 @@ defmodule SppaWeb.ApprovedProjectLive do
   use SppaWeb, :live_view
 
   alias Sppa.ApprovedProjects
+  alias Sppa.Projects
   alias Sppa.Accounts
 
-  @allowed_roles ["pengurus projek", "ketua penolong pengarah"]
+  @allowed_roles ["pengurus projek", "ketua penolong pengarah", "ketua unit"]
 
   @impl true
   def mount(%{"id" => id}, _session, %{assigns: %{current_scope: current_scope}} = socket) do
     user_role = current_scope && current_scope.user && current_scope.user.role
 
     if user_role in @allowed_roles do
+      {sidebar_dashboard_path, sidebar_list_path, back_list_path} =
+        if user_role == "ketua unit" do
+          {~p"/dashboard-kk", "/penyerahan-projek", ~p"/penyerahan-projek"}
+        else
+          {~p"/dashboard-pp", "/senarai-projek-diluluskan", ~p"/senarai-projek-diluluskan"}
+        end
+
+      # Only ketua unit can assign pengurus projek.
+      can_assign_pm = user_role == "ketua unit"
+
       socket =
         socket
         |> assign(:hide_root_header, true)
@@ -21,6 +32,10 @@ defmodule SppaWeb.ApprovedProjectLive do
         |> assign(:show_settings_modal, false)
         |> assign(:notifications_count, 0)
         |> assign(:activities, [])
+        |> assign(:sidebar_dashboard_path, sidebar_dashboard_path)
+        |> assign(:sidebar_list_path, sidebar_list_path)
+        |> assign(:back_list_path, back_list_path)
+        |> assign(:can_assign_pm, can_assign_pm)
 
       case Integer.parse(id) do
         {approved_id, _} ->
@@ -28,45 +43,57 @@ defmodule SppaWeb.ApprovedProjectLive do
           # so the page renders full information even before the LV socket connects.
           approved_project = ApprovedProjects.get_approved_project!(approved_id)
 
-          all_users = Accounts.list_users()
-          all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
-
-          all_project_managers =
-            Enum.filter(all_users, fn user -> user.role == "pengurus projek" end)
-
-          stored_names = parse_pembangun_sistem(approved_project.pembangun_sistem)
-          selected_developers = stored_names
-
+          # Parse pengurus projek and pembangun sistem lists
           stored_pm_names = parse_pengurus_projek(approved_project.pengurus_projek)
-          selected_project_managers = stored_pm_names
+          stored_dev_names = parse_pembangun_sistem(approved_project.pembangun_sistem)
 
-          available_developers =
-            all_developers
-            |> Enum.filter(fn dev -> dev.no_kp not in selected_developers end)
+          # For pengurus projek, verify they are assigned to this specific project
+          # They can be assigned either as pengurus_projek OR as pembangun_sistem
+          # (since assigned pengurus projek are automatically added to pembangun_sistem)
+          if user_role == "pengurus projek" do
+            user_no_kp = current_scope.user.no_kp
 
-          available_project_managers =
-            all_project_managers
-            |> Enum.filter(fn pm -> pm.no_kp not in selected_project_managers end)
+            # Check if user is in either pengurus_projek or pembangun_sistem list
+            has_access = user_no_kp in stored_pm_names || user_no_kp in stored_dev_names
 
-          {:ok,
-           socket
-           |> assign(:approved_project, approved_project)
-           |> assign(:developers, all_developers)
-           |> assign(:available_developers, available_developers)
-           |> assign(:selected_developers, selected_developers)
-           |> assign(:project_managers, all_project_managers)
-           |> assign(:available_project_managers, available_project_managers)
-           |> assign(:selected_project_managers, selected_project_managers)
-           |> assign(
-             :form_pembangun,
-             to_form(%{"pembangun_sistem" => selected_developers}, as: :project)
-           )}
+            if not has_access do
+              list_path = ~p"/senarai-projek-diluluskan"
+
+              {:ok,
+               socket
+               |> put_flash(:error, "Anda tidak mempunyai kebenaran untuk mengakses halaman ini.")
+               |> push_navigate(to: list_path)}
+            else
+              # User is assigned, continue with normal flow
+              load_approved_project_data(
+                socket,
+                approved_project,
+                stored_pm_names,
+                user_role,
+                current_scope
+              )
+            end
+          else
+            # Not a pengurus projek, continue with normal flow
+            load_approved_project_data(
+              socket,
+              approved_project,
+              stored_pm_names,
+              user_role,
+              current_scope
+            )
+          end
 
         :error ->
+          list_path =
+            if user_role == "ketua unit",
+              do: ~p"/penyerahan-projek",
+              else: ~p"/senarai-projek-diluluskan"
+
           {:ok,
            socket
            |> put_flash(:error, "ID projek diluluskan tidak sah.")
-           |> push_navigate(to: ~p"/senarai-projek-diluluskan")}
+           |> push_navigate(to: list_path)}
       end
     else
       {:ok,
@@ -79,8 +106,57 @@ defmodule SppaWeb.ApprovedProjectLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
+     |> assign(:sidebar_dashboard_path, ~p"/dashboard-pp")
+     |> assign(:sidebar_list_path, "/senarai-projek-diluluskan")
+     |> assign(:back_list_path, ~p"/senarai-projek-diluluskan")
      |> put_flash(:error, "Akses tidak sah.")
      |> push_navigate(to: ~p"/users/log-in")}
+  end
+
+  defp load_approved_project_data(
+         socket,
+         approved_project,
+         selected_project_managers,
+         user_role,
+         current_scope
+       ) do
+    all_users = Accounts.list_users()
+    all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
+
+    all_project_managers =
+      Enum.filter(all_users, fn user -> user.role == "pengurus projek" end)
+
+    stored_names = parse_pembangun_sistem(approved_project.pembangun_sistem)
+    selected_developers = stored_names
+
+    available_developers =
+      all_developers
+      |> Enum.filter(fn dev -> dev.no_kp not in selected_developers end)
+
+    available_project_managers =
+      all_project_managers
+      |> Enum.filter(fn pm -> pm.no_kp not in selected_project_managers end)
+
+    {:ok,
+     socket
+     |> assign(:approved_project, approved_project)
+     |> assign(:developers, all_developers)
+     |> assign(:available_developers, available_developers)
+     |> assign(:selected_developers, selected_developers)
+     |> assign(:project_managers, all_project_managers)
+     |> assign(:available_project_managers, available_project_managers)
+     |> assign(:selected_project_managers, selected_project_managers)
+     # Pengurus projek can assign pembangun sistem only when they are
+     # already assigned as pengurus projek for this system.
+     |> assign(
+       :can_assign_devs,
+       user_role == "pengurus projek" &&
+         current_scope.user.no_kp in selected_project_managers
+     )
+     |> assign(
+       :form_pembangun,
+       to_form(%{"pembangun_sistem" => selected_developers}, as: :project)
+     )}
   end
 
   defp format_date(nil), do: "-"
@@ -89,7 +165,7 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp external_api_base_url do
     full_url =
       Application.get_env(:sppa, :system_permohonan_aplikasi, [])[:base_url] ||
-        "http://10.71.70.121:4000/api/requests?status=Diluluskan"
+        "http://10.71.70.76:4000/api/requests?status=Diluluskan"
 
     # Extract base URL (remove path and query string)
     case URI.parse(full_url) do
@@ -98,7 +174,7 @@ defmodule SppaWeb.ApprovedProjectLive do
         "#{scheme}://#{host}#{port_str}"
 
       _ ->
-        "http://10.71.67.142:4000"
+        "http://10.71.70.76:4000"
     end
   end
 
@@ -234,151 +310,63 @@ defmodule SppaWeb.ApprovedProjectLive do
 
   @impl true
   def handle_event("add_pembangun_sistem", %{"developer_id" => developer_id_str}, socket) do
-    case Integer.parse(developer_id_str) do
-      {developer_id, _} ->
-        # Find the developer
-        developer = Enum.find(socket.assigns.developers, fn dev -> dev.id == developer_id end)
+    case {socket.assigns.current_scope.user.role, socket.assigns.can_assign_devs} do
+      {"pengurus projek", true} ->
+        do_add_pembangun_sistem(developer_id_str, socket)
 
-        if developer && developer.no_kp not in socket.assigns.selected_developers do
-          # Add to selected list
-          new_selected = socket.assigns.selected_developers ++ [developer.no_kp]
-
-          # Format as comma-separated string
-          pembangun_sistem_str = format_pembangun_sistem(new_selected)
-
-          # Update the approved project
-          case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-                 "pembangun_sistem" => pembangun_sistem_str
-               }) do
-            {:ok, updated_project} ->
-              # Update available developers (exclude selected ones)
-              available_developers =
-                socket.assigns.developers
-                |> Enum.filter(fn dev -> dev.no_kp not in new_selected end)
-
-              {:noreply,
-               socket
-               |> assign(:approved_project, updated_project)
-               |> assign(:selected_developers, new_selected)
-               |> assign(:available_developers, available_developers)
-               |> put_flash(:info, "Pembangun sistem telah ditambah.")}
-
-            {:error, _changeset} ->
-              {:noreply, put_flash(socket, :error, "Gagal menambah pembangun sistem.")}
-          end
-        else
-          {:noreply, socket}
-        end
-
-      :error ->
-        {:noreply, socket}
+      _ ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Hanya pengurus projek yang terlibat boleh menetapkan pembangun sistem."
+         )}
     end
   end
 
   @impl true
   def handle_event("add_pengurus_projek", %{"project_manager_id" => pm_id_str}, socket) do
-    case Integer.parse(pm_id_str) do
-      {pm_id, _} ->
-        # Find the project manager
-        project_manager = Enum.find(socket.assigns.project_managers, fn pm -> pm.id == pm_id end)
-
-        if project_manager &&
-             project_manager.no_kp not in socket.assigns.selected_project_managers do
-          # Add to selected list
-          new_selected = socket.assigns.selected_project_managers ++ [project_manager.no_kp]
-
-          # Format as comma-separated string
-          pengurus_projek_str = format_pengurus_projek(new_selected)
-
-          # Update the approved project
-          case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-                 "pengurus_projek" => pengurus_projek_str
-               }) do
-            {:ok, updated_project} ->
-              # Update available project managers (exclude selected ones)
-              available_project_managers =
-                socket.assigns.project_managers
-                |> Enum.filter(fn pm -> pm.no_kp not in new_selected end)
-
-              {:noreply,
-               socket
-               |> assign(:approved_project, updated_project)
-               |> assign(:selected_project_managers, new_selected)
-               |> assign(:available_project_managers, available_project_managers)
-               |> put_flash(:info, "Pengurus projek telah ditambah.")}
-
-            {:error, _changeset} ->
-              {:noreply, put_flash(socket, :error, "Gagal menambah pengurus projek.")}
-          end
-        else
-          {:noreply, socket}
-        end
-
-      :error ->
-        {:noreply, socket}
+    unless socket.assigns.current_scope.user.role == "ketua unit" do
+      {:noreply,
+       put_flash(
+         socket,
+         :error,
+         "Hanya ketua unit boleh menetapkan pembangun sistem dan pengurus projek."
+       )}
+    else
+      do_add_pengurus_projek(pm_id_str, socket)
     end
   end
 
   @impl true
   def handle_event("remove_pengurus_projek", %{"no_kp" => no_kp}, socket) do
-    new_selected = List.delete(socket.assigns.selected_project_managers, no_kp)
-
-    pengurus_projek_str =
-      if new_selected == [], do: nil, else: format_pengurus_projek(new_selected)
-
-    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-           "pengurus_projek" => pengurus_projek_str
-         }) do
-      {:ok, updated_project} ->
-        # Update available project managers
-        available_project_managers =
-          socket.assigns.project_managers
-          |> Enum.filter(fn pm -> pm.no_kp not in new_selected end)
-
-        {:noreply,
-         socket
-         |> assign(:approved_project, updated_project)
-         |> assign(:selected_project_managers, new_selected)
-         |> assign(:available_project_managers, available_project_managers)
-         |> put_flash(:info, "Pengurus projek telah dikeluarkan.")}
-
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Gagal mengeluarkan pengurus projek.")}
+    unless socket.assigns.current_scope.user.role == "ketua unit" do
+      {:noreply,
+       put_flash(
+         socket,
+         :error,
+         "Hanya ketua unit boleh menetapkan pembangun sistem dan pengurus projek."
+       )}
+    else
+      do_remove_pengurus_projek(no_kp, socket)
     end
   end
 
   @impl true
   def handle_event("remove_pembangun_sistem", %{"no_kp" => no_kp}, socket) do
-    # Remove from selected list
-    new_selected = List.delete(socket.assigns.selected_developers, no_kp)
+    case {socket.assigns.current_scope.user.role, socket.assigns.can_assign_devs} do
+      {"pengurus projek", true} ->
+        do_remove_pembangun_sistem(no_kp, socket)
 
-    # Format as comma-separated string (or nil if empty)
-    pembangun_sistem_str =
-      if new_selected == [], do: nil, else: format_pembangun_sistem(new_selected)
-
-    # Update the approved project
-    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-           "pembangun_sistem" => pembangun_sistem_str
-         }) do
-      {:ok, updated_project} ->
-        # Update available developers (exclude selected ones)
-        available_developers =
-          socket.assigns.developers
-          |> Enum.filter(fn dev -> dev.no_kp not in new_selected end)
-
+      _ ->
         {:noreply,
-         socket
-         |> assign(:approved_project, updated_project)
-         |> assign(:selected_developers, new_selected)
-         |> assign(:available_developers, available_developers)
-         |> put_flash(:info, "Pembangun sistem telah dikeluarkan.")}
-
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Gagal mengeluarkan pembangun sistem.")}
+         put_flash(
+           socket,
+           :error,
+           "Hanya pengurus projek yang terlibat boleh menetapkan pembangun sistem."
+         )}
     end
   end
-
-  # Note: update_tarikh_mula handler removed - tarikh_mula is read-only and comes from external link
 
   @impl true
   def handle_event("update_tarikh_jangkaan_siap", %{"tarikh_jangkaan_siap" => date_str}, socket) do
@@ -416,6 +404,219 @@ defmodule SppaWeb.ApprovedProjectLive do
     end
   end
 
+  defp do_add_pembangun_sistem(developer_id_str, socket) do
+    case Integer.parse(developer_id_str) do
+      {developer_id, _} ->
+        # Find the developer
+        developer = Enum.find(socket.assigns.developers, fn dev -> dev.id == developer_id end)
+
+        if developer && developer.no_kp not in socket.assigns.selected_developers do
+          # Add to selected list
+          new_selected = socket.assigns.selected_developers ++ [developer.no_kp]
+
+          # Format as comma-separated string
+          pembangun_sistem_str = format_pembangun_sistem(new_selected)
+
+          # Update the approved project
+          case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+                 "pembangun_sistem" => pembangun_sistem_str
+               }) do
+            {:ok, updated_project} ->
+              # Ensure there's an internal project linked to this approved project
+              # This is necessary for the project to appear in pembangun sistem's project list
+              # Reload the approved_project to ensure we have the latest data from database
+              reloaded_approved_project =
+                ApprovedProjects.get_approved_project!(updated_project.id)
+
+              # Create or get the internal project - this ensures the project exists and is linked
+              case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
+                {:ok, _project} ->
+                  :ok
+
+                {:error, changeset} ->
+                  require Logger
+                  Logger.error("Failed to ensure internal project: #{inspect(changeset.errors)}")
+                  :error
+              end
+
+              # Update available developers (exclude selected ones)
+              available_developers =
+                socket.assigns.developers
+                |> Enum.filter(fn dev -> dev.no_kp not in new_selected end)
+
+              {:noreply,
+               socket
+               |> assign(:approved_project, reloaded_approved_project)
+               |> assign(:selected_developers, new_selected)
+               |> assign(:available_developers, available_developers)
+               |> put_flash(:info, "Pembangun sistem telah ditambah.")}
+
+            {:error, _changeset} ->
+              {:noreply, put_flash(socket, :error, "Gagal menambah pembangun sistem.")}
+          end
+        else
+          {:noreply, socket}
+        end
+
+      :error ->
+        {:noreply, socket}
+    end
+  end
+
+  defp do_add_pengurus_projek(pm_id_str, socket) do
+    case Integer.parse(pm_id_str) do
+      {pm_id, _} ->
+        # Find the project manager
+        project_manager = Enum.find(socket.assigns.project_managers, fn pm -> pm.id == pm_id end)
+
+        if project_manager &&
+             project_manager.no_kp not in socket.assigns.selected_project_managers do
+          # Add to selected pengurus projek list
+          new_selected_pms = socket.assigns.selected_project_managers ++ [project_manager.no_kp]
+
+          # Also ensure the same user is included in pembangun_sistem so that
+          # assigned pengurus projek automatically has developer-style access
+          # to the project.
+          existing_devs = socket.assigns.selected_developers || []
+
+          new_selected_devs =
+            if project_manager.no_kp in existing_devs do
+              existing_devs
+            else
+              existing_devs ++ [project_manager.no_kp]
+            end
+
+          pengurus_projek_str = format_pengurus_projek(new_selected_pms)
+          pembangun_sistem_str = format_pembangun_sistem(new_selected_devs)
+
+          # Update the approved project
+          case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+                 "pengurus_projek" => pengurus_projek_str,
+                 "pembangun_sistem" => pembangun_sistem_str
+               }) do
+            {:ok, updated_project} ->
+              # Ensure there's an internal project linked to this approved project
+              # This is necessary for the project to appear in project lists
+              # Reload the approved_project to ensure we have the latest data
+              reloaded_approved_project =
+                ApprovedProjects.get_approved_project!(updated_project.id)
+
+              case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
+                {:ok, _project} ->
+                  :ok
+
+                {:error, changeset} ->
+                  require Logger
+                  Logger.error("Failed to ensure internal project: #{inspect(changeset.errors)}")
+                  :error
+              end
+
+              # Update available project managers (exclude selected ones)
+              available_project_managers =
+                socket.assigns.project_managers
+                |> Enum.filter(fn pm -> pm.no_kp not in new_selected_pms end)
+
+              # Update available developers (exclude selected ones)
+              available_developers =
+                socket.assigns.developers
+                |> Enum.filter(fn dev -> dev.no_kp not in new_selected_devs end)
+
+              {:noreply,
+               socket
+               |> assign(:approved_project, updated_project)
+               |> assign(:selected_project_managers, new_selected_pms)
+               |> assign(:available_project_managers, available_project_managers)
+               |> assign(:selected_developers, new_selected_devs)
+               |> assign(:available_developers, available_developers)
+               |> put_flash(:info, "Pengurus projek telah ditambah.")}
+
+            {:error, _changeset} ->
+              {:noreply, put_flash(socket, :error, "Gagal menambah pengurus projek.")}
+          end
+        else
+          {:noreply, socket}
+        end
+
+      :error ->
+        {:noreply, socket}
+    end
+  end
+
+  defp do_remove_pengurus_projek(no_kp, socket) do
+    # Remove from selected pengurus projek list
+    new_selected_pms = List.delete(socket.assigns.selected_project_managers, no_kp)
+
+    # Also remove from pembangun_sistem so that removing pengurus projek
+    # revokes their automatic developer-style access for this system.
+    new_selected_devs = List.delete(socket.assigns.selected_developers, no_kp)
+
+    pengurus_projek_str =
+      if new_selected_pms == [], do: nil, else: format_pengurus_projek(new_selected_pms)
+
+    pembangun_sistem_str =
+      if new_selected_devs == [], do: nil, else: format_pembangun_sistem(new_selected_devs)
+
+    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+           "pengurus_projek" => pengurus_projek_str,
+           "pembangun_sistem" => pembangun_sistem_str
+         }) do
+      {:ok, updated_project} ->
+        # Update available project managers
+        available_project_managers =
+          socket.assigns.project_managers
+          |> Enum.filter(fn pm -> pm.no_kp not in new_selected_pms end)
+
+        # Update available developers (exclude selected ones)
+        available_developers =
+          socket.assigns.developers
+          |> Enum.filter(fn dev -> dev.no_kp not in new_selected_devs end)
+
+        {:noreply,
+         socket
+         |> assign(:approved_project, updated_project)
+         |> assign(:selected_project_managers, new_selected_pms)
+         |> assign(:available_project_managers, available_project_managers)
+         |> assign(:selected_developers, new_selected_devs)
+         |> assign(:available_developers, available_developers)
+         |> put_flash(:info, "Pengurus projek telah dikeluarkan.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Gagal mengeluarkan pengurus projek.")}
+    end
+  end
+
+  defp do_remove_pembangun_sistem(no_kp, socket) do
+    # Remove from selected list
+    new_selected = List.delete(socket.assigns.selected_developers, no_kp)
+
+    # Format as comma-separated string (or nil if empty)
+    pembangun_sistem_str =
+      if new_selected == [], do: nil, else: format_pembangun_sistem(new_selected)
+
+    # Update the approved project
+    case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+           "pembangun_sistem" => pembangun_sistem_str
+         }) do
+      {:ok, updated_project} ->
+        # Update available developers (exclude selected ones)
+        available_developers =
+          socket.assigns.developers
+          |> Enum.filter(fn dev -> dev.no_kp not in new_selected end)
+
+        {:noreply,
+         socket
+         |> assign(:approved_project, updated_project)
+         |> assign(:selected_developers, new_selected)
+         |> assign(:available_developers, available_developers)
+         |> put_flash(:info, "Pembangun sistem telah dikeluarkan.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Gagal mengeluarkan pembangun sistem.")}
+    end
+  end
+
+  # Note: update_tarikh_mula handler removed - tarikh_mula is read-only and comes from external link
+
   @impl true
   def handle_info(:close_settings_modal, socket) do
     {:noreply, assign(socket, :show_settings_modal, false)}
@@ -432,6 +633,7 @@ defmodule SppaWeb.ApprovedProjectLive do
           current_scope={@current_scope}
         />
       <% end %>
+      
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div
@@ -445,10 +647,10 @@ defmodule SppaWeb.ApprovedProjectLive do
          <%!-- Sidebar --%>
         <.dashboard_sidebar
           sidebar_open={@sidebar_open}
-          dashboard_path={~p"/dashboard-pp"}
+          dashboard_path={@sidebar_dashboard_path}
           logo_src={~p"/images/logojpkn.png"}
           current_scope={@current_scope}
-          current_path="/senarai-projek-diluluskan"
+          current_path={@sidebar_list_path}
         /> <%!-- Main Content --%>
         <div class="flex-1 flex flex-col overflow-hidden">
           <%!-- Header --%>
@@ -462,7 +664,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                 <.icon name="hero-bars-3" class="w-6 h-6" />
               </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
+            
             <.header_actions
               notifications_open={@notifications_open}
               notifications_count={@notifications_count}
@@ -475,7 +677,7 @@ defmodule SppaWeb.ApprovedProjectLive do
           <main class="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
             <div class="text-center text-gray-600 space-y-2">
               <p class="text-base font-medium">Memuatkan maklumat projek yang diluluskan...</p>
-
+              
               <p class="text-xs text-gray-400">Sila tunggu sebentar.</p>
             </div>
           </main>
@@ -495,6 +697,7 @@ defmodule SppaWeb.ApprovedProjectLive do
           current_scope={@current_scope}
         />
       <% end %>
+      
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div
@@ -508,10 +711,10 @@ defmodule SppaWeb.ApprovedProjectLive do
          <%!-- Sidebar --%>
         <.dashboard_sidebar
           sidebar_open={@sidebar_open}
-          dashboard_path={~p"/dashboard-pp"}
+          dashboard_path={@sidebar_dashboard_path}
           logo_src={~p"/images/logojpkn.png"}
           current_scope={@current_scope}
-          current_path="/senarai-projek-diluluskan"
+          current_path={@sidebar_list_path}
         /> <%!-- Main Content --%>
         <div class="flex-1 flex flex-col overflow-hidden">
           <%!-- Header --%>
@@ -525,7 +728,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                 <.icon name="hero-bars-3" class="w-6 h-6" />
               </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
+            
             <.header_actions
               notifications_open={@notifications_open}
               notifications_count={@notifications_count}
@@ -543,12 +746,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                   <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
                     Butiran Projek Diluluskan
                   </h1>
-
+                  
                   <p class="text-base text-gray-600">
                     Maklumat penuh permohonan projek yang telah diluluskan
                   </p>
                 </div>
-
+                
                 <div class="flex items-center gap-3">
                   <%= if @approved_project.project do %>
                     <.link
@@ -558,9 +761,9 @@ defmodule SppaWeb.ApprovedProjectLive do
                       <.icon name="hero-cog-6-tooth" class="w-4 h-4" /> <span>Modul Projek</span>
                     </.link>
                   <% end %>
-
+                  
                   <.link
-                    navigate={~p"/senarai-projek-diluluskan"}
+                    navigate={@back_list_path}
                     class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                   >
                     <.icon name="hero-arrow-left" class="w-4 h-4" /> <span>Kembali ke Senarai</span>
@@ -580,16 +783,16 @@ defmodule SppaWeb.ApprovedProjectLive do
                           Projek Diluluskan
                         </span>
                       </div>
-
+                      
                       <h2 class="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
                         {@approved_project.nama_projek}
                       </h2>
-
+                      
                       <p class="text-base text-gray-600 font-medium">
                         {@approved_project.jabatan || "Tiada maklumat jabatan"}
                       </p>
                     </div>
-
+                    
                     <div class="flex flex-col items-start md:items-end gap-3 md:pl-6 md:border-l md:border-gray-300">
                       <div class="space-y-1.5 text-sm">
                         <div class="flex items-center gap-2 text-gray-600">
@@ -599,7 +802,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                             {format_date(@approved_project.tarikh_mula)}
                           </span>
                         </div>
-
+                        
                         <div class="flex items-center gap-2 text-gray-600">
                           <.icon name="hero-clock" class="w-4 h-4 text-gray-400" />
                           <span class="font-medium">Tarikh Jangkaan Siap:</span>
@@ -624,14 +827,14 @@ defmodule SppaWeb.ApprovedProjectLive do
                       Maklumat Pemohon
                     </h2>
                   </div>
-
+                  
                   <div class="p-6">
                     <dl class="space-y-4">
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                           Emel
                         </dt>
-
+                        
                         <dd class="text-base text-gray-900 break-all">
                           <%= if @approved_project.pengurus_email do %>
                             {@approved_project.pengurus_email}
@@ -640,12 +843,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           <% end %>
                         </dd>
                       </div>
-
+                      
                       <div>
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                           Kementerian / Jabatan
                         </dt>
-
+                        
                         <dd class="text-base text-gray-900">
                           <%= if @approved_project.jabatan do %>
                             {@approved_project.jabatan}
@@ -667,87 +870,111 @@ defmodule SppaWeb.ApprovedProjectLive do
                       Maklumat Sistem
                     </h2>
                   </div>
-
+                  
                   <div class="p-6">
                     <dl class="space-y-4">
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                           Nama Sistem
                         </dt>
-
+                        
                         <dd class="text-base font-semibold text-gray-900">
                           {@approved_project.nama_projek}
                         </dd>
                       </div>
-
+                      
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Pembangun Sistem
                         </dt>
-
+                        
                         <dd>
                           <div class="space-y-3">
-                            <%!-- Dropdown to add pembangun sistem --%>
-                            <%= if @available_developers != [] do %>
-                              <.form
-                                for={%{}}
-                                phx-submit="add_pembangun_sistem"
-                                id="add-pembangun-form"
-                                class="space-y-2"
-                              >
-                                <select
-                                  name="developer_id"
-                                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
-                                  required
+                            <%= if @can_assign_devs do %>
+                              <%!-- Ketua unit only: Dropdown to add pembangun sistem --%>
+                              <%= if @available_developers != [] do %>
+                                <.form
+                                  for={%{}}
+                                  phx-submit="add_pembangun_sistem"
+                                  id="add-pembangun-form"
+                                  class="space-y-2"
                                 >
-                                  <option value="">Pilih Pembangun</option>
-
-                                  <%= for developer <- @available_developers do %>
-                                    <option value={developer.id}>
-                                      {developer.name || developer.email || developer.no_kp ||
-                                        "Unknown"}
-                                    </option>
-                                  <% end %>
-                                </select>
-                                <button
-                                  type="submit"
-                                  class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all duration-200"
-                                >
-                                  <.icon name="hero-plus" class="w-4 h-4" /> <span>Tambah</span>
-                                </button>
-                              </.form>
-                            <% else %>
-                              <p class="text-sm text-gray-500 italic">
-                                Semua pembangun sistem telah dipilih
-                              </p>
+                                  <select
+                                    name="developer_id"
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
+                                    required
+                                  >
+                                    <option value="">Pilih Pembangun</option>
+                                    
+                                    <%= for developer <- @available_developers do %>
+                                      <option value={developer.id}>
+                                        {developer.name || developer.email || developer.no_kp ||
+                                          "Unknown"}
+                                      </option>
+                                    <% end %>
+                                  </select>
+                                  <button
+                                    type="submit"
+                                    class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all duration-200"
+                                  >
+                                    <.icon name="hero-plus" class="w-4 h-4" /> <span>Tambah</span>
+                                  </button>
+                                </.form>
+                              <% else %>
+                                <p class="text-sm text-gray-500 italic">
+                                  Semua pembangun sistem telah dipilih
+                                </p>
+                              <% end %>
                             <% end %>
-                             <%!-- Display selected pembangun sistem --%>
+                            
+                            <%!-- Display selected pembangun sistem (with remove button only for ketua unit) --%>
                             <%= if @selected_developers != [] do %>
                               <div class="mt-4 space-y-2">
                                 <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                                   Pembangun Dipilih:
                                 </p>
-
+                                
                                 <div class="flex flex-wrap gap-2">
                                   <%= for no_kp <- @selected_developers do %>
                                     <% developer =
                                       Enum.find(@developers, fn dev -> dev.no_kp == no_kp end) %> <% display_name =
-                                      if developer,
-                                        do:
-                                          developer.name || developer.email || developer.no_kp ||
-                                            "Unknown",
-                                        else: no_kp %>
+                                      cond do
+                                        developer && developer.name && developer.name != "" ->
+                                          developer.name
+
+                                        developer && developer.email && developer.email != "" ->
+                                          developer.email
+
+                                        developer ->
+                                          developer.no_kp || "Unknown"
+
+                                        true ->
+                                          # Fallback: try to find by no_kp from all users if not in developers list
+                                          all_users = Accounts.list_users()
+
+                                          found_user =
+                                            Enum.find(all_users, fn u -> u.no_kp == no_kp end)
+
+                                          if found_user do
+                                            found_user.name || found_user.email || found_user.no_kp ||
+                                              "Unknown"
+                                          else
+                                            no_kp
+                                          end
+                                      end %>
                                     <div class="inline-flex items-center gap-2 rounded-full bg-indigo-100 px-3 py-1.5 text-sm text-indigo-800">
                                       <span>{display_name}</span>
-                                      <button
-                                        type="button"
-                                        phx-click="remove_pembangun_sistem"
-                                        phx-value-no_kp={no_kp}
-                                        class="ml-1 rounded-full p-0.5 hover:bg-indigo-200 transition-colors"
-                                        title="Keluarkan"
-                                      >
-                                        <.icon name="hero-x-mark" class="w-3.5 h-3.5" />
-                                      </button>
+                                      <%= if @can_assign_devs do %>
+                                        <button
+                                          type="button"
+                                          phx-click="remove_pembangun_sistem"
+                                          phx-value-no_kp={no_kp}
+                                          class="ml-1 rounded-full p-0.5 hover:bg-indigo-200 transition-colors"
+                                          title="Keluarkan"
+                                        >
+                                          <.icon name="hero-x-mark" class="w-3.5 h-3.5" />
+                                        </button>
+                                      <% end %>
                                     </div>
                                   <% end %>
                                 </div>
@@ -760,75 +987,101 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </div>
                         </dd>
                       </div>
-
+                      
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Pengurus Projek
                         </dt>
-
+                        
                         <dd>
                           <div class="space-y-3">
-                            <%!-- Dropdown to add pengurus projek --%>
-                            <%= if @available_project_managers != [] do %>
-                              <.form
-                                for={%{}}
-                                phx-submit="add_pengurus_projek"
-                                id="add-pengurus-form"
-                                class="space-y-2"
-                              >
-                                <select
-                                  name="project_manager_id"
-                                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
-                                  required
+                            <%= if @can_assign_pm do %>
+                              <%!-- Ketua unit only: Dropdown to add pengurus projek --%>
+                              <%= if @available_project_managers != [] do %>
+                                <.form
+                                  for={%{}}
+                                  phx-submit="add_pengurus_projek"
+                                  id="add-pengurus-form"
+                                  class="space-y-2"
                                 >
-                                  <option value="">Pilih Pengurus Projek</option>
-
-                                  <%= for project_manager <- @available_project_managers do %>
-                                    <option value={project_manager.id}>
-                                      {project_manager.name || project_manager.email ||
-                                        project_manager.no_kp || "Unknown"}
-                                    </option>
-                                  <% end %>
-                                </select>
-                                <button
-                                  type="submit"
-                                  class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all duration-200"
-                                >
-                                  <.icon name="hero-plus" class="w-4 h-4" /> <span>Tambah</span>
-                                </button>
-                              </.form>
-                            <% else %>
-                              <p class="text-sm text-gray-500 italic">
-                                Semua pengurus projek telah dipilih
-                              </p>
+                                  <select
+                                    name="project_manager_id"
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
+                                    required
+                                  >
+                                    <option value="">Pilih Pengurus Projek</option>
+                                    
+                                    <%= for project_manager <- @available_project_managers do %>
+                                      <option value={project_manager.id}>
+                                        {project_manager.name || project_manager.email ||
+                                          project_manager.no_kp || "Unknown"}
+                                      </option>
+                                    <% end %>
+                                  </select>
+                                  <button
+                                    type="submit"
+                                    class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all duration-200"
+                                  >
+                                    <.icon name="hero-plus" class="w-4 h-4" /> <span>Tambah</span>
+                                  </button>
+                                </.form>
+                              <% else %>
+                                <p class="text-sm text-gray-500 italic">
+                                  Semua pengurus projek telah dipilih
+                                </p>
+                              <% end %>
                             <% end %>
-                             <%!-- Display selected pengurus projek --%>
+                            
+                            <%!-- Display selected pengurus projek (with remove button only for ketua unit) --%>
                             <%= if @selected_project_managers != [] do %>
                               <div class="mt-4 space-y-2">
                                 <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                                   Pengurus Projek Dipilih:
                                 </p>
-
+                                
                                 <div class="flex flex-wrap gap-2">
                                   <%= for no_kp <- @selected_project_managers do %>
                                     <% project_manager =
                                       Enum.find(@project_managers, fn pm -> pm.no_kp == no_kp end) %> <% display_name =
-                                      if project_manager,
-                                        do:
-                                          project_manager.name || project_manager.email ||
-                                            project_manager.no_kp || "Unknown",
-                                        else: no_kp %>
+                                      cond do
+                                        project_manager && project_manager.name &&
+                                            project_manager.name != "" ->
+                                          project_manager.name
+
+                                        project_manager && project_manager.email &&
+                                            project_manager.email != "" ->
+                                          project_manager.email
+
+                                        project_manager ->
+                                          project_manager.no_kp || "Unknown"
+
+                                        true ->
+                                          # Fallback: try to find by no_kp from all users if not in project_managers list
+                                          all_users = Accounts.list_users()
+
+                                          found_user =
+                                            Enum.find(all_users, fn u -> u.no_kp == no_kp end)
+
+                                          if found_user do
+                                            found_user.name || found_user.email || found_user.no_kp ||
+                                              "Unknown"
+                                          else
+                                            no_kp
+                                          end
+                                      end %>
                                     <div class="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1.5 text-sm text-purple-800">
                                       <span>{display_name}</span>
-                                      <button
-                                        type="button"
-                                        phx-click="remove_pengurus_projek"
-                                        phx-value-no_kp={no_kp}
-                                        class="ml-1 rounded-full p-0.5 hover:bg-purple-200 transition-colors"
-                                        title="Keluarkan"
-                                      >
-                                        <.icon name="hero-x-mark" class="w-3.5 h-3.5" />
-                                      </button>
+                                      <%= if @can_assign_pm do %>
+                                        <button
+                                          type="button"
+                                          phx-click="remove_pengurus_projek"
+                                          phx-value-no_kp={no_kp}
+                                          class="ml-1 rounded-full p-0.5 hover:bg-purple-200 transition-colors"
+                                          title="Keluarkan"
+                                        >
+                                          <.icon name="hero-x-mark" class="w-3.5 h-3.5" />
+                                        </button>
+                                      <% end %>
                                     </div>
                                   <% end %>
                                 </div>
@@ -841,12 +1094,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </div>
                         </dd>
                       </div>
-
+                      
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Tarikh Mula
                         </dt>
-
+                        
                         <dd>
                           <div class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                             <%= if @approved_project.tarikh_mula do %>
@@ -855,18 +1108,18 @@ defmodule SppaWeb.ApprovedProjectLive do
                               <span class="text-gray-400 italic">Tiada tarikh mula</span>
                             <% end %>
                           </div>
-
+                          
                           <p class="mt-1 text-xs text-gray-500 italic">
                             Tarikh mula ditetapkan dari sistem luaran dan tidak boleh diubah
                           </p>
                         </dd>
                       </div>
-
+                      
                       <div>
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Tarikh Jangkaan Siap
                         </dt>
-
+                        
                         <dd>
                           <%= if @approved_project.project do %>
                             <%!-- Editable if project has been registered --%>
@@ -895,7 +1148,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                                 <span class="text-gray-400 italic">Tiada tarikh jangkaan siap</span>
                               <% end %>
                             </div>
-
+                            
                             <p class="mt-1 text-xs text-gray-500 italic">
                               Sila daftar projek terlebih dahulu untuk menetapkan tarikh jangkaan siap
                             </p>
@@ -916,7 +1169,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                     Maklumat Terperinci
                   </h2>
                 </div>
-
+                
                 <div class="p-6 md:p-8">
                   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="space-y-6">
@@ -925,7 +1178,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                           <.icon name="hero-information-circle" class="w-4 h-4 text-blue-600" />
                           Latar Belakang Sistem
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.latar_belakang do %>
@@ -936,12 +1189,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
-
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-flag" class="w-4 h-4 text-green-600" /> Objektif Sistem
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.objektif do %>
@@ -952,12 +1205,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
-
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-globe-alt" class="w-4 h-4 text-purple-600" /> Skop Sistem
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.skop do %>
@@ -969,14 +1222,14 @@ defmodule SppaWeb.ApprovedProjectLive do
                         </div>
                       </div>
                     </div>
-
+                    
                     <div class="space-y-6">
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-user-group" class="w-4 h-4 text-orange-600" />
                           Kumpulan Pengguna
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.kumpulan_pengguna do %>
@@ -987,13 +1240,13 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
-
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-exclamation-triangle" class="w-4 h-4 text-amber-600" />
                           Implikasi
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.implikasi do %>
@@ -1004,13 +1257,13 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
-
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-document-arrow-down" class="w-4 h-4 text-red-600" />
                           Dokumen Kertas Kerja
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <%= if @approved_project.kertas_kerja_path do %>
                             <% full_url = ensure_full_url(@approved_project.kertas_kerja_path) %>
@@ -1031,7 +1284,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                               </div>
                             <% else %>
                               <p class="text-sm text-gray-400 italic">URL dokumen tidak sah</p>
-
+                              
                               <p class="text-xs text-gray-500 mt-1">
                                 Nilai tersimpan: {@approved_project.kertas_kerja_path}
                               </p>

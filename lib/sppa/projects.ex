@@ -9,6 +9,7 @@ defmodule Sppa.Projects do
   alias Sppa.Projects.Project
   alias Sppa.ApprovedProjects.ApprovedProject
   alias Sppa.ActivityLogs
+  alias Sppa.ApprovedProjects
 
   @doc """
   Returns the list of projects for a user scope.
@@ -23,19 +24,37 @@ defmodule Sppa.Projects do
 
   @doc """
   Returns the list of projects for a pengurus projek (project manager).
-  Projects where the current user is assigned as project manager.
+
+  For pengurus projek:
+  - If the project is linked to an approved project and at least one pengurus_projek
+    has been set by ketua unit, visibility is based on that assignment list.
+  - If the project is not linked to an approved project, falls back to
+    project_manager_id (existing behaviour).
+
+  For ketua unit, all projects are visible in lists that use this function.
   """
   def list_projects_for_pengurus_projek(current_scope) do
-    user_id = current_scope.user && current_scope.user.id
-    if is_nil(user_id), do: [], else: list_projects_for_pengurus_projek_by_id(user_id)
-  end
+    role = current_scope.user.role
+    user_id = current_scope.user.id
+    user_no_kp = current_scope.user.no_kp
 
-  defp list_projects_for_pengurus_projek_by_id(user_id) do
     Project
-    |> where([p], p.project_manager_id == ^user_id and not is_nil(p.approved_project_id))
+    |> where([p], not is_nil(p.approved_project_id))
     |> preload([:developer, :project_manager, :approved_project])
     |> order_by([p], desc: p.last_updated)
     |> Repo.all()
+    |> Enum.filter(fn project ->
+      case role do
+        "ketua unit" ->
+          true
+
+        "pengurus projek" ->
+          has_pm_access_to_project?(project, user_id, user_no_kp)
+
+        _other ->
+          project.project_manager_id == user_id
+      end
+    end)
     |> Enum.map(&format_project_for_display/1)
   end
 
@@ -118,9 +137,17 @@ defmodule Sppa.Projects do
 
   @doc """
   Returns the list of projects for a pembangun sistem (developer).
-  Returns projects where the developer is assigned, i.e.:
-  - project.developer_id is the current user, OR
-  - project has an approved_project and the developer's no_kp is in approved_project.pembangun_sistem.
+
+  Shows projects from both:
+  1. Projects table (internal projects) where user has access
+  2. Approved_projects table where user's no_kp is in pembangun_sistem list
+     (even if no corresponding project exists in projects table)
+
+  For projects linked to an approved project where pembangun_sistem has been assigned
+  (by ketua unit or pengurus projek), visibility is based on that assignment list.
+
+  For projects without an approved project, falls back to developer_id
+  (developer's own internal projects).
   """
   def list_projects_for_pembangun_sistem(current_scope) do
     user_id = current_scope.user && current_scope.user.id
@@ -129,17 +156,111 @@ defmodule Sppa.Projects do
     if is_nil(user_id) && (is_nil(user_no_kp) || user_no_kp == "") do
       []
     else
-      Project
-      |> where([p], not is_nil(p.approved_project_id))
-      |> preload([:developer, :project_manager, :approved_project])
-      |> order_by([p], desc: p.last_updated)
-      |> Repo.all()
-      |> Enum.filter(fn project ->
-        assigned_as_developer = not is_nil(user_id) and project.developer_id == user_id
-        assigned_via_pembangun_sistem = has_access_to_project?(project, user_no_kp)
-        assigned_as_developer or assigned_via_pembangun_sistem
-      end)
-      |> Enum.map(&format_project_for_display/1)
+      # 1. Get ALL approved_projects where user's no_kp is in pembangun_sistem
+      #    This is the PRIMARY source - shows all assigned approved_projects
+      #    (both from projects table and approved_projects table)
+      approved_projects_with_access =
+        ApprovedProjects.list_approved_projects()
+        |> Enum.filter(fn approved_project ->
+          # Check if pembangun_sistem is set and contains user's no_kp
+          if approved_project.pembangun_sistem && approved_project.pembangun_sistem != "" do
+            selected_no_kps = parse_pembangun_sistem(approved_project.pembangun_sistem)
+            user_no_kp in selected_no_kps
+          else
+            false
+          end
+        end)
+        |> Enum.map(fn approved_project ->
+          # Ensure a project exists for this approved_project (create if needed)
+          case ensure_internal_project_for_approved(approved_project) do
+            {:ok, project} ->
+              # Update project with data from approved_project if project fields are empty
+              # This ensures projects created earlier get populated with approved_project data
+              update_attrs = %{}
+
+              update_attrs =
+                if project.nama == "" or is_nil(project.nama),
+                  do: Map.put(update_attrs, :nama, approved_project.nama_projek || ""),
+                  else: update_attrs
+
+              update_attrs =
+                if project.jabatan == "" or is_nil(project.jabatan),
+                  do: Map.put(update_attrs, :jabatan, approved_project.jabatan || ""),
+                  else: update_attrs
+
+              update_attrs =
+                if is_nil(project.status),
+                  do: Map.put(update_attrs, :status, "Dalam Pembangunan"),
+                  else: update_attrs
+
+              update_attrs =
+                if is_nil(project.fasa),
+                  do: Map.put(update_attrs, :fasa, "Analisis dan Rekabentuk"),
+                  else: update_attrs
+
+              update_attrs =
+                if is_nil(project.tarikh_mula),
+                  do: Map.put(update_attrs, :tarikh_mula, approved_project.tarikh_mula),
+                  else: update_attrs
+
+              updated_project =
+                if map_size(update_attrs) > 0 do
+                  case update_project(project, update_attrs) do
+                    {:ok, p} -> p
+                    _ -> project
+                  end
+                else
+                  project
+                end
+
+              # Reload with approved_project preloaded to ensure fresh data
+              Repo.preload(updated_project, :approved_project)
+
+            {:error, _} ->
+              # If creation fails, create a virtual project struct for display
+              %Project{
+                id: nil,
+                nama: approved_project.nama_projek || "",
+                jabatan: approved_project.jabatan || "",
+                status: "Dalam Pembangunan",
+                fasa: "Analisis dan Rekabentuk",
+                tarikh_mula: approved_project.tarikh_mula,
+                tarikh_siap: approved_project.tarikh_jangkaan_siap,
+                approved_project_id: approved_project.id,
+                approved_project: approved_project,
+                developer_id: nil,
+                project_manager_id: nil,
+                user_id: nil,
+                last_updated: approved_project.updated_at || approved_project.inserted_at
+              }
+          end
+        end)
+
+      # 2. Get projects from projects table that don't have approved_project
+      #    (fallback for projects without approved_project - user's own internal projects)
+      projects_without_approved =
+        Project
+        |> where([p], is_nil(p.approved_project_id))
+        |> where([p], p.developer_id == ^user_id)
+        |> preload([:developer, :project_manager, :approved_project])
+        |> order_by([p], desc: p.last_updated)
+        |> Repo.all()
+
+      # 3. Combine both lists - approved_projects (primary) + projects without approved_project (fallback)
+      all_accessible_projects = approved_projects_with_access ++ projects_without_approved
+
+      # Remove duplicates by approved_project.id (if exists) or project.id
+      unique_projects =
+        all_accessible_projects
+        |> Enum.uniq_by(fn project ->
+          if project.approved_project do
+            project.approved_project.id
+          else
+            project.id
+          end
+        end)
+
+      Enum.map(unique_projects, &format_project_for_display/1)
     end
   end
 
@@ -152,6 +273,7 @@ defmodule Sppa.Projects do
 
     if approved_project && approved_project.pembangun_sistem do
       # Parse the comma-separated list of no_kp values
+      # Format is "no_kp1, no_kp2" (comma space), parse splits by comma and trims
       selected_no_kps = parse_pembangun_sistem(approved_project.pembangun_sistem)
       developer_no_kp in selected_no_kps
     else
@@ -161,6 +283,31 @@ defmodule Sppa.Projects do
   end
 
   def has_access_to_project?(_project, _developer_no_kp), do: false
+
+  @doc """
+  Checks if a pengurus projek has access to a project.
+
+  For projects with an approved_project and a non-empty pengurus_projek list,
+  access is granted only when the user's no_kp is in that list.
+
+  For projects without an approved_project, falls back to project_manager_id.
+  """
+  def has_pm_access_to_project?(project, user_id, user_no_kp)
+      when is_integer(user_id) and is_binary(user_no_kp) do
+    ap = project.approved_project
+
+    cond do
+      ap && ap.pengurus_projek && ap.pengurus_projek != "" ->
+        selected_no_kps = parse_pengurus_projek(ap.pengurus_projek)
+        user_no_kp in selected_no_kps
+
+      ap == nil ->
+        project.project_manager_id == user_id
+
+      true ->
+        false
+    end
+  end
 
   # Parse comma-separated pembangun_sistem string into list of no_kp values
   defp parse_pembangun_sistem(nil), do: []
@@ -175,6 +322,19 @@ defmodule Sppa.Projects do
 
   defp parse_pembangun_sistem(_), do: []
 
+  # Parse comma-separated pengurus_projek string into list of no_kp values
+  defp parse_pengurus_projek(nil), do: []
+  defp parse_pengurus_projek(""), do: []
+
+  defp parse_pengurus_projek(str) when is_binary(str) do
+    str
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&(&1 != ""))
+  end
+
+  defp parse_pengurus_projek(_), do: []
+
   @doc """
   Formats project data for display in senarai projek.
   Data diutamakan dari projek dalaman; jika kosong, guna data dari approved_project (DB approved projects).
@@ -185,10 +345,10 @@ defmodule Sppa.Projects do
 
     %{
       id: project.id,
-      nama: coalesce(project.nama, ap && ap.nama_projek),
-      jabatan: coalesce(project.jabatan, ap && ap.jabatan),
-      status: project.status,
-      fasa: project.fasa,
+      nama: coalesce(project.nama, ap && ap.nama_projek) || "",
+      jabatan: coalesce(project.jabatan, ap && ap.jabatan) || "",
+      status: project.status || (ap && "Dalam Pembangunan") || "Dalam Pembangunan",
+      fasa: project.fasa || (ap && "Analisis dan Rekabentuk") || "Analisis dan Rekabentuk",
       tarikh_mula: project.tarikh_mula || (ap && ap.tarikh_mula),
       tarikh_siap: project.tarikh_siap || (ap && ap.tarikh_jangkaan_siap),
       pengurus_projek:
@@ -252,7 +412,7 @@ defmodule Sppa.Projects do
   Gets dashboard statistics for a user scope.
   Counts reflect projects the user can see based on role:
   - ketua penolong pengarah: all projects
-  - pengurus projek: projects where user is project manager
+  - pengurus projek / ketua unit: projects where user is project manager
   - pembangun sistem: projects where user is developer or in approved_project.pembangun_sistem
   - fallback: projects where user_id is the current user (owner)
   """
@@ -263,7 +423,7 @@ defmodule Sppa.Projects do
       "ketua penolong pengarah" ->
         get_dashboard_stats_all_projects()
 
-      "pengurus projek" ->
+      role when role in ["pengurus projek", "ketua unit"] ->
         get_dashboard_stats_by_project_manager(current_scope)
 
       "pembangun sistem" ->
@@ -305,7 +465,7 @@ defmodule Sppa.Projects do
           from(p in Project, select: p.id)
           |> Repo.all()
 
-        "pengurus projek" ->
+        role when role in ["pengurus projek", "ketua unit"] ->
           from(p in Project,
             where: p.project_manager_id == ^current_scope.user.id,
             select: p.id
@@ -415,15 +575,49 @@ defmodule Sppa.Projects do
   end
 
   @doc """
-  Gets a single project.
+  Gets a single project with access control based on the current scope.
 
-  Raises `Ecto.NoResultsError` if the Project does not exist.
+  Raises `Ecto.NoResultsError` if the project does not exist or the user
+  does not have access to it.
   """
   def get_project!(id, current_scope) do
-    Project
-    |> where([p], p.id == ^id and p.user_id == ^current_scope.user.id)
-    |> preload([:developer, :project_manager, :approved_project])
-    |> Repo.one!()
+    project =
+      Project
+      |> where([p], p.id == ^id)
+      |> preload([:developer, :project_manager, :approved_project, :user])
+      |> Repo.one!()
+
+    user = current_scope.user
+    role = user.role
+
+    allowed? =
+      case role do
+        # Directors / senior roles can see all projects
+        "ketua penolong pengarah" ->
+          true
+
+        # Ketua unit can see all projects (they control assignments)
+        "ketua unit" ->
+          true
+
+        # Pengurus projek: must be assigned via approved_project.pengurus_projek
+        "pengurus projek" ->
+          has_pm_access_to_project?(project, user.id, user.no_kp)
+
+        # Pembangun sistem: must be assigned as developer or via pembangun_sistem list
+        "pembangun sistem" ->
+          project.developer_id == user.id or has_access_to_project?(project, user.no_kp)
+
+        # Fallback: owner-based access
+        _ ->
+          project.user_id == user.id
+      end
+
+    if allowed? do
+      project
+    else
+      raise Ecto.NoResultsError, queryable: Project
+    end
   end
 
   @doc """
@@ -484,6 +678,88 @@ defmodule Sppa.Projects do
 
       error ->
         error
+    end
+  end
+
+  @doc """
+  Ensures there is an internal project for the given approved project.
+
+  - If a project with `approved_project_id` already exists, returns `{:ok, project}`.
+  - Otherwise, creates a new project using data from the approved project.
+
+  This is used by the external sync so every external system automatically
+  has a corresponding internal project for Modul/Pelan Modul usage.
+  """
+  def ensure_internal_project_for_approved(
+        %Sppa.ApprovedProjects.ApprovedProject{} = approved_project
+      ) do
+    existing =
+      Project
+      |> where([p], p.approved_project_id == ^approved_project.id)
+      |> preload([:approved_project, :developer, :project_manager])
+      |> Repo.one()
+
+    if existing do
+      # Update existing project with data from approved_project if fields are null/empty
+      update_attrs = %{}
+
+      update_attrs =
+        if existing.nama == "" or is_nil(existing.nama),
+          do: Map.put(update_attrs, :nama, approved_project.nama_projek || ""),
+          else: update_attrs
+
+      update_attrs =
+        if existing.jabatan == "" or is_nil(existing.jabatan),
+          do: Map.put(update_attrs, :jabatan, approved_project.jabatan || ""),
+          else: update_attrs
+
+      update_attrs =
+        if is_nil(existing.status),
+          do: Map.put(update_attrs, :status, "Dalam Pembangunan"),
+          else: update_attrs
+
+      update_attrs =
+        if is_nil(existing.fasa),
+          do: Map.put(update_attrs, :fasa, "Analisis dan Rekabentuk"),
+          else: update_attrs
+
+      update_attrs =
+        if is_nil(existing.tarikh_mula),
+          do: Map.put(update_attrs, :tarikh_mula, approved_project.tarikh_mula),
+          else: update_attrs
+
+      updated_project =
+        if map_size(update_attrs) > 0 do
+          case update_project(existing, update_attrs) do
+            {:ok, p} -> p
+            _ -> existing
+          end
+        else
+          existing
+        end
+
+      # Reload to ensure approved_project association is fresh
+      {:ok, Repo.preload(updated_project, :approved_project)}
+    else
+      attrs = %{
+        nama: approved_project.nama_projek || "",
+        jabatan: approved_project.jabatan || "",
+        status: "Dalam Pembangunan",
+        fasa: "Analisis dan Rekabentuk",
+        tarikh_mula: approved_project.tarikh_mula,
+        approved_project_id: approved_project.id
+      }
+
+      case %Project{}
+           |> Project.changeset(attrs)
+           |> Repo.insert() do
+        {:ok, project} ->
+          # Reload with approved_project preloaded to ensure association is available
+          {:ok, Repo.preload(project, :approved_project)}
+
+        error ->
+          error
+      end
     end
   end
 
@@ -567,6 +843,68 @@ defmodule Sppa.Projects do
   def delete_project(%Project{} = project) do
     Repo.delete(project)
   end
+
+  @doc """
+  Returns the list of approved_projects where a pengurus projek is assigned.
+  This is the EXACT same logic used by the pengurus projek project list page.
+  Returns approved_projects with their associated internal projects loaded.
+  """
+  def list_approved_projects_for_pengurus_projek(current_scope) do
+    user_role = current_scope.user.role
+    user_no_kp = current_scope.user.no_kp
+
+    unless user_role == "pengurus projek" do
+      []
+    else
+      base_query =
+        from ap in ApprovedProjects.ApprovedProject,
+          left_join: p in assoc(ap, :project),
+          preload: [project: p]
+
+      approved_projects =
+        base_query
+        |> order_by([ap, _p], desc: ap.external_updated_at)
+        |> Repo.all()
+
+      approved_projects
+      |> Enum.filter(fn approved_project ->
+        has_pm_assignment_for_approved?(approved_project, user_no_kp)
+      end)
+      |> Enum.map(fn approved_project ->
+        # Ensure internal project exists (same as ensure_project_loaded in project_list_live.ex)
+        project =
+          case approved_project.project do
+            %Project{} = p ->
+              p
+
+            _ ->
+              case ensure_internal_project_for_approved(approved_project) do
+                {:ok, p} -> p
+                _ -> nil
+              end
+          end
+
+        # Return approved_project with project association
+        Map.put(approved_project, :project, project)
+      end)
+    end
+  end
+
+  # Helper function to check if a pengurus projek is assigned to an approved project
+  defp has_pm_assignment_for_approved?(approved_project, user_no_kp) when is_binary(user_no_kp) do
+    pengurus = approved_project.pengurus_projek
+
+    if is_binary(pengurus) and pengurus != "" do
+      pengurus
+      |> String.split(",")
+      |> Enum.map(&String.trim/1)
+      |> Enum.any?(&(&1 == user_no_kp))
+    else
+      false
+    end
+  end
+
+  defp has_pm_assignment_for_approved?(_approved_project, _user_no_kp), do: false
 
   @doc """
   Deletes all "dummy" projects: projects that have no approved_project_id

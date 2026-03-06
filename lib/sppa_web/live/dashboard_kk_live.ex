@@ -1,45 +1,56 @@
-defmodule SppaWeb.DashboardLive do
+defmodule SppaWeb.DashboardKKLive do
   use SppaWeb, :live_view
 
-  alias Sppa.ActivityLogs
   alias Sppa.Projects
-
-  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua unit", "ketua penolong pengarah"]
+  alias Sppa.ActivityLogs
 
   @impl true
   def mount(_params, _session, socket) do
-    # Verify user has required role (defense in depth - router already checks this)
     user_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
 
-    if user_role && user_role in @allowed_roles do
-      # Sidebar starts closed on mobile, but we'll show it by default on desktop via CSS
+    if user_role == "ketua unit" do
       socket =
         socket
         |> assign(:hide_root_header, true)
-        |> assign(:page_title, "Papan Pemuka")
+        |> assign(:page_title, "Papan Pemuka Ketua Unit")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
-        |> assign(:show_settings_modal, false)
 
-      # Always load stats and activities from database so metric cards show actual counts
-      stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
-      raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
+      if connected?(socket) do
+        stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
 
-      activities =
-        Enum.map(raw_activities, fn a ->
-          Map.put(a, :action_label, ActivityLogs.action_label(a.action))
-        end)
+        raw_activities =
+          ActivityLogs.list_recent_activities(socket.assigns.current_scope, 10)
 
-      notifications_count = length(activities)
+        activities =
+          Enum.map(raw_activities, fn a ->
+            Map.put(a, :action_label, ActivityLogs.action_label(a.action))
+          end)
 
-      {:ok,
-       socket
-       |> assign(:stats, stats)
-       |> assign(:activities, activities)
-       |> assign(:notifications_count, notifications_count)}
+        notifications_count = length(activities)
+
+        {:ok,
+         socket
+         |> assign(:stats, stats)
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
+      else
+        {:ok,
+         socket
+         |> assign(:stats, %{
+           total_projects: 0,
+           in_development: 0,
+           completed: 0,
+           on_hold: 0,
+           uat: 0,
+           change_management: 0
+         })
+         |> assign(:activities, [])
+         |> assign(:notifications_count, 0)}
+      end
     else
       socket =
         socket
@@ -87,18 +98,5 @@ defmodule SppaWeb.DashboardLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
-  end
-
-  @impl true
-  def handle_event("open_settings_modal", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_settings_modal, true)
-     |> assign(:profile_menu_open, false)}
-  end
-
-  @impl true
-  def handle_info(:close_settings_modal, socket) do
-    {:noreply, assign(socket, :show_settings_modal, false)}
   end
 end
