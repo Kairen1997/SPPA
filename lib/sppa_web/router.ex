@@ -57,6 +57,7 @@ defmodule SppaWeb.Router do
     live_session :require_dashboard_role,
       on_mount: [{SppaWeb.UserAuth, :require_dashboard_role}] do
       live "/dashboard-pp", DashboardPPLive, :index
+      live "/dashboard-kk", DashboardKKLive, :index
       live "/dashboard", DashboardLive, :index
       live "/projek", ProjekLive, :index
       # Halaman /projek kini khusus untuk senarai projek sahaja.
@@ -77,6 +78,10 @@ defmodule SppaWeb.Router do
 
       # Dashboard modules referenced by the sidebar (must exist for VerifiedRoutes ~p)
       live "/jadual-projek", JadualProjekLive, :index
+      live "/penempatan", PenempatanLive, :index
+      live "/penempatan/:id", PenempatanLive, :show
+      live "/penyerahan-projek", PenyerahanProjekLive, :index
+      live "/pengaturcaraan", PembangunanLive, :index
     end
 
     live_session :require_authenticated_user,

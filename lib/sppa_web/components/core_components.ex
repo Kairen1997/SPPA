@@ -646,13 +646,29 @@ defmodule SppaWeb.CoreComponents do
               <.icon name="hero-squares-2x2" class="w-5 h-5" />
               <span class="font-medium">Dashboard</span>
             </.link>
-            <.link
-              navigate={~p"/projek"}
-              phx-click="close_sidebar"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-            >
-              <.icon name="hero-folder" class="w-5 h-5" /> <span>Senarai Projek</span>
-            </.link>
+            <%= if ketua_unit_kk_nav?(@current_scope, @dashboard_path) do %>
+              <.link
+                navigate={~p"/penyerahan-projek"}
+                phx-click="close_sidebar"
+                class={[
+                  "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
+                  if(@current_path == "/penyerahan-projek",
+                    do: "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md",
+                    else: "text-gray-300 hover:bg-gray-700 hover:text-white"
+                  )
+                ]}
+              >
+                <.icon name="hero-document-check" class="w-5 h-5" /> <span>Penyerahan Projek</span>
+              </.link>
+            <% else %>
+              <.link
+                navigate={~p"/projek"}
+                phx-click="close_sidebar"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg mb-1 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+              >
+                <.icon name="hero-folder" class="w-5 h-5" /> <span>Senarai Projek</span>
+              </.link>
+            <% end %>
           <% end %>
         </nav>
       </div>
@@ -661,6 +677,12 @@ defmodule SppaWeb.CoreComponents do
   end
 
   defp show_pp_nav?(path), do: to_string(path) == "/dashboard-pp"
+
+  defp ketua_unit_kk_nav?(current_scope, dashboard_path) do
+    role = current_scope && current_scope.user && current_scope.user.role
+    path_str = to_string(dashboard_path)
+    role == "ketua unit" and path_str == "/dashboard-kk"
+  end
 
   attr :id, :string, required: true, doc: "unique id for the table"
   attr :title, :string, required: true, doc: "category title"

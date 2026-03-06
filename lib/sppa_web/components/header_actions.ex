@@ -18,7 +18,10 @@ defmodule SppaWeb.Components.HeaderActions do
   attr :activities, :list, default: [], doc: "List of activities for notifications"
   attr :profile_menu_open, :boolean, default: false, doc: "Whether profile dropdown menu is open"
   attr :current_scope, :any, default: nil, doc: "The current user scope"
-  attr :settings_as_modal, :boolean, default: true, doc: "When true, Tetapan opens a modal instead of navigating; set false to use link"
+
+  attr :settings_as_modal, :boolean,
+    default: true,
+    doc: "When true, Tetapan opens a modal instead of navigating; set false to use link"
 
   def header_actions(assigns) do
     ~H"""
@@ -177,7 +180,7 @@ defmodule SppaWeb.Components.HeaderActions do
                 <.icon name="hero-cog-6-tooth" class="w-4 h-4 text-gray-500" /> <span>Tetapan</span>
               </.link>
             <% end %>
-            <%!-- Divider --%>
+             <%!-- Divider --%>
             <div class="my-1 border-t border-gray-100"></div>
              <%!-- Logout Button --%>
             <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline w-full">

@@ -3,12 +3,11 @@ defmodule SppaWeb.ProjectListLive do
 
   alias Sppa.ActivityLogs
   alias Sppa.Projects
-  alias Sppa.ApprovedProjects
   alias Sppa.Accounts
+  alias Sppa.ApprovedProjects
   alias Sppa.Repo
-  alias Oban
-  require Logger
   import Ecto.Query
+  require Logger
 
   @impl true
   def mount(_params, _session, socket) do
@@ -36,10 +35,12 @@ defmodule SppaWeb.ProjectListLive do
 
       # Muat aktiviti untuk notifikasi header (sama seperti dashboard)
       raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
+
       activities =
         Enum.map(raw_activities, fn a ->
           Map.put(a, :action_label, ActivityLogs.action_label(a.action))
         end)
+
       notifications_count = length(activities)
 
       # Always load projects and users so the page is populated immediately,
@@ -246,7 +247,26 @@ defmodule SppaWeb.ProjectListLive do
   end
 
   defp list_projects(socket) do
-    # Base query with join to internal project (if exists)
+    all_projects = list_all_approved_projects_for_current_pm(socket)
+
+    start = (socket.assigns.page - 1) * socket.assigns.per_page
+    Enum.slice(all_projects, start, socket.assigns.per_page)
+  end
+
+  defp calculate_total_pages(socket) do
+    total = socket |> list_all_approved_projects_for_current_pm() |> length()
+    ceil(total / socket.assigns.per_page)
+  end
+
+  # Returns all approved projects visible to the current pengurus projek,
+  # before pagination. Visibility is based on ketua unit assignments in
+  # approved_project.pengurus_projek (by no_kp). If no assignments exist yet,
+  # the project is hidden from the pengurus projek list.
+  defp list_all_approved_projects_for_current_pm(socket) do
+    current_scope = socket.assigns.current_scope
+    user_role = current_scope.user.role
+    user_no_kp = current_scope.user.no_kp
+
     base_query =
       from ap in Sppa.ApprovedProjects.ApprovedProject,
         left_join: p in assoc(ap, :project),
@@ -269,42 +289,56 @@ defmodule SppaWeb.ProjectListLive do
         base_query
       end
 
-    # Apply pagination
-    offset = (socket.assigns.page - 1) * socket.assigns.per_page
+    approved_projects =
+      base_query
+      |> order_by([ap, _p], desc: ap.external_updated_at)
+      |> Repo.all()
 
-    # Order by external updated_at from the upstream system so the table follows
-    # the same ordering as the external API (newest first), regardless of local
-    # changes to tarikh_mula/tarikh_jangkaan_siap.
-    base_query
-    |> order_by([ap, _p], desc: ap.external_updated_at)
-    |> limit(^socket.assigns.per_page)
-    |> offset(^offset)
-    |> Repo.all()
+    approved_projects
+    |> Enum.filter(fn approved_project ->
+      case user_role do
+        "pengurus projek" ->
+          has_pm_assignment?(approved_project, user_no_kp)
+
+        _other ->
+          # In practice only pengurus projek should hit this LiveView, but keep
+          # behaviour permissive for any future roles.
+          true
+      end
+    end)
+    |> Enum.map(&ensure_project_loaded/1)
   end
 
-  defp calculate_total_pages(socket) do
-    base_query =
-      from ap in Sppa.ApprovedProjects.ApprovedProject,
-        left_join: p in assoc(ap, :project)
+  # Ensure there is an internal project struct on the approved_project so the
+  # Modul button can work for all systems. If no project exists yet, this will
+  # create one using Projects.ensure_internal_project_for_approved/1.
+  defp ensure_project_loaded(%Sppa.ApprovedProjects.ApprovedProject{} = approved_project) do
+    project =
+      case approved_project.project do
+        %Sppa.Projects.Project{} = p ->
+          p
 
-    # Apply search filter
-    base_query =
-      if socket.assigns.search_query != "" do
-        search_term = "%#{socket.assigns.search_query}%"
-        where(base_query, [ap, _p], ilike(ap.nama_projek, ^search_term))
-      else
-        base_query
+        _ ->
+          case Projects.ensure_internal_project_for_approved(approved_project) do
+            {:ok, p} -> p
+            _ -> nil
+          end
       end
 
-    base_query =
-      if socket.assigns.status_filter != "" do
-        where(base_query, [_ap, p], p.status == ^socket.assigns.status_filter)
-      else
-        base_query
-      end
+    Map.put(approved_project, :project, project)
+  end
 
-    total = Repo.aggregate(base_query, :count, :id)
-    ceil(total / socket.assigns.per_page)
+  defp has_pm_assignment?(approved_project, user_no_kp) when is_binary(user_no_kp) do
+    pengurus = approved_project.pengurus_projek
+
+    if is_binary(pengurus) and pengurus != "" do
+      pengurus
+      |> String.split(",")
+      |> Enum.map(&String.trim/1)
+      |> Enum.any?(&(&1 == user_no_kp))
+    else
+      false
+    end
   end
 
   @impl true
@@ -318,6 +352,7 @@ defmodule SppaWeb.ProjectListLive do
           current_scope={@current_scope}
         />
       <% end %>
+      
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div
@@ -348,7 +383,7 @@ defmodule SppaWeb.ProjectListLive do
                 <.icon name="hero-bars-3" class="w-6 h-6" />
               </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
+            
             <.header_actions
               notifications_open={@notifications_open}
               notifications_count={@notifications_count}
@@ -366,7 +401,7 @@ defmodule SppaWeb.ProjectListLive do
                   <h1 class="text-3xl font-bold text-gray-900 mb-2 print:text-2xl print:mb-1 print:text-black">
                     Senarai Projek Diluluskan
                   </h1>
-
+                  
                   <p class="text-gray-600 print:text-gray-800 print:text-sm">
                     Senarai lengkap semua projek yang diluluskan
                   </p>
@@ -408,21 +443,14 @@ defmodule SppaWeb.ProjectListLive do
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     >
                       <option value="">Semua</option>
-
+                      
                       <option value="Dalam Pembangunan">Dalam Pembangunan</option>
-
+                      
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
-                   <%!-- Action buttons --%>
+                   <%!-- Action buttons (sync only for ketua unit on Penyerahan Projek) --%>
                   <div class="flex-shrink-0 flex gap-3">
-                    <button
-                      type="button"
-                      phx-click="sync_external_data"
-                      class="rounded-lg bg-green-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center gap-2"
-                    >
-                      <.icon name="hero-arrow-path" class="w-4 h-4" /> <span>Sync Data</span>
-                    </button>
                     <button
                       type="button"
                       phx-click="open_new_project_modal"
@@ -444,39 +472,39 @@ defmodule SppaWeb.ProjectListLive do
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Nama Sistem
                       </th>
-
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Emel
                       </th>
-
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Kementerian/Jabatan
                       </th>
-
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Tarikh
                       </th>
-
+                      
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 print:hidden">
                         Tindakan
                       </th>
                     </tr>
                   </thead>
-
+                  
                   <tbody class="divide-y divide-gray-200 bg-white print-table-body">
                     <tr :for={project <- @projects} class="hover:bg-gray-50 print-table-row">
                       <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                         {project.nama_projek}
                       </td>
-
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {project.pengurus_email || "-"}
                       </td>
-
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {project.jabatan || "-"}
                       </td>
-
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         <%= if project.tarikh_mula do %>
                           {Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}
@@ -484,7 +512,7 @@ defmodule SppaWeb.ProjectListLive do
                           <span class="text-gray-400">-</span>
                         <% end %>
                       </td>
-
+                      
                       <td class="whitespace-nowrap px-6 py-4 text-sm print:hidden">
                         <div class="flex items-center gap-2">
                           <%!-- Sentiasa tunjuk butang Lihat untuk paparan penuh maklumat permohonan (data external) --%>
@@ -494,8 +522,7 @@ defmodule SppaWeb.ProjectListLive do
                           >
                             <.icon name="hero-eye" class="w-4 h-4" />
                             <span class="hidden lg:inline">Lihat</span>
-                          </.link>
-                          <%!-- Jika projek dalaman sudah wujud, benarkan ke modul; jika tidak, tunjuk butang Daftar Projek --%>
+                          </.link> <%!-- Modul link hanya untuk projek dalaman yang sedia ada --%>
                           <%= if project.project do %>
                             <.link
                               navigate={~p"/projek/#{project.project.id}/modul"}
@@ -504,15 +531,11 @@ defmodule SppaWeb.ProjectListLive do
                               <.icon name="hero-cog-6-tooth" class="w-4 h-4" />
                               <span class="hidden lg:inline">Modul</span>
                             </.link>
-                          <% else %>
-                            <.button phx-click="create_project" phx-value-id={project.id}>
-                              Daftar Projek
-                            </.button>
                           <% end %>
                         </div>
                       </td>
                     </tr>
-
+                    
                     <tr :if={@projects == []}>
                       <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">
                         Tiada projek dijumpai
@@ -588,12 +611,12 @@ defmodule SppaWeb.ProjectListLive do
                   <div class="flex items-center justify-between">
                     <div>
                       <h2 class="text-2xl font-bold text-white">Projek Baru</h2>
-
+                      
                       <p class="mt-1 text-sm text-blue-100">
                         Lengkapkan maklumat di bawah untuk mencipta projek baharu
                       </p>
                     </div>
-
+                    
                     <button
                       type="button"
                       phx-click="close_modal"
@@ -618,7 +641,7 @@ defmodule SppaWeb.ProjectListLive do
                     <div class="space-y-5">
                       <div class="border-b border-gray-200 pb-2">
                         <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
-
+                        
                         <p class="mt-1 text-sm text-gray-500">Maklumat utama projek</p>
                       </div>
                        <%!-- Nama Sistem --%>
@@ -647,12 +670,12 @@ defmodule SppaWeb.ProjectListLive do
                     <div class="space-y-5">
                       <div class="border-b border-gray-200 pb-2">
                         <h3 class="text-lg font-semibold text-gray-900">Penugasan Pasukan</h3>
-
+                        
                         <p class="mt-1 text-sm text-gray-500">
                           Tetapkan pengurus projek dan pembangun sistem
                         </p>
                       </div>
-
+                      
                       <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                         <%!-- Pengurus Projek --%>
                         <div>
@@ -690,12 +713,12 @@ defmodule SppaWeb.ProjectListLive do
                     <div class="space-y-5">
                       <div class="border-b border-gray-200 pb-2">
                         <h3 class="text-lg font-semibold text-gray-900">Jadual Projek</h3>
-
+                        
                         <p class="mt-1 text-sm text-gray-500">
                           Tetapkan tarikh mula dan jangkaan siap
                         </p>
                       </div>
-
+                      
                       <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                         <%!-- Tarikh Mula --%>
                         <div>
@@ -721,12 +744,12 @@ defmodule SppaWeb.ProjectListLive do
                     <div class="space-y-5">
                       <div class="border-b border-gray-200 pb-2">
                         <h3 class="text-lg font-semibold text-gray-900">Dokumen Sokongan</h3>
-
+                        
                         <p class="mt-1 text-sm text-gray-500">
                           Muat naik dokumen yang berkaitan dengan projek
                         </p>
                       </div>
-
+                      
                       <div>
                         <label class="mb-2 block text-sm font-medium text-gray-700">
                           Dokumen Sokongan
@@ -755,7 +778,7 @@ defmodule SppaWeb.ProjectListLive do
                               </label>
                               <p class="pl-1">atau seret dan lepaskan</p>
                             </div>
-
+                            
                             <p class="mt-2 text-xs leading-5 text-gray-600">
                               PDF, DOC, DOCX sehingga 10MB setiap fail
                             </p>

@@ -6,6 +6,7 @@
       current_scope={@current_scope}
     />
   <% end %>
+  
   <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
     <%!-- Overlay --%>
     <div
@@ -1601,7 +1602,9 @@
                                   name="hero-document"
                                   class="w-3 h-3 text-gray-400 mr-1 flex-shrink-0 group-hover:text-blue-600"
                                 />
-                                <span class="truncate font-medium underline decoration-blue-200 group-hover:decoration-blue-400">{project.dokumen_sokongan}</span>
+                                <span class="truncate font-medium underline decoration-blue-200 group-hover:decoration-blue-400">
+                                  {project.dokumen_sokongan}
+                                </span>
                               </.link>
                             <% else %>
                               <span class="text-xs text-gray-400">—</span>

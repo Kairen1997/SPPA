@@ -15,7 +15,7 @@ defmodule Sppa.Accounts.User do
     timestamps(type: :utc_datetime)
   end
 
-  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua unit", "ketua penolong pengarah"]
 
   @doc """
   A user changeset for registration and updates.

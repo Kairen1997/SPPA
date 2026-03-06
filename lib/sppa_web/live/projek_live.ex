@@ -52,10 +52,12 @@ defmodule SppaWeb.ProjekLive do
       # Muat aktiviti sentiasa (sumber sama seperti dashboard) supaya bilangan notifikasi
       # dipaparkan pada render awal dan konsisten merentas halaman.
       raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
+
       activities =
         Enum.map(raw_activities, fn a ->
           Map.put(a, :action_label, ActivityLogs.action_label(a.action))
         end)
+
       notifications_count = length(activities)
 
       {:ok,
