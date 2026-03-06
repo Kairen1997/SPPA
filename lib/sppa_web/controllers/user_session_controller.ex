@@ -63,7 +63,7 @@ defmodule SppaWeb.UserSessionController do
     UserAuth.disconnect_sessions(expired_tokens)
 
     conn
-    |> put_session(:user_return_to, ~p"/users/settings")
+    |> put_session(:user_return_to, ~p"/dashboard")
     |> create(params, "Password updated successfully!")
   end
 

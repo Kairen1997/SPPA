@@ -22,6 +22,7 @@ defmodule SppaWeb.JadualProjekLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:show_settings_modal, false)
         |> assign(:current_path, "/jadual-projek")
 
       # Sentiasa muat projek dari DB (sama bila connected atau tidak) supaya data tidak hilang selepas refresh
@@ -336,6 +337,14 @@ defmodule SppaWeb.JadualProjekLive do
     {:noreply, assign(socket, :profile_menu_open, false)}
   end
 
+  @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
+  end
+
   # Project CRUD Events
   @impl true
   def handle_event("open_new_project_modal", _params, socket) do
@@ -563,6 +572,11 @@ defmodule SppaWeb.JadualProjekLive do
     else
       {:noreply, socket}
     end
+  end
+
+  @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
   end
 
   # Helper function to parse date

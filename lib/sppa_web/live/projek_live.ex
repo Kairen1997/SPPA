@@ -26,6 +26,7 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:show_settings_modal, false)
         |> assign(:page, 1)
         |> assign(:per_page, 10)
         |> assign(:search_term, "")
@@ -115,6 +116,14 @@ defmodule SppaWeb.ProjekLive do
   end
 
   @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
+  end
+
+  @impl true
   def handle_event("change_page", %{"page" => page}, socket) do
     page = String.to_integer(page)
 
@@ -177,6 +186,11 @@ defmodule SppaWeb.ProjekLive do
      |> assign(:filtered_projects, socket.assigns.all_projects)
      |> assign(:total_pages, total_pages)
      |> assign(:total_count, length(socket.assigns.all_projects))}
+  end
+
+  @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
   end
 
   # Senarai Sistem: hanya papar projek yang ditugaskan kepada pengguna semasa.

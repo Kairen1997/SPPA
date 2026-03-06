@@ -134,6 +134,7 @@ defmodule SppaWeb.SoalSelidikLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:show_settings_modal, false)
         |> assign(:current_path, "/soal-selidik")
         |> assign(:soal_selidik_id, soal_selidik_id)
         |> assign(:project, project)
@@ -214,6 +215,14 @@ defmodule SppaWeb.SoalSelidikLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
@@ -1422,6 +1431,11 @@ defmodule SppaWeb.SoalSelidikLive do
            |> Phoenix.LiveView.put_flash(:error, error_message)}
       end
     end
+  end
+
+  @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
   end
 
   # Ensure value is a map (for to_form compatibility)
