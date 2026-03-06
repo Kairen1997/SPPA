@@ -232,32 +232,38 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:maklumbalas_show_create_modal, false)
          |> assign(:maklumbalas_show_edit_modal, false)
          |> assign(:maklumbalas_editing, nil)
-         |> assign(:maklumbalas_form, to_form(%{}, as: :maklumbalas))
-         |> assign(:current_tab, "Soal Selidik")
-         |> assign(:activities, activities)
-         |> assign(:notifications_count, notifications_count)
-         |> allow_upload(:kes_file,
-           accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
-           max_entries: 1,
-           max_file_size: 10_000_000
-         )
-         |> allow_upload(:kes_edit_file,
-           accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
-           max_entries: 1,
-           max_file_size: 10_000_000
-         )
-         |> allow_upload(:penyerahan_manual,
-           accept: ~w(.pdf .doc .docx),
-           max_entries: 1,
-           max_file_size: 10_000_000,
-           chunk_size: 64_000
-         )
-         |> allow_upload(:penyerahan_surat,
-           accept: ~w(.pdf .doc .docx),
-           max_entries: 1,
-           max_file_size: 10_000_000,
-           chunk_size: 64_000
-         )}
+        |> assign(:maklumbalas_form, to_form(%{}, as: :maklumbalas))
+        |> assign(:current_tab, "Soal Selidik")
+        |> assign(:activities, activities)
+        |> assign(:notifications_count, notifications_count)
+        |> allow_upload(:kes_file,
+          accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
+          max_entries: 1,
+          max_file_size: 10_000_000
+        )
+        |> allow_upload(:kes_edit_file,
+          accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
+          max_entries: 1,
+          max_file_size: 10_000_000
+        )
+        |> allow_upload(:penyerahan_manual,
+          accept: ~w(.pdf .doc .docx),
+          max_entries: 1,
+          max_file_size: 10_000_000,
+          chunk_size: 64_000
+        )
+        |> allow_upload(:penyerahan_surat,
+          accept: ~w(.pdf .doc .docx),
+          max_entries: 1,
+          max_file_size: 10_000_000,
+          chunk_size: 64_000
+        )
+        |> allow_upload(:uat_file,
+          accept: ~w(.pdf .doc .docx),
+          max_entries: 1,
+          max_file_size: 10_000_000,
+          chunk_size: 64_000
+        )}
       else
         socket =
           socket
@@ -828,9 +834,36 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   def handle_event("create_uat_ujian", %{"ujian" => ujian_params}, socket) do
     project_id = socket.assigns.project.id
 
+    dokumen_ujian_path =
+      consume_uploaded_entries(socket, :uat_file, fn %{path: path}, entry ->
+        filename = kes_upload_filename(project_id, entry)
+        dest_dir = Path.join(File.cwd!(), "priv/static/uploads/uat_ujian")
+        File.mkdir_p!(dest_dir)
+        dest = Path.join(dest_dir, filename)
+        File.cp!(path, dest)
+        # Simpan path relatif dari root static, supaya boleh dicapai melalui Plug.Static
+        {:ok, "uploads/uat_ujian/#{filename}"}
+      end)
+      |> List.first()
+
+    modul_name =
+      ujian_params["modul"]
+      |> to_string()
+      |> String.trim()
+
+    tajuk_default =
+      modul_name
+      |> then(fn name ->
+        if name == "" do
+          "Ujian Penerimaan Pengguna"
+        else
+          "Ujian Penerimaan Pengguna - #{name}"
+        end
+      end)
+
     attrs = %{
       project_id: project_id,
-      tajuk: ujian_params["tajuk"],
+      tajuk: tajuk_default,
       modul: ujian_params["modul"],
       tarikh_ujian: uat_parse_date(ujian_params["tarikh_ujian"], Date.utc_today()),
       tarikh_dijangka_siap:
@@ -838,7 +871,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       status: ujian_params["status"] || "Menunggu",
       penguji: uat_empty_to_nil(ujian_params["penguji"]),
       hasil: ujian_params["hasil"] || "Belum Selesai",
-      catatan: uat_empty_to_nil(ujian_params["catatan"])
+      catatan: uat_empty_to_nil(ujian_params["catatan"]),
+      dokumen_ujian: dokumen_ujian_path,
+      dokumen_ujian_nama:
+        if(dokumen_ujian_path, do: kes_display_filename(dokumen_ujian_path), else: nil)
     }
 
     case UjianPenerimaanPengguna.create_ujian(attrs) do
@@ -874,6 +910,19 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     editing_ujian = socket.assigns[:uat_editing_ujian]
 
     if editing_ujian do
+      project_id = socket.assigns.project.id
+
+      dokumen_ujian_path =
+        consume_uploaded_entries(socket, :uat_file, fn %{path: path}, entry ->
+          filename = kes_upload_filename(project_id, entry)
+          dest_dir = Path.join(File.cwd!(), "priv/static/uploads/uat_ujian")
+          File.mkdir_p!(dest_dir)
+          dest = Path.join(dest_dir, filename)
+          File.cp!(path, dest)
+          {:ok, "uploads/uat_ujian/#{filename}"}
+        end)
+        |> List.first()
+
       attrs = %{
         tajuk: ujian_params["tajuk"] || editing_ujian.tajuk,
         modul: ujian_params["modul"],
@@ -883,7 +932,19 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         status: ujian_params["status"],
         penguji: uat_empty_to_nil(ujian_params["penguji"]),
         hasil: ujian_params["hasil"],
-        catatan: uat_empty_to_nil(ujian_params["catatan"])
+        catatan: uat_empty_to_nil(ujian_params["catatan"]),
+        dokumen_ujian: dokumen_ujian_path || editing_ujian.dokumen_ujian,
+        dokumen_ujian_nama:
+          cond do
+            dokumen_ujian_path ->
+              kes_display_filename(dokumen_ujian_path)
+
+            editing_ujian.dokumen_ujian_nama ->
+              editing_ujian.dokumen_ujian_nama
+
+            true ->
+              editing_ujian.dokumen_ujian && kes_display_filename(editing_ujian.dokumen_ujian)
+          end
       }
 
       case UjianPenerimaanPengguna.update_ujian(editing_ujian, attrs) do
@@ -1310,6 +1371,35 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
         {:error, _} ->
           {:noreply, put_flash(socket, :error, "Gagal mengalih keluar lajur.")}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event(
+        "uat_update_kes_extra",
+        %{"kes_id" => kes_id_param, "column_id" => column_id, "value" => value},
+        socket
+      ) do
+    kes_id = parse_kes_id(kes_id_param)
+
+    if kes_id && column_id != "" do
+      case UjianPenerimaanPengguna.update_kes_extra_value(kes_id, column_id, value) do
+        {:ok, _} ->
+          ujian_id = socket.assigns[:uat_expanded_ujian_id]
+          if ujian_id do
+            ujian = UjianPenerimaanPengguna.get_ujian(ujian_id)
+            formatted = ujian && UjianPenerimaanPengguna.format_ujian_for_display(ujian)
+            {:noreply,
+             if(formatted, do: assign(socket, :uat_expanded_ujian, formatted), else: socket)}
+          else
+            {:noreply, socket}
+          end
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Gagal menyimpan catatan.")}
       end
     else
       {:noreply, socket}
@@ -3421,23 +3511,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     end
   end
 
-  # UAT tab: build ujian list (merge modules with ujian, ensure one per module)
-  defp build_uat_list(project_id, current_scope) when is_integer(project_id) do
-    modules = AnalisisDanRekabentuk.list_modules_for_project(project_id, current_scope)
-    ujian_list = UjianPenerimaanPengguna.list_ujian_for_project(project_id)
-    ujian_by_modul = Map.new(ujian_list, fn u -> {String.trim(u.modul || ""), u} end)
-
-    Enum.map(modules, fn mod ->
-      name = String.trim(mod.name || "")
-      ujian = Map.get(ujian_by_modul, name)
-
-      if ujian do
-        ujian
-      else
-        UjianPenerimaanPengguna.ensure_ujian_for_module(project_id, name)
-      end
-    end)
-    |> Enum.reject(&is_nil/1)
+  # UAT tab: build ujian list based purely on stored records per project.
+  # This ensures setiap rekod dalam jadual `ujian_penerimaan_pengguna` untuk projek tersebut dipaparkan.
+  defp build_uat_list(project_id, _current_scope) when is_integer(project_id) do
+    UjianPenerimaanPengguna.list_ujian_for_project(project_id)
   end
 
   defp uat_paginate(ujian, page, per_page) do
