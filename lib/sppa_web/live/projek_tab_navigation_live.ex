@@ -246,38 +246,38 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:maklumbalas_show_create_modal, false)
          |> assign(:maklumbalas_show_edit_modal, false)
          |> assign(:maklumbalas_editing, nil)
-        |> assign(:maklumbalas_form, to_form(%{}, as: :maklumbalas))
-        |> assign(:current_tab, "Soal Selidik")
-        |> assign(:activities, activities)
-        |> assign(:notifications_count, notifications_count)
-        |> allow_upload(:kes_file,
-          accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
-          max_entries: 1,
-          max_file_size: 10_000_000
-        )
-        |> allow_upload(:kes_edit_file,
-          accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
-          max_entries: 1,
-          max_file_size: 10_000_000
-        )
-        |> allow_upload(:penyerahan_manual,
-          accept: ~w(.pdf .doc .docx),
-          max_entries: 1,
-          max_file_size: 10_000_000,
-          chunk_size: 64_000
-        )
-        |> allow_upload(:penyerahan_surat,
-          accept: ~w(.pdf .doc .docx),
-          max_entries: 1,
-          max_file_size: 10_000_000,
-          chunk_size: 64_000
-        )
-        |> allow_upload(:uat_file,
-          accept: ~w(.pdf .doc .docx),
-          max_entries: 1,
-          max_file_size: 10_000_000,
-          chunk_size: 64_000
-        )}
+         |> assign(:maklumbalas_form, to_form(%{}, as: :maklumbalas))
+         |> assign(:current_tab, "Soal Selidik")
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)
+         |> allow_upload(:kes_file,
+           accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
+           max_entries: 1,
+           max_file_size: 10_000_000
+         )
+         |> allow_upload(:kes_edit_file,
+           accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg .gif),
+           max_entries: 1,
+           max_file_size: 10_000_000
+         )
+         |> allow_upload(:penyerahan_manual,
+           accept: ~w(.pdf .doc .docx),
+           max_entries: 1,
+           max_file_size: 10_000_000,
+           chunk_size: 64_000
+         )
+         |> allow_upload(:penyerahan_surat,
+           accept: ~w(.pdf .doc .docx),
+           max_entries: 1,
+           max_file_size: 10_000_000,
+           chunk_size: 64_000
+         )
+         |> allow_upload(:uat_file,
+           accept: ~w(.pdf .doc .docx),
+           max_entries: 1,
+           max_file_size: 10_000_000,
+           chunk_size: 64_000
+         )}
       else
         socket =
           socket
@@ -1403,9 +1403,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       case UjianPenerimaanPengguna.update_kes_extra_value(kes_id, column_id, value) do
         {:ok, _} ->
           ujian_id = socket.assigns[:uat_expanded_ujian_id]
+
           if ujian_id do
             ujian = UjianPenerimaanPengguna.get_ujian(ujian_id)
             formatted = ujian && UjianPenerimaanPengguna.format_ujian_for_display(ujian)
+
             {:noreply,
              if(formatted, do: assign(socket, :uat_expanded_ujian, formatted), else: socket)}
           else
@@ -2707,7 +2709,9 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         "responden" => "",
         "butiran" => ""
       }
+
     form = to_form(default, as: :maklumbalas)
+
     {:noreply,
      socket
      |> assign(:maklumbalas_show_create_modal, true)
@@ -2754,6 +2758,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     case Maklumbalas.create_maklumbalas(attrs) do
       {:ok, _maklumbalas} ->
         list = Maklumbalas.list_by_project_id(project_id)
+
         {:noreply,
          socket
          |> assign(:maklumbalas_list, list)
@@ -2763,6 +2768,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
       {:error, %Ecto.Changeset{} = changeset} ->
         form = to_form(changeset, as: :maklumbalas)
+
         {:noreply,
          socket
          |> assign(:maklumbalas_form, form)
@@ -2837,6 +2843,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       case Maklumbalas.update_maklumbalas(editing, attrs) do
         {:ok, _updated} ->
           list = Maklumbalas.list_by_project_id(project_id)
+
           {:noreply,
            socket
            |> assign(:maklumbalas_list, list)
@@ -2847,6 +2854,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
         {:error, %Ecto.Changeset{} = changeset} ->
           form = to_form(changeset, as: :maklumbalas)
+
           {:noreply,
            socket
            |> assign(:maklumbalas_form, form)

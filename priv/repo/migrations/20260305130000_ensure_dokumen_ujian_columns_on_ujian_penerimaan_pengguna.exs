@@ -9,4 +9,3 @@ defmodule Sppa.Repo.Migrations.EnsureDokumenUjianColumnsOnUjianPenerimaanPenggun
     """)
   end
 end
-

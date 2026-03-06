@@ -8,4 +8,3 @@ defmodule Sppa.Repo.Migrations.AddDokumenUjianToUjianPenerimaanPengguna do
     end
   end
 end
-

@@ -9,8 +9,8 @@
       phx-click="close_sidebar"
     >
     </div>
-     <%!-- Sidebar --%>
-    <% dashboard_path =
+    
+    <%!-- Sidebar --%> <% dashboard_path =
       if @current_scope && @current_scope.user &&
            @current_scope.user.role == "pengurus projek" do
         ~p"/dashboard-pp"
