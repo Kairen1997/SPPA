@@ -178,6 +178,7 @@ defmodule Sppa.Projects do
   @doc """
   Formats project data for display in senarai projek.
   Data diutamakan dari projek dalaman; jika kosong, guna data dari approved_project (DB approved projects).
+  Bilangan dokumen diambil daripada database penugasan (approved_projects) sahaja: 1 jika ada kertas_kerja_path, 0 jika tidak.
   """
   def format_project_for_display(project) do
     ap = project.approved_project
@@ -195,18 +196,20 @@ defmodule Sppa.Projects do
       pembangun_sistem: coalesce_pembangun(project.developer, ap && ap.pembangun_sistem),
       developer_id: project.developer_id,
       project_manager_id: project.project_manager_id,
-      dokumen_sokongan:
-        cond do
-          ap &&
-            Map.has_key?(ap, :kertas_kerja_path) &&
-            ap.kertas_kerja_path &&
-              ap.kertas_kerja_path != "" ->
-            1
-
-          true ->
-            project.dokumen_sokongan || 0
-        end
+      # Data dokumen daripada penugasan (approved_projects) sahaja
+      dokumen_sokongan: dokumen_count_from_penugasan(ap)
     }
+  end
+
+  # Bilangan dokumen dari database penugasan (approved_projects): 1 jika ada kertas_kerja, 0 jika tidak.
+  defp dokumen_count_from_penugasan(nil), do: 0
+
+  defp dokumen_count_from_penugasan(ap) do
+    if ap.kertas_kerja_path && ap.kertas_kerja_path != "" do
+      1
+    else
+      0
+    end
   end
 
   defp coalesce(a, _b) when is_binary(a) and a != "", do: a

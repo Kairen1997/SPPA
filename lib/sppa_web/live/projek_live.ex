@@ -1,6 +1,7 @@
 defmodule SppaWeb.ProjekLive do
   use SppaWeb, :live_view
 
+  alias Sppa.ActivityLogs
   alias Sppa.Projects
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
@@ -48,13 +49,13 @@ defmodule SppaWeb.ProjekLive do
       {paginated_projects, total_pages} =
         paginate_projects(filtered_projects, socket.assigns.page, socket.assigns.per_page)
 
+      # Muat aktiviti sentiasa (sumber sama seperti dashboard) supaya bilangan notifikasi
+      # dipaparkan pada render awal dan konsisten merentas halaman.
+      raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
       activities =
-        if connected?(socket) do
-          Projects.list_recent_activities(socket.assigns.current_scope, 10)
-        else
-          []
-        end
-
+        Enum.map(raw_activities, fn a ->
+          Map.put(a, :action_label, ActivityLogs.action_label(a.action))
+        end)
       notifications_count = length(activities)
 
       {:ok,

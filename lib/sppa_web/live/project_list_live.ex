@@ -1,6 +1,7 @@
 defmodule SppaWeb.ProjectListLive do
   use SppaWeb, :live_view
 
+  alias Sppa.ActivityLogs
   alias Sppa.Projects
   alias Sppa.ApprovedProjects
   alias Sppa.Accounts
@@ -25,8 +26,6 @@ defmodule SppaWeb.ProjectListLive do
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
         |> assign(:show_settings_modal, false)
-        |> assign(:notifications_count, 0)
-        |> assign(:activities, [])
         |> assign(:status_filter, "")
         |> assign(:phase_filter, "")
         |> assign(:search_query, "")
@@ -34,6 +33,14 @@ defmodule SppaWeb.ProjectListLive do
         |> assign(:per_page, 10)
         |> assign(:show_modal, false)
         |> assign(:form, to_form(%{}, as: :project))
+
+      # Muat aktiviti untuk notifikasi header (sama seperti dashboard)
+      raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
+      activities =
+        Enum.map(raw_activities, fn a ->
+          Map.put(a, :action_label, ActivityLogs.action_label(a.action))
+        end)
+      notifications_count = length(activities)
 
       # Always load projects and users so the page is populated immediately,
       # even before the LiveView JS socket connects.
@@ -45,7 +52,9 @@ defmodule SppaWeb.ProjectListLive do
        socket
        |> assign(:projects, projects)
        |> assign(:total_pages, total_pages)
-       |> assign(:users, users)}
+       |> assign(:users, users)
+       |> assign(:activities, activities)
+       |> assign(:notifications_count, notifications_count)}
     else
       socket =
         socket

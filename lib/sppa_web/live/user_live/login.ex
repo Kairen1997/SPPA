@@ -28,7 +28,7 @@ defmodule SppaWeb.UserLive.Login do
             </div>
              <%!-- System Title --%>
             <div class="text-center mb-8">
-              <h2 class="text-lg font-semibold text-black leading-relaxed">
+              <h2 class="text-2xl font-semibold text-black leading-relaxed">
                 Sistem Pengurusan Pembangunan Aplikasi
               </h2>
             </div>
@@ -45,7 +45,7 @@ defmodule SppaWeb.UserLive.Login do
               <div class="flex items-center gap-4">
                 <label
                   for="user_no_kp"
-                  class="text-black font-medium w-28 text-sm"
+                  class="text-black font-medium w-28 text-base"
                 >
                   No K/P
                 </label>
@@ -54,7 +54,7 @@ defmodule SppaWeb.UserLive.Login do
                     field={@form[:no_kp]}
                     type="text"
                     placeholder="Masukkan No K/P"
-                    class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                    class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                   />
                 </div>
               </div>
@@ -62,7 +62,7 @@ defmodule SppaWeb.UserLive.Login do
               <div class="flex items-center gap-4">
                 <label
                   for="user_password"
-                  class="text-black font-medium w-28 text-sm"
+                  class="text-black font-medium w-28 text-base"
                 >
                   Kata Laluan
                 </label>
@@ -71,7 +71,7 @@ defmodule SppaWeb.UserLive.Login do
                     field={@form[:password]}
                     type="password"
                     placeholder="Masukkan Kata Laluan"
-                    class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                    class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                   />
                 </div>
               </div>
