@@ -166,6 +166,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:sidebar_open, false)
          |> assign(:notifications_open, false)
          |> assign(:profile_menu_open, false)
+         |> assign(:show_settings_modal, false)
          |> assign(:project, project)
          |> assign(:project_modules, project_modules)
          |> assign(:developer_tasks, developer_tasks)
@@ -528,6 +529,14 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
@@ -3069,6 +3078,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     else
       {:noreply, put_flash(socket, :error, "Penempatan tidak ditemui.")}
     end
+  end
+
+  @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
   end
 
   defp parse_date_param(nil), do: nil

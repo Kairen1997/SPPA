@@ -18,6 +18,7 @@ defmodule SppaWeb.Components.HeaderActions do
   attr :activities, :list, default: [], doc: "List of activities for notifications"
   attr :profile_menu_open, :boolean, default: false, doc: "Whether profile dropdown menu is open"
   attr :current_scope, :any, default: nil, doc: "The current user scope"
+  attr :settings_as_modal, :boolean, default: true, doc: "When true, Tetapan opens a modal instead of navigating; set false to use link"
 
   def header_actions(assigns) do
     ~H"""
@@ -158,14 +159,25 @@ defmodule SppaWeb.Components.HeaderActions do
           </div>
            <%!-- Menu Items --%>
           <div class="py-1 bg-white">
-            <%!-- Settings Link --%>
-            <.link
-              navigate={~p"/users/settings"}
-              class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-150"
-              phx-click="close_profile_menu"
-            >
-              <.icon name="hero-cog-6-tooth" class="w-4 h-4 text-gray-500" /> <span>Tetapan</span>
-            </.link> <%!-- Divider --%>
+            <%!-- Settings Link or Modal Trigger --%>
+            <%= if @settings_as_modal do %>
+              <button
+                type="button"
+                phx-click="open_settings_modal"
+                class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left text-gray-700 hover:bg-blue-50 transition-colors duration-150"
+              >
+                <.icon name="hero-cog-6-tooth" class="w-4 h-4 text-gray-500" /> <span>Tetapan</span>
+              </button>
+            <% else %>
+              <.link
+                navigate={~p"/users/settings"}
+                class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-150"
+                phx-click="close_profile_menu"
+              >
+                <.icon name="hero-cog-6-tooth" class="w-4 h-4 text-gray-500" /> <span>Tetapan</span>
+              </.link>
+            <% end %>
+            <%!-- Divider --%>
             <div class="my-1 border-t border-gray-100"></div>
              <%!-- Logout Button --%>
             <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline w-full">

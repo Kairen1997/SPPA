@@ -20,6 +20,7 @@ defmodule SppaWeb.DashboardPPLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:show_settings_modal, false)
 
       if connected?(socket) do
         # Subscribe to approved projects updates for live updates
@@ -74,6 +75,11 @@ defmodule SppaWeb.DashboardPPLive do
   end
 
   @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
+  end
+
+  @impl true
   def handle_info(_message, socket) do
     {:noreply, socket}
   end
@@ -112,6 +118,14 @@ defmodule SppaWeb.DashboardPPLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
   end
 
   # Helper function to get all team members (developers and project managers) with their roles
@@ -223,6 +237,13 @@ defmodule SppaWeb.DashboardPPLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+      <%= if @show_settings_modal do %>
+        <.live_component
+          module={SppaWeb.Components.SettingsModalLive}
+          id="settings-modal"
+          current_scope={@current_scope}
+        />
+      <% end %>
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div
@@ -255,9 +276,9 @@ defmodule SppaWeb.DashboardPPLive do
                 <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
               </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-            
+
             <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
-            
+
             <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <.header_actions
                 notifications_open={@notifications_open}
@@ -273,7 +294,7 @@ defmodule SppaWeb.DashboardPPLive do
             <div class="max-w-7xl mx-auto">
               <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard Pengurus Projek</h1>
-                
+
                 <p class="text-gray-600">Gambaran keseluruhan projek dan aktiviti terkini</p>
               </div>
                <%!-- Summary Cards --%>
@@ -283,9 +304,9 @@ defmodule SppaWeb.DashboardPPLive do
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-folder-open" class="w-8 h-8 text-yellow-800 opacity-80" />
                   </div>
-                  
+
                   <div class="text-4xl font-bold text-gray-900 mb-1">{@stats[:jumlah] || 0}</div>
-                  
+
                   <div class="text-sm font-medium text-gray-800">Jumlah</div>
                 </div>
                  <%!-- Jumlah Projek Berdaftar --%>
@@ -293,11 +314,11 @@ defmodule SppaWeb.DashboardPPLive do
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-check-circle" class="w-8 h-8 text-white opacity-90" />
                   </div>
-                  
+
                   <div class="text-4xl font-bold text-white mb-1">
                     {@stats[:jumlah_projek_berdaftar] || 0}
                   </div>
-                  
+
                   <div class="text-sm font-medium text-blue-50">Jumlah Projek Berdaftar</div>
                 </div>
                  <%!-- Jumlah Projek Perlu Didaftar --%>
@@ -305,11 +326,11 @@ defmodule SppaWeb.DashboardPPLive do
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-exclamation-triangle" class="w-8 h-8 text-white opacity-90" />
                   </div>
-                  
+
                   <div class="text-4xl font-bold text-white mb-1">
                     {@stats[:jumlah_projek_perlu_didaftar] || 0}
                   </div>
-                  
+
                   <div class="text-sm font-medium text-green-50">Jumlah Projek Perlu Didaftar</div>
                 </div>
               </div>
@@ -323,7 +344,7 @@ defmodule SppaWeb.DashboardPPLive do
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="overflow-x-auto">
                   <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -331,21 +352,21 @@ defmodule SppaWeb.DashboardPPLive do
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Nama Projek
                         </th>
-                        
+
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Pembangun / Pengurus Projek
                         </th>
-                        
+
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Status Terkini
                         </th>
-                        
+
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Tarikh Akhir Kemaskini
                         </th>
                       </tr>
                     </thead>
-                    
+
                     <tbody class="bg-white divide-y divide-gray-200">
                       <%= if Enum.empty?(@activities) do %>
                         <tr>
@@ -364,11 +385,11 @@ defmodule SppaWeb.DashboardPPLive do
                                 <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
                                   <.icon name="hero-folder" class="w-5 h-5 text-white" />
                                 </div>
-                                
+
                                 <div class="text-sm font-medium text-gray-900">{activity.nama}</div>
                               </div>
                             </td>
-                            
+
                             <td class="px-6 py-4">
                               <div class="text-sm text-gray-600">
                                 <%= case get_team_members(activity) do %>
@@ -407,13 +428,13 @@ defmodule SppaWeb.DashboardPPLive do
                                 <% end %>
                               </div>
                             </td>
-                            
+
                             <td class="px-6 py-4 whitespace-nowrap">
                               <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 {activity.status}
                               </span>
                             </td>
-                            
+
                             <td class="px-6 py-4 whitespace-nowrap">
                               <div class="flex items-center text-sm text-gray-600">
                                 <.icon name="hero-calendar" class="w-4 h-4 text-gray-400 mr-2" />

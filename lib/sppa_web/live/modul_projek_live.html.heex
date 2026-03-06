@@ -1,4 +1,11 @@
 <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+  <%= if @show_settings_modal do %>
+    <.live_component
+      module={SppaWeb.Components.SettingsModalLive}
+      id="settings-modal"
+      current_scope={@current_scope}
+    />
+  <% end %>
   <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
     <%!-- Overlay --%>
     <div
@@ -35,12 +42,14 @@
         <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
         
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          <.link
-            navigate={~p"/users/settings"}
+          <button
+            type="button"
+            phx-click="open_settings_modal"
             class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200"
+            aria-label="Tetapan"
           >
             <.icon name="hero-user-circle" class="w-5 h-5 sm:w-6 sm:h-6" />
-          </.link>
+          </button>
           <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
             <button
               type="submit"

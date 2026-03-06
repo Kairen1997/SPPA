@@ -23,6 +23,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:show_settings_modal, false)
         |> assign(:current_path, "/analisis-dan-rekabentuk")
         |> assign(:document_id, "JPKN-BPA-01/B2")
         |> assign(:form, to_form(%{}, as: :analisis_dan_rekabentuk))
@@ -198,6 +199,14 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
@@ -777,6 +786,11 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
       {:ok, updated_socket} -> {:noreply, updated_socket}
       {:error, updated_socket} -> {:noreply, updated_socket}
     end
+  end
+
+  @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
   end
 
   @impl true
