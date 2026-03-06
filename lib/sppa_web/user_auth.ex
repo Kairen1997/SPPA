@@ -273,7 +273,12 @@ defmodule SppaWeb.UserAuth do
   def on_mount(:require_dashboard_role, _params, session, socket) do
     socket = mount_current_scope(socket, session)
 
-    allowed_roles = ["pembangun sistem", "pengurus projek", "ketua unit", "ketua penolong pengarah"]
+    allowed_roles = [
+      "pembangun sistem",
+      "pengurus projek",
+      "ketua unit",
+      "ketua penolong pengarah"
+    ]
 
     cond do
       !socket.assigns.current_scope || !socket.assigns.current_scope.user ->

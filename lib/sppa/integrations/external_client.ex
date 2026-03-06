@@ -9,7 +9,16 @@ defmodule Sppa.Integrations.ExternalClient do
   end
 
   # Keys the external API might use to wrap the list of requests (try in order)
-  @response_list_keys ["data", "requests", "permohonan", "results", "items", "applications", "records", "list"]
+  @response_list_keys [
+    "data",
+    "requests",
+    "permohonan",
+    "results",
+    "items",
+    "applications",
+    "records",
+    "list"
+  ]
 
   # Public API used by the worker
   def fetch_documents do
@@ -92,6 +101,7 @@ defmodule Sppa.Integrations.ExternalClient do
   end
 
   defp normalize_body_to_list(body) when is_list(body), do: {:ok, body}
+
   defp normalize_body_to_list(body) when is_map(body) do
     keys = Map.keys(body)
     Logger.info("External API response top-level keys: #{inspect(keys)}")

@@ -169,10 +169,17 @@ defmodule SppaWeb.PenempatanLive do
   defp get_project_ids_for_scope(current_scope) do
     projects =
       case current_scope.user.role do
-        "ketua penolong pengarah" -> Projects.list_all_projects()
-        role when role in ["pengurus projek", "ketua unit"] -> Projects.list_projects_for_pengurus_projek(current_scope)
-        "pembangun sistem" -> Projects.list_projects_for_pembangun_sistem(current_scope)
-        _ -> Projects.list_projects(current_scope)
+        "ketua penolong pengarah" ->
+          Projects.list_all_projects()
+
+        role when role in ["pengurus projek", "ketua unit"] ->
+          Projects.list_projects_for_pengurus_projek(current_scope)
+
+        "pembangun sistem" ->
+          Projects.list_projects_for_pembangun_sistem(current_scope)
+
+        _ ->
+          Projects.list_projects(current_scope)
       end
 
     projects

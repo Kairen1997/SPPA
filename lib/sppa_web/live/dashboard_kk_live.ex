@@ -99,6 +99,4 @@ defmodule SppaWeb.DashboardKKLive do
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
   end
-
 end
-

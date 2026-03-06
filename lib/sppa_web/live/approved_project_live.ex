@@ -58,6 +58,7 @@ defmodule SppaWeb.ApprovedProjectLive do
 
             if not has_access do
               list_path = ~p"/senarai-projek-diluluskan"
+
               {:ok,
                socket
                |> put_flash(:error, "Anda tidak mempunyai kebenaran untuk mengakses halaman ini.")
@@ -84,7 +85,11 @@ defmodule SppaWeb.ApprovedProjectLive do
           end
 
         :error ->
-          list_path = if user_role == "ketua unit", do: ~p"/penyerahan-projek", else: ~p"/senarai-projek-diluluskan"
+          list_path =
+            if user_role == "ketua unit",
+              do: ~p"/penyerahan-projek",
+              else: ~p"/senarai-projek-diluluskan"
+
           {:ok,
            socket
            |> put_flash(:error, "ID projek diluluskan tidak sah.")
@@ -108,7 +113,13 @@ defmodule SppaWeb.ApprovedProjectLive do
      |> push_navigate(to: ~p"/users/log-in")}
   end
 
-  defp load_approved_project_data(socket, approved_project, selected_project_managers, user_role, current_scope) do
+  defp load_approved_project_data(
+         socket,
+         approved_project,
+         selected_project_managers,
+         user_role,
+         current_scope
+       ) do
     all_users = Accounts.list_users()
     all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
 
@@ -140,7 +151,7 @@ defmodule SppaWeb.ApprovedProjectLive do
      |> assign(
        :can_assign_devs,
        user_role == "pengurus projek" &&
-         (current_scope.user.no_kp in selected_project_managers)
+         current_scope.user.no_kp in selected_project_managers
      )
      |> assign(
        :form_pembangun,
@@ -317,7 +328,11 @@ defmodule SppaWeb.ApprovedProjectLive do
   def handle_event("add_pengurus_projek", %{"project_manager_id" => pm_id_str}, socket) do
     unless socket.assigns.current_scope.user.role == "ketua unit" do
       {:noreply,
-       put_flash(socket, :error, "Hanya ketua unit boleh menetapkan pembangun sistem dan pengurus projek.")}
+       put_flash(
+         socket,
+         :error,
+         "Hanya ketua unit boleh menetapkan pembangun sistem dan pengurus projek."
+       )}
     else
       do_add_pengurus_projek(pm_id_str, socket)
     end
@@ -327,7 +342,11 @@ defmodule SppaWeb.ApprovedProjectLive do
   def handle_event("remove_pengurus_projek", %{"no_kp" => no_kp}, socket) do
     unless socket.assigns.current_scope.user.role == "ketua unit" do
       {:noreply,
-       put_flash(socket, :error, "Hanya ketua unit boleh menetapkan pembangun sistem dan pengurus projek.")}
+       put_flash(
+         socket,
+         :error,
+         "Hanya ketua unit boleh menetapkan pembangun sistem dan pengurus projek."
+       )}
     else
       do_remove_pengurus_projek(no_kp, socket)
     end
@@ -406,12 +425,14 @@ defmodule SppaWeb.ApprovedProjectLive do
               # Ensure there's an internal project linked to this approved project
               # This is necessary for the project to appear in pembangun sistem's project list
               # Reload the approved_project to ensure we have the latest data from database
-              reloaded_approved_project = ApprovedProjects.get_approved_project!(updated_project.id)
+              reloaded_approved_project =
+                ApprovedProjects.get_approved_project!(updated_project.id)
 
               # Create or get the internal project - this ensures the project exists and is linked
               case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
                 {:ok, _project} ->
                   :ok
+
                 {:error, changeset} ->
                   require Logger
                   Logger.error("Failed to ensure internal project: #{inspect(changeset.errors)}")
@@ -477,11 +498,13 @@ defmodule SppaWeb.ApprovedProjectLive do
               # Ensure there's an internal project linked to this approved project
               # This is necessary for the project to appear in project lists
               # Reload the approved_project to ensure we have the latest data
-              reloaded_approved_project = ApprovedProjects.get_approved_project!(updated_project.id)
+              reloaded_approved_project =
+                ApprovedProjects.get_approved_project!(updated_project.id)
 
               case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
                 {:ok, _project} ->
                   :ok
+
                 {:error, changeset} ->
                   require Logger
                   Logger.error("Failed to ensure internal project: #{inspect(changeset.errors)}")
@@ -610,6 +633,7 @@ defmodule SppaWeb.ApprovedProjectLive do
           current_scope={@current_scope}
         />
       <% end %>
+      
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div
@@ -640,7 +664,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                 <.icon name="hero-bars-3" class="w-6 h-6" />
               </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
+            
             <.header_actions
               notifications_open={@notifications_open}
               notifications_count={@notifications_count}
@@ -653,7 +677,7 @@ defmodule SppaWeb.ApprovedProjectLive do
           <main class="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
             <div class="text-center text-gray-600 space-y-2">
               <p class="text-base font-medium">Memuatkan maklumat projek yang diluluskan...</p>
-
+              
               <p class="text-xs text-gray-400">Sila tunggu sebentar.</p>
             </div>
           </main>
@@ -673,6 +697,7 @@ defmodule SppaWeb.ApprovedProjectLive do
           current_scope={@current_scope}
         />
       <% end %>
+      
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div
@@ -703,7 +728,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                 <.icon name="hero-bars-3" class="w-6 h-6" />
               </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
+            
             <.header_actions
               notifications_open={@notifications_open}
               notifications_count={@notifications_count}
@@ -721,12 +746,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                   <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
                     Butiran Projek Diluluskan
                   </h1>
-
+                  
                   <p class="text-base text-gray-600">
                     Maklumat penuh permohonan projek yang telah diluluskan
                   </p>
                 </div>
-
+                
                 <div class="flex items-center gap-3">
                   <%= if @approved_project.project do %>
                     <.link
@@ -736,7 +761,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                       <.icon name="hero-cog-6-tooth" class="w-4 h-4" /> <span>Modul Projek</span>
                     </.link>
                   <% end %>
-
+                  
                   <.link
                     navigate={@back_list_path}
                     class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
@@ -758,16 +783,16 @@ defmodule SppaWeb.ApprovedProjectLive do
                           Projek Diluluskan
                         </span>
                       </div>
-
+                      
                       <h2 class="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
                         {@approved_project.nama_projek}
                       </h2>
-
+                      
                       <p class="text-base text-gray-600 font-medium">
                         {@approved_project.jabatan || "Tiada maklumat jabatan"}
                       </p>
                     </div>
-
+                    
                     <div class="flex flex-col items-start md:items-end gap-3 md:pl-6 md:border-l md:border-gray-300">
                       <div class="space-y-1.5 text-sm">
                         <div class="flex items-center gap-2 text-gray-600">
@@ -777,7 +802,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                             {format_date(@approved_project.tarikh_mula)}
                           </span>
                         </div>
-
+                        
                         <div class="flex items-center gap-2 text-gray-600">
                           <.icon name="hero-clock" class="w-4 h-4 text-gray-400" />
                           <span class="font-medium">Tarikh Jangkaan Siap:</span>
@@ -802,14 +827,14 @@ defmodule SppaWeb.ApprovedProjectLive do
                       Maklumat Pemohon
                     </h2>
                   </div>
-
+                  
                   <div class="p-6">
                     <dl class="space-y-4">
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                           Emel
                         </dt>
-
+                        
                         <dd class="text-base text-gray-900 break-all">
                           <%= if @approved_project.pengurus_email do %>
                             {@approved_project.pengurus_email}
@@ -818,12 +843,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           <% end %>
                         </dd>
                       </div>
-
+                      
                       <div>
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                           Kementerian / Jabatan
                         </dt>
-
+                        
                         <dd class="text-base text-gray-900">
                           <%= if @approved_project.jabatan do %>
                             {@approved_project.jabatan}
@@ -845,24 +870,24 @@ defmodule SppaWeb.ApprovedProjectLive do
                       Maklumat Sistem
                     </h2>
                   </div>
-
+                  
                   <div class="p-6">
                     <dl class="space-y-4">
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                           Nama Sistem
                         </dt>
-
+                        
                         <dd class="text-base font-semibold text-gray-900">
                           {@approved_project.nama_projek}
                         </dd>
                       </div>
-
+                      
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Pembangun Sistem
                         </dt>
-
+                        
                         <dd>
                           <div class="space-y-3">
                             <%= if @can_assign_devs do %>
@@ -880,7 +905,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                                     required
                                   >
                                     <option value="">Pilih Pembangun</option>
-
+                                    
                                     <%= for developer <- @available_developers do %>
                                       <option value={developer.id}>
                                         {developer.name || developer.email || developer.no_kp ||
@@ -901,31 +926,38 @@ defmodule SppaWeb.ApprovedProjectLive do
                                 </p>
                               <% end %>
                             <% end %>
-                             <%!-- Display selected pembangun sistem (with remove button only for ketua unit) --%>
+                            
+                            <%!-- Display selected pembangun sistem (with remove button only for ketua unit) --%>
                             <%= if @selected_developers != [] do %>
                               <div class="mt-4 space-y-2">
                                 <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                                   Pembangun Dipilih:
                                 </p>
-
+                                
                                 <div class="flex flex-wrap gap-2">
                                   <%= for no_kp <- @selected_developers do %>
                                     <% developer =
-                                      Enum.find(@developers, fn dev -> dev.no_kp == no_kp end) %>
-                                    <% display_name =
+                                      Enum.find(@developers, fn dev -> dev.no_kp == no_kp end) %> <% display_name =
                                       cond do
                                         developer && developer.name && developer.name != "" ->
                                           developer.name
+
                                         developer && developer.email && developer.email != "" ->
                                           developer.email
+
                                         developer ->
                                           developer.no_kp || "Unknown"
+
                                         true ->
                                           # Fallback: try to find by no_kp from all users if not in developers list
                                           all_users = Accounts.list_users()
-                                          found_user = Enum.find(all_users, fn u -> u.no_kp == no_kp end)
+
+                                          found_user =
+                                            Enum.find(all_users, fn u -> u.no_kp == no_kp end)
+
                                           if found_user do
-                                            found_user.name || found_user.email || found_user.no_kp || "Unknown"
+                                            found_user.name || found_user.email || found_user.no_kp ||
+                                              "Unknown"
                                           else
                                             no_kp
                                           end
@@ -955,12 +987,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </div>
                         </dd>
                       </div>
-
+                      
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Pengurus Projek
                         </dt>
-
+                        
                         <dd>
                           <div class="space-y-3">
                             <%= if @can_assign_pm do %>
@@ -978,7 +1010,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                                     required
                                   >
                                     <option value="">Pilih Pengurus Projek</option>
-
+                                    
                                     <%= for project_manager <- @available_project_managers do %>
                                       <option value={project_manager.id}>
                                         {project_manager.name || project_manager.email ||
@@ -999,31 +1031,40 @@ defmodule SppaWeb.ApprovedProjectLive do
                                 </p>
                               <% end %>
                             <% end %>
-                             <%!-- Display selected pengurus projek (with remove button only for ketua unit) --%>
+                            
+                            <%!-- Display selected pengurus projek (with remove button only for ketua unit) --%>
                             <%= if @selected_project_managers != [] do %>
                               <div class="mt-4 space-y-2">
                                 <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                                   Pengurus Projek Dipilih:
                                 </p>
-
+                                
                                 <div class="flex flex-wrap gap-2">
                                   <%= for no_kp <- @selected_project_managers do %>
                                     <% project_manager =
-                                      Enum.find(@project_managers, fn pm -> pm.no_kp == no_kp end) %>
-                                    <% display_name =
+                                      Enum.find(@project_managers, fn pm -> pm.no_kp == no_kp end) %> <% display_name =
                                       cond do
-                                        project_manager && project_manager.name && project_manager.name != "" ->
+                                        project_manager && project_manager.name &&
+                                            project_manager.name != "" ->
                                           project_manager.name
-                                        project_manager && project_manager.email && project_manager.email != "" ->
+
+                                        project_manager && project_manager.email &&
+                                            project_manager.email != "" ->
                                           project_manager.email
+
                                         project_manager ->
                                           project_manager.no_kp || "Unknown"
+
                                         true ->
                                           # Fallback: try to find by no_kp from all users if not in project_managers list
                                           all_users = Accounts.list_users()
-                                          found_user = Enum.find(all_users, fn u -> u.no_kp == no_kp end)
+
+                                          found_user =
+                                            Enum.find(all_users, fn u -> u.no_kp == no_kp end)
+
                                           if found_user do
-                                            found_user.name || found_user.email || found_user.no_kp || "Unknown"
+                                            found_user.name || found_user.email || found_user.no_kp ||
+                                              "Unknown"
                                           else
                                             no_kp
                                           end
@@ -1053,12 +1094,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </div>
                         </dd>
                       </div>
-
+                      
                       <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Tarikh Mula
                         </dt>
-
+                        
                         <dd>
                           <div class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                             <%= if @approved_project.tarikh_mula do %>
@@ -1067,18 +1108,18 @@ defmodule SppaWeb.ApprovedProjectLive do
                               <span class="text-gray-400 italic">Tiada tarikh mula</span>
                             <% end %>
                           </div>
-
+                          
                           <p class="mt-1 text-xs text-gray-500 italic">
                             Tarikh mula ditetapkan dari sistem luaran dan tidak boleh diubah
                           </p>
                         </dd>
                       </div>
-
+                      
                       <div>
                         <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           Tarikh Jangkaan Siap
                         </dt>
-
+                        
                         <dd>
                           <%= if @approved_project.project do %>
                             <%!-- Editable if project has been registered --%>
@@ -1107,7 +1148,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                                 <span class="text-gray-400 italic">Tiada tarikh jangkaan siap</span>
                               <% end %>
                             </div>
-
+                            
                             <p class="mt-1 text-xs text-gray-500 italic">
                               Sila daftar projek terlebih dahulu untuk menetapkan tarikh jangkaan siap
                             </p>
@@ -1128,7 +1169,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                     Maklumat Terperinci
                   </h2>
                 </div>
-
+                
                 <div class="p-6 md:p-8">
                   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="space-y-6">
@@ -1137,7 +1178,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                           <.icon name="hero-information-circle" class="w-4 h-4 text-blue-600" />
                           Latar Belakang Sistem
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.latar_belakang do %>
@@ -1148,12 +1189,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
-
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-flag" class="w-4 h-4 text-green-600" /> Objektif Sistem
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.objektif do %>
@@ -1164,12 +1205,12 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
-
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-globe-alt" class="w-4 h-4 text-purple-600" /> Skop Sistem
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.skop do %>
@@ -1181,14 +1222,14 @@ defmodule SppaWeb.ApprovedProjectLive do
                         </div>
                       </div>
                     </div>
-
+                    
                     <div class="space-y-6">
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-user-group" class="w-4 h-4 text-orange-600" />
                           Kumpulan Pengguna
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.kumpulan_pengguna do %>
@@ -1199,13 +1240,13 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
-
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-exclamation-triangle" class="w-4 h-4 text-amber-600" />
                           Implikasi
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                             <%= if @approved_project.implikasi do %>
@@ -1216,13 +1257,13 @@ defmodule SppaWeb.ApprovedProjectLive do
                           </p>
                         </div>
                       </div>
-
+                      
                       <div>
                         <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <.icon name="hero-document-arrow-down" class="w-4 h-4 text-red-600" />
                           Dokumen Kertas Kerja
                         </h3>
-
+                        
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                           <%= if @approved_project.kertas_kerja_path do %>
                             <% full_url = ensure_full_url(@approved_project.kertas_kerja_path) %>
@@ -1243,7 +1284,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                               </div>
                             <% else %>
                               <p class="text-sm text-gray-400 italic">URL dokumen tidak sah</p>
-
+                              
                               <p class="text-xs text-gray-500 mt-1">
                                 Nilai tersimpan: {@approved_project.kertas_kerja_path}
                               </p>

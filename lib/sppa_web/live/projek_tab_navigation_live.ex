@@ -3509,18 +3509,18 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   defp get_project_by_id(project_id, current_scope, user_role) do
     current_user_id = current_scope.user.id
 
-      # Fetch project from database based on user role
-      project =
-        case user_role do
-          "ketua penolong pengarah" ->
-            # Directors/Admins can view any project
-            Projects.get_project_by_id(project_id)
+    # Fetch project from database based on user role
+    project =
+      case user_role do
+        "ketua penolong pengarah" ->
+          # Directors/Admins can view any project
+          Projects.get_project_by_id(project_id)
 
-          "ketua unit" ->
-            # Ketua unit can view any project (they control assignments)
-            Projects.get_project_by_id(project_id)
+        "ketua unit" ->
+          # Ketua unit can view any project (they control assignments)
+          Projects.get_project_by_id(project_id)
 
-          "pembangun sistem" ->
+        "pembangun sistem" ->
           # Developers can only view projects where their no_kp is in the approved_project's pembangun_sistem
           case Projects.get_project_by_id(project_id) do
             nil ->

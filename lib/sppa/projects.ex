@@ -157,63 +157,84 @@ defmodule Sppa.Projects do
       []
     else
       # 1. Get ALL approved_projects where user's no_kp is in pembangun_sistem
-    #    This is the PRIMARY source - shows all assigned approved_projects
-    #    (both from projects table and approved_projects table)
-    approved_projects_with_access =
-      ApprovedProjects.list_approved_projects()
-      |> Enum.filter(fn approved_project ->
-        # Check if pembangun_sistem is set and contains user's no_kp
-        if approved_project.pembangun_sistem && approved_project.pembangun_sistem != "" do
-          selected_no_kps = parse_pembangun_sistem(approved_project.pembangun_sistem)
-          user_no_kp in selected_no_kps
-        else
-          false
-        end
-      end)
-      |> Enum.map(fn approved_project ->
-        # Ensure a project exists for this approved_project (create if needed)
-        case ensure_internal_project_for_approved(approved_project) do
-          {:ok, project} ->
-            # Update project with data from approved_project if project fields are empty
-            # This ensures projects created earlier get populated with approved_project data
-            update_attrs = %{}
-            update_attrs = if project.nama == "" or is_nil(project.nama), do: Map.put(update_attrs, :nama, approved_project.nama_projek || ""), else: update_attrs
-            update_attrs = if project.jabatan == "" or is_nil(project.jabatan), do: Map.put(update_attrs, :jabatan, approved_project.jabatan || ""), else: update_attrs
-            update_attrs = if is_nil(project.status), do: Map.put(update_attrs, :status, "Dalam Pembangunan"), else: update_attrs
-            update_attrs = if is_nil(project.fasa), do: Map.put(update_attrs, :fasa, "Analisis dan Rekabentuk"), else: update_attrs
-            update_attrs = if is_nil(project.tarikh_mula), do: Map.put(update_attrs, :tarikh_mula, approved_project.tarikh_mula), else: update_attrs
+      #    This is the PRIMARY source - shows all assigned approved_projects
+      #    (both from projects table and approved_projects table)
+      approved_projects_with_access =
+        ApprovedProjects.list_approved_projects()
+        |> Enum.filter(fn approved_project ->
+          # Check if pembangun_sistem is set and contains user's no_kp
+          if approved_project.pembangun_sistem && approved_project.pembangun_sistem != "" do
+            selected_no_kps = parse_pembangun_sistem(approved_project.pembangun_sistem)
+            user_no_kp in selected_no_kps
+          else
+            false
+          end
+        end)
+        |> Enum.map(fn approved_project ->
+          # Ensure a project exists for this approved_project (create if needed)
+          case ensure_internal_project_for_approved(approved_project) do
+            {:ok, project} ->
+              # Update project with data from approved_project if project fields are empty
+              # This ensures projects created earlier get populated with approved_project data
+              update_attrs = %{}
 
-            updated_project =
-              if map_size(update_attrs) > 0 do
-                case update_project(project, update_attrs) do
-                  {:ok, p} -> p
-                  _ -> project
+              update_attrs =
+                if project.nama == "" or is_nil(project.nama),
+                  do: Map.put(update_attrs, :nama, approved_project.nama_projek || ""),
+                  else: update_attrs
+
+              update_attrs =
+                if project.jabatan == "" or is_nil(project.jabatan),
+                  do: Map.put(update_attrs, :jabatan, approved_project.jabatan || ""),
+                  else: update_attrs
+
+              update_attrs =
+                if is_nil(project.status),
+                  do: Map.put(update_attrs, :status, "Dalam Pembangunan"),
+                  else: update_attrs
+
+              update_attrs =
+                if is_nil(project.fasa),
+                  do: Map.put(update_attrs, :fasa, "Analisis dan Rekabentuk"),
+                  else: update_attrs
+
+              update_attrs =
+                if is_nil(project.tarikh_mula),
+                  do: Map.put(update_attrs, :tarikh_mula, approved_project.tarikh_mula),
+                  else: update_attrs
+
+              updated_project =
+                if map_size(update_attrs) > 0 do
+                  case update_project(project, update_attrs) do
+                    {:ok, p} -> p
+                    _ -> project
+                  end
+                else
+                  project
                 end
-              else
-                project
-              end
 
-            # Reload with approved_project preloaded to ensure fresh data
-            Repo.preload(updated_project, :approved_project)
-          {:error, _} ->
-            # If creation fails, create a virtual project struct for display
-            %Project{
-              id: nil,
-              nama: approved_project.nama_projek || "",
-              jabatan: approved_project.jabatan || "",
-              status: "Dalam Pembangunan",
-              fasa: "Analisis dan Rekabentuk",
-              tarikh_mula: approved_project.tarikh_mula,
-              tarikh_siap: approved_project.tarikh_jangkaan_siap,
-              approved_project_id: approved_project.id,
-              approved_project: approved_project,
-              developer_id: nil,
-              project_manager_id: nil,
-              user_id: nil,
-              last_updated: approved_project.updated_at || approved_project.inserted_at
-            }
-        end
-      end)
+              # Reload with approved_project preloaded to ensure fresh data
+              Repo.preload(updated_project, :approved_project)
+
+            {:error, _} ->
+              # If creation fails, create a virtual project struct for display
+              %Project{
+                id: nil,
+                nama: approved_project.nama_projek || "",
+                jabatan: approved_project.jabatan || "",
+                status: "Dalam Pembangunan",
+                fasa: "Analisis dan Rekabentuk",
+                tarikh_mula: approved_project.tarikh_mula,
+                tarikh_siap: approved_project.tarikh_jangkaan_siap,
+                approved_project_id: approved_project.id,
+                approved_project: approved_project,
+                developer_id: nil,
+                project_manager_id: nil,
+                user_id: nil,
+                last_updated: approved_project.updated_at || approved_project.inserted_at
+              }
+          end
+        end)
 
       # 2. Get projects from projects table that don't have approved_project
       #    (fallback for projects without approved_project - user's own internal projects)
@@ -681,11 +702,31 @@ defmodule Sppa.Projects do
     if existing do
       # Update existing project with data from approved_project if fields are null/empty
       update_attrs = %{}
-      update_attrs = if existing.nama == "" or is_nil(existing.nama), do: Map.put(update_attrs, :nama, approved_project.nama_projek || ""), else: update_attrs
-      update_attrs = if existing.jabatan == "" or is_nil(existing.jabatan), do: Map.put(update_attrs, :jabatan, approved_project.jabatan || ""), else: update_attrs
-      update_attrs = if is_nil(existing.status), do: Map.put(update_attrs, :status, "Dalam Pembangunan"), else: update_attrs
-      update_attrs = if is_nil(existing.fasa), do: Map.put(update_attrs, :fasa, "Analisis dan Rekabentuk"), else: update_attrs
-      update_attrs = if is_nil(existing.tarikh_mula), do: Map.put(update_attrs, :tarikh_mula, approved_project.tarikh_mula), else: update_attrs
+
+      update_attrs =
+        if existing.nama == "" or is_nil(existing.nama),
+          do: Map.put(update_attrs, :nama, approved_project.nama_projek || ""),
+          else: update_attrs
+
+      update_attrs =
+        if existing.jabatan == "" or is_nil(existing.jabatan),
+          do: Map.put(update_attrs, :jabatan, approved_project.jabatan || ""),
+          else: update_attrs
+
+      update_attrs =
+        if is_nil(existing.status),
+          do: Map.put(update_attrs, :status, "Dalam Pembangunan"),
+          else: update_attrs
+
+      update_attrs =
+        if is_nil(existing.fasa),
+          do: Map.put(update_attrs, :fasa, "Analisis dan Rekabentuk"),
+          else: update_attrs
+
+      update_attrs =
+        if is_nil(existing.tarikh_mula),
+          do: Map.put(update_attrs, :tarikh_mula, approved_project.tarikh_mula),
+          else: update_attrs
 
       updated_project =
         if map_size(update_attrs) > 0 do
@@ -715,6 +756,7 @@ defmodule Sppa.Projects do
         {:ok, project} ->
           # Reload with approved_project preloaded to ensure association is available
           {:ok, Repo.preload(project, :approved_project)}
+
         error ->
           error
       end

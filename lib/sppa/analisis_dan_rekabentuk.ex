@@ -164,7 +164,8 @@ defmodule Sppa.AnalisisDanRekabentuk do
         # Get all projects the pengurus projek has access to
         # Use the SHARED function from Projects context to ensure EXACT same logic
         # as the pengurus projek project list page
-        approved_projects_with_projects = Projects.list_approved_projects_for_pengurus_projek(current_scope)
+        approved_projects_with_projects =
+          Projects.list_approved_projects_for_pengurus_projek(current_scope)
 
         # Extract the internal projects from approved_projects
         accessible_projects =
@@ -771,5 +772,4 @@ defmodule Sppa.AnalisisDanRekabentuk do
       }
     ]
   end
-
 end

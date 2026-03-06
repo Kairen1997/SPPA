@@ -9,9 +9,20 @@ defmodule Sppa.ApprovedProjects do
 
   # Fields to update when external sync finds an existing record (do not overwrite id, inserted_at, or project_id)
   @sync_upsert_replace_fields [
-    :nama_projek, :jabatan, :pengurus_email, :tarikh_mula, :tarikh_jangkaan_siap,
-    :pembangun_sistem, :pengurus_projek, :latar_belakang, :objektif, :skop,
-    :kumpulan_pengguna, :implikasi, :kertas_kerja_path, :external_updated_at
+    :nama_projek,
+    :jabatan,
+    :pengurus_email,
+    :tarikh_mula,
+    :tarikh_jangkaan_siap,
+    :pembangun_sistem,
+    :pengurus_projek,
+    :latar_belakang,
+    :objektif,
+    :skop,
+    :kumpulan_pengguna,
+    :implikasi,
+    :kertas_kerja_path,
+    :external_updated_at
   ]
 
   @doc """

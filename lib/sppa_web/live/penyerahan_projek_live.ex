@@ -113,6 +113,7 @@ defmodule SppaWeb.PenyerahanProjekLive do
     socket = assign(socket, :page, page)
     projects = list_projects(socket)
     total_pages = socket.assigns.total_pages
+
     {:noreply,
      socket
      |> assign(:projects, projects)
@@ -127,12 +128,14 @@ defmodule SppaWeb.PenyerahanProjekLive do
       case Oban.insert(job) do
         {:ok, _inserted_job} ->
           Process.send_after(self(), :reload_projects, 3000)
+
           {:noreply,
            socket
            |> put_flash(:info, "Sinkronisasi data telah dimulakan. Sila tunggu sebentar...")}
 
         {:error, reason} ->
           Logger.error("Failed to insert sync job: #{inspect(reason)}")
+
           {:noreply,
            socket
            |> put_flash(:error, "Ralat semasa memulakan sinkronisasi: #{inspect(reason)}")}
@@ -140,6 +143,7 @@ defmodule SppaWeb.PenyerahanProjekLive do
     rescue
       e ->
         Logger.error("Exception during sync: #{inspect(e)}")
+
         {:noreply,
          socket
          |> put_flash(:error, "Ralat: #{Exception.message(e)}. Pastikan Oban sedang berjalan.")}
@@ -150,6 +154,7 @@ defmodule SppaWeb.PenyerahanProjekLive do
   def handle_info(:reload_projects, socket) do
     projects = list_projects(socket)
     total_pages = calculate_total_pages(socket)
+
     {:noreply,
      socket
      |> assign(:projects, projects)
@@ -221,10 +226,29 @@ defmodule SppaWeb.PenyerahanProjekLive do
         [1, 2, 3, 4, 5, :ellipsis, total_pages - 1, total_pages]
 
       current_page >= total_pages - 3 ->
-        [1, 2, :ellipsis, total_pages - 4, total_pages - 3, total_pages - 2, total_pages - 1, total_pages]
+        [
+          1,
+          2,
+          :ellipsis,
+          total_pages - 4,
+          total_pages - 3,
+          total_pages - 2,
+          total_pages - 1,
+          total_pages
+        ]
 
       true ->
-        [1, 2, :ellipsis, current_page - 1, current_page, current_page + 1, :ellipsis, total_pages - 1, total_pages]
+        [
+          1,
+          2,
+          :ellipsis,
+          current_page - 1,
+          current_page,
+          current_page + 1,
+          :ellipsis,
+          total_pages - 1,
+          total_pages
+        ]
     end
   end
 end
