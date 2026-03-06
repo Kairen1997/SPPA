@@ -806,6 +806,7 @@
 
             <.form
               for={@form}
+              phx-change="validate_module"
               phx-submit="update_module"
               id="edit-module-form"
               class="space-y-6"
@@ -920,10 +921,20 @@
                             do: @form[:tarikh_mula].value,
                             else: ""
                         }
-                        phx-hook="OpenDatePicker"
-                        class="w-full pl-4 pr-9 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 bg-white"
+                        class={[
+                          "w-full pl-4 pr-9 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 bg-white",
+                          if(@form[:tarikh_mula] && @form[:tarikh_mula].errors != [],
+                            do: "border-red-300 focus:border-red-500 focus:ring-red-200",
+                            else: "border-gray-300"
+                          )
+                        ]}
                       />
                     </label>
+                    <%= if @form[:tarikh_mula] && @form[:tarikh_mula].errors != [] do %>
+                      <p class="mt-1 text-xs text-red-600">
+                        {Enum.at(@form[:tarikh_mula].errors, 0).message}
+                      </p>
+                    <% end %>
                   </div>
 
                   <div>
@@ -944,10 +955,20 @@
                             do: @form[:tarikh_jangka_siap].value,
                             else: ""
                         }
-                        phx-hook="OpenDatePicker"
-                        class="w-full pl-4 pr-9 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 bg-white"
+                        class={[
+                          "w-full pl-4 pr-9 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 bg-white",
+                          if(@form[:tarikh_jangka_siap] && @form[:tarikh_jangka_siap].errors != [],
+                            do: "border-red-300 focus:border-red-500 focus:ring-red-200",
+                            else: "border-gray-300"
+                          )
+                        ]}
                       />
                     </label>
+                    <%= if @form[:tarikh_jangka_siap] && @form[:tarikh_jangka_siap].errors != [] do %>
+                      <p class="mt-1 text-xs text-red-600">
+                        {Enum.at(@form[:tarikh_jangka_siap].errors, 0).message}
+                      </p>
+                    <% end %>
                   </div>
                 </div>
 

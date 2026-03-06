@@ -818,14 +818,18 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   defp get_project_by_id(project_id, current_scope, user_role) do
     current_user_id = current_scope.user.id
 
-    # Fetch project from database based on user role
-    project =
-      case user_role do
-        "ketua penolong pengarah" ->
-          # Directors/Admins can view any project
-          Projects.get_project_by_id(project_id)
+      # Fetch project from database based on user role
+      project =
+        case user_role do
+          "ketua penolong pengarah" ->
+            # Directors/Admins can view any project
+            Projects.get_project_by_id(project_id)
 
-        "pembangun sistem" ->
+          "ketua unit" ->
+            # Ketua unit can view any project (they control assignments)
+            Projects.get_project_by_id(project_id)
+
+          "pembangun sistem" ->
           # Developers can only view projects where their no_kp is in the approved_project's pembangun_sistem
           case Projects.get_project_by_id(project_id) do
             nil ->
@@ -837,10 +841,24 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           end
 
         "pengurus projek" ->
-          # Project managers can only view projects where they are assigned as project manager
+          # Project managers can view projects where they are assigned via:
+          # 1. approved_project.pengurus_projek (by no_kp), OR
+          # 2. approved_project.pembangun_sistem (since assigned PMs are auto-added), OR
+          # 3. project_manager_id (legacy/fallback)
           case Projects.get_project_by_id(project_id) do
-            nil -> nil
-            p -> if p.project_manager_id == current_user_id, do: p, else: nil
+            nil ->
+              nil
+
+            p ->
+              user_no_kp = current_scope.user.no_kp
+              # Check if they have PM access (via pengurus_projek assignment)
+              has_pm_access = Projects.has_pm_access_to_project?(p, current_user_id, user_no_kp)
+              # Also check if they're in pembangun_sistem list
+              has_dev_access = Projects.has_access_to_project?(p, user_no_kp)
+              # Fallback to project_manager_id check
+              has_legacy_access = p.project_manager_id == current_user_id
+
+              if has_pm_access || has_dev_access || has_legacy_access, do: p, else: nil
           end
 
         _ ->

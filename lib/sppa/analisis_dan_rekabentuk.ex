@@ -10,6 +10,7 @@ defmodule Sppa.AnalisisDanRekabentuk do
   alias Sppa.AnalisisDanRekabentuk.Function
   alias Sppa.AnalisisDanRekabentuk.SubFunction
   alias Sppa.ModulPengaturcaraan
+  alias Sppa.Projects
 
   @doc """
   Returns the list of analisis_dan_rekabentuk for a user scope.
@@ -147,75 +148,163 @@ defmodule Sppa.AnalisisDanRekabentuk do
   Returns modules (nama modul, versi, fungsi modul) from Analisis dan Rekabentuk
   for use on the Pembangunan (Pengaturcaraan) page.
 
-  Uses the user's most recent analisis_dan_rekabentuk document. Each module
-  includes the document version (versi). Fields not stored in Analisis dan
+  For pembangun sistem: Uses the user's most recent analisis_dan_rekabentuk document.
+  For pengurus projek: Returns modules from all projects they are assigned to
+  (either as pengurus_projek or pembangun_sistem in approved_project).
+
+  Each module includes the document version (versi). Fields not stored in Analisis dan
   Rekabentuk (priority, status, tarikh_mula, tarikh_jangka_siap, catatan) are
   set to defaults so the Pembangunan UI can display the list.
   """
   def list_modules_for_pembangunan(current_scope) do
-    analisis =
-      AnalisisDanRekabentuk
-      |> where([a], a.user_id == ^current_scope.user.id)
-      |> preload(modules: [functions: :sub_functions])
-      |> order_by([a], desc: a.inserted_at)
-      |> limit(1)
-      |> Repo.one()
+    user_role = current_scope.user.role
 
-    if analisis do
-      versi = analisis.versi || "1.0.0"
-      project_id = analisis.project_id
+    case user_role do
+      "pengurus projek" ->
+        # Get all projects the pengurus projek has access to
+        # Use the SHARED function from Projects context to ensure EXACT same logic
+        # as the pengurus projek project list page
+        approved_projects_with_projects = Projects.list_approved_projects_for_pengurus_projek(current_scope)
 
-      pengaturcaraan_by_module =
-        if project_id, do: ModulPengaturcaraan.list_by_project(project_id), else: %{}
-
-      analisis.modules
-      |> Enum.sort_by(& &1.number)
-      |> Enum.map(fn module ->
-        functions =
-          module.functions
-          |> Enum.map(fn function ->
-            sub_functions =
-              (function.sub_functions || [])
-              |> Enum.map(fn sub -> %{id: "sub_#{sub.id}", name: sub.name || ""} end)
-
-            %{
-              id: "func_#{function.id}",
-              name: function.name || "",
-              sub_functions: sub_functions
-            }
+        # Extract the internal projects from approved_projects
+        accessible_projects =
+          approved_projects_with_projects
+          |> Enum.map(fn approved_project ->
+            approved_project.project
           end)
+          |> Enum.filter(&(!is_nil(&1)))
+          |> Enum.uniq_by(& &1.id)
 
-        pengaturcaraan = Map.get(pengaturcaraan_by_module, module.id)
+        # Get modules from all accessible projects
+        accessible_projects
+        |> Enum.flat_map(fn project ->
+          if project.id do
+            analisis = get_analisis_dan_rekabentuk_by_project_for_display(project.id, nil)
 
-        base = %{
-          id: "module_#{module.id}",
-          number: module.number,
-          name: module.name || "",
-          version: versi,
-          priority: nil,
-          status: "Belum Mula",
-          tarikh_mula: nil,
-          tarikh_jangka_siap: nil,
-          catatan: nil,
-          functions: functions,
-          project_id: project_id
-        }
+            if analisis do
+              versi = analisis.versi || "1.0.0"
+              pengaturcaraan_by_module = ModulPengaturcaraan.list_by_project(project.id)
 
-        if pengaturcaraan do
-          %{
-            base
-            | priority: pengaturcaraan.keutamaan,
-              status: pengaturcaraan.status || "Belum Mula",
-              tarikh_mula: pengaturcaraan.tarikh_mula,
-              tarikh_jangka_siap: pengaturcaraan.tarikh_jangka_siap,
-              catatan: pengaturcaraan.catatan
-          }
+              analisis.modules
+              |> Enum.map(fn module ->
+                functions =
+                  module.functions
+                  |> Enum.map(fn function ->
+                    sub_functions =
+                      (function.sub_functions || [])
+                      |> Enum.map(fn sub -> %{id: "sub_#{sub.id}", name: sub.name || ""} end)
+
+                    %{
+                      id: "func_#{function.id}",
+                      name: function.name || "",
+                      sub_functions: sub_functions
+                    }
+                  end)
+
+                pengaturcaraan = Map.get(pengaturcaraan_by_module, module.id)
+
+                base = %{
+                  id: "module_#{module.id}",
+                  number: module.number,
+                  name: module.name || "",
+                  version: versi,
+                  priority: nil,
+                  status: "Belum Mula",
+                  tarikh_mula: nil,
+                  tarikh_jangka_siap: nil,
+                  catatan: nil,
+                  functions: functions,
+                  project_id: project.id
+                }
+
+                if pengaturcaraan do
+                  %{
+                    base
+                    | priority: pengaturcaraan.keutamaan,
+                      status: pengaturcaraan.status || "Belum Mula",
+                      tarikh_mula: pengaturcaraan.tarikh_mula,
+                      tarikh_jangka_siap: pengaturcaraan.tarikh_jangka_siap,
+                      catatan: pengaturcaraan.catatan
+                  }
+                else
+                  base
+                end
+              end)
+            else
+              []
+            end
+          else
+            []
+          end
+        end)
+        |> Enum.sort_by(&{&1.project_id || 0, &1.number || 0})
+
+      _ ->
+        # For pembangun sistem and other roles: use existing behavior
+        analisis =
+          AnalisisDanRekabentuk
+          |> where([a], a.user_id == ^current_scope.user.id)
+          |> preload(modules: [functions: :sub_functions])
+          |> order_by([a], desc: a.inserted_at)
+          |> limit(1)
+          |> Repo.one()
+
+        if analisis do
+          versi = analisis.versi || "1.0.0"
+          project_id = analisis.project_id
+
+          pengaturcaraan_by_module =
+            if project_id, do: ModulPengaturcaraan.list_by_project(project_id), else: %{}
+
+          analisis.modules
+          |> Enum.sort_by(& &1.number)
+          |> Enum.map(fn module ->
+            functions =
+              module.functions
+              |> Enum.map(fn function ->
+                sub_functions =
+                  (function.sub_functions || [])
+                  |> Enum.map(fn sub -> %{id: "sub_#{sub.id}", name: sub.name || ""} end)
+
+                %{
+                  id: "func_#{function.id}",
+                  name: function.name || "",
+                  sub_functions: sub_functions
+                }
+              end)
+
+            pengaturcaraan = Map.get(pengaturcaraan_by_module, module.id)
+
+            base = %{
+              id: "module_#{module.id}",
+              number: module.number,
+              name: module.name || "",
+              version: versi,
+              priority: nil,
+              status: "Belum Mula",
+              tarikh_mula: nil,
+              tarikh_jangka_siap: nil,
+              catatan: nil,
+              functions: functions,
+              project_id: project_id
+            }
+
+            if pengaturcaraan do
+              %{
+                base
+                | priority: pengaturcaraan.keutamaan,
+                  status: pengaturcaraan.status || "Belum Mula",
+                  tarikh_mula: pengaturcaraan.tarikh_mula,
+                  tarikh_jangka_siap: pengaturcaraan.tarikh_jangka_siap,
+                  catatan: pengaturcaraan.catatan
+              }
+            else
+              base
+            end
+          end)
         else
-          base
+          []
         end
-      end)
-    else
-      []
     end
   end
 
@@ -682,4 +771,5 @@ defmodule Sppa.AnalisisDanRekabentuk do
       }
     ]
   end
+
 end

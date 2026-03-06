@@ -40,7 +40,23 @@ defmodule SppaWeb.PelanModulLive do
                   else: nil
             end
 
-          {role, _} when role in ["pengurus projek", "ketua penolong pengarah"] ->
+          {"pengurus projek", %{id: user_id, no_kp: no_kp}} ->
+            # Pengurus projek must be assigned via approved_project.pengurus_projek
+            # or pembangun_sistem (since assigned PMs are auto-added)
+            case Projects.get_project_by_id(project_id) do
+              nil ->
+                nil
+
+              p ->
+                has_pm_access = Projects.has_pm_access_to_project?(p, user_id, no_kp)
+                has_dev_access = Projects.has_access_to_project?(p, no_kp)
+                # Fallback to project_manager_id check
+                has_legacy_access = p.project_manager_id == user_id
+
+                if has_pm_access || has_dev_access || has_legacy_access, do: p, else: nil
+            end
+
+          {"ketua penolong pengarah", _} ->
             Projects.get_project_by_id(project_id)
 
           _ ->

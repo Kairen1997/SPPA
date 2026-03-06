@@ -2,6 +2,7 @@ defmodule SppaWeb.ApprovedProjectLive do
   use SppaWeb, :live_view
 
   alias Sppa.ApprovedProjects
+  alias Sppa.Projects
   alias Sppa.Accounts
 
   @allowed_roles ["pengurus projek", "ketua penolong pengarah", "ketua unit"]
@@ -41,46 +42,45 @@ defmodule SppaWeb.ApprovedProjectLive do
           # so the page renders full information even before the LV socket connects.
           approved_project = ApprovedProjects.get_approved_project!(approved_id)
 
-          all_users = Accounts.list_users()
-          all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
-
-          all_project_managers =
-            Enum.filter(all_users, fn user -> user.role == "pengurus projek" end)
-
-          stored_names = parse_pembangun_sistem(approved_project.pembangun_sistem)
-          selected_developers = stored_names
-
+          # Parse pengurus projek and pembangun sistem lists
           stored_pm_names = parse_pengurus_projek(approved_project.pengurus_projek)
-          selected_project_managers = stored_pm_names
+          stored_dev_names = parse_pembangun_sistem(approved_project.pembangun_sistem)
 
-          available_developers =
-            all_developers
-            |> Enum.filter(fn dev -> dev.no_kp not in selected_developers end)
+          # For pengurus projek, verify they are assigned to this specific project
+          # They can be assigned either as pengurus_projek OR as pembangun_sistem
+          # (since assigned pengurus projek are automatically added to pembangun_sistem)
+          if user_role == "pengurus projek" do
+            user_no_kp = current_scope.user.no_kp
 
-          available_project_managers =
-            all_project_managers
-            |> Enum.filter(fn pm -> pm.no_kp not in selected_project_managers end)
+            # Check if user is in either pengurus_projek or pembangun_sistem list
+            has_access = user_no_kp in stored_pm_names || user_no_kp in stored_dev_names
 
-          {:ok,
-           socket
-           |> assign(:approved_project, approved_project)
-           |> assign(:developers, all_developers)
-           |> assign(:available_developers, available_developers)
-           |> assign(:selected_developers, selected_developers)
-           |> assign(:project_managers, all_project_managers)
-           |> assign(:available_project_managers, available_project_managers)
-           |> assign(:selected_project_managers, selected_project_managers)
-           # Pengurus projek can assign pembangun sistem only when they are
-           # already assigned as pengurus projek for this system.
-           |> assign(
-             :can_assign_devs,
-             user_role == "pengurus projek" &&
-               (current_scope.user.no_kp in selected_project_managers)
-           )
-           |> assign(
-             :form_pembangun,
-             to_form(%{"pembangun_sistem" => selected_developers}, as: :project)
-           )}
+            if not has_access do
+              list_path = ~p"/senarai-projek-diluluskan"
+              {:ok,
+               socket
+               |> put_flash(:error, "Anda tidak mempunyai kebenaran untuk mengakses halaman ini.")
+               |> push_navigate(to: list_path)}
+            else
+              # User is assigned, continue with normal flow
+              load_approved_project_data(
+                socket,
+                approved_project,
+                stored_pm_names,
+                user_role,
+                current_scope
+              )
+            end
+          else
+            # Not a pengurus projek, continue with normal flow
+            load_approved_project_data(
+              socket,
+              approved_project,
+              stored_pm_names,
+              user_role,
+              current_scope
+            )
+          end
 
         :error ->
           list_path = if user_role == "ketua unit", do: ~p"/penyerahan-projek", else: ~p"/senarai-projek-diluluskan"
@@ -107,13 +107,53 @@ defmodule SppaWeb.ApprovedProjectLive do
      |> push_navigate(to: ~p"/users/log-in")}
   end
 
+  defp load_approved_project_data(socket, approved_project, selected_project_managers, user_role, current_scope) do
+    all_users = Accounts.list_users()
+    all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
+
+    all_project_managers =
+      Enum.filter(all_users, fn user -> user.role == "pengurus projek" end)
+
+    stored_names = parse_pembangun_sistem(approved_project.pembangun_sistem)
+    selected_developers = stored_names
+
+    available_developers =
+      all_developers
+      |> Enum.filter(fn dev -> dev.no_kp not in selected_developers end)
+
+    available_project_managers =
+      all_project_managers
+      |> Enum.filter(fn pm -> pm.no_kp not in selected_project_managers end)
+
+    {:ok,
+     socket
+     |> assign(:approved_project, approved_project)
+     |> assign(:developers, all_developers)
+     |> assign(:available_developers, available_developers)
+     |> assign(:selected_developers, selected_developers)
+     |> assign(:project_managers, all_project_managers)
+     |> assign(:available_project_managers, available_project_managers)
+     |> assign(:selected_project_managers, selected_project_managers)
+     # Pengurus projek can assign pembangun sistem only when they are
+     # already assigned as pengurus projek for this system.
+     |> assign(
+       :can_assign_devs,
+       user_role == "pengurus projek" &&
+         (current_scope.user.no_kp in selected_project_managers)
+     )
+     |> assign(
+       :form_pembangun,
+       to_form(%{"pembangun_sistem" => selected_developers}, as: :project)
+     )}
+  end
+
   defp format_date(nil), do: "-"
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
 
   defp external_api_base_url do
     full_url =
       Application.get_env(:sppa, :system_permohonan_aplikasi, [])[:base_url] ||
-        "http://10.71.69.152:4000/api/requests?status=Diluluskan"
+        "http://10.71.70.76:4000/api/requests?status=Diluluskan"
 
     # Extract base URL (remove path and query string)
     case URI.parse(full_url) do
@@ -122,7 +162,7 @@ defmodule SppaWeb.ApprovedProjectLive do
         "#{scheme}://#{host}#{port_str}"
 
       _ ->
-        "http://10.71.67.142:4000"
+        "http://10.71.70.76:4000"
     end
   end
 
@@ -264,6 +304,78 @@ defmodule SppaWeb.ApprovedProjectLive do
     end
   end
 
+  @impl true
+  def handle_event("add_pengurus_projek", %{"project_manager_id" => pm_id_str}, socket) do
+    unless socket.assigns.current_scope.user.role == "ketua unit" do
+      {:noreply,
+       put_flash(socket, :error, "Hanya ketua unit boleh menetapkan pembangun sistem dan pengurus projek.")}
+    else
+      do_add_pengurus_projek(pm_id_str, socket)
+    end
+  end
+
+  @impl true
+  def handle_event("remove_pengurus_projek", %{"no_kp" => no_kp}, socket) do
+    unless socket.assigns.current_scope.user.role == "ketua unit" do
+      {:noreply,
+       put_flash(socket, :error, "Hanya ketua unit boleh menetapkan pembangun sistem dan pengurus projek.")}
+    else
+      do_remove_pengurus_projek(no_kp, socket)
+    end
+  end
+
+  @impl true
+  def handle_event("remove_pembangun_sistem", %{"no_kp" => no_kp}, socket) do
+    case {socket.assigns.current_scope.user.role, socket.assigns.can_assign_devs} do
+      {"pengurus projek", true} ->
+        do_remove_pembangun_sistem(no_kp, socket)
+
+      _ ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Hanya pengurus projek yang terlibat boleh menetapkan pembangun sistem."
+         )}
+    end
+  end
+
+  @impl true
+  def handle_event("update_tarikh_jangkaan_siap", %{"tarikh_jangkaan_siap" => date_str}, socket) do
+    # Only allow update if project has been registered (daftar projek)
+    if socket.assigns.approved_project.project do
+      date_value =
+        if date_str == "" or date_str == nil do
+          nil
+        else
+          case Date.from_iso8601(date_str) do
+            {:ok, date} -> date
+            {:error, _} -> nil
+          end
+        end
+
+      case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+             "tarikh_jangkaan_siap" => date_value
+           }) do
+        {:ok, updated_project} ->
+          {:noreply,
+           socket
+           |> assign(:approved_project, updated_project)
+           |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
+
+        {:error, _changeset} ->
+          {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
+      end
+    else
+      {:noreply,
+       socket
+       |> put_flash(
+         :error,
+         "Sila daftar projek terlebih dahulu sebelum menetapkan tarikh jangkaan siap."
+       )}
+    end
+  end
+
   defp do_add_pembangun_sistem(developer_id_str, socket) do
     case Integer.parse(developer_id_str) do
       {developer_id, _} ->
@@ -282,6 +394,21 @@ defmodule SppaWeb.ApprovedProjectLive do
                  "pembangun_sistem" => pembangun_sistem_str
                }) do
             {:ok, updated_project} ->
+              # Ensure there's an internal project linked to this approved project
+              # This is necessary for the project to appear in pembangun sistem's project list
+              # Reload the approved_project to ensure we have the latest data from database
+              reloaded_approved_project = ApprovedProjects.get_approved_project!(updated_project.id)
+
+              # Create or get the internal project - this ensures the project exists and is linked
+              case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
+                {:ok, _project} ->
+                  :ok
+                {:error, changeset} ->
+                  require Logger
+                  Logger.error("Failed to ensure internal project: #{inspect(changeset.errors)}")
+                  :error
+              end
+
               # Update available developers (exclude selected ones)
               available_developers =
                 socket.assigns.developers
@@ -289,7 +416,7 @@ defmodule SppaWeb.ApprovedProjectLive do
 
               {:noreply,
                socket
-               |> assign(:approved_project, updated_project)
+               |> assign(:approved_project, reloaded_approved_project)
                |> assign(:selected_developers, new_selected)
                |> assign(:available_developers, available_developers)
                |> put_flash(:info, "Pembangun sistem telah ditambah.")}
@@ -303,16 +430,6 @@ defmodule SppaWeb.ApprovedProjectLive do
 
       :error ->
         {:noreply, socket}
-    end
-  end
-
-  @impl true
-  def handle_event("add_pengurus_projek", %{"project_manager_id" => pm_id_str}, socket) do
-    unless socket.assigns.current_scope.user.role == "ketua unit" do
-      {:noreply,
-       put_flash(socket, :error, "Hanya ketua unit boleh menetapkan pembangun sistem dan pengurus projek.")}
-    else
-      do_add_pengurus_projek(pm_id_str, socket)
     end
   end
 
@@ -348,6 +465,20 @@ defmodule SppaWeb.ApprovedProjectLive do
                  "pembangun_sistem" => pembangun_sistem_str
                }) do
             {:ok, updated_project} ->
+              # Ensure there's an internal project linked to this approved project
+              # This is necessary for the project to appear in project lists
+              # Reload the approved_project to ensure we have the latest data
+              reloaded_approved_project = ApprovedProjects.get_approved_project!(updated_project.id)
+
+              case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
+                {:ok, _project} ->
+                  :ok
+                {:error, changeset} ->
+                  require Logger
+                  Logger.error("Failed to ensure internal project: #{inspect(changeset.errors)}")
+                  :error
+              end
+
               # Update available project managers (exclude selected ones)
               available_project_managers =
                 socket.assigns.project_managers
@@ -376,16 +507,6 @@ defmodule SppaWeb.ApprovedProjectLive do
 
       :error ->
         {:noreply, socket}
-    end
-  end
-
-  @impl true
-  def handle_event("remove_pengurus_projek", %{"no_kp" => no_kp}, socket) do
-    unless socket.assigns.current_scope.user.role == "ketua unit" do
-      {:noreply,
-       put_flash(socket, :error, "Hanya ketua unit boleh menetapkan pembangun sistem dan pengurus projek.")}
-    else
-      do_remove_pengurus_projek(no_kp, socket)
     end
   end
 
@@ -432,22 +553,6 @@ defmodule SppaWeb.ApprovedProjectLive do
     end
   end
 
-  @impl true
-  def handle_event("remove_pembangun_sistem", %{"no_kp" => no_kp}, socket) do
-    case {socket.assigns.current_scope.user.role, socket.assigns.can_assign_devs} do
-      {"pengurus projek", true} ->
-        do_remove_pembangun_sistem(no_kp, socket)
-
-      _ ->
-        {:noreply,
-         put_flash(
-           socket,
-           :error,
-           "Hanya pengurus projek yang terlibat boleh menetapkan pembangun sistem."
-         )}
-    end
-  end
-
   defp do_remove_pembangun_sistem(no_kp, socket) do
     # Remove from selected list
     new_selected = List.delete(socket.assigns.selected_developers, no_kp)
@@ -479,42 +584,6 @@ defmodule SppaWeb.ApprovedProjectLive do
   end
 
   # Note: update_tarikh_mula handler removed - tarikh_mula is read-only and comes from external link
-
-  @impl true
-  def handle_event("update_tarikh_jangkaan_siap", %{"tarikh_jangkaan_siap" => date_str}, socket) do
-    # Only allow update if project has been registered (daftar projek)
-    if socket.assigns.approved_project.project do
-      date_value =
-        if date_str == "" or date_str == nil do
-          nil
-        else
-          case Date.from_iso8601(date_str) do
-            {:ok, date} -> date
-            {:error, _} -> nil
-          end
-        end
-
-      case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-             "tarikh_jangkaan_siap" => date_value
-           }) do
-        {:ok, updated_project} ->
-          {:noreply,
-           socket
-           |> assign(:approved_project, updated_project)
-           |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
-
-        {:error, _changeset} ->
-          {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
-      end
-    else
-      {:noreply,
-       socket
-       |> put_flash(
-         :error,
-         "Sila daftar projek terlebih dahulu sebelum menetapkan tarikh jangkaan siap."
-       )}
-    end
-  end
 
   @impl true
   def render(%{approved_project: nil} = assigns) do
@@ -814,12 +883,25 @@ defmodule SppaWeb.ApprovedProjectLive do
                                 <div class="flex flex-wrap gap-2">
                                   <%= for no_kp <- @selected_developers do %>
                                     <% developer =
-                                      Enum.find(@developers, fn dev -> dev.no_kp == no_kp end) %> <% display_name =
-                                      if developer,
-                                        do:
-                                          developer.name || developer.email || developer.no_kp ||
-                                            "Unknown",
-                                        else: no_kp %>
+                                      Enum.find(@developers, fn dev -> dev.no_kp == no_kp end) %>
+                                    <% display_name =
+                                      cond do
+                                        developer && developer.name && developer.name != "" ->
+                                          developer.name
+                                        developer && developer.email && developer.email != "" ->
+                                          developer.email
+                                        developer ->
+                                          developer.no_kp || "Unknown"
+                                        true ->
+                                          # Fallback: try to find by no_kp from all users if not in developers list
+                                          all_users = Accounts.list_users()
+                                          found_user = Enum.find(all_users, fn u -> u.no_kp == no_kp end)
+                                          if found_user do
+                                            found_user.name || found_user.email || found_user.no_kp || "Unknown"
+                                          else
+                                            no_kp
+                                          end
+                                      end %>
                                     <div class="inline-flex items-center gap-2 rounded-full bg-indigo-100 px-3 py-1.5 text-sm text-indigo-800">
                                       <span>{display_name}</span>
                                       <%= if @can_assign_devs do %>
@@ -899,12 +981,25 @@ defmodule SppaWeb.ApprovedProjectLive do
                                 <div class="flex flex-wrap gap-2">
                                   <%= for no_kp <- @selected_project_managers do %>
                                     <% project_manager =
-                                      Enum.find(@project_managers, fn pm -> pm.no_kp == no_kp end) %> <% display_name =
-                                      if project_manager,
-                                        do:
-                                          project_manager.name || project_manager.email ||
-                                            project_manager.no_kp || "Unknown",
-                                        else: no_kp %>
+                                      Enum.find(@project_managers, fn pm -> pm.no_kp == no_kp end) %>
+                                    <% display_name =
+                                      cond do
+                                        project_manager && project_manager.name && project_manager.name != "" ->
+                                          project_manager.name
+                                        project_manager && project_manager.email && project_manager.email != "" ->
+                                          project_manager.email
+                                        project_manager ->
+                                          project_manager.no_kp || "Unknown"
+                                        true ->
+                                          # Fallback: try to find by no_kp from all users if not in project_managers list
+                                          all_users = Accounts.list_users()
+                                          found_user = Enum.find(all_users, fn u -> u.no_kp == no_kp end)
+                                          if found_user do
+                                            found_user.name || found_user.email || found_user.no_kp || "Unknown"
+                                          else
+                                            no_kp
+                                          end
+                                      end %>
                                     <div class="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1.5 text-sm text-purple-800">
                                       <span>{display_name}</span>
                                       <%= if @can_assign_pm do %>
