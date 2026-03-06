@@ -1,10 +1,13 @@
 defmodule SppaWeb.ProjectListLive do
   use SppaWeb, :live_view
 
+  alias Sppa.ActivityLogs
   alias Sppa.Projects
   alias Sppa.Accounts
+  alias Sppa.ApprovedProjects
   alias Sppa.Repo
   import Ecto.Query
+  require Logger
 
   @impl true
   def mount(_params, _session, socket) do
@@ -21,8 +24,7 @@ defmodule SppaWeb.ProjectListLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
-        |> assign(:notifications_count, 0)
-        |> assign(:activities, [])
+        |> assign(:show_settings_modal, false)
         |> assign(:status_filter, "")
         |> assign(:phase_filter, "")
         |> assign(:search_query, "")
@@ -30,6 +32,14 @@ defmodule SppaWeb.ProjectListLive do
         |> assign(:per_page, 10)
         |> assign(:show_modal, false)
         |> assign(:form, to_form(%{}, as: :project))
+
+      # Muat aktiviti untuk notifikasi header (sama seperti dashboard)
+      raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
+      activities =
+        Enum.map(raw_activities, fn a ->
+          Map.put(a, :action_label, ActivityLogs.action_label(a.action))
+        end)
+      notifications_count = length(activities)
 
       # Always load projects and users so the page is populated immediately,
       # even before the LiveView JS socket connects.
@@ -41,7 +51,9 @@ defmodule SppaWeb.ProjectListLive do
        socket
        |> assign(:projects, projects)
        |> assign(:total_pages, total_pages)
-       |> assign(:users, users)}
+       |> assign(:users, users)
+       |> assign(:activities, activities)
+       |> assign(:notifications_count, notifications_count)}
     else
       socket =
         socket
@@ -83,6 +95,14 @@ defmodule SppaWeb.ProjectListLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
@@ -137,6 +157,92 @@ defmodule SppaWeb.ProjectListLive do
      |> put_flash(:info, "Projek akan disimpan selepas penambahan medan pangkalan data")}
   end
 
+  @impl true
+  def handle_event("sync_external_data", _params, socket) do
+    # Check if Oban is running
+    try do
+      # Manually trigger the sync worker
+      job = Sppa.Workers.ExternalSyncWorker.new(%{})
+
+      case Oban.insert(job) do
+        {:ok, inserted_job} ->
+          Logger.info("Sync job inserted: #{inspect(inserted_job.id)}")
+          # Reload projects after a short delay
+          Process.send_after(self(), :reload_projects, 3000)
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Sinkronisasi data telah dimulakan. Sila tunggu sebentar...")}
+
+        {:error, reason} ->
+          Logger.error("Failed to insert sync job: #{inspect(reason)}")
+
+          {:noreply,
+           socket
+           |> put_flash(:error, "Ralat semasa memulakan sinkronisasi: #{inspect(reason)}")}
+      end
+    rescue
+      e ->
+        Logger.error("Exception during sync: #{inspect(e)}")
+
+        {:noreply,
+         socket
+         |> put_flash(:error, "Ralat: #{Exception.message(e)}. Pastikan Oban sedang berjalan.")}
+    end
+  end
+
+  @impl true
+  def handle_event("create_project", %{"id" => approved_project_id}, socket) do
+    approved_project_id = String.to_integer(approved_project_id)
+
+    case ApprovedProjects.get_approved_project!(approved_project_id) do
+      approved_project ->
+        # Create project from approved project data
+        project_attrs = %{
+          "nama" => approved_project.nama_projek || "",
+          "jabatan" => approved_project.jabatan || "",
+          "status" => "Dalam Pembangunan",
+          "fasa" => "Analisis dan Rekabentuk",
+          "tarikh_mula" => approved_project.tarikh_mula,
+          "approved_project_id" => approved_project.id
+        }
+
+        case Projects.create_project(project_attrs, socket.assigns.current_scope) do
+          {:ok, _project} ->
+            # Reload projects
+            projects = list_projects(socket)
+            total_pages = calculate_total_pages(socket)
+
+            {:noreply,
+             socket
+             |> assign(:projects, projects)
+             |> assign(:total_pages, total_pages)
+             |> put_flash(:info, "Projek berjaya didaftarkan")}
+
+          {:error, _changeset} ->
+            {:noreply,
+             socket
+             |> put_flash(:error, "Terdapat ralat semasa mendaftarkan projek")}
+        end
+    end
+  end
+
+  @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
+  end
+
+  @impl true
+  def handle_info(:reload_projects, socket) do
+    projects = list_projects(socket)
+    total_pages = calculate_total_pages(socket)
+
+    {:noreply,
+     socket
+     |> assign(:projects, projects)
+     |> assign(:total_pages, total_pages)
+     |> put_flash(:info, "Data telah dikemaskini")}
+  end
   defp list_projects(socket) do
     all_projects = list_all_approved_projects_for_current_pm(socket)
 
@@ -236,6 +342,13 @@ defmodule SppaWeb.ProjectListLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+      <%= if @show_settings_modal do %>
+        <.live_component
+          module={SppaWeb.Components.SettingsModalLive}
+          id="settings-modal"
+          current_scope={@current_scope}
+        />
+      <% end %>
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div

@@ -16,6 +16,7 @@ defmodule Sppa.UjianPenerimaanPengguna.KesUjian do
     field :tarikh_ujian, :date
     field :disahkan_oleh, :string
     field :tarikh_pengesahan, :date
+    field :extra_values, :string, default: "{}"
 
     belongs_to :ujian_penerimaan_pengguna, Sppa.UjianPenerimaanPengguna.UjianPenerimaanPengguna
 

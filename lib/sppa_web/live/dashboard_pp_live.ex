@@ -20,6 +20,7 @@ defmodule SppaWeb.DashboardPPLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:show_settings_modal, false)
 
       if connected?(socket) do
         # Subscribe to approved projects updates for live updates
@@ -74,6 +75,11 @@ defmodule SppaWeb.DashboardPPLive do
   end
 
   @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
+  end
+
+  @impl true
   def handle_info(_message, socket) do
     {:noreply, socket}
   end
@@ -112,6 +118,14 @@ defmodule SppaWeb.DashboardPPLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
   end
 
   # Helper function to get all team members (developers and project managers) with their roles
@@ -223,6 +237,13 @@ defmodule SppaWeb.DashboardPPLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+      <%= if @show_settings_modal do %>
+        <.live_component
+          module={SppaWeb.Components.SettingsModalLive}
+          id="settings-modal"
+          current_scope={@current_scope}
+        />
+      <% end %>
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div

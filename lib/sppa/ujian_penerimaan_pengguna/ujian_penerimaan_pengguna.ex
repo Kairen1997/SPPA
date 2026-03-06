@@ -14,6 +14,9 @@ defmodule Sppa.UjianPenerimaanPengguna.UjianPenerimaanPengguna do
     field :penguji, :string
     field :hasil, :string, default: "Belum Selesai"
     field :catatan, :string
+    field :dokumen_ujian, :string
+    field :dokumen_ujian_nama, :string
+    field :extra_columns, :string, default: "[]"
 
     belongs_to :project, Sppa.Projects.Project
     has_many :kes_ujian, Sppa.UjianPenerimaanPengguna.KesUjian
@@ -33,6 +36,8 @@ defmodule Sppa.UjianPenerimaanPengguna.UjianPenerimaanPengguna do
       :penguji,
       :hasil,
       :catatan,
+      :dokumen_ujian,
+      :dokumen_ujian_nama,
       :project_id
     ])
     |> validate_required([:tajuk, :modul, :tarikh_ujian, :tarikh_dijangka_siap, :project_id])

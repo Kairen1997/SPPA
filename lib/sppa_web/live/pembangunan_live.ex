@@ -171,14 +171,22 @@ defmodule SppaWeb.PembangunanLive do
 
   @impl true
   def handle_event("open_edit_modal", params, socket) do
+    require Logger
+    Logger.info("open_edit_modal called with params: #{inspect(params)}")
+
     module_id = Map.get(params, "module_id")
 
     if is_nil(module_id) do
+      Logger.error("module_id is nil in params: #{inspect(params)}")
       {:noreply, socket |> put_flash(:error, "Module ID tidak ditemui dalam parameter.")}
     else
       # Try to find module in full modules list first, then in paginated_modules as fallback
       # Convert both to string for comparison to handle any type mismatches
       module_id_str = to_string(module_id)
+
+      Logger.info("Looking for module with ID: #{module_id_str}")
+      Logger.info("Total modules: #{length(socket.assigns.modules)}")
+      Logger.info("Total paginated modules: #{length(socket.assigns.paginated_modules || [])}")
 
       module =
         Enum.find(socket.assigns.modules, fn m -> to_string(m.id) == module_id_str end) ||
@@ -186,16 +194,15 @@ defmodule SppaWeb.PembangunanLive do
             to_string(m.id) == module_id_str
           end)
 
+      Logger.info("Module found: #{inspect(not is_nil(module))}")
+
       cond do
         is_nil(module) ->
-          {:noreply,
-           socket
-           |> put_flash(:error, "Modul tidak ditemui.")}
+          Logger.error("Module not found for ID: #{inspect(module_id)}")
 
-        is_nil(module.project_id) ->
           {:noreply,
            socket
-           |> put_flash(:error, "Modul ini tidak dikaitkan dengan projek. Sila akses modul melalui halaman projek.")}
+           |> put_flash(:error, "Modul tidak ditemui. ID: #{inspect(module_id)}")}
 
         true ->
           form_data = %{
@@ -215,6 +222,8 @@ defmodule SppaWeb.PembangunanLive do
           }
 
           form = to_form(form_data, as: :module)
+
+          Logger.info("Opening edit modal for module: #{module.name}")
 
           {:noreply,
            socket
@@ -237,189 +246,83 @@ defmodule SppaWeb.PembangunanLive do
 
   @impl true
   def handle_event("validate_module", %{"module" => module_params}, socket) do
-    # Validate dates if provided
-    validated_params = module_params
-
-    # Validate date range if both dates are provided
-    validated_params =
-      if module_params["tarikh_mula"] && module_params["tarikh_mula"] != "" &&
-           module_params["tarikh_jangka_siap"] && module_params["tarikh_jangka_siap"] != "" do
-        case {Date.from_iso8601(module_params["tarikh_mula"]),
-              Date.from_iso8601(module_params["tarikh_jangka_siap"])} do
-          {{:ok, start_date}, {:ok, end_date}} ->
-            if Date.compare(end_date, start_date) == :lt do
-              # Keep params but we'll show error on submit
-              validated_params
-            else
-              validated_params
-            end
-
-          _ ->
-            validated_params
-        end
-      else
-        validated_params
-      end
-
-    form = to_form(validated_params, as: :module)
+    form = to_form(module_params, as: :module)
     {:noreply, assign(socket, :form, form)}
   end
 
   @impl true
   def handle_event("update_module", %{"module" => module_params}, socket) do
     selected = socket.assigns.selected_module
+    module_id_str = selected.id
+    project_id = selected.project_id
 
-    if is_nil(selected) do
+    analisis_module_id =
+      case module_id_str do
+        "module_" <> id_str -> String.to_integer(id_str)
+        _ -> nil
+      end
+
+    if is_nil(project_id) or is_nil(analisis_module_id) do
       {:noreply,
        socket
-       |> put_flash(:error, "Modul tidak dipilih. Sila tutup dan cuba lagi.")
+       |> put_flash(:error, "Projek atau modul tidak sah.")
        |> assign(:show_edit_modal, false)
        |> assign(:selected_module, nil)}
     else
-      module_id_str = selected.id
-      project_id = selected.project_id
-
-      analisis_module_id =
-        case module_id_str do
-          "module_" <> id_str ->
-            case Integer.parse(id_str) do
-              {id, _} -> id
-              :error -> nil
-            end
-
-          _ ->
-            nil
+      tarikh_mula =
+        if module_params["tarikh_mula"] && module_params["tarikh_mula"] != "" do
+          case Date.from_iso8601(module_params["tarikh_mula"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
         end
 
-      cond do
-        is_nil(project_id) ->
-          {:noreply,
-           socket
-           |> put_flash(:error, "Modul ini tidak dikaitkan dengan projek. Sila akses modul melalui halaman projek.")
-           |> assign(:show_edit_modal, false)
-           |> assign(:selected_module, nil)}
-
-        is_nil(analisis_module_id) ->
-          {:noreply,
-           socket
-           |> put_flash(:error, "ID modul tidak sah.")
-           |> assign(:show_edit_modal, false)
-           |> assign(:selected_module, nil)}
-
-        true ->
-          tarikh_mula =
-            if module_params["tarikh_mula"] && module_params["tarikh_mula"] != "" do
-              case Date.from_iso8601(module_params["tarikh_mula"]) do
-                {:ok, date} -> date
-                {:error, _} -> nil
-              end
-            else
-              nil
-            end
-
-          tarikh_jangka_siap =
-            if module_params["tarikh_jangka_siap"] && module_params["tarikh_jangka_siap"] != "" do
-              case Date.from_iso8601(module_params["tarikh_jangka_siap"]) do
-                {:ok, date} -> date
-                {:error, _} -> nil
-              end
-            else
-              nil
-            end
-
-          # Validate that tarikh_jangka_siap is after tarikh_mula if both are provided
-          date_valid =
-            if tarikh_mula && tarikh_jangka_siap do
-              Date.compare(tarikh_jangka_siap, tarikh_mula) != :lt
-            else
-              true
-            end
-
-          if not date_valid do
-            {:noreply,
-             socket
-             |> put_flash(:error, "Tarikh jangkaan siap mestilah selepas tarikh mula.")
-             |> assign(:form, to_form(module_params, as: :module))}
-          else
-            priority_value =
-              if module_params["priority"] && module_params["priority"] != "" do
-                module_params["priority"]
-              else
-                nil
-              end
-
-            catatan_value =
-              if module_params["catatan"] && module_params["catatan"] != "" do
-                String.trim(module_params["catatan"])
-              else
-                nil
-              end
-
-            attrs = %{
-              keutamaan: priority_value,
-              status: module_params["status"] || "Belum Mula",
-              tarikh_mula: tarikh_mula,
-              tarikh_jangka_siap: tarikh_jangka_siap,
-              catatan: catatan_value
-            }
-
-            case ModulPengaturcaraan.upsert(project_id, analisis_module_id, attrs) do
-              {:ok, _} ->
-                # Reload modules based on current view context
-                modules =
-                  if socket.assigns.project_id do
-                    AnalisisDanRekabentuk.list_modules_for_project(
-                      socket.assigns.project_id,
-                      socket.assigns.current_scope
-                    )
-                  else
-                    AnalisisDanRekabentuk.list_modules_for_pembangunan(socket.assigns.current_scope)
-                  end
-
-                # Find the current page that contains the updated module
-                current_page = socket.assigns.page
-                updated_module_index =
-                  Enum.find_index(modules, fn m -> to_string(m.id) == module_id_str end)
-
-                page =
-                  if updated_module_index do
-                    # Calculate which page the updated module is on
-                    div(updated_module_index, socket.assigns.page_size) + 1
-                  else
-                    current_page
-                  end
-
-                socket =
-                  socket
-                  |> assign(:modules, modules)
-                  |> assign(:page, page)
-                  |> put_pagination_assigns()
-                  |> assign(:show_edit_modal, false)
-                  |> assign(:selected_module, nil)
-                  |> assign(:form, to_form(%{}, as: :module))
-                  |> put_flash(:info, "Modul berjaya dikemaskini.")
-
-                {:noreply, socket}
-
-              {:error, changeset} ->
-                error_message =
-                  if changeset.errors != [] do
-                    errors =
-                      changeset.errors
-                      |> Enum.map(fn {field, {msg, _}} -> "#{field}: #{msg}" end)
-                      |> Enum.join(", ")
-
-                    "Gagal mengemaskini modul: #{errors}"
-                  else
-                    "Gagal mengemaskini modul. Sila cuba lagi."
-                  end
-
-                {:noreply,
-                 socket
-                 |> put_flash(:error, error_message)
-                 |> assign(:form, to_form(module_params, as: :module))}
-            end
+      tarikh_jangka_siap =
+        if module_params["tarikh_jangka_siap"] && module_params["tarikh_jangka_siap"] != "" do
+          case Date.from_iso8601(module_params["tarikh_jangka_siap"]) do
+            {:ok, date} -> date
+            _ -> nil
           end
+        else
+          nil
+        end
+
+      attrs = %{
+        keutamaan: module_params["priority"] || nil,
+        status: module_params["status"] || "Belum Mula",
+        tarikh_mula: tarikh_mula,
+        tarikh_jangka_siap: tarikh_jangka_siap,
+        catatan: if(module_params["catatan"] == "", do: nil, else: module_params["catatan"])
+      }
+
+      case ModulPengaturcaraan.upsert(project_id, analisis_module_id, attrs) do
+        {:ok, _} ->
+          modules =
+            if socket.assigns.project_id do
+              AnalisisDanRekabentuk.list_modules_for_project(
+                socket.assigns.project_id,
+                socket.assigns.current_scope
+              )
+            else
+              AnalisisDanRekabentuk.list_modules_for_pembangunan(socket.assigns.current_scope)
+            end
+
+          {:noreply,
+           socket
+           |> assign(:modules, modules)
+           |> assign(:page, 1)
+           |> put_pagination_assigns()
+           |> assign(:show_edit_modal, false)
+           |> assign(:selected_module, nil)
+           |> assign(:form, to_form(%{}, as: :module))
+           |> put_flash(:info, "Modul berjaya dikemaskini")}
+
+        {:error, _changeset} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Gagal mengemaskini modul. Sila cuba lagi.")}
       end
     end
   end

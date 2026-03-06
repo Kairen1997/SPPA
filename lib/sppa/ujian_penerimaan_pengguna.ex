@@ -149,14 +149,140 @@ defmodule Sppa.UjianPenerimaanPengguna do
   end
 
   @doc """
+  Parses extra_columns JSON string to list of maps with "id" and "label" keys.
+  """
+  def parse_extra_columns(nil), do: []
+  def parse_extra_columns(""), do: []
+
+  def parse_extra_columns(str) when is_binary(str) do
+    case Jason.decode(str) do
+      {:ok, list} when is_list(list) ->
+        Enum.map(list, fn
+          %{"id" => id, "label" => label} -> %{"id" => to_string(id), "label" => to_string(label)}
+          _ -> nil
+        end)
+        |> Enum.reject(&is_nil/1)
+
+      _ ->
+        []
+    end
+  end
+
+  @doc """
+  Parses extra_values JSON string to map of column_id => value.
+  """
+  def parse_extra_values(nil), do: %{}
+  def parse_extra_values(""), do: %{}
+
+  def parse_extra_values(str) when is_binary(str) do
+    case Jason.decode(str) do
+      {:ok, map} when is_map(map) ->
+        Map.new(map, fn {k, v} -> {to_string(k), v && to_string(v)} end)
+
+      _ ->
+        %{}
+    end
+  end
+
+  @doc """
+  Adds a dynamic column to an ujian. Label is the column header.
+  Returns {:ok, ujian} or {:error, changeset}.
+  """
+  def add_column_to_ujian(ujian_id, label) when is_binary(label) and label != "" do
+    ujian = get_ujian(ujian_id)
+
+    if is_nil(ujian),
+      do: {:error, :not_found},
+      else: do_add_column(ujian, String.trim(label))
+  end
+
+  def add_column_to_ujian(_, _), do: {:error, :invalid_label}
+
+  defp do_add_column(%UjianPenerimaanPengguna{} = ujian, label) do
+    list = parse_extra_columns(ujian.extra_columns)
+    id = Ecto.UUID.generate()
+    new_list = list ++ [%{"id" => id, "label" => label}]
+    json = Jason.encode!(new_list)
+
+    ujian
+    |> Ecto.Changeset.change(%{extra_columns: json})
+    |> Repo.update()
+  end
+
+  @doc """
+  Removes a dynamic column from an ujian. Also clears that column's values from all kes.
+  """
+  def remove_column_from_ujian(ujian_id, column_id) when is_binary(column_id) do
+    ujian = get_ujian(ujian_id)
+
+    if is_nil(ujian),
+      do: {:error, :not_found},
+      else: do_remove_column(ujian, column_id)
+  end
+
+  def remove_column_from_ujian(_, _), do: {:error, :invalid_column_id}
+
+  defp do_remove_column(%UjianPenerimaanPengguna{} = ujian, column_id) do
+    list = parse_extra_columns(ujian.extra_columns) |> Enum.reject(&(&1["id"] == column_id))
+    json = Jason.encode!(list)
+
+    case ujian
+         |> Ecto.Changeset.change(%{extra_columns: json})
+         |> Repo.update() do
+      {:ok, updated} ->
+        # Clear this column from all kes under this ujian
+        kes_list = Repo.preload(updated, :kes_ujian).kes_ujian
+
+        Enum.each(kes_list, fn kes ->
+          vals = parse_extra_values(kes.extra_values)
+          vals = Map.delete(vals, column_id)
+
+          kes
+          |> Ecto.Changeset.change(%{extra_values: Jason.encode!(vals)})
+          |> Repo.update()
+        end)
+
+        {:ok, get_ujian(updated.id)}
+
+      err ->
+        err
+    end
+  end
+
+  @doc """
+  Updates a single extra (dynamic) column value for a kes.
+  """
+  def update_kes_extra_value(kes_id, column_id, value) when is_binary(column_id) do
+    kes = get_kes(kes_id)
+
+    if is_nil(kes),
+      do: {:error, :not_found},
+      else: do_update_kes_extra(kes, column_id, value)
+  end
+
+  def update_kes_extra_value(_, _, _), do: {:error, :invalid}
+
+  defp do_update_kes_extra(%KesUjian{} = kes, column_id, value) do
+    vals = parse_extra_values(kes.extra_values) |> Map.put(column_id, value || "")
+
+    kes
+    |> Ecto.Changeset.change(%{extra_values: Jason.encode!(vals)})
+    |> Repo.update()
+  end
+
+  @doc """
   Formats ujian struct for LiveView display.
   Maps kes_ujian to senarai_kes_ujian and ensures kes has id (for compatibility).
+  Includes extra_columns and each kes extra_values for dynamic table columns.
   """
   def format_ujian_for_display(%UjianPenerimaanPengguna{} = ujian) do
-    kes_ujian = Repo.preload(ujian, :kes_ujian).kes_ujian
+    ujian = Repo.preload(ujian, :kes_ujian)
+    extra_columns = parse_extra_columns(ujian.extra_columns)
 
     kes_formatted =
-      Enum.map(kes_ujian, fn kes ->
+      Enum.map(ujian.kes_ujian, fn kes ->
+        extra_vals = parse_extra_values(kes.extra_values)
+
         %{
           id: kes.id,
           kod: kes.kod,
@@ -169,7 +295,8 @@ defmodule Sppa.UjianPenerimaanPengguna do
           tarikh_ujian: kes.tarikh_ujian,
           disahkan_oleh: kes.disahkan_oleh,
           tarikh_pengesahan: kes.tarikh_pengesahan,
-          disahkan: (kes.disahkan_oleh || "") != ""
+          disahkan: (kes.disahkan_oleh || "") != "",
+          extra_values: extra_vals
         }
       end)
 
@@ -183,6 +310,7 @@ defmodule Sppa.UjianPenerimaanPengguna do
       penguji: ujian.penguji,
       hasil: ujian.hasil,
       catatan: ujian.catatan,
+      extra_columns: extra_columns,
       senarai_kes_ujian: kes_formatted
     }
   end

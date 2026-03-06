@@ -1,6 +1,7 @@
 defmodule SppaWeb.ProjekLive do
   use SppaWeb, :live_view
 
+  alias Sppa.ActivityLogs
   alias Sppa.Projects
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
@@ -12,10 +13,11 @@ defmodule SppaWeb.ProjekLive do
   end
 
   defp mount_index(socket) do
-    # Verify user has required role (defense in depth - router already checks this)
-    user_role =
+    raw_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
+
+    user_role = raw_role && raw_role |> String.trim() |> String.downcase()
 
     if user_role && user_role in @allowed_roles do
       socket =
@@ -25,6 +27,7 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:show_settings_modal, false)
         |> assign(:page, 1)
         |> assign(:per_page, 10)
         |> assign(:search_term, "")
@@ -46,13 +49,13 @@ defmodule SppaWeb.ProjekLive do
       {paginated_projects, total_pages} =
         paginate_projects(filtered_projects, socket.assigns.page, socket.assigns.per_page)
 
+      # Muat aktiviti sentiasa (sumber sama seperti dashboard) supaya bilangan notifikasi
+      # dipaparkan pada render awal dan konsisten merentas halaman.
+      raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
       activities =
-        if connected?(socket) do
-          Projects.list_recent_activities(socket.assigns.current_scope, 10)
-        else
-          []
-        end
-
+        Enum.map(raw_activities, fn a ->
+          Map.put(a, :action_label, ActivityLogs.action_label(a.action))
+        end)
       notifications_count = length(activities)
 
       {:ok,
@@ -111,6 +114,14 @@ defmodule SppaWeb.ProjekLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
@@ -178,32 +189,17 @@ defmodule SppaWeb.ProjekLive do
      |> assign(:total_count, length(socket.assigns.all_projects))}
   end
 
-  # Fetches projects from database based on user role:
-  # - Developers see projects where they are assigned as developer
-  # - Project managers see projects where they are assigned as project manager
-  # - Directors/Admins see all projects
-  defp list_projects(current_scope, user_role) do
-    projects =
-      case user_role do
-        "ketua penolong pengarah" ->
-          # Directors/Admins see all projects
-          Projects.list_all_projects()
+  @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
+  end
 
-        "pembangun sistem" ->
-          # Developers see projects where they are assigned as developer
-          Projects.list_projects_for_pembangun_sistem(current_scope)
-
-        "pengurus projek" ->
-          # Project managers see projects where they are assigned as project manager
-          Projects.list_projects_for_pengurus_projek(current_scope)
-
-        _ ->
-          # Default: return empty list for unknown roles
-          []
-      end
-
-    # Normalize status for consistency
-    Enum.map(projects, &normalize_project_status/1)
+  # Senarai Sistem: hanya papar projek yang ditugaskan kepada pengguna semasa.
+  # Semua peranan guna fungsi yang sama supaya sistem yang tidak ditugaskan tidak dipaparkan.
+  defp list_projects(current_scope, _user_role) do
+    current_scope
+    |> Projects.list_projects_assigned_to_user()
+    |> Enum.map(&normalize_project_status/1)
   end
 
   defp normalize_project_status(project) do

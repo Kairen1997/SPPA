@@ -17,7 +17,7 @@ defmodule SppaWeb do
   those modules here.
   """
 
-  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt uploads)
 
   def router do
     quote do
@@ -53,6 +53,7 @@ defmodule SppaWeb do
       use Phoenix.LiveView
 
       unquote(html_helpers())
+      unquote(layout_helpers())
     end
   end
 
@@ -61,6 +62,7 @@ defmodule SppaWeb do
       use Phoenix.LiveComponent
 
       unquote(html_helpers())
+      unquote(layout_helpers())
     end
   end
 
@@ -92,10 +94,15 @@ defmodule SppaWeb do
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS
-      alias SppaWeb.Layouts
 
       # Routes generation with the ~p sigil
       unquote(verified_routes())
+    end
+  end
+
+  defp layout_helpers do
+    quote do
+      alias SppaWeb.Layouts
     end
   end
 

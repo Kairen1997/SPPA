@@ -107,7 +107,13 @@
       filter: brightness(0) saturate(100%);
     }
   </style>
-  
+  <%= if @show_settings_modal do %>
+    <.live_component
+      module={SppaWeb.Components.SettingsModalLive}
+      id="settings-modal"
+      current_scope={@current_scope}
+    />
+  <% end %>
   <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
     <%!-- Overlay --%>
     <div
@@ -132,6 +138,14 @@
           class="flex items-center gap-2 sm:gap-4 flex-shrink-0"
           style="max-width: min(30%, 200px);"
         >
+          <.link
+            navigate={if @project, do: ~p"/projek/#{@project.id}", else: ~p"/projek"}
+            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 relative z-50 flex-shrink-0 inline-flex items-center gap-1.5"
+            title="Kembali"
+          >
+            <.icon name="hero-arrow-left" class="w-5 h-5 sm:w-6 sm:h-6" />
+            <span class="hidden sm:inline text-sm font-medium">Kembali</span>
+          </.link>
           <button
             phx-click="toggle_sidebar"
             class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 relative z-50 flex-shrink-0"
@@ -155,6 +169,15 @@
        <%!-- TAJUK SOAL SELIDIK --%>
       <div class="bg-white px-6 py-4 border-b border-gray-200">
         <div class="max-w-7xl mx-auto">
+          <div class="flex items-center gap-4 mb-2">
+            <.link
+              navigate={if @project, do: ~p"/projek/#{@project.id}", else: ~p"/projek"}
+              class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+            >
+              <.icon name="hero-arrow-left" class="w-4 h-4" />
+              <span>Kembali</span>
+            </.link>
+          </div>
           <h1 class="text-2xl font-bold text-gray-900">Soal Selidik</h1>
           
           <p class="text-gray-600 mt-1">Soal Selidik Kajian Keperluan Pembangunan Aplikasi</p>

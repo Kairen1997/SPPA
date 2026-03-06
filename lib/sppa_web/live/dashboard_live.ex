@@ -22,6 +22,7 @@ defmodule SppaWeb.DashboardLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:show_settings_modal, false)
 
       # Always load stats and activities from database so metric cards show actual counts
       stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
@@ -86,5 +87,18 @@ defmodule SppaWeb.DashboardLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
   end
 end

@@ -29,6 +29,7 @@ defmodule SppaWeb.ApprovedProjectLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
+        |> assign(:show_settings_modal, false)
         |> assign(:notifications_count, 0)
         |> assign(:activities, [])
         |> assign(:sidebar_dashboard_path, sidebar_dashboard_path)
@@ -286,6 +287,14 @@ defmodule SppaWeb.ApprovedProjectLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_settings_modal, true)
+     |> assign(:profile_menu_open, false)}
   end
 
   @impl true
@@ -586,9 +595,21 @@ defmodule SppaWeb.ApprovedProjectLive do
   # Note: update_tarikh_mula handler removed - tarikh_mula is read-only and comes from external link
 
   @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
+  end
+
+  @impl true
   def render(%{approved_project: nil} = assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+      <%= if @show_settings_modal do %>
+        <.live_component
+          module={SppaWeb.Components.SettingsModalLive}
+          id="settings-modal"
+          current_scope={@current_scope}
+        />
+      <% end %>
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div
@@ -645,6 +666,13 @@ defmodule SppaWeb.ApprovedProjectLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+      <%= if @show_settings_modal do %>
+        <.live_component
+          module={SppaWeb.Components.SettingsModalLive}
+          id="settings-modal"
+          current_scope={@current_scope}
+        />
+      <% end %>
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div

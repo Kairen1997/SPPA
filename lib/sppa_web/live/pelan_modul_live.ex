@@ -22,6 +22,7 @@ defmodule SppaWeb.PelanModulLive do
         |> assign(:page_title, "Pelan Modul")
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
+        |> assign(:show_settings_modal, false)
         |> assign(:project_id, project_id)
 
       current_scope = socket.assigns.current_scope
@@ -117,6 +118,11 @@ defmodule SppaWeb.PelanModulLive do
   end
 
   @impl true
+  def handle_event("open_settings_modal", _params, socket) do
+    {:noreply, assign(socket, :show_settings_modal, true)}
+  end
+
+  @impl true
   def handle_event("toggle_notifications", _params, socket) do
     {:noreply, update(socket, :notifications_open, &(!&1))}
   end
@@ -124,6 +130,11 @@ defmodule SppaWeb.PelanModulLive do
   @impl true
   def handle_event("close_notifications", _params, socket) do
     {:noreply, assign(socket, :notifications_open, false)}
+  end
+
+  @impl true
+  def handle_info(:close_settings_modal, socket) do
+    {:noreply, assign(socket, :show_settings_modal, false)}
   end
 
   # Helper function to get status color (public for template access)

@@ -1,4 +1,11 @@
 <Layouts.app flash={@flash} current_scope={@current_scope} full_width={true}>
+  <%= if @show_settings_modal do %>
+    <.live_component
+      module={SppaWeb.Components.SettingsModalLive}
+      id="settings-modal"
+      current_scope={@current_scope}
+    />
+  <% end %>
   <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
     <%!-- Overlay --%>
     <div
@@ -1585,12 +1592,19 @@
                           
                           <td class="px-2 py-2">
                             <%= if project.dokumen_sokongan && project.dokumen_sokongan > 0 do %>
-                              <div class="flex items-center text-xs text-gray-600 min-w-0">
+                              <.link
+                                navigate={~p"/projek/#{project.id}/soal-selidik"}
+                                class="flex items-center text-xs text-blue-600 hover:text-blue-800 min-w-0 cursor-pointer group"
+                                title="Klik untuk lihat dokumen"
+                              >
                                 <.icon
                                   name="hero-document"
-                                  class="w-3 h-3 text-gray-400 mr-1 flex-shrink-0"
-                                /> <span class="truncate">{project.dokumen_sokongan}</span>
-                              </div>
+                                  class="w-3 h-3 text-gray-400 mr-1 flex-shrink-0 group-hover:text-blue-600"
+                                />
+                                <span class="truncate font-medium underline decoration-blue-200 group-hover:decoration-blue-400">{project.dokumen_sokongan}</span>
+                              </.link>
+                            <% else %>
+                              <span class="text-xs text-gray-400">—</span>
                             <% end %>
                           </td>
                           

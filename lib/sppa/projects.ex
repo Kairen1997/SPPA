@@ -7,6 +7,7 @@ defmodule Sppa.Projects do
   import Ecto.Changeset
   alias Sppa.Repo
   alias Sppa.Projects.Project
+  alias Sppa.ApprovedProjects.ApprovedProject
   alias Sppa.ActivityLogs
   alias Sppa.ApprovedProjects
 
@@ -38,6 +39,7 @@ defmodule Sppa.Projects do
     user_no_kp = current_scope.user.no_kp
 
     Project
+    |> where([p], not is_nil(p.approved_project_id))
     |> preload([:developer, :project_manager, :approved_project])
     |> order_by([p], desc: p.last_updated)
     |> Repo.all()
@@ -68,6 +70,72 @@ defmodule Sppa.Projects do
   end
 
   @doc """
+  Returns only projects assigned to the current user (as project manager or developer).
+  Used so that Senarai Sistem shows "sistem yang ditugaskan sahaja" for all roles including ketua penolong pengarah.
+  Filters at database level so unassigned systems are never loaded or displayed.
+  """
+  def list_projects_assigned_to_user(current_scope) do
+    if is_nil(current_scope) or is_nil(current_scope.user) do
+      []
+    else
+      user_id = current_scope.user.id
+      user_no_kp = current_scope.user.no_kp
+
+      if is_nil(user_id) && (is_nil(user_no_kp) || user_no_kp == "") do
+        []
+      else
+        # Project IDs where user is manager or developer (DB-level, no unassigned loaded)
+        ids_manager_or_developer =
+          if is_nil(user_id) do
+            []
+          else
+            Project
+            |> where([p], p.project_manager_id == ^user_id or p.developer_id == ^user_id)
+            |> select([p], p.id)
+            |> Repo.all()
+          end
+
+        # Project IDs where user is in approved_project.pembangun_sistem
+        ids_via_pembangun =
+          if is_binary(user_no_kp) and user_no_kp != "" do
+            ap_ids_with_user =
+              ApprovedProject
+              |> Repo.all()
+              |> Enum.filter(fn ap ->
+                ap.pembangun_sistem && user_no_kp in parse_pembangun_sistem(ap.pembangun_sistem)
+              end)
+              |> Enum.map(& &1.id)
+
+            if ap_ids_with_user == [] do
+              []
+            else
+              Project
+              |> where([p], p.approved_project_id in ^ap_ids_with_user)
+              |> select([p], p.id)
+              |> Repo.all()
+            end
+          else
+            []
+          end
+
+        all_ids = (ids_manager_or_developer ++ ids_via_pembangun) |> Enum.uniq()
+
+        if all_ids == [] do
+          []
+        else
+          # Hanya projek dari admin (ada approved_project_id) dipaparkan
+          Project
+          |> where([p], p.id in ^all_ids and not is_nil(p.approved_project_id))
+          |> preload([:developer, :project_manager, :approved_project])
+          |> order_by([p], desc: p.last_updated)
+          |> Repo.all()
+          |> Enum.map(&format_project_for_display/1)
+        end
+      end
+    end
+  end
+
+  @doc """
   Returns the list of projects for a pembangun sistem (developer).
 
   Shows projects from both:
@@ -82,10 +150,13 @@ defmodule Sppa.Projects do
   (developer's own internal projects).
   """
   def list_projects_for_pembangun_sistem(current_scope) do
-    user_id = current_scope.user.id
-    user_no_kp = current_scope.user.no_kp
+    user_id = current_scope.user && current_scope.user.id
+    user_no_kp = current_scope.user && current_scope.user.no_kp
 
-    # 1. Get ALL approved_projects where user's no_kp is in pembangun_sistem
+    if is_nil(user_id) && (is_nil(user_no_kp) || user_no_kp == "") do
+      []
+    else
+      # 1. Get ALL approved_projects where user's no_kp is in pembangun_sistem
     #    This is the PRIMARY source - shows all assigned approved_projects
     #    (both from projects table and approved_projects table)
     approved_projects_with_access =
@@ -144,31 +215,32 @@ defmodule Sppa.Projects do
         end
       end)
 
-    # 2. Get projects from projects table that don't have approved_project
-    #    (fallback for projects without approved_project - user's own internal projects)
-    projects_without_approved =
-      Project
-      |> where([p], is_nil(p.approved_project_id))
-      |> where([p], p.developer_id == ^user_id)
-      |> preload([:developer, :project_manager, :approved_project])
-      |> order_by([p], desc: p.last_updated)
-      |> Repo.all()
+      # 2. Get projects from projects table that don't have approved_project
+      #    (fallback for projects without approved_project - user's own internal projects)
+      projects_without_approved =
+        Project
+        |> where([p], is_nil(p.approved_project_id))
+        |> where([p], p.developer_id == ^user_id)
+        |> preload([:developer, :project_manager, :approved_project])
+        |> order_by([p], desc: p.last_updated)
+        |> Repo.all()
 
-    # 3. Combine both lists - approved_projects (primary) + projects without approved_project (fallback)
-    all_accessible_projects = approved_projects_with_access ++ projects_without_approved
+      # 3. Combine both lists - approved_projects (primary) + projects without approved_project (fallback)
+      all_accessible_projects = approved_projects_with_access ++ projects_without_approved
 
-    # Remove duplicates by approved_project.id (if exists) or project.id
-    unique_projects =
-      all_accessible_projects
-      |> Enum.uniq_by(fn project ->
-        if project.approved_project do
-          project.approved_project.id
-        else
-          project.id
-        end
-      end)
+      # Remove duplicates by approved_project.id (if exists) or project.id
+      unique_projects =
+        all_accessible_projects
+        |> Enum.uniq_by(fn project ->
+          if project.approved_project do
+            project.approved_project.id
+          else
+            project.id
+          end
+        end)
 
-    Enum.map(unique_projects, &format_project_for_display/1)
+      Enum.map(unique_projects, &format_project_for_display/1)
+    end
   end
 
   @doc """
@@ -245,6 +317,7 @@ defmodule Sppa.Projects do
   @doc """
   Formats project data for display in senarai projek.
   Data diutamakan dari projek dalaman; jika kosong, guna data dari approved_project (DB approved projects).
+  Bilangan dokumen diambil daripada database penugasan (approved_projects) sahaja: 1 jika ada kertas_kerja_path, 0 jika tidak.
   """
   def format_project_for_display(project) do
     ap = project.approved_project
@@ -262,18 +335,20 @@ defmodule Sppa.Projects do
       pembangun_sistem: coalesce_pembangun(project.developer, ap && ap.pembangun_sistem),
       developer_id: project.developer_id,
       project_manager_id: project.project_manager_id,
-      dokumen_sokongan:
-        cond do
-          ap &&
-            Map.has_key?(ap, :kertas_kerja_path) &&
-            ap.kertas_kerja_path &&
-              ap.kertas_kerja_path != "" ->
-            1
-
-          true ->
-            project.dokumen_sokongan || 0
-        end
+      # Data dokumen daripada penugasan (approved_projects) sahaja
+      dokumen_sokongan: dokumen_count_from_penugasan(ap)
     }
+  end
+
+  # Bilangan dokumen dari database penugasan (approved_projects): 1 jika ada kertas_kerja, 0 jika tidak.
+  defp dokumen_count_from_penugasan(nil), do: 0
+
+  defp dokumen_count_from_penugasan(ap) do
+    if ap.kertas_kerja_path && ap.kertas_kerja_path != "" do
+      1
+    else
+      0
+    end
   end
 
   defp coalesce(a, _b) when is_binary(a) and a != "", do: a
@@ -788,4 +863,29 @@ defmodule Sppa.Projects do
   end
 
   defp has_pm_assignment_for_approved?(_approved_project, _user_no_kp), do: false
+
+  @doc """
+  Deletes all "dummy" projects: projects that have no approved_project_id
+  (i.e. not created from Senarai Projek Diluluskan / admin).
+  Returns `{:ok, count}` with the number of projects deleted, or `{:error, reason}`.
+  """
+  def delete_dummy_projects do
+    dummy =
+      Project
+      |> where([p], is_nil(p.approved_project_id))
+      |> Repo.all()
+
+    count = length(dummy)
+
+    case Repo.transaction(fn ->
+           Enum.each(dummy, fn project ->
+             Repo.delete!(project)
+           end)
+
+           count
+         end) do
+      {:ok, n} -> {:ok, n}
+      {:error, _} = err -> err
+    end
+  end
 end

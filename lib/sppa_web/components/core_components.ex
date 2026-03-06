@@ -61,7 +61,7 @@ defmodule SppaWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end z-50 flash-auto-hide"
+      class="toast toast-top toast-end z-[70] flash-auto-hide"
       {@rest}
     >
       <div class={[

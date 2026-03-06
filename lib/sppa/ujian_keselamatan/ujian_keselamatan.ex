@@ -15,6 +15,10 @@ defmodule Sppa.UjianKeselamatan.UjianKeselamatan do
     field :hasil, :string, default: "Belum Selesai"
     field :disahkan_oleh, :string
     field :catatan, :string
+    field :tarikh_permohonan, :date
+    field :tarikh_kelulusan, :date
+    field :upload_file, :string
+    field :status_kelulusan, :string
 
     belongs_to :project, Sppa.Projects.Project
 
@@ -40,6 +44,10 @@ defmodule Sppa.UjianKeselamatan.UjianKeselamatan do
       :hasil,
       :disahkan_oleh,
       :catatan,
+      :tarikh_permohonan,
+      :tarikh_kelulusan,
+      :upload_file,
+      :status_kelulusan,
       :project_id,
       :analisis_dan_rekabentuk_module_id
     ])
