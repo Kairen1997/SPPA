@@ -3,6 +3,7 @@ defmodule SppaWeb.DashboardPPLive do
 
   alias Sppa.Projects
   alias Sppa.ApprovedProjects
+  alias Sppa.Accounts
 
   @impl true
   def mount(_params, _session, socket) do
@@ -113,6 +114,111 @@ defmodule SppaWeb.DashboardPPLive do
     {:noreply, assign(socket, :profile_menu_open, false)}
   end
 
+  # Helper function to get all team members (developers and project managers) with their roles
+  defp get_team_members(project) do
+    team_members = []
+
+    # Add main developer if exists
+    team_members =
+      if project.developer do
+        [%{user: project.developer, role: "pembangun sistem"} | team_members]
+      else
+        team_members
+      end
+
+    # Add main project manager if exists
+    team_members =
+      if project.project_manager do
+        [%{user: project.project_manager, role: "pengurus projek"} | team_members]
+      else
+        team_members
+      end
+
+    # Add developers from approved_project's pembangun_sistem
+    team_members =
+      if project.approved_project && project.approved_project.pembangun_sistem do
+        no_kps = parse_pembangun_sistem(project.approved_project.pembangun_sistem)
+
+        additional_developers =
+          no_kps
+          |> Enum.map(&Accounts.get_user_by_no_kp/1)
+          |> Enum.filter(&(&1 != nil))
+          |> Enum.filter(fn user -> user.role == "pembangun sistem" end)
+          |> Enum.map(fn user -> %{user: user, role: "pembangun sistem"} end)
+
+        team_members ++ additional_developers
+      else
+        team_members
+      end
+
+    # Add project managers from approved_project's pengurus_projek
+    team_members =
+      if project.approved_project && project.approved_project.pengurus_projek do
+        no_kps = parse_pengurus_projek(project.approved_project.pengurus_projek)
+
+        additional_pms =
+          no_kps
+          |> Enum.map(&Accounts.get_user_by_no_kp/1)
+          |> Enum.filter(&(&1 != nil))
+          |> Enum.filter(fn user -> user.role == "pengurus projek" end)
+          |> Enum.map(fn user -> %{user: user, role: "pengurus projek"} end)
+
+        team_members ++ additional_pms
+      else
+        team_members
+      end
+
+    # Remove duplicates by user id and return formatted list
+    team_members
+    |> Enum.uniq_by(fn %{user: user} -> user.id end)
+    |> Enum.map(fn %{user: user, role: role} ->
+      name =
+        cond do
+          user.name && user.name != "" -> user.name
+          user.email && user.email != "" -> user.email
+          user.no_kp && user.no_kp != "" -> user.no_kp
+          true -> "N/A"
+        end
+
+      %{name: name, role: role}
+    end)
+    |> Enum.filter(fn %{name: name} -> name != nil end)
+    |> Enum.sort_by(fn %{role: role} ->
+      # Sort: pengurus projek first (0), then pembangun sistem (1)
+      case role do
+        "pengurus projek" -> 0
+        "pembangun sistem" -> 1
+        _ -> 2
+      end
+    end)
+  end
+
+  # Parse comma-separated pengurus_projek string into list of no_kp values
+  defp parse_pengurus_projek(nil), do: []
+  defp parse_pengurus_projek(""), do: []
+
+  defp parse_pengurus_projek(str) when is_binary(str) do
+    str
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&(&1 != ""))
+  end
+
+  defp parse_pengurus_projek(_), do: []
+
+  # Parse comma-separated pembangun_sistem string into list of no_kp values
+  defp parse_pembangun_sistem(nil), do: []
+  defp parse_pembangun_sistem(""), do: []
+
+  defp parse_pembangun_sistem(str) when is_binary(str) do
+    str
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&(&1 != ""))
+  end
+
+  defp parse_pembangun_sistem(_), do: []
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -127,7 +233,7 @@ defmodule SppaWeb.DashboardPPLive do
           phx-click="close_sidebar"
         >
         </div>
-        <%!-- Sidebar --%>
+         <%!-- Sidebar --%>
         <.dashboard_sidebar
           sidebar_open={@sidebar_open}
           dashboard_path={~p"/dashboard-pp"}
@@ -147,12 +253,11 @@ defmodule SppaWeb.DashboardPPLive do
                 class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
               >
                 <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-               <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+              </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
+            
             <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
-
+            
             <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <.header_actions
                 notifications_open={@notifications_open}
@@ -163,52 +268,52 @@ defmodule SppaWeb.DashboardPPLive do
               />
             </div>
           </header>
-          <%!-- Dashboard Content --%>
+           <%!-- Dashboard Content --%>
           <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
             <div class="max-w-7xl mx-auto">
               <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard Pengurus Projek</h1>
-
+                
                 <p class="text-gray-600">Gambaran keseluruhan projek dan aktiviti terkini</p>
               </div>
-              <%!-- Summary Cards --%>
+               <%!-- Summary Cards --%>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 <%!-- Jumlah --%>
                 <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-folder-open" class="w-8 h-8 text-yellow-800 opacity-80" />
                   </div>
-
+                  
                   <div class="text-4xl font-bold text-gray-900 mb-1">{@stats[:jumlah] || 0}</div>
-
+                  
                   <div class="text-sm font-medium text-gray-800">Jumlah</div>
                 </div>
-                <%!-- Jumlah Projek Berdaftar --%>
+                 <%!-- Jumlah Projek Berdaftar --%>
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-check-circle" class="w-8 h-8 text-white opacity-90" />
                   </div>
-
+                  
                   <div class="text-4xl font-bold text-white mb-1">
                     {@stats[:jumlah_projek_berdaftar] || 0}
                   </div>
-
+                  
                   <div class="text-sm font-medium text-blue-50">Jumlah Projek Berdaftar</div>
                 </div>
-                <%!-- Jumlah Projek Perlu Didaftar --%>
+                 <%!-- Jumlah Projek Perlu Didaftar --%>
                 <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-exclamation-triangle" class="w-8 h-8 text-white opacity-90" />
                   </div>
-
+                  
                   <div class="text-4xl font-bold text-white mb-1">
                     {@stats[:jumlah_projek_perlu_didaftar] || 0}
                   </div>
-
+                  
                   <div class="text-sm font-medium text-green-50">Jumlah Projek Perlu Didaftar</div>
                 </div>
               </div>
-              <%!-- Latest Activities --%>
+               <%!-- Latest Activities --%>
               <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                   <div class="flex items-center justify-between">
@@ -218,7 +323,7 @@ defmodule SppaWeb.DashboardPPLive do
                     </div>
                   </div>
                 </div>
-
+                
                 <div class="overflow-x-auto">
                   <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -226,21 +331,21 @@ defmodule SppaWeb.DashboardPPLive do
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Nama Projek
                         </th>
-
+                        
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Pembangun / Pengurus Projek
                         </th>
-
+                        
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Status Terkini
                         </th>
-
+                        
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Tarikh Akhir Kemaskini
                         </th>
                       </tr>
                     </thead>
-
+                    
                     <tbody class="bg-white divide-y divide-gray-200">
                       <%= if Enum.empty?(@activities) do %>
                         <tr>
@@ -259,35 +364,56 @@ defmodule SppaWeb.DashboardPPLive do
                                 <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
                                   <.icon name="hero-folder" class="w-5 h-5 text-white" />
                                 </div>
-
+                                
                                 <div class="text-sm font-medium text-gray-900">{activity.nama}</div>
                               </div>
                             </td>
-
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            
+                            <td class="px-6 py-4">
                               <div class="text-sm text-gray-600">
-                                <%= if activity.developer do %>
-                                  <div class="flex items-center gap-2 mb-1">
-                                    <.icon name="hero-code-bracket" class="w-4 h-4 text-gray-400" />
-                                    <span>{activity.developer.email}</span>
-                                  </div>
-                                <% end %>
-
-                                <%= if activity.project_manager do %>
-                                  <div class="flex items-center gap-2">
-                                    <.icon name="hero-user" class="w-4 h-4 text-gray-400" />
-                                    <span>{activity.project_manager.email}</span>
-                                  </div>
+                                <%= case get_team_members(activity) do %>
+                                  <% [] -> %>
+                                    <span class="text-gray-400">Tiada pembangun/pengurus projek</span>
+                                  <% team_members -> %>
+                                    <div class="flex flex-col gap-1">
+                                      <%= for member <- team_members do %>
+                                        <div class="flex items-center gap-2">
+                                          <%= if member.role == "pembangun sistem" do %>
+                                            <.icon
+                                              name="hero-code-bracket"
+                                              class="w-4 h-4 text-blue-500"
+                                            />
+                                            <span class="font-medium text-gray-900">
+                                              {member.name}
+                                            </span>
+                                            <span class="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                              Pembangun
+                                            </span>
+                                          <% else %>
+                                            <.icon
+                                              name="hero-user-circle"
+                                              class="w-4 h-4 text-purple-500"
+                                            />
+                                            <span class="font-medium text-gray-900">
+                                              {member.name}
+                                            </span>
+                                            <span class="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
+                                              Pengurus
+                                            </span>
+                                          <% end %>
+                                        </div>
+                                      <% end %>
+                                    </div>
                                 <% end %>
                               </div>
                             </td>
-
+                            
                             <td class="px-6 py-4 whitespace-nowrap">
                               <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 {activity.status}
                               </span>
                             </td>
-
+                            
                             <td class="px-6 py-4 whitespace-nowrap">
                               <div class="flex items-center text-sm text-gray-600">
                                 <.icon name="hero-calendar" class="w-4 h-4 text-gray-400 mr-2" />

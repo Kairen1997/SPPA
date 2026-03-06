@@ -582,7 +582,8 @@ defmodule SppaWeb.CoreComponents do
         </div>
         
         <nav class="flex-1 overflow-y-auto py-4 px-3">
-          <%= if @current_scope && @current_scope.user && @current_scope.user.role == "pengurus projek" do %>
+          <%!-- Show pengurus projek nav only when we are on PP layout (dashboard_path is dashboard-pp) --%>
+          <%= if @current_scope && @current_scope.user && @current_scope.user.role == "pengurus projek" && show_pp_nav?(@dashboard_path) do %>
             <div class="space-y-1">
               <.link
                 navigate={@dashboard_path}
@@ -611,9 +612,29 @@ defmodule SppaWeb.CoreComponents do
               >
                 <.icon name="hero-folder" class="w-5 h-5" />
                 <span class="font-medium">Senarai Projek</span>
+              </.link> <%!-- Only for pengurus projek: switch to pembangun sistem view --%>
+              <.link
+                navigate={~p"/dashboard"}
+                phx-click="close_sidebar"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-gray-200 hover:text-white hover:bg-gray-700/70 border-t border-gray-600/50 mt-3 pt-3"
+              >
+                <.icon name="hero-computer-desktop" class="w-5 h-5" />
+                <span class="font-medium">Pembangun Sistem</span>
               </.link>
             </div>
           <% else %>
+            <%!-- When logged in as pengurus projek but viewing pembangun sistem page: back to pengurus projek --%>
+            <%= if @current_scope && @current_scope.user && @current_scope.user.role == "pengurus projek" do %>
+              <.link
+                navigate={~p"/dashboard-pp"}
+                phx-click="close_sidebar"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-amber-200 hover:text-amber-100 hover:bg-amber-600/30 border-b border-gray-600/50 mb-3 pb-3"
+              >
+                <.icon name="hero-arrow-left" class="w-5 h-5" />
+                <span class="font-medium">Kembali ke Pengurus Projek</span>
+              </.link>
+            <% end %>
+            
             <.link
               navigate={@dashboard_path}
               phx-click="close_sidebar"
@@ -638,6 +659,8 @@ defmodule SppaWeb.CoreComponents do
     </aside>
     """
   end
+
+  defp show_pp_nav?(path), do: to_string(path) == "/dashboard-pp"
 
   attr :id, :string, required: true, doc: "unique id for the table"
   attr :title, :string, required: true, doc: "category title"

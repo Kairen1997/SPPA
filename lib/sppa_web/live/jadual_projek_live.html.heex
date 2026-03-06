@@ -30,7 +30,7 @@
           >
             <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
-          <.header_logos />
+           <.header_logos />
         </div>
 
         <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
@@ -72,17 +72,177 @@
             </div>
           </div>
 
-          <%= if @gantt_data && length(@gantt_data.projects) > 0 do %>
-            <%!-- Gantt Chart Section --%>
+          <%!-- Pembangun sistem: Gantt from Pelan Modul (modul per projek) --%>
+          <%= if @use_pelan_style_gantt && @project_gantt_list != [] do %>
+            <div class="space-y-6 mb-6">
+              <p class="text-sm text-gray-600">
+                Carta Gantt mengikut modul yang dicipta oleh pengurus projek (Pelan Modul) untuk setiap projek.
+              </p>
+              <%= for gantt_data <- @project_gantt_list do %>
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                  <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900">Gantt Chart Projek</h2>
+                    <p class="text-sm text-gray-600 mt-1">{gantt_data.project.nama}</p>
+                  </div>
+                  <div class="overflow-x-auto p-6">
+                    <div class="min-w-full">
+                      <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-gray-200">
+                          <div class="flex items-center justify-between">
+                            <div>
+                              <h3 class="text-lg font-semibold text-gray-900">
+                                {gantt_data.project.nama}
+                              </h3>
+                              <p class="text-sm text-gray-600 mt-1">
+                                {gantt_data.project.jabatan || "—"}
+                              </p>
+                            </div>
+                            <div class="text-right">
+                              <p class="text-xs text-gray-500">Tempoh Projek</p>
+                              <p class="text-sm font-medium text-gray-700">
+                                {Calendar.strftime(gantt_data.start_date, "%d/%m/%Y")} - {Calendar.strftime(
+                                  gantt_data.end_date,
+                                  "%d/%m/%Y"
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <% timeline_start = gantt_data.start_date
+                          timeline_end = gantt_data.end_date
+                          total_days = days_between(timeline_start, timeline_end)
+                          today = Date.utc_today() %>
+                          <div class="border-b border-gray-200 bg-gray-50 mt-4">
+                            <div class="flex" style="min-width: {max(800, total_days * 4)}px;">
+                              <%= for month_offset <- 0..(div(total_days, 30) + 1) do %>
+                                <% month_date = Date.add(timeline_start, month_offset * 30)
+                                month_name = Calendar.strftime(month_date, "%b %Y") %>
+                                <div class="flex-1 border-r border-gray-200 px-2 py-2 text-center min-w-[80px]">
+                                  <p class="text-xs font-medium text-gray-700">{month_name}</p>
+                                </div>
+                              <% end %>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="p-4 space-y-3">
+                          <%= for {module, index} <- Enum.with_index(gantt_data.modules) do %>
+                            <% module_days = days_between(module.start_date, module.end_date)
+                            offset_days = days_between(timeline_start, module.start_date)
+
+                            offset_percent =
+                              if total_days > 0, do: offset_days / total_days * 100, else: 0
+
+                            width_percent =
+                              if total_days > 0, do: module_days / total_days * 100, else: 0
+
+                            is_overdue =
+                              module.status == "in_progress" &&
+                                Date.compare(module.end_date, today) == :lt
+
+                            bar_color_class =
+                              cond do
+                                module.status == "done" -> "bg-green-500"
+                                is_overdue -> "bg-red-400"
+                                true -> "bg-blue-500"
+                              end
+
+                            previous_module =
+                              if index > 0, do: Enum.at(gantt_data.modules, index - 1), else: nil
+
+                            is_new_phase =
+                              previous_module == nil || previous_module.fasa != module.fasa %>
+                            <%= if is_new_phase do %>
+                              <div class={[
+                                "pt-4",
+                                if(index > 0, do: "border-t border-gray-300 mt-4", else: "")
+                              ]}>
+                                <div class="mb-3 flex items-center gap-2">
+                                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent">
+                                  </div>
+                                  <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                    Fasa {module.fasa}
+                                  </span>
+                                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent">
+                                  </div>
+                                </div>
+                              </div>
+                            <% end %>
+                            <div class="flex items-center gap-4 min-h-[60px]">
+                              <div class="w-64 flex-shrink-0">
+                                <h4 class="text-sm font-semibold text-gray-900">
+                                  {module.title}
+                                </h4>
+                                <div class="flex items-center gap-2 flex-wrap mt-1">
+                                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                    Fasa {module.fasa}
+                                  </span>
+                                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                    Versi {module.versi}
+                                  </span>
+                                  <span class={[
+                                    "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                                    module_status_color(module.status)
+                                  ]}>
+                                    {module_status_label(module.status)}
+                                  </span>
+                                  <span class={[
+                                    "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
+                                    priority_color(module.priority)
+                                  ]}>
+                                    {priority_label(module.priority)}
+                                  </span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">{module.developer_name}</p>
+                              </div>
+                              <div class="flex-1 relative h-12 bg-gray-100 rounded border border-gray-200 overflow-hidden">
+                                <div
+                                  class={["absolute h-full rounded", bar_color_class]}
+                                  style={"left: #{offset_percent}%; width: #{width_percent}%;"}
+                                  title={"#{module.title} - #{Calendar.strftime(module.start_date, "%d/%m/%Y")} hingga #{Calendar.strftime(module.end_date, "%d/%m/%Y")}"}
+                                >
+                                </div>
+                              </div>
+                              <div class="w-32 flex-shrink-0 text-right">
+                                <p class="text-xs font-medium text-gray-700">
+                                  {Calendar.strftime(module.start_date, "%d/%m/%Y")}
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                  {Calendar.strftime(module.end_date, "%d/%m/%Y")}
+                                </p>
+                                <p class="text-xs text-gray-400 mt-1">{module_days} hari</p>
+                              </div>
+                            </div>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div class="flex gap-6 flex-wrap text-xs">
+                      <span class="font-semibold text-gray-700">Status:</span>
+                      <span class="flex items-center gap-2">
+                        <span class="w-4 h-4 bg-blue-500 rounded"></span> Dalam Proses
+                      </span>
+                      <span class="flex items-center gap-2">
+                        <span class="w-4 h-4 bg-green-500 rounded"></span> Selesai
+                      </span>
+                      <span class="flex items-center gap-2">
+                        <span class="w-4 h-4 bg-red-400 rounded"></span> Lewat
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+          <%= if !@use_pelan_style_gantt && @gantt_data && length(@gantt_data.projects) > 0 do %>
+            <%!-- Gantt Chart Section (project-level bars for pengurus projek / ketua) --%>
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
               <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <div class="w-2 h-2 rounded-full bg-blue-600"></div>
-
                     <h2 class="text-xl font-bold text-gray-900">Gantt Chart Projek</h2>
                   </div>
-
                   <div class="flex items-center gap-4">
                     <div class="text-sm text-gray-600">
                       <span class="font-semibold">Tempoh:</span> {Calendar.strftime(
@@ -90,7 +250,6 @@
                         "%d/%m/%Y"
                       )} - {Calendar.strftime(@gantt_data.max_date, "%d/%m/%Y")}
                     </div>
-
                     <%= if @is_developer do %>
                       <button
                         type="button"
@@ -378,7 +537,8 @@
                 </div>
               </div>
             </div>
-          <% else %>
+          <% end %>
+          <%= if (!@use_pelan_style_gantt || @project_gantt_list == []) && (!@gantt_data || length(@gantt_data.projects || []) == 0) do %>
             <%!-- Empty State --%>
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
               <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">

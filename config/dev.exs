@@ -3,7 +3,7 @@ import Config
 # Configure your database
 config :sppa, Sppa.Repo,
   username: "postgres",
-  password: "123456",
+  password: "ABC#xyz00!",
   hostname: "localhost",
   database: "sppa_dev",
   stacktrace: true,
@@ -16,7 +16,7 @@ config :sppa, Sppa.Repo,
 # debugging and code reloading.
 # External System Permohonan Aplikasi API (base URL only; paths are appended in code)
 config :sppa, :system_permohonan_aplikasi,
-  base_url: "http://10.71.67.140:4000/api/requests?status=Diluluskan"
+  base_url: "http://10.71.70.121:4000/api/requests?status=Diluluskan"
 
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it

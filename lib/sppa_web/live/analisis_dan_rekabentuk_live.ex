@@ -3,6 +3,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
   alias Sppa.Projects
   alias Sppa.AnalisisDanRekabentuk
+  alias Sppa.ProjectModules
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
 
@@ -35,6 +36,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
         |> assign(:pdf_data, nil)
         |> assign(:modules_count, 0)
         |> assign(:modules_list, [])
+        |> assign(:project_modules, [])
         |> assign(:adding_module, false)
         |> update_summary()
 
@@ -91,12 +93,13 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
                 current_scope
               )
 
+            # Modul Sistem: show modules created by pengurus projek (by project_id), read-only
+            project_modules = ProjectModules.list_modules_by_project_id(project_id)
+
             socket =
               if existing_analisis do
-                # Load existing data
                 load_existing_analisis(socket, existing_analisis, project)
               else
-                # Initialize with project data
                 initial_params = %{
                   "nama_projek" => project.nama || "",
                   "nama_agensi" => project.jabatan || ""
@@ -109,6 +112,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
               end
 
             socket
+            |> assign(:project_modules, project_modules)
           else
             socket
           end
@@ -198,8 +202,23 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
 
   @impl true
   def handle_event("generate_pdf", _params, socket) do
-    # Generate preview data
-    modules = get_modules_from_stream(socket)
+    # Use project modules (from pengurus projek) when present for borang modul section
+    modules =
+      if socket.assigns[:project_modules] && socket.assigns.project_modules != [] do
+        socket.assigns.project_modules
+        |> Enum.with_index(1)
+        |> Enum.map(fn {pm, i} ->
+          %{
+            number: i,
+            name: pm.title || "—",
+            description: pm.description || "—",
+            functions: []
+          }
+        end)
+      else
+        get_modules_from_stream(socket)
+      end
+
     form_data = socket.assigns.form.params || %{}
 
     dummy_data =
