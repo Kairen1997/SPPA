@@ -4,68 +4,37 @@ defmodule SppaWeb.PembangunanLive do
   alias Sppa.Projects
   alias Sppa.AnalisisDanRekabentuk
   alias Sppa.ModulPengaturcaraan
-  alias Sppa.ProjectModules
-  alias Sppa.GanttData
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
   @page_size 10
 
   @impl true
   def mount(params, _session, socket) do
+    # Verify user has required role (defense in depth - router already checks this)
     user_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
 
     if user_role && user_role in @allowed_roles do
-      {assigned_modules, gantt_list, use_assigned_tasks, pengaturcaraan_stats} =
-        if user_role in ["pembangun sistem", "pengurus projek"] do
-          assigned = ProjectModules.list_modules_assigned_to_user(socket.assigns.current_scope)
-
-          gantt_list =
-            assigned
-            |> Enum.group_by(fn m -> m.project_id end)
-            |> Enum.map(fn {_pid, modules} ->
-              project = (List.first(modules)).project
-              if project, do: GanttData.build_project_gantt(project, modules), else: nil
-            end)
-            |> Enum.reject(&is_nil/1)
-
-          stats = %{
-            total: length(assigned),
-            done: Enum.count(assigned, &(&1.status == "done")),
-            in_progress: Enum.count(assigned, &(&1.status == "in_progress")),
-            project_count: assigned |> Enum.map(& &1.project_id) |> Enum.uniq() |> length()
-          }
-
-          {assigned, gantt_list, true, stats}
-        else
-          {[], [], false, %{total: 0, done: 0, in_progress: 0, project_count: 0}}
-        end
-
+      # Get modules: filter by project_id when present, otherwise all from user's analisis
       {modules, project_id} =
-        if use_assigned_tasks do
-          # Assigned task list is in assigned_modules; no Analisis modules for main list
-          {[], nil}
-        else
-          case params["project_id"] do
-            nil ->
-              {AnalisisDanRekabentuk.list_modules_for_pembangunan(socket.assigns.current_scope),
-               nil}
+        case params["project_id"] do
+          nil ->
+            {AnalisisDanRekabentuk.list_modules_for_pembangunan(socket.assigns.current_scope),
+             nil}
 
-            id when is_binary(id) ->
-              case Integer.parse(id) do
-                {pid, ""} ->
-                  {AnalisisDanRekabentuk.list_modules_for_project(
-                     pid,
-                     socket.assigns.current_scope
-                   ), pid}
+          id when is_binary(id) ->
+            case Integer.parse(id) do
+              {pid, ""} ->
+                {AnalisisDanRekabentuk.list_modules_for_project(
+                   pid,
+                   socket.assigns.current_scope
+                 ), pid}
 
-                _ ->
-                  {AnalisisDanRekabentuk.list_modules_for_pembangunan(
-                     socket.assigns.current_scope
-                   ), nil}
-              end
-          end
+              _ ->
+                {AnalisisDanRekabentuk.list_modules_for_pembangunan(socket.assigns.current_scope),
+                 nil}
+            end
         end
 
       socket =
@@ -78,10 +47,6 @@ defmodule SppaWeb.PembangunanLive do
         |> assign(:current_path, "/pengaturcaraan")
         |> assign(:project_id, project_id)
         |> assign(:modules, modules)
-        |> assign(:assigned_modules, assigned_modules)
-        |> assign(:gantt_list, gantt_list)
-        |> assign(:use_assigned_tasks, use_assigned_tasks)
-        |> assign(:pengaturcaraan_stats, pengaturcaraan_stats)
         |> assign(:page_size, @page_size)
         |> assign(:page, 1)
         |> put_pagination_assigns()
@@ -395,28 +360,5 @@ defmodule SppaWeb.PembangunanLive do
       true ->
         [1, :ellipsis, current - 1, current, current + 1, :ellipsis, total_pages]
     end
-  end
-
-  # Helpers for Gantt / assigned tasks (same as PelanModulLive)
-  def status_color("in_progress"), do: "bg-blue-100 text-blue-800 border border-blue-200"
-  def status_color("done"), do: "bg-green-100 text-green-800 border border-green-200"
-  def status_color(_), do: "bg-gray-100 text-gray-800 border border-gray-200"
-
-  def status_label("in_progress"), do: "Dalam Proses"
-  def status_label("done"), do: "Selesai"
-  def status_label(_), do: "Dalam Proses"
-
-  def priority_color("high"), do: "bg-orange-100 text-orange-800 border-orange-200"
-  def priority_color("medium"), do: "bg-amber-100 text-amber-800 border-amber-200"
-  def priority_color("low"), do: "bg-pink-100 text-pink-800 border-pink-200"
-  def priority_color(_), do: "bg-gray-100 text-gray-800 border-gray-200"
-
-  def priority_label("high"), do: "Tinggi"
-  def priority_label("medium"), do: "Sederhana"
-  def priority_label("low"), do: "Rendah"
-  def priority_label(_), do: "Sederhana"
-
-  def days_between(start_date, end_date) do
-    Date.diff(end_date, start_date) + 1
   end
 end

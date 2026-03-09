@@ -13,6 +13,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   alias Sppa.UjianPenerimaanPengguna
   alias Sppa.Maklumbalas
   alias Sppa.ModulPengaturcaraan
+  alias Sppa.GanttData
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
   @module_page_size 10
@@ -29,6 +30,27 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     "penyerahan" => "Penyerahan",
     "maklumbalas-pelanggan" => "Maklumbalas Pelanggan"
   }
+
+  # Helpers for Pengaturcaraan tab (assigned modul + Gantt)
+  def pengaturcaraan_status_color("in_progress"), do: "bg-blue-100 text-blue-800 border border-blue-200"
+  def pengaturcaraan_status_color("done"), do: "bg-green-100 text-green-800 border border-green-200"
+  def pengaturcaraan_status_color(_), do: "bg-gray-100 text-gray-800 border border-gray-200"
+
+  def pengaturcaraan_status_label("in_progress"), do: "Dalam Proses"
+  def pengaturcaraan_status_label("done"), do: "Selesai"
+  def pengaturcaraan_status_label(_), do: "Dalam Proses"
+
+  def pengaturcaraan_priority_color("high"), do: "bg-orange-100 text-orange-800 border-orange-200"
+  def pengaturcaraan_priority_color("medium"), do: "bg-amber-100 text-amber-800 border-amber-200"
+  def pengaturcaraan_priority_color("low"), do: "bg-pink-100 text-pink-800 border-pink-200"
+  def pengaturcaraan_priority_color(_), do: "bg-gray-100 text-gray-800 border-gray-200"
+
+  def pengaturcaraan_priority_label("high"), do: "Tinggi"
+  def pengaturcaraan_priority_label("medium"), do: "Sederhana"
+  def pengaturcaraan_priority_label("low"), do: "Rendah"
+  def pengaturcaraan_priority_label(_), do: "Sederhana"
+
+  def pengaturcaraan_days_between(start_date, end_date), do: Date.diff(end_date, start_date) + 1
 
   @impl true
   def mount(params_or_uri, session, socket) do
@@ -125,14 +147,21 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
         project_modules = ProjectModules.list_modules_by_project_id(project_id)
 
+        # For Pengaturcaraan tab: show only modul assigned to current user (from Modul Projek page)
         developer_tasks =
           case socket.assigns.current_scope && socket.assigns.current_scope.user do
             %{role: "pembangun sistem", id: user_id} ->
               Enum.filter(project_modules, fn m -> m.developer_id == user_id end)
 
+            %{role: "pengurus projek", id: user_id} ->
+              Enum.filter(project_modules, fn m -> m.developer_id == user_id end)
+
             _ ->
               project_modules
           end
+
+        project_pengaturcaraan_gantt_data =
+          GanttData.build_project_gantt(project, developer_tasks)
 
         {jadual_gantt_data, jadual_month_labels} = prepare_jadual_data_for_project(project)
 
@@ -170,6 +199,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:project, project)
          |> assign(:project_modules, project_modules)
          |> assign(:developer_tasks, developer_tasks)
+         |> assign(:project_pengaturcaraan_gantt_data, project_pengaturcaraan_gantt_data)
          |> assign(:soal_selidik_pdf_data, soal_selidik_pdf_data)
          |> assign(:analisis_pdf_data, analisis_pdf_data)
          |> assign(:modules, modules)

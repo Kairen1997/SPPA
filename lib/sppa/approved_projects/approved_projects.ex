@@ -7,15 +7,14 @@ defmodule Sppa.ApprovedProjects do
   alias Sppa.Repo
   alias Sppa.ApprovedProjects.ApprovedProject
 
-  # Fields to update when external sync finds an existing record (do not overwrite id, inserted_at, or project_id)
+  # Fields to update when external sync finds an existing record (do not overwrite id, inserted_at, or project_id).
+  # Exclude :pengurus_projek and :pembangun_sistem so that assignments made in-app are never overwritten by sync.
   @sync_upsert_replace_fields [
     :nama_projek,
     :jabatan,
     :pengurus_email,
     :tarikh_mula,
     :tarikh_jangkaan_siap,
-    :pembangun_sistem,
-    :pengurus_projek,
     :latar_belakang,
     :objektif,
     :skop,

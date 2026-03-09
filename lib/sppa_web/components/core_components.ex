@@ -612,7 +612,8 @@ defmodule SppaWeb.CoreComponents do
               >
                 <.icon name="hero-folder" class="w-5 h-5" />
                 <span class="font-medium">Senarai Projek</span>
-              </.link> <%!-- Only for pengurus projek: switch to pembangun sistem view --%>
+              </.link>
+              <%!-- Only for pengurus projek: switch to pembangun sistem view --%>
               <.link
                 navigate={~p"/dashboard"}
                 phx-click="close_sidebar"

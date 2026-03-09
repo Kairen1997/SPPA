@@ -6,6 +6,7 @@ defmodule Sppa.Projects do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   alias Sppa.Repo
+  alias Sppa.Accounts
   alias Sppa.Projects.Project
   alias Sppa.ApprovedProjects.ApprovedProject
   alias Sppa.ActivityLogs
@@ -409,6 +410,51 @@ defmodule Sppa.Projects do
   end
 
   @doc """
+  Returns recently registered projects (linked from external / approved_project),
+  latest first, visible to the current scope. Used for dashboard "Aktiviti Terkini".
+  For pembangun sistem: includes projects where user is in approved_project.pembangun_sistem or project.developer_id.
+  """
+  def list_recently_registered_projects(current_scope, limit \\ 20) do
+    visible_ids = visible_project_ids(current_scope)
+    if visible_ids == [] do
+      []
+    else
+      Project
+      |> where([p], p.id in ^visible_ids and not is_nil(p.approved_project_id))
+      |> order_by([p], desc: p.inserted_at)
+      |> limit(^limit)
+      |> preload([:developer, :project_manager, :approved_project])
+      |> Repo.all()
+    end
+  end
+
+  @doc """
+  Returns the display string of pengurus projek for a project (for dashboard Aktiviti Terkini).
+  Uses approved_project.pengurus_projek (no_kp list) resolved to names; falls back to project_manager if set.
+  """
+  def project_pengurus_projek_display(project) do
+    ap = project.approved_project
+    if ap && ap.pengurus_projek && ap.pengurus_projek != "" do
+      no_kps = parse_pengurus_projek(ap.pengurus_projek)
+      names =
+        Enum.map(no_kps, fn no_kp ->
+          case Accounts.get_user_by_no_kp(no_kp) do
+            nil -> nil
+            user -> user.name || user.email || user.no_kp
+          end
+        end)
+        |> Enum.reject(&is_nil/1)
+      if names == [], do: "-", else: Enum.join(names, ", ")
+    else
+      if project.project_manager do
+        project.project_manager.name || project.project_manager.email || project.project_manager.no_kp || "-"
+      else
+        "-"
+      end
+    end
+  end
+
+  @doc """
   Gets dashboard statistics for a user scope.
   Counts reflect projects the user can see based on role:
   - ketua penolong pengarah: all projects
@@ -482,6 +528,35 @@ defmodule Sppa.Projects do
             select: p.id
           )
           |> Repo.all()
+      end
+
+    ids
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
+  end
+
+  @doc """
+  Returns project IDs accessible for the Pengaturcaraan page (modul assigned to user).
+  - Pengurus projek: projects where they are assigned via approved_project.pengurus_projek.
+  - Pembangun sistem: projects where they are developer or in approved_project.pembangun_sistem.
+  - Other roles: [] (page is for pengurus projek and pembangun sistem only).
+  """
+  def list_accessible_project_ids_for_pengaturcaraan(current_scope) do
+    role = current_scope.user && current_scope.user.role
+
+    ids =
+      case role do
+        "pengurus projek" ->
+          list_approved_projects_for_pengurus_projek(current_scope)
+          |> Enum.flat_map(fn ap ->
+            if ap.project && ap.project.id, do: [ap.project.id], else: []
+          end)
+
+        "pembangun sistem" ->
+          visible_project_ids(current_scope)
+
+        _ ->
+          []
       end
 
     ids

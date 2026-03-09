@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Senarai Projek Diluluskan</title>
-    
+
     <style>
       * {
         margin: 0;
@@ -203,12 +203,12 @@
       }
     </style>
   </head>
-  
+
   <body style="background: #ffffff !important; background-image: none !important;">
     <!-- Document Header -->
     <div class="document-header">
       <div class="agency">SISTEM PENGURUSAN PROJEK APLIKASI</div>
-      
+
       <div class="title">SENARAI PROJEK DILULUSKAN</div>
     </div>
     <!-- Summary Information -->
@@ -216,20 +216,20 @@
       <table>
         <tr>
           <td>Jumlah Projek:</td>
-          
+
           <td><strong>{length(@projects)} projek</strong></td>
         </tr>
-        
+
         <tr>
           <td>Tarikh Dijana:</td>
-          
+
           <td><strong>{Calendar.strftime(Date.utc_today(), "%d/%m/%Y")}</strong></td>
         </tr>
-        
+
         <%= if @current_scope && @current_scope.user do %>
           <tr>
             <td>Dicetak oleh:</td>
-            
+
             <td>
               <%= if @current_scope.user.no_kp && @current_scope.user.no_kp != "" do %>
                 {@current_scope.user.no_kp}
@@ -247,17 +247,17 @@
         <thead>
           <tr>
             <th>Nama Projek</th>
-            
+
             <th>Emel</th>
-            
+
             <th>Kementerian / Jabatan</th>
-            
+
             <th>Tarikh Mula</th>
-            
+
             <th>Tarikh Jangkaan Siap</th>
           </tr>
         </thead>
-        
+
         <tbody>
           <%= if Enum.empty?(@projects) do %>
             <tr>
@@ -269,11 +269,11 @@
             <%= for project <- @projects do %>
               <tr>
                 <td><strong>{project.nama_projek || "-"}</strong></td>
-                
+
                 <td>{project.pengurus_email || "-"}</td>
-                
+
                 <td>{project.jabatan || "-"}</td>
-                
+
                 <td>
                   <%= if project.tarikh_mula do %>
                     <strong>{Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}</strong>
@@ -281,7 +281,7 @@
                     <span style="color: #94a3b8;">-</span>
                   <% end %>
                 </td>
-                
+
                 <td>
                   <%= if project.tarikh_jangkaan_siap do %>
                     <strong>{Calendar.strftime(project.tarikh_jangkaan_siap, "%d/%m/%Y")}</strong>
@@ -298,12 +298,12 @@
     <!-- Document Footer -->
     <div class="document-footer">
       <div>Dokumen ini dijana secara automatik oleh Sistem Pengurusan Projek Aplikasi</div>
-      
+
       <div class="generated-date">
         Tarikh Dijana: {Calendar.strftime(Date.utc_today(), "%d %B %Y")}
       </div>
     </div>
-    
+
     <script>
       // Ensure no background images are applied
       document.documentElement.style.background = '#ffffff';

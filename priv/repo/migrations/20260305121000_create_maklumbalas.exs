@@ -16,4 +16,3 @@ defmodule Sppa.Repo.Migrations.CreateMaklumbalas do
     create index(:maklumbalas, [:project_id])
   end
 end
-

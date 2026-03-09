@@ -41,7 +41,8 @@ defmodule SppaWeb.Components.Sidebar do
           aria-label="Menu"
         >
           <.icon name="hero-bars-3" class="h-5 w-5" />
-        </button> <%!-- Left sidebar --%>
+        </button>
+         <%!-- Left sidebar --%>
         <aside class={[
           "w-64 flex-col bg-[#05243A] text-white shadow-xl transition-transform duration-300",
           if(@desktop_sidebar_visible, do: "hidden md:flex", else: "hidden")
@@ -50,18 +51,18 @@ defmodule SppaWeb.Components.Sidebar do
             <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-slate-300 to-slate-100 text-[#05243A] shadow-md">
               <.icon name="hero-user" class="h-9 w-9" />
             </div>
-            
+
             <div class="text-base font-semibold leading-tight">
               {(@current_scope && @current_scope.user && @current_scope.user.no_kp) ||
                 "Nama Pengguna"}
             </div>
-            
+
             <div class="mt-1 text-xs uppercase tracking-wide text-gray-300">
               {(@current_scope && @current_scope.user && @current_scope.user.role) ||
                 "Jawatan"}
             </div>
           </div>
-          
+
           <nav class="mt-4 flex-1 text-sm">
             <.link
               navigate={~p"/dashboard-pp"}
@@ -105,7 +106,7 @@ defmodule SppaWeb.Components.Sidebar do
             </.link>
           </nav>
         </aside>
-         {render_slot(@inner_block)}
+        {render_slot(@inner_block)}
       </div>
       """
     else
