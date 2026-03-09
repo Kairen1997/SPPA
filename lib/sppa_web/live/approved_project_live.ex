@@ -41,7 +41,9 @@ defmodule SppaWeb.ApprovedProjectLive do
         {approved_id, _} ->
           # Load the approved project and all supporting data immediately,
           # so the page renders full information even before the LV socket connects.
-          approved_project = ApprovedProjects.get_approved_project!(approved_id)
+          approved_project =
+            ApprovedProjects.get_approved_project!(approved_id)
+            |> Sppa.Repo.preload([project: [:project_manager, :approved_project]])
 
           # Parse pengurus projek and pembangun sistem lists
           stored_pm_names = parse_pengurus_projek(approved_project.pengurus_projek)
@@ -427,6 +429,7 @@ defmodule SppaWeb.ApprovedProjectLive do
               # Reload the approved_project to ensure we have the latest data from database
               reloaded_approved_project =
                 ApprovedProjects.get_approved_project!(updated_project.id)
+                |> Sppa.Repo.preload([project: [:project_manager, :approved_project]])
 
               # Create or get the internal project - this ensures the project exists and is linked
               case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
@@ -500,6 +503,7 @@ defmodule SppaWeb.ApprovedProjectLive do
               # Reload the approved_project to ensure we have the latest data
               reloaded_approved_project =
                 ApprovedProjects.get_approved_project!(updated_project.id)
+                |> Sppa.Repo.preload([project: [:project_manager, :approved_project]])
 
               case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
                 {:ok, _project} ->
@@ -809,6 +813,33 @@ defmodule SppaWeb.ApprovedProjectLive do
                           <span class="text-gray-900">
                             {format_date(@approved_project.tarikh_jangkaan_siap)}
                           </span>
+                        </div>
+
+                        <div class="flex items-center gap-2 text-gray-600 pt-1">
+                          <span class="font-medium">Status:</span>
+                          <%= if @approved_project.project && @approved_project.project.status do %>
+                            <span class={[
+                              "inline-flex px-2 py-0.5 rounded-full text-xs font-medium",
+                              if(@approved_project.project.status == "Selesai",
+                                do: "bg-green-100 text-green-800",
+                                else: "bg-amber-100 text-amber-800"
+                              )
+                            ]}>
+                              {@approved_project.project.status}
+                            </span>
+                          <% else %>
+                            <span class="text-gray-400">—</span>
+                          <% end %>
+                        </div>
+
+                        <div class="flex items-center gap-2 text-gray-600">
+                          <span class="font-medium">Pengurus Projek:</span>
+                          <% pengurus = if @approved_project.project, do: Projects.project_pengurus_projek_display(@approved_project.project), else: Projects.approved_project_pengurus_display(@approved_project) %>
+                          <%= if pengurus && pengurus != "" && pengurus != "-" do %>
+                            <span class="text-gray-900">{pengurus}</span>
+                          <% else %>
+                            <span class="text-gray-400 italic">Belum dilantik</span>
+                          <% end %>
                         </div>
                       </div>
                     </div>
