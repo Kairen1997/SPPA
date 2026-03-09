@@ -196,6 +196,9 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:notifications_open, false)
          |> assign(:profile_menu_open, false)
          |> assign(:show_settings_modal, false)
+         |> assign(:show_notes_modal, false)
+         |> assign(:notes_task, nil)
+         |> assign(:notes_form, to_form(%{"text" => ""}, as: :notes))
          |> assign(:project, project)
          |> assign(:project_modules, project_modules)
          |> assign(:developer_tasks, developer_tasks)
@@ -559,6 +562,95 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   @impl true
   def handle_event("close_profile_menu", _params, socket) do
     {:noreply, assign(socket, :profile_menu_open, false)}
+  end
+
+  @impl true
+  def handle_event("open_notes_modal", params, socket) do
+    task_id = params["task_id"] || params["task-id"]
+
+    task =
+      if task_id do
+        Enum.find(socket.assigns.developer_tasks || [], fn t ->
+          to_string(t.id) == to_string(task_id)
+        end)
+      else
+        nil
+      end
+
+    if task do
+      notes_value = Map.get(task, :notes) || task.notes || ""
+
+      form =
+        to_form(%{"text" => notes_value}, as: :notes)
+
+      {:noreply,
+       socket
+       |> assign(:show_notes_modal, true)
+       |> assign(:notes_task, task)
+       |> assign(:notes_form, form)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("close_notes_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_notes_modal, false)
+     |> assign(:notes_task, nil)}
+  end
+
+  @impl true
+  def handle_event("save_notes", params, socket) do
+    task = socket.assigns.notes_task
+    notes_text = get_in(params, ["notes", "text"]) || ""
+
+    if is_nil(task) do
+      {:noreply, socket}
+    else
+      attrs = %{
+        notes: if(notes_text == "", do: nil, else: notes_text)
+      }
+
+      case ProjectModules.update_module(task, attrs) do
+        {:ok, _updated} ->
+          project_id = socket.assigns.project.id
+          project = socket.assigns.project
+          project_modules =
+            ProjectModules.list_modules_by_project_id(project_id)
+
+          developer_tasks =
+            case socket.assigns.current_scope && socket.assigns.current_scope.user do
+              %{role: "pembangun sistem", id: user_id} ->
+                Enum.filter(project_modules, fn m -> m.developer_id == user_id end)
+
+              %{role: "pengurus projek", id: user_id} ->
+                Enum.filter(project_modules, fn m -> m.developer_id == user_id end)
+
+              _ ->
+                project_modules
+            end
+
+          project_pengaturcaraan_gantt_data =
+            GanttData.build_project_gantt(project, developer_tasks)
+
+          {:noreply,
+           socket
+           |> assign(:project_modules, project_modules)
+           |> assign(:developer_tasks, developer_tasks)
+           |> assign(:project_pengaturcaraan_gantt_data, project_pengaturcaraan_gantt_data)
+           |> assign(:show_notes_modal, false)
+           |> assign(:notes_task, nil)
+           |> assign(:notes_form, to_form(%{"text" => ""}, as: :notes))
+           |> put_flash(:info, "Catatan berjaya disimpan.")}
+
+        {:error, _changeset} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Gagal menyimpan catatan. Sila cuba lagi.")}
+      end
+    end
   end
 
   @impl true

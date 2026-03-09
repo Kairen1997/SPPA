@@ -11,6 +11,7 @@ defmodule Sppa.ProjectModules.ProjectModule do
     field :versi, :string
     field :tarikh_mula, :date
     field :due_date, :date
+    field :notes, :string
 
     belongs_to :project, Sppa.Projects.Project
     belongs_to :developer, Sppa.Accounts.User
@@ -30,6 +31,7 @@ defmodule Sppa.ProjectModules.ProjectModule do
       :versi,
       :tarikh_mula,
       :due_date,
+      :notes,
       :project_id,
       :developer_id
     ])

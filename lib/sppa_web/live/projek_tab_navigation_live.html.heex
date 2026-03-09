@@ -677,10 +677,13 @@
                     </div>
                     
                     <%!-- 1. Maklumat Projek --%>
-                    <div class="mb-6">
-                      <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide pb-2 border-b border-slate-300 mb-3">
-                        1. Maklumat Projek
-                      </h3>
+                    <div class="mb-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                      <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200">
+                        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                          1. Maklumat Projek
+                        </h3>
+                      </div>
+                      <div class="p-4 sm:p-5">
                       <table class="w-full border-collapse text-sm">
                         <tbody>
                           <tr class="border-b border-slate-200">
@@ -705,13 +708,17 @@
                           </tr>
                         </tbody>
                       </table>
+                      </div>
                     </div>
                     
                     <%!-- 2. Modul Sistem --%>
-                    <div class="mb-6">
-                      <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide pb-2 border-b border-slate-300 mb-3">
-                        2. Modul Sistem
-                      </h3>
+                    <div class="mb-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                      <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200">
+                        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                          2. Modul Sistem
+                        </h3>
+                      </div>
+                      <div class="p-4 sm:p-5">
                       <p class="text-xs text-slate-600 mb-3">
                         Modul berikut telah dicipta oleh pengurus projek untuk projek ini. Paparan hanya baca (tajuk tugasan dan penerangan).
                       </p>
@@ -729,13 +736,17 @@
                       <% else %>
                         <p class="text-sm text-slate-500 italic">Tiada modul dicipta oleh pengurus projek untuk projek ini.</p>
                       <% end %>
+                      </div>
                     </div>
                     
                     <%!-- 3. Pengesahan & Perakuan --%>
-                    <div class="mt-6">
-                      <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide pb-2 border-b border-slate-300 mb-4">
-                        3. Pengesahan & Perakuan
-                      </h3>
+                    <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                      <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200">
+                        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                          3. Pengesahan & Perakuan
+                        </h3>
+                      </div>
+                      <div class="p-4 sm:p-5">
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
                         <div>
                           <h4 class="font-bold text-slate-900 text-sm mb-1">Dipersetujui Oleh:</h4>
@@ -751,6 +762,7 @@
                           <p class="text-sm text-slate-800 mt-1"><span class="font-semibold text-slate-700">Jawatan:</span> {@analisis_pdf_data.prepared_by_position}</p>
                           <p class="text-sm text-slate-800 mt-1"><span class="font-semibold text-slate-700">Tarikh:</span> {@analisis_pdf_data.prepared_by_date}</p>
                         </div>
+                      </div>
                       </div>
                     </div>
                   <% else %>
@@ -1042,10 +1054,15 @@
                                 <% end %>
                               </td>
                               <td class="px-4 py-3 text-right">
-                                <.link navigate={~p"/projek/#{@project.id}/pelan-modul"} class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors">
-                                  <.icon name="hero-chart-bar" class="w-4 h-4" />
-                                  Pelan Modul
-                                </.link>
+                                <button
+                                  type="button"
+                                  phx-click="open_notes_modal"
+                                  phx-value-task_id={task.id}
+                                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors duration-200"
+                                >
+                                  <.icon name="hero-pencil-square" class="w-4 h-4" />
+                                  Catatan
+                                </button>
                               </td>
                             </tr>
                           <% end %>
@@ -1056,15 +1073,11 @@
                 </div>
                 <%= if @project_pengaturcaraan_gantt_data && !Enum.empty?(@project_pengaturcaraan_gantt_data.modules) do %>
                   <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
                       <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
                         <.icon name="hero-calendar-days" class="w-5 h-5 text-gray-600" />
                         Carta Gantt Modul
                       </h2>
-                      <.link navigate={~p"/projek/#{@project.id}/pelan-modul"} class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200">
-                        <.icon name="hero-chart-bar" class="w-4 h-4" />
-                        Buka Pelan Modul
-                      </.link>
                     </div>
                     <% gd = @project_pengaturcaraan_gantt_data
                     timeline_start = gd.start_date
@@ -5227,4 +5240,58 @@
       </div>
     </div>
   <% end %>
+
+  <%!-- Catatan Tugasan Modal (Pengaturcaraan tab) --%>
+  <div
+    :if={@show_notes_modal && @notes_task}
+    class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Catatan Tugasan</h2>
+          <p class="text-xs text-gray-500 mt-1 max-w-sm truncate">
+            {@notes_task.title || "-"}
+          </p>
+        </div>
+        <button
+          type="button"
+          phx-click="close_notes_modal"
+          class="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Tutup"
+        >
+          <.icon name="hero-x-mark" class="w-4 h-4" />
+        </button>
+      </div>
+
+      <.form for={@notes_form} phx-submit="save_notes" class="px-6 py-5 space-y-4">
+        <.input
+          field={@notes_form[:text]}
+          type="textarea"
+          label="Catatan"
+          class="w-full"
+          rows="6"
+          placeholder="Contoh: status terkini, isu yang diselesaikan, atau tindakan seterusnya."
+        />
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+          <button
+            type="button"
+            phx-click="close_notes_modal"
+            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            class="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+          >
+            Simpan
+          </button>
+        </div>
+      </.form>
+    </div>
+  </div>
 </Layouts.app>
