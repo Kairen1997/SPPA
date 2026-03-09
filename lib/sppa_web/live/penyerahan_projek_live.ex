@@ -6,6 +6,7 @@ defmodule SppaWeb.PenyerahanProjekLive do
   use SppaWeb, :live_view
 
   alias Sppa.Repo
+  alias Sppa.Projects
   alias Oban
   require Logger
   import Ecto.Query
@@ -167,7 +168,7 @@ defmodule SppaWeb.PenyerahanProjekLive do
     base_query =
       from ap in Sppa.ApprovedProjects.ApprovedProject,
         left_join: p in assoc(ap, :project),
-        preload: [project: p]
+        preload: [project: [:project_manager, :approved_project]]
 
     base_query =
       if socket.assigns.search_query != "" do
@@ -215,6 +216,14 @@ defmodule SppaWeb.PenyerahanProjekLive do
 
     total = Repo.aggregate(base_query, :count, :id)
     ceil(total / socket.assigns.per_page)
+  end
+
+  def pengurus_projek_display(approved_project) do
+    if approved_project.project do
+      Projects.project_pengurus_projek_display(approved_project.project)
+    else
+      Projects.approved_project_pengurus_display(approved_project)
+    end
   end
 
   defp pagination_pages(current_page, total_pages) do

@@ -429,6 +429,29 @@ defmodule Sppa.Projects do
   end
 
   @doc """
+  Returns the display string of pengurus projek for an approved project when there is no
+  linked internal project. Resolves approved_project.pengurus_projek (no_kp list) to names.
+  Used e.g. on Penyerahan page to show lantikan by ketua unit.
+  """
+  def approved_project_pengurus_display(nil), do: ""
+  def approved_project_pengurus_display(%ApprovedProject{} = ap) do
+    if ap.pengurus_projek && ap.pengurus_projek != "" do
+      no_kps = parse_pengurus_projek(ap.pengurus_projek)
+      names =
+        Enum.map(no_kps, fn no_kp ->
+          case Accounts.get_user_by_no_kp(no_kp) do
+            nil -> nil
+            user -> user.name || user.email || user.no_kp
+          end
+        end)
+        |> Enum.reject(&is_nil/1)
+      if names == [], do: "", else: Enum.join(names, ", ")
+    else
+      ""
+    end
+  end
+
+  @doc """
   Returns the display string of pengurus projek for a project (for dashboard Aktiviti Terkini).
   Uses approved_project.pengurus_projek (no_kp list) resolved to names; falls back to project_manager if set.
   """
@@ -469,8 +492,11 @@ defmodule Sppa.Projects do
       "ketua penolong pengarah" ->
         get_dashboard_stats_all_projects()
 
-      role when role in ["pengurus projek", "ketua unit"] ->
+      "pengurus projek" ->
         get_dashboard_stats_by_project_manager(current_scope)
+
+      "ketua unit" ->
+        get_dashboard_stats_for_ketua_unit(current_scope)
 
       "pembangun sistem" ->
         get_dashboard_stats_for_pembangun_sistem(current_scope)
@@ -593,6 +619,25 @@ defmodule Sppa.Projects do
       uat: Enum.count(projects, &(&1.status == "UAT")),
       change_management: Enum.count(projects, &(&1.status == "Pengurusan Perubahan"))
     }
+  end
+
+  defp get_dashboard_stats_for_ketua_unit(_current_scope) do
+    # Ketua unit: Jumlah Projek = bilangan projek yang telah diluluskan (ada approved_project_id)
+    result =
+      from(p in Project,
+        where: not is_nil(p.approved_project_id),
+        select: %{
+          total_projects: count(p.id),
+          in_development: filter(count(p.id), p.status == "Dalam Pembangunan"),
+          completed: filter(count(p.id), p.status == "Selesai"),
+          on_hold: filter(count(p.id), p.status == "Ditangguhkan"),
+          uat: filter(count(p.id), p.status == "UAT"),
+          change_management: filter(count(p.id), p.status == "Pengurusan Perubahan")
+        }
+      )
+      |> Repo.one()
+
+    map_result(result)
   end
 
   defp get_dashboard_stats_by_owner(current_scope) do
