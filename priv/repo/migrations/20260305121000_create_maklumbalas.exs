@@ -2,7 +2,7 @@ defmodule Sppa.Repo.Migrations.CreateMaklumbalas do
   use Ecto.Migration
 
   def change do
-    create table(:maklumbalas) do
+    create_if_not_exists table(:maklumbalas) do
       add :tarikh_maklumbalas, :date
       add :jabatan, :string
       add :responden, :string
@@ -13,6 +13,6 @@ defmodule Sppa.Repo.Migrations.CreateMaklumbalas do
       timestamps(type: :utc_datetime)
     end
 
-    create index(:maklumbalas, [:project_id])
+    create_if_not_exists index(:maklumbalas, [:project_id])
   end
 end
