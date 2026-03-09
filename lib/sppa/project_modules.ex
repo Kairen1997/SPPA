@@ -5,7 +5,34 @@ defmodule Sppa.ProjectModules do
 
   import Ecto.Query, warn: false
   alias Sppa.Repo
+  alias Sppa.Projects
   alias Sppa.ProjectModules.ProjectModule
+
+  @doc """
+  List project modules (tugasan) assigned to the current user for the Pengaturcaraan page.
+  Only returns modules where developer_id == current_scope.user.id, restricted to projects
+  the user can access (pengurus projek: assigned via approved_project.pengurus_projek;
+  pembangun sistem: developer or in approved_project.pembangun_sistem).
+  """
+  def list_modules_assigned_to_user(current_scope) do
+    user_id = current_scope.user && current_scope.user.id
+
+    if is_nil(user_id) do
+      []
+    else
+      project_ids = Projects.list_accessible_project_ids_for_pengaturcaraan(current_scope)
+
+      if project_ids == [] do
+        []
+      else
+        ProjectModule
+        |> where([m], m.project_id in ^project_ids and m.developer_id == ^user_id)
+        |> order_by([m], asc: m.project_id, asc: m.fasa, asc: m.versi, asc: m.inserted_at)
+        |> preload([:developer, project: :approved_project])
+        |> Repo.all()
+      end
+    end
+  end
 
   @doc """
   List all modules for a given project by project_id (no user filter).

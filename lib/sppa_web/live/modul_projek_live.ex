@@ -43,7 +43,10 @@ defmodule SppaWeb.ModulProjekLive do
         all_developers = Enum.filter(users, fn user -> user.role == "pembangun sistem" end)
 
         # Filter developers to only include those selected in the approved project's pembangun_sistem
-        developers = filter_developers_by_project_involvement(all_developers, project)
+        developers_from_pembangun = filter_developers_by_project_involvement(all_developers, project)
+        # Include assigned pengurus projek so they can be set as pembangun (pengurus projek can also be pembangun sistem)
+        assigned_pengurus = assigned_pengurus_projek_for_project(users, project)
+        developers = (developers_from_pembangun ++ assigned_pengurus) |> Enum.uniq_by(& &1.id)
 
         tasks =
           ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
@@ -567,6 +570,31 @@ defmodule SppaWeb.ModulProjekLive do
       []
     end
   end
+
+  # Returns users who are assigned as pengurus projek for this project (from approved_project.pengurus_projek).
+  # Pengurus projek can also be assigned as pembangun sistem in the Modul Baru form.
+  defp assigned_pengurus_projek_for_project(users, project) do
+    approved_project = project.approved_project
+    if approved_project && approved_project.pengurus_projek && approved_project.pengurus_projek != "" do
+      no_kps = parse_pengurus_projek(approved_project.pengurus_projek)
+      users
+      |> Enum.filter(fn u -> u.role == "pengurus projek" && u.no_kp && u.no_kp in no_kps end)
+    else
+      []
+    end
+  end
+
+  defp parse_pengurus_projek(nil), do: []
+  defp parse_pengurus_projek(""), do: []
+
+  defp parse_pengurus_projek(str) when is_binary(str) do
+    str
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(&(&1 != ""))
+  end
+
+  defp parse_pengurus_projek(_), do: []
 
   # Parse comma-separated pembangun_sistem string into list of no_kp values
   defp parse_pembangun_sistem(nil), do: []

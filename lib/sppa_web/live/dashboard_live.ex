@@ -1,7 +1,6 @@
 defmodule SppaWeb.DashboardLive do
   use SppaWeb, :live_view
 
-  alias Sppa.ActivityLogs
   alias Sppa.Projects
 
   @allowed_roles ["pembangun sistem", "pengurus projek", "ketua unit", "ketua penolong pengarah"]
@@ -26,11 +25,20 @@ defmodule SppaWeb.DashboardLive do
 
       # Always load stats and activities from database so metric cards show actual counts
       stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
-      raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
-
+      # Aktiviti Terkini: recently registered projects (from external link), latest first (visible to current role)
+      registered = Projects.list_recently_registered_projects(socket.assigns.current_scope, 20)
       activities =
-        Enum.map(raw_activities, fn a ->
-          Map.put(a, :action_label, ActivityLogs.action_label(a.action))
+        Enum.map(registered, fn p ->
+          %{
+            action: "projek_didaftar",
+            action_label: "Projek didaftarkan",
+            resource_name: p.nama || "-",
+            resource_id: p.id,
+            actor: nil,
+            pengurus_projek_display: Projects.project_pengurus_projek_display(p),
+            details: "Didaftar dari pautan luar",
+            inserted_at: p.inserted_at
+          }
         end)
 
       notifications_count = length(activities)

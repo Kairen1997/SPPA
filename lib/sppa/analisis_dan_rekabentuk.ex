@@ -148,9 +148,12 @@ defmodule Sppa.AnalisisDanRekabentuk do
   Returns modules (nama modul, versi, fungsi modul) from Analisis dan Rekabentuk
   for use on the Pembangunan (Pengaturcaraan) page.
 
-  For pembangun sistem: Uses the user's most recent analisis_dan_rekabentuk document.
   For pengurus projek: Returns modules from all projects they are assigned to
-  (either as pengurus_projek or pembangun_sistem in approved_project).
+  (via approved_project.pengurus_projek).
+  For pembangun sistem: Returns modules from all projects assigned to them
+  (approved_project.pembangun_sistem or project.developer_id).
+  For other roles (e.g. ketua unit, ketua penolong pengarah): uses the user's
+  most recent analisis_dan_rekabentuk document.
 
   Each module includes the document version (versi). Fields not stored in Analisis dan
   Rekabentuk (priority, status, tarikh_mula, tarikh_jangka_siap, catatan) are
@@ -240,8 +243,73 @@ defmodule Sppa.AnalisisDanRekabentuk do
         end)
         |> Enum.sort_by(&{&1.project_id || 0, &1.number || 0})
 
+      "pembangun sistem" ->
+        # Show only modules from projects assigned to this developer
+        # (approved_project.pembangun_sistem or project.developer_id)
+        accessible_projects = Projects.list_projects_for_pembangun_sistem(current_scope)
+        project_ids = accessible_projects |> Enum.map(& &1.id) |> Enum.reject(&is_nil/1)
+
+        project_ids
+        |> Enum.flat_map(fn project_id ->
+          analisis = get_analisis_dan_rekabentuk_by_project_for_display(project_id, nil)
+
+          if analisis do
+            versi = analisis.versi || "1.0.0"
+            pengaturcaraan_by_module = ModulPengaturcaraan.list_by_project(project_id)
+
+            analisis.modules
+            |> Enum.map(fn module ->
+              functions =
+                module.functions
+                |> Enum.map(fn function ->
+                  sub_functions =
+                    (function.sub_functions || [])
+                    |> Enum.map(fn sub -> %{id: "sub_#{sub.id}", name: sub.name || ""} end)
+
+                  %{
+                    id: "func_#{function.id}",
+                    name: function.name || "",
+                    sub_functions: sub_functions
+                  }
+                end)
+
+              pengaturcaraan = Map.get(pengaturcaraan_by_module, module.id)
+
+              base = %{
+                id: "module_#{module.id}",
+                number: module.number,
+                name: module.name || "",
+                version: versi,
+                priority: nil,
+                status: "Belum Mula",
+                tarikh_mula: nil,
+                tarikh_jangka_siap: nil,
+                catatan: nil,
+                functions: functions,
+                project_id: project_id
+              }
+
+              if pengaturcaraan do
+                %{
+                  base
+                  | priority: pengaturcaraan.keutamaan,
+                    status: pengaturcaraan.status || "Belum Mula",
+                    tarikh_mula: pengaturcaraan.tarikh_mula,
+                    tarikh_jangka_siap: pengaturcaraan.tarikh_jangka_siap,
+                    catatan: pengaturcaraan.catatan
+                }
+              else
+                base
+              end
+            end)
+          else
+            []
+          end
+        end)
+        |> Enum.sort_by(&{&1.project_id || 0, &1.number || 0})
+
       _ ->
-        # For pembangun sistem and other roles: use existing behavior
+        # For ketua unit, ketua penolong pengarah, etc.: use existing behavior (most recent analisis)
         analisis =
           AnalisisDanRekabentuk
           |> where([a], a.user_id == ^current_scope.user.id)

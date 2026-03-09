@@ -119,7 +119,7 @@
                     </th>
                     
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Oleh
+                      Pengurus Projek
                     </th>
                     
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -164,11 +164,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                           <div class="flex items-center gap-2 text-sm text-gray-600">
                             <.icon name="hero-user" class="w-4 h-4 text-gray-400" />
-                            <%= if activity.actor do %>
-                              <span>{activity.actor.email}</span>
-                            <% else %>
-                              <span class="text-gray-400">-</span>
-                            <% end %>
+                            <span>{activity.pengurus_projek_display || "-"}</span>
                           </div>
                         </td>
                         
