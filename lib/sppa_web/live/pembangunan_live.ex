@@ -82,6 +82,9 @@ defmodule SppaWeb.PembangunanLive do
         |> assign(:gantt_list, gantt_list)
         |> assign(:use_assigned_tasks, use_assigned_tasks)
         |> assign(:pengaturcaraan_stats, pengaturcaraan_stats)
+        |> assign(:show_notes_modal, false)
+        |> assign(:notes_task, nil)
+        |> assign(:notes_form, to_form(%{"text" => ""}, as: :notes))
         |> assign(:page_size, @page_size)
         |> assign(:page, 1)
         |> put_pagination_assigns()
@@ -172,6 +175,94 @@ defmodule SppaWeb.PembangunanLive do
       |> put_pagination_assigns()
 
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("open_notes_modal", params, socket) do
+    # Params may have "task_id" (from phx-value-task_id)
+    task_id = params["task_id"] || params["task-id"]
+
+    task =
+      if task_id do
+        Enum.find(socket.assigns.assigned_modules || [], fn t ->
+          to_string(t.id) == to_string(task_id)
+        end)
+      else
+        nil
+      end
+
+    if task do
+      notes_value = Map.get(task, :notes) || task.notes || ""
+
+      form =
+        to_form(%{"text" => notes_value}, as: :notes)
+
+      {:noreply,
+       socket
+       |> assign(:show_notes_modal, true)
+       |> assign(:notes_task, task)
+       |> assign(:notes_form, form)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("close_notes_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_notes_modal, false)
+     |> assign(:notes_task, nil)}
+  end
+
+  @impl true
+  def handle_event("save_notes", params, socket) do
+    task = socket.assigns.notes_task
+    notes_text = get_in(params, ["notes", "text"]) || ""
+
+    if is_nil(task) do
+      {:noreply, socket}
+    else
+      attrs = %{
+        notes: if(notes_text == "", do: nil, else: notes_text)
+      }
+
+      case ProjectModules.update_module(task, attrs) do
+        {:ok, _updated} ->
+          assigned = ProjectModules.list_modules_assigned_to_user(socket.assigns.current_scope)
+
+          gantt_list =
+            assigned
+            |> Enum.group_by(fn m -> m.project_id end)
+            |> Enum.map(fn {_pid, modules} ->
+              project = (List.first(modules)).project
+              if project, do: GanttData.build_project_gantt(project, modules), else: nil
+            end)
+            |> Enum.reject(&is_nil/1)
+
+          stats = %{
+            total: length(assigned),
+            done: Enum.count(assigned, &(&1.status == "done")),
+            in_progress: Enum.count(assigned, &(&1.status == "in_progress")),
+            project_count: assigned |> Enum.map(& &1.project_id) |> Enum.uniq() |> length()
+          }
+
+          {:noreply,
+           socket
+           |> assign(:assigned_modules, assigned)
+           |> assign(:gantt_list, gantt_list)
+           |> assign(:pengaturcaraan_stats, stats)
+           |> assign(:show_notes_modal, false)
+           |> assign(:notes_task, nil)
+           |> assign(:notes_form, to_form(%{"text" => ""}, as: :notes))
+           |> put_flash(:info, "Catatan berjaya disimpan.")}
+
+        {:error, _changeset} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Gagal menyimpan catatan. Sila cuba lagi.")}
+      end
+    end
   end
 
   @impl true
