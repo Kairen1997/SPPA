@@ -483,6 +483,10 @@ defmodule SppaWeb.ProjectListLive do
                       </th>
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Status
+                      </th>
+
+                      <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Tarikh
                       </th>
 
@@ -504,6 +508,14 @@ defmodule SppaWeb.ProjectListLive do
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {project.jabatan || "-"}
+                      </td>
+
+                      <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                        <%= if project.project && project.project.status do %>
+                          {project.project.status}
+                        <% else %>
+                          <span class="text-gray-400">-</span>
+                        <% end %>
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">

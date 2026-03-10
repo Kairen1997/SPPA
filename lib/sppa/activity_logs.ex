@@ -18,6 +18,7 @@ defmodule Sppa.ActivityLogs do
   - `:resource_id` - ID of the resource
   - `:resource_name` - Display name of the resource (e.g. project nama)
   - `:details` - Optional text details (e.g. "Status: Dalam Pembangunan → Selesai")
+  - `:target_user_id` - Optional ID of the user who is the target of the action (e.g. assigned pengurus projek)
 
   ## Examples
       log_activity(%{
@@ -51,6 +52,35 @@ defmodule Sppa.ActivityLogs do
         preload: [:actor]
       )
       |> Repo.all()
+    end
+  end
+
+  @doc """
+  Returns recent assignment activities where the current user (pengurus projek) was
+  assigned to a project by ketua unit. Used for dashboard PP notifications so the
+  project manager sees "Ketua unit telah menugaskan projek X kepada anda."
+  """
+  def list_recent_assignment_activities_for_pengurus_projek(current_scope, limit \\ 10) do
+    if is_nil(current_scope) or is_nil(current_scope.user) or current_scope.user.role != "pengurus projek" do
+      []
+    else
+      from(a in ActivityLog,
+        where:
+          a.action == "pengurus_projek_dilantik" and
+            a.target_user_id == ^current_scope.user.id,
+        order_by: [desc: a.inserted_at],
+        limit: ^limit,
+        preload: [:actor]
+      )
+      |> Repo.all()
+      |> Enum.map(fn a ->
+        %{
+          resource_name: a.resource_name,
+          action_label: action_label(a.action),
+          details: a.details,
+          inserted_at: a.inserted_at
+        }
+      end)
     end
   end
 

@@ -548,13 +548,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                 socket.assigns.developers
                 |> Enum.filter(fn dev -> dev.no_kp not in new_selected_devs end)
 
-              # Log activity for dashboard "Aktiviti Terkini"
-              pm_display_name =
-                project_manager.name ||
-                  project_manager.email ||
-                  project_manager.no_kp ||
-                  "Pengurus Projek"
-
+              # Log activity so pengurus projek receives notification (dashboard PP)
               if project_for_log do
                 ActivityLogs.log_activity(%{
                   actor_id: socket.assigns.current_scope.user.id,
@@ -562,7 +556,18 @@ defmodule SppaWeb.ApprovedProjectLive do
                   resource_type: "project",
                   resource_id: project_for_log.id,
                   resource_name: project_for_log.nama,
-                  details: "Pengurus projek: #{pm_display_name}"
+                  details: "Ketua unit telah menugaskan projek ini kepada anda.",
+                  target_user_id: project_manager.id
+                })
+              else
+                ActivityLogs.log_activity(%{
+                  actor_id: socket.assigns.current_scope.user.id,
+                  action: "pengurus_projek_dilantik",
+                  resource_type: "approved_project",
+                  resource_id: reloaded_approved_project.id,
+                  resource_name: reloaded_approved_project.nama_projek || "Projek",
+                  details: "Ketua unit telah menugaskan projek ini kepada anda.",
+                  target_user_id: project_manager.id
                 })
               end
 

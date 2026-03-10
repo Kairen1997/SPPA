@@ -252,6 +252,8 @@
 
             <th>Kementerian / Jabatan</th>
 
+            <th>Status</th>
+
             <th>Tarikh Mula</th>
 
             <th>Tarikh Jangkaan Siap</th>
@@ -261,7 +263,7 @@
         <tbody>
           <%= if Enum.empty?(@projects) do %>
             <tr>
-              <td colspan="5" style="text-align: center; padding: 30px; color: #64748b;">
+              <td colspan="6" style="text-align: center; padding: 30px; color: #64748b;">
                 <strong>Tiada projek diluluskan</strong>
               </td>
             </tr>
@@ -273,6 +275,14 @@
                 <td>{project.pengurus_email || "-"}</td>
 
                 <td>{project.jabatan || "-"}</td>
+
+                <td>
+                  <%= if project.project && project.project.status do %>
+                    <strong>{project.project.status}</strong>
+                  <% else %>
+                    <span style="color: #94a3b8;">-</span>
+                  <% end %>
+                </td>
 
                 <td>
                   <%= if project.tarikh_mula do %>
