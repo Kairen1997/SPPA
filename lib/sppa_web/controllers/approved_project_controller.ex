@@ -14,15 +14,7 @@ defmodule SppaWeb.ApprovedProjectController do
       |> render(:"404")
       |> halt()
     else
-      case load_and_send_kertas_kerja(conn, id) do
-        {:send, sent_conn} -> sent_conn
-        :not_found ->
-          conn
-          |> put_status(404)
-          |> put_view(html: SppaWeb.ErrorHTML)
-          |> render(:"404")
-          |> halt()
-      end
+      load_and_send_kertas_kerja(conn, id)
     end
   end
 
@@ -39,7 +31,7 @@ defmodule SppaWeb.ApprovedProjectController do
     path = approved_project.kertas_kerja_path
 
     if is_nil(path) or path == "" do
-      :not_found
+      not_found(conn)
     else
       app_root = Application.get_env(:sppa, :root_path) || File.cwd!()
       base = Path.expand(app_root)
@@ -52,23 +44,29 @@ defmodule SppaWeb.ApprovedProjectController do
 
       if (under_root or under_documents) and File.regular?(resolved) do
         filename = Path.basename(resolved)
-        content_type = Plug.MIME.path(resolved)
+        content_type = MIME.from_path(resolved)
 
         sent_conn =
           conn
           |> put_resp_content_type(content_type)
-          |> Plug.Conn.send_file(200, resolved,
-            disposition: :inline,
-            filename: filename
-          )
+          |> put_resp_header("content-disposition", ~s(inline; filename="#{filename}"))
+          |> Plug.Conn.send_file(200, resolved)
           |> halt()
 
-        {:send, sent_conn}
+        sent_conn
       else
-        :not_found
+        not_found(conn)
       end
     end
   rescue
-    Ecto.NoResultsError -> :not_found
+    Ecto.NoResultsError -> not_found(conn)
+  end
+
+  defp not_found(conn) do
+    conn
+    |> put_status(404)
+    |> put_view(html: SppaWeb.ErrorHTML)
+    |> render(:"404")
+    |> halt()
   end
 end
