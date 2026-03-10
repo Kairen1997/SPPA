@@ -55,9 +55,29 @@ defmodule Sppa.ActivityLogs do
   end
 
   @doc """
+  Returns recent assignment activities (pengurus projek dilantik/dikeluarkan) for the
+  ketua unit dashboard. All ketua units see the same list; no per-unit filter.
+  Used for "Aktiviti Terkini Unit" so ketua unit can see when projects are assigned
+  to pengurus projek (nama sistem, nama pengurus, tindakan, tarikh).
+  """
+  def list_recent_assignment_activities_for_ketua_unit(limit \\ 20) do
+    from(a in ActivityLog,
+      where:
+        a.action in ["pengurus_projek_dilantik", "pengurus_projek_dikeluarkan"] and
+          a.resource_type in ["project", "approved_project"],
+      order_by: [desc: a.inserted_at],
+      limit: ^limit,
+      preload: [:actor]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
   Returns the display label in Malay for an action key.
   """
   def action_label("projek_dicipta"), do: "Projek dicipta"
   def action_label("projek_dikemaskini"), do: "Projek dikemaskini"
+  def action_label("pengurus_projek_dilantik"), do: "Pengurus projek dilantik"
+  def action_label("pengurus_projek_dikeluarkan"), do: "Pengurus projek dikeluarkan"
   def action_label(action), do: action
 end

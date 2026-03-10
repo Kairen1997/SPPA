@@ -622,7 +622,7 @@ defmodule Sppa.Projects do
   end
 
   defp get_dashboard_stats_for_ketua_unit(_current_scope) do
-    # Ketua unit: Jumlah Projek = bilangan projek yang telah diluluskan (ada approved_project_id)
+    # Ketua unit: Jumlah Projek = bilangan projek yang telah diluluskan (ada approved_project_id).
     result =
       from(p in Project,
         where: not is_nil(p.approved_project_id),
@@ -637,7 +637,21 @@ defmodule Sppa.Projects do
       )
       |> Repo.one()
 
-    map_result(result)
+    base = map_result(result)
+
+    # Dalam Pembangunan: hanya kira projek yang status "Dalam Pembangunan" DAN pengurus telah
+    # dilantik (project_manager_id ada ATAU approved_project.pengurus_projek tidak kosong).
+    in_dev_count =
+      from(p in Project,
+        join: ap in assoc(p, :approved_project),
+        where: not is_nil(p.approved_project_id),
+        where: p.status == "Dalam Pembangunan",
+        where: not is_nil(p.project_manager_id) or (not is_nil(ap.pengurus_projek) and ap.pengurus_projek != ""),
+        select: count(p.id)
+      )
+      |> Repo.one()
+
+    Map.put(base, :in_development, in_dev_count || 0)
   end
 
   defp get_dashboard_stats_by_owner(current_scope) do
