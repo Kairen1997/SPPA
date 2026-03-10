@@ -33,15 +33,19 @@ defmodule SppaWeb.ProjectListLive do
         |> assign(:show_modal, false)
         |> assign(:form, to_form(%{}, as: :project))
 
-      # Muat aktiviti untuk notifikasi header (sama seperti dashboard)
-      raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
+      # Muat aktiviti untuk notifikasi header – ikut logik Dashboard Pengurus Projek
+      project_activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
 
-      activities =
-        Enum.map(raw_activities, fn a ->
-          Map.put(a, :action_label, ActivityLogs.action_label(a.action))
-        end)
+      assignment_activities =
+        ActivityLogs.list_recent_assignment_activities_for_pengurus_projek(
+          socket.assigns.current_scope,
+          10
+        )
 
-      notifications_count = length(activities)
+      notification_activities =
+        merge_activities_for_notifications(project_activities, assignment_activities, 10)
+
+      notifications_count = length(notification_activities)
 
       # Always load projects and users so the page is populated immediately,
       # even before the LiveView JS socket connects.
@@ -54,7 +58,7 @@ defmodule SppaWeb.ProjectListLive do
        |> assign(:projects, projects)
        |> assign(:total_pages, total_pages)
        |> assign(:users, users)
-       |> assign(:activities, activities)
+       |> assign(:activities, notification_activities)
        |> assign(:notifications_count, notifications_count)}
     else
       socket =
@@ -256,6 +260,34 @@ defmodule SppaWeb.ProjectListLive do
   defp calculate_total_pages(socket) do
     total = socket |> list_all_approved_projects_for_current_pm() |> length()
     ceil(total / socket.assigns.per_page)
+  end
+
+  # Sama seperti di Dashboard Pengurus Projek: gabungkan aktiviti projek
+  # dan aktiviti penugasan untuk dropdown notifikasi.
+  defp merge_activities_for_notifications(project_activities, assignment_activities, limit) do
+    project_items =
+      Enum.map(project_activities, fn p ->
+        sort_at = p.last_updated || Map.get(p, :updated_at) || DateTime.utc_now()
+        %{nama: p.nama, status: p.status, last_updated: p.last_updated, sort_at: sort_at}
+      end)
+
+    assignment_items =
+      Enum.map(assignment_activities, fn a ->
+        sort_at = a.inserted_at || DateTime.utc_now()
+
+        %{
+          resource_name: a.resource_name,
+          action_label: a.action_label,
+          details: a.details,
+          inserted_at: a.inserted_at,
+          sort_at: sort_at
+        }
+      end)
+
+    (project_items ++ assignment_items)
+    |> Enum.sort_by(& &1.sort_at, {:desc, DateTime})
+    |> Enum.take(limit)
+    |> Enum.map(&Map.delete(&1, :sort_at))
   end
 
   # Returns all approved projects visible to the current pengurus projek,

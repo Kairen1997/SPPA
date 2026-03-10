@@ -124,7 +124,22 @@ defmodule SppaWeb.ApprovedProjectLive do
          current_scope
        ) do
     all_users = Accounts.list_users()
-    all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
+    base_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
+
+    # Benarkan pengurus projek melantik diri sendiri sebagai pembangun:
+    # tambah pengguna semasa ke dalam senarai pembangun jika belum ada.
+    all_developers =
+      if user_role == "pengurus projek" do
+        current_user = current_scope.user
+
+        if current_user && !Enum.any?(base_developers, fn dev -> dev.id == current_user.id end) do
+          [current_user | base_developers]
+        else
+          base_developers
+        end
+      else
+        base_developers
+      end
 
     all_project_managers =
       Enum.filter(all_users, fn user -> user.role == "pengurus projek" end)
@@ -165,21 +180,32 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp format_date(nil), do: "-"
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
 
-  # Status for approved project details: "Belum Lantik Pengurus" if no pengurus appointed;
-  # otherwise project status (e.g. "Dalam Pembangunan", "Selesai").
+  # Status untuk halaman butiran projek diluluskan.
+  # - Jika TIADA pembangun dilantik -> "Belum Lantik Pembangun"
+  # - Jika ada pembangun tapi TIADA pengurus -> "Belum Lantik Pengurus"
+  # - Jika kedua-dua dilantik -> guna status projek (contoh: "Dalam Pembangunan", "Selesai")
   def status_display_approved_project(approved_project) do
+    pembangun_dilantik? =
+      (approved_project.project && approved_project.project.developer_id) ||
+        (approved_project.pembangun_sistem && approved_project.pembangun_sistem != "")
+
     pengurus_dilantik? =
       (approved_project.project && approved_project.project.project_manager_id) ||
         (approved_project.pengurus_projek && approved_project.pengurus_projek != "")
 
-    if pengurus_dilantik? do
-      if approved_project.project && approved_project.project.status && approved_project.project.status != "" do
+    cond do
+      !pembangun_dilantik? ->
+        "Belum Lantik Pembangun"
+
+      !pengurus_dilantik? ->
+        "Belum Lantik Pengurus"
+
+      approved_project.project && approved_project.project.status &&
+          approved_project.project.status != "" ->
         approved_project.project.status
-      else
+
+      true ->
         "Dalam Pembangunan"
-      end
-    else
-      "Belum Lantik Pengurus"
     end
   end
 

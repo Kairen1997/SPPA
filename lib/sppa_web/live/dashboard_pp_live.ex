@@ -156,6 +156,13 @@ defmodule SppaWeb.DashboardPPLive do
 
   # Helper function to get all team members (developers and project managers) with their roles
   defp get_team_members(project) do
+    dev_no_kps =
+      if project.approved_project && project.approved_project.pembangun_sistem do
+        parse_pembangun_sistem(project.approved_project.pembangun_sistem)
+      else
+        []
+      end
+
     team_members = []
 
     # Add main developer if exists
@@ -220,7 +227,11 @@ defmodule SppaWeb.DashboardPPLive do
           true -> "N/A"
         end
 
-      %{name: name, role: role}
+      is_developer =
+        role == "pembangun sistem" ||
+          (user.no_kp && user.no_kp in dev_no_kps)
+
+      %{name: name, role: role, is_developer: is_developer}
     end)
     |> Enum.filter(fn %{name: name} -> name != nil end)
     |> Enum.sort_by(fn %{role: role} ->
@@ -429,7 +440,7 @@ defmodule SppaWeb.DashboardPPLive do
                         </th>
 
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Pembangun / Pengurus Projek
+                          Pembangun
                         </th>
 
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -467,37 +478,17 @@ defmodule SppaWeb.DashboardPPLive do
 
                             <td class="px-6 py-4">
                               <div class="text-sm text-gray-600">
-                                <%= case get_team_members(activity) do %>
+                                <%= case Enum.filter(get_team_members(activity), fn member ->
+                                      member.is_developer
+                                    end) do %>
                                   <% [] -> %>
-                                    <span class="text-gray-400">Tiada pembangun/pengurus projek</span>
-                                  <% team_members -> %>
+                                    <span class="text-gray-400">Tiada pembangun</span>
+                                  <% developers -> %>
                                     <div class="flex flex-col gap-1">
-                                      <%= for member <- team_members do %>
-                                        <div class="flex items-center gap-2">
-                                          <%= if member.role == "pembangun sistem" do %>
-                                            <.icon
-                                              name="hero-code-bracket"
-                                              class="w-4 h-4 text-blue-500"
-                                            />
-                                            <span class="font-medium text-gray-900">
-                                              {member.name}
-                                            </span>
-                                            <span class="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                                              Pembangun
-                                            </span>
-                                          <% else %>
-                                            <.icon
-                                              name="hero-user-circle"
-                                              class="w-4 h-4 text-purple-500"
-                                            />
-                                            <span class="font-medium text-gray-900">
-                                              {member.name}
-                                            </span>
-                                            <span class="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
-                                              Pengurus
-                                            </span>
-                                          <% end %>
-                                        </div>
+                                      <%= for member <- developers do %>
+                                        <span class="font-medium text-gray-900">
+                                          {member.name}
+                                        </span>
                                       <% end %>
                                     </div>
                                 <% end %>
@@ -506,7 +497,15 @@ defmodule SppaWeb.DashboardPPLive do
 
                             <td class="px-6 py-4 whitespace-nowrap">
                               <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {activity.status}
+                                <%= if Enum.any?(
+                                      Enum.filter(get_team_members(activity), fn member ->
+                                        member.is_developer
+                                      end)
+                                    ) do %>
+                                  {activity.status}
+                                <% else %>
+                                  Belum lantik pembangun
+                                <% end %>
                               </span>
                             </td>
 
