@@ -85,6 +85,36 @@ defmodule Sppa.ActivityLogs do
   end
 
   @doc """
+  Returns recent assignment activities where the current user (pembangun sistem)
+  was assigned as a developer to a project. Used so developers see notifications
+  like "Anda telah dilantik sebagai pembangun sistem bagi projek X."
+  """
+  def list_recent_assignment_activities_for_pembangun_sistem(current_scope, limit \\ 10) do
+    if is_nil(current_scope) or is_nil(current_scope.user) or
+         current_scope.user.role != "pembangun sistem" do
+      []
+    else
+      from(a in ActivityLog,
+        where:
+          a.action == "pembangun_sistem_dilantik" and
+            a.target_user_id == ^current_scope.user.id,
+        order_by: [desc: a.inserted_at],
+        limit: ^limit,
+        preload: [:actor]
+      )
+      |> Repo.all()
+      |> Enum.map(fn a ->
+        %{
+          resource_name: a.resource_name,
+          action_label: action_label(a.action),
+          details: a.details,
+          inserted_at: a.inserted_at
+        }
+      end)
+    end
+  end
+
+  @doc """
   Returns recent assignment activities (pengurus projek dilantik/dikeluarkan) for the
   ketua unit dashboard. All ketua units see the same list; no per-unit filter.
   Used for "Aktiviti Terkini Unit" so ketua unit can see when projects are assigned
@@ -110,5 +140,6 @@ defmodule Sppa.ActivityLogs do
   def action_label("projek_dikemaskini"), do: "Projek dikemaskini"
   def action_label("pengurus_projek_dilantik"), do: "Pengurus projek dilantik"
   def action_label("pengurus_projek_dikeluarkan"), do: "Pengurus projek dikeluarkan"
+  def action_label("pembangun_sistem_dilantik"), do: "Pembangun sistem dilantik"
   def action_label(action), do: action
 end
