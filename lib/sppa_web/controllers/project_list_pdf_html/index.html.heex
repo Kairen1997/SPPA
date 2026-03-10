@@ -277,11 +277,7 @@
                 <td>{project.jabatan || "-"}</td>
 
                 <td>
-                  <%= if project.project && project.project.status do %>
-                    <strong>{project.project.status}</strong>
-                  <% else %>
-                    <span style="color: #94a3b8;">-</span>
-                  <% end %>
+                  <strong>{status_display(project)}</strong>
                 </td>
 
                 <td>

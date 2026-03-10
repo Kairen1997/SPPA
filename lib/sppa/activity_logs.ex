@@ -94,7 +94,8 @@ defmodule Sppa.ActivityLogs do
     from(a in ActivityLog,
       where:
         a.action in ["pengurus_projek_dilantik", "pengurus_projek_dikeluarkan"] and
-          a.resource_type in ["project", "approved_project"],
+          a.resource_type in ["project", "approved_project"] and
+          is_nil(a.target_user_id),
       order_by: [desc: a.inserted_at],
       limit: ^limit,
       preload: [:actor]
