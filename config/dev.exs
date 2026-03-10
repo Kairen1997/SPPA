@@ -3,7 +3,7 @@ import Config
 # Configure your database
 config :sppa, Sppa.Repo,
   username: "postgres",
-  password: "ABC#xyz00!",
+  password: "123456",
   hostname: "localhost",
   database: "sppa_dev",
   stacktrace: true,

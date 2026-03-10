@@ -4,6 +4,7 @@ defmodule SppaWeb.ApprovedProjectLive do
   alias Sppa.ApprovedProjects
   alias Sppa.Projects
   alias Sppa.Accounts
+  alias Sppa.ActivityLogs
 
   @allowed_roles ["pengurus projek", "ketua penolong pengarah", "ketua unit"]
 
@@ -41,7 +42,9 @@ defmodule SppaWeb.ApprovedProjectLive do
         {approved_id, _} ->
           # Load the approved project and all supporting data immediately,
           # so the page renders full information even before the LV socket connects.
-          approved_project = ApprovedProjects.get_approved_project!(approved_id)
+          approved_project =
+            ApprovedProjects.get_approved_project!(approved_id)
+            |> Sppa.Repo.preload([project: [:project_manager, :approved_project]])
 
           # Parse pengurus projek and pembangun sistem lists
           stored_pm_names = parse_pengurus_projek(approved_project.pengurus_projek)
@@ -161,6 +164,24 @@ defmodule SppaWeb.ApprovedProjectLive do
 
   defp format_date(nil), do: "-"
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
+
+  # Status for approved project details: "Belum Lantik Pengurus" if no pengurus appointed;
+  # otherwise project status (e.g. "Dalam Pembangunan", "Selesai").
+  def status_display_approved_project(approved_project) do
+    pengurus_dilantik? =
+      (approved_project.project && approved_project.project.project_manager_id) ||
+        (approved_project.pengurus_projek && approved_project.pengurus_projek != "")
+
+    if pengurus_dilantik? do
+      if approved_project.project && approved_project.project.status && approved_project.project.status != "" do
+        approved_project.project.status
+      else
+        "Dalam Pembangunan"
+      end
+    else
+      "Belum Lantik Pengurus"
+    end
+  end
 
   defp external_api_base_url do
     full_url =
@@ -427,6 +448,7 @@ defmodule SppaWeb.ApprovedProjectLive do
               # Reload the approved_project to ensure we have the latest data from database
               reloaded_approved_project =
                 ApprovedProjects.get_approved_project!(updated_project.id)
+                |> Sppa.Repo.preload([project: [:project_manager, :approved_project]])
 
               # Create or get the internal project - this ensures the project exists and is linked
               case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
@@ -500,16 +522,21 @@ defmodule SppaWeb.ApprovedProjectLive do
               # Reload the approved_project to ensure we have the latest data
               reloaded_approved_project =
                 ApprovedProjects.get_approved_project!(updated_project.id)
+                |> Sppa.Repo.preload([project: [:project_manager, :approved_project]])
 
-              case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
-                {:ok, _project} ->
-                  :ok
+              project_for_log =
+                case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
+                  {:ok, project} ->
+                    project
 
-                {:error, changeset} ->
-                  require Logger
-                  Logger.error("Failed to ensure internal project: #{inspect(changeset.errors)}")
-                  :error
-              end
+                  {:error, changeset} ->
+                    require Logger
+                    Logger.error(
+                      "Failed to ensure internal project: #{inspect(changeset.errors)}"
+                    )
+
+                    nil
+                end
 
               # Update available project managers (exclude selected ones)
               available_project_managers =
@@ -520,6 +547,24 @@ defmodule SppaWeb.ApprovedProjectLive do
               available_developers =
                 socket.assigns.developers
                 |> Enum.filter(fn dev -> dev.no_kp not in new_selected_devs end)
+
+              # Log activity for dashboard "Aktiviti Terkini"
+              pm_display_name =
+                project_manager.name ||
+                  project_manager.email ||
+                  project_manager.no_kp ||
+                  "Pengurus Projek"
+
+              if project_for_log do
+                ActivityLogs.log_activity(%{
+                  actor_id: socket.assigns.current_scope.user.id,
+                  action: "pengurus_projek_dilantik",
+                  resource_type: "project",
+                  resource_id: project_for_log.id,
+                  resource_name: project_for_log.nama,
+                  details: "Pengurus projek: #{pm_display_name}"
+                })
+              end
 
               {:noreply,
                socket
@@ -561,6 +606,39 @@ defmodule SppaWeb.ApprovedProjectLive do
            "pembangun_sistem" => pembangun_sistem_str
          }) do
       {:ok, updated_project} ->
+        # Log activity for dashboard "Aktiviti Terkini Unit" (ketua unit)
+        removed_user = Accounts.get_user_by_no_kp(no_kp)
+        pm_display_name =
+          if removed_user do
+            removed_user.name || removed_user.email || removed_user.no_kp || no_kp
+          else
+            no_kp
+          end
+
+        ap_with_project =
+          ApprovedProjects.get_approved_project!(updated_project.id)
+          |> Sppa.Repo.preload(:project)
+
+        if ap_with_project.project do
+          ActivityLogs.log_activity(%{
+            actor_id: socket.assigns.current_scope.user.id,
+            action: "pengurus_projek_dikeluarkan",
+            resource_type: "project",
+            resource_id: ap_with_project.project.id,
+            resource_name: ap_with_project.project.nama,
+            details: "Pengurus projek dikeluarkan: #{pm_display_name}"
+          })
+        else
+          ActivityLogs.log_activity(%{
+            actor_id: socket.assigns.current_scope.user.id,
+            action: "pengurus_projek_dikeluarkan",
+            resource_type: "approved_project",
+            resource_id: ap_with_project.id,
+            resource_name: ap_with_project.nama_projek,
+            details: "Pengurus projek dikeluarkan: #{pm_display_name}"
+          })
+        end
+
         # Update available project managers
         available_project_managers =
           socket.assigns.project_managers
@@ -809,6 +887,34 @@ defmodule SppaWeb.ApprovedProjectLive do
                           <span class="text-gray-900">
                             {format_date(@approved_project.tarikh_jangkaan_siap)}
                           </span>
+                        </div>
+
+                        <div class="flex items-center gap-2 text-gray-600 pt-1">
+                          <span class="font-medium">Status:</span>
+                          <% status_label = status_display_approved_project(@approved_project) %>
+                          <span class={[
+                            "inline-flex px-2 py-0.5 rounded-full text-xs font-medium",
+                            if(status_label == "Selesai",
+                              do: "bg-green-100 text-green-800",
+                              else:
+                                if(status_label == "Belum Lantik Pengurus",
+                                  do: "bg-gray-100 text-gray-700",
+                                  else: "bg-amber-100 text-amber-800"
+                                )
+                            )
+                          ]}>
+                            {status_label}
+                          </span>
+                        </div>
+
+                        <div class="flex items-center gap-2 text-gray-600">
+                          <span class="font-medium">Pengurus Projek:</span>
+                          <% pengurus = if @approved_project.project, do: Projects.project_pengurus_projek_display(@approved_project.project), else: Projects.approved_project_pengurus_display(@approved_project) %>
+                          <%= if pengurus && pengurus != "" && pengurus != "-" do %>
+                            <span class="text-gray-900">{pengurus}</span>
+                          <% else %>
+                            <span class="text-gray-400 italic">Belum dilantik</span>
+                          <% end %>
                         </div>
                       </div>
                     </div>

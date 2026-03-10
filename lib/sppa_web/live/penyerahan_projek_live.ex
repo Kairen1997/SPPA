@@ -6,6 +6,7 @@ defmodule SppaWeb.PenyerahanProjekLive do
   use SppaWeb, :live_view
 
   alias Sppa.Repo
+  alias Sppa.Projects
   alias Oban
   require Logger
   import Ecto.Query
@@ -90,7 +91,10 @@ defmodule SppaWeb.PenyerahanProjekLive do
   end
 
   @impl true
-  def handle_event("filter", %{"status" => status, "search" => search}, socket) do
+  def handle_event("filter", params, socket) do
+    status = Map.get(params, "status", "") || ""
+    search = Map.get(params, "search", "") || ""
+
     socket =
       socket
       |> assign(:status_filter, status)
@@ -167,18 +171,20 @@ defmodule SppaWeb.PenyerahanProjekLive do
     base_query =
       from ap in Sppa.ApprovedProjects.ApprovedProject,
         left_join: p in assoc(ap, :project),
-        preload: [project: p]
+        preload: [project: [:project_manager, :approved_project]]
+
+    search_q = socket.assigns.search_query || ""
 
     base_query =
-      if socket.assigns.search_query != "" do
-        search_term = "%#{socket.assigns.search_query}%"
+      if search_q != "" do
+        search_term = "%#{search_q}%"
         where(base_query, [ap, _p], ilike(ap.nama_projek, ^search_term))
       else
         base_query
       end
 
     base_query =
-      if socket.assigns.status_filter != "" do
+      if (socket.assigns.status_filter || "") != "" do
         where(base_query, [_ap, p], p.status == ^socket.assigns.status_filter)
       else
         base_query
@@ -198,16 +204,18 @@ defmodule SppaWeb.PenyerahanProjekLive do
       from ap in Sppa.ApprovedProjects.ApprovedProject,
         left_join: p in assoc(ap, :project)
 
+    search_q = socket.assigns.search_query || ""
+
     base_query =
-      if socket.assigns.search_query != "" do
-        search_term = "%#{socket.assigns.search_query}%"
+      if search_q != "" do
+        search_term = "%#{search_q}%"
         where(base_query, [ap, _p], ilike(ap.nama_projek, ^search_term))
       else
         base_query
       end
 
     base_query =
-      if socket.assigns.status_filter != "" do
+      if (socket.assigns.status_filter || "") != "" do
         where(base_query, [_ap, p], p.status == ^socket.assigns.status_filter)
       else
         base_query
@@ -215,6 +223,32 @@ defmodule SppaWeb.PenyerahanProjekLive do
 
     total = Repo.aggregate(base_query, :count, :id)
     ceil(total / socket.assigns.per_page)
+  end
+
+  def pengurus_projek_display(approved_project) do
+    if approved_project.project do
+      Projects.project_pengurus_projek_display(approved_project.project)
+    else
+      Projects.approved_project_pengurus_display(approved_project)
+    end
+  end
+
+  # Returns status label for table: "Belum Lantik Pengurus" if no pengurus appointed;
+  # after appointment, show "Dalam Pembangunan" or the project status (e.g. "Selesai").
+  def status_display(approved_project) do
+    pengurus_dilantik? =
+      (approved_project.project && approved_project.project.project_manager_id) ||
+        (approved_project.pengurus_projek && approved_project.pengurus_projek != "")
+
+    if pengurus_dilantik? do
+      if approved_project.project && approved_project.project.status && approved_project.project.status != "" do
+        approved_project.project.status
+      else
+        "Dalam Pembangunan"
+      end
+    else
+      "Belum Lantik Pengurus"
+    end
   end
 
   defp pagination_pages(current_page, total_pages) do

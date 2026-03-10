@@ -73,6 +73,10 @@ config :logger, :default_formatter,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Colocated JS: write to assets/node_modules so no symlink is needed (avoids :eperm on Windows)
+config :phoenix_live_view, :colocated_js,
+  target_directory: Path.expand("../assets/node_modules/phoenix-colocated", __DIR__)
+
 config :sppa, Oban,
   repo: Sppa.Repo,
   plugins: [

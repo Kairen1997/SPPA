@@ -121,6 +121,14 @@
                   </th>
                   
                   <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Pengurus Projek
+                  </th>
+                  
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Status
+                  </th>
+                  
+                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Tarikh
                   </th>
                   
@@ -148,6 +156,31 @@
                   </td>
                   
                   <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                    <% display = pengurus_projek_display(project) %>
+                    <%= if display != "" and display != "-" do %>
+                      {display}
+                    <% else %>
+                      <%!-- Kosong jika pengurus belum dilantik --%>
+                    <% end %>
+                  </td>
+                  
+                  <td class="whitespace-nowrap px-6 py-4 text-sm">
+                    <% status_label = status_display(project) %>
+                    <span class={[
+                      "inline-flex px-2 py-0.5 rounded-full text-xs font-medium",
+                      if(status_label == "Selesai",
+                        do: "bg-green-100 text-green-800",
+                        else:
+                          if(status_label == "Belum Lantik Pengurus",
+                            do: "bg-gray-100 text-gray-700",
+                            else: "bg-amber-100 text-amber-800"
+                          )
+                    )]}>
+                      {status_label}
+                    </span>
+                  </td>
+                  
+                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                     <%= if project.tarikh_mula do %>
                       {Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}
                     <% else %>
@@ -167,7 +200,7 @@
                 </tr>
                 
                 <tr :if={@projects == []}>
-                  <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">
+                  <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
                     Tiada projek dijumpai
                   </td>
                 </tr>

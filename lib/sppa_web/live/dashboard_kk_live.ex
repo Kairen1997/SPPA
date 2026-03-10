@@ -23,11 +23,15 @@ defmodule SppaWeb.DashboardKKLive do
         stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
 
         raw_activities =
-          ActivityLogs.list_recent_activities(socket.assigns.current_scope, 10)
+          ActivityLogs.list_recent_assignment_activities_for_ketua_unit(10)
 
         activities =
           Enum.map(raw_activities, fn a ->
-            Map.put(a, :action_label, ActivityLogs.action_label(a.action))
+            a
+            |> Map.put(:action_label, ActivityLogs.action_label(a.action))
+            |> Map.put(:nama, a.resource_name)
+            |> Map.put(:pengurus_display, extract_pengurus_from_details(a.details))
+            |> Map.put(:ketua_unit_display, actor_display(a.actor))
           end)
 
         notifications_count = length(activities)
@@ -61,6 +65,28 @@ defmodule SppaWeb.DashboardKKLive do
         |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
 
       {:ok, socket}
+    end
+  end
+
+  defp actor_display(nil), do: nil
+
+  defp actor_display(actor) do
+    actor.name || actor.email || actor.no_kp
+  end
+
+  defp extract_pengurus_from_details(nil), do: nil
+  defp extract_pengurus_from_details(""), do: nil
+
+  defp extract_pengurus_from_details(details) when is_binary(details) do
+    cond do
+      String.starts_with?(details, "Pengurus projek dikeluarkan: ") ->
+        String.trim_leading(details, "Pengurus projek dikeluarkan: ")
+
+      String.starts_with?(details, "Pengurus projek: ") ->
+        String.trim_leading(details, "Pengurus projek: ")
+
+      true ->
+        details
     end
   end
 
