@@ -397,16 +397,22 @@ defmodule Sppa.Projects do
   @doc """
   Returns the list of recent activities (latest projects) for the current scope.
   Only includes projects with status "Dalam Pembangunan" or "Selesai".
-  Project set is role-based (same as get_dashboard_stats).
+  Project set is role-based (same as get_dashboard_stats) via visible_project_ids/1.
   """
   def list_recent_activities(current_scope, limit \\ 10) do
-    Project
-    |> where([p], p.user_id == ^current_scope.user.id)
-    |> where([p], p.status == "Dalam Pembangunan" or p.status == "Selesai")
-    |> preload([:developer, :project_manager, :user, :approved_project])
-    |> order_by([p], desc: p.last_updated)
-    |> limit(^limit)
-    |> Repo.all()
+    visible_ids = visible_project_ids(current_scope)
+
+    if visible_ids == [] do
+      []
+    else
+      Project
+      |> where([p], p.id in ^visible_ids)
+      |> where([p], p.status == "Dalam Pembangunan" or p.status == "Selesai")
+      |> preload([:developer, :project_manager, :user, :approved_project])
+      |> order_by([p], desc: p.last_updated)
+      |> limit(^limit)
+      |> Repo.all()
+    end
   end
 
   @doc """
@@ -537,7 +543,20 @@ defmodule Sppa.Projects do
           from(p in Project, select: p.id)
           |> Repo.all()
 
-        role when role in ["pengurus projek", "ketua unit"] ->
+        "pengurus projek" ->
+          list_approved_projects_for_pengurus_projek(current_scope)
+          |> Enum.flat_map(fn ap ->
+            if ap.project && ap.project.id, do: [ap.project.id], else: []
+          end)
+
+        "ketua unit" ->
+          from(p in Project,
+            where: not is_nil(p.approved_project_id),
+            select: p.id
+          )
+          |> Repo.all()
+
+        role when role in ["ketua penolong pengarah (lama)"] ->
           from(p in Project,
             where: p.project_manager_id == ^current_scope.user.id,
             select: p.id

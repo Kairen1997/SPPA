@@ -7,6 +7,7 @@ defmodule SppaWeb.PenyerahanProjekLive do
 
   alias Sppa.Repo
   alias Sppa.Projects
+  alias Sppa.ActivityLogs
   alias Oban
   require Logger
   import Ecto.Query
@@ -25,12 +26,34 @@ defmodule SppaWeb.PenyerahanProjekLive do
         |> assign(:sidebar_open, false)
         |> assign(:notifications_open, false)
         |> assign(:profile_menu_open, false)
-        |> assign(:notifications_count, 0)
-        |> assign(:activities, [])
         |> assign(:status_filter, "")
         |> assign(:search_query, "")
         |> assign(:page, 1)
         |> assign(:per_page, 10)
+
+      {activities, notifications_count} =
+        if connected?(socket) do
+          raw_activities =
+            ActivityLogs.list_recent_assignment_activities_for_ketua_unit(10)
+
+          activities =
+            Enum.map(raw_activities, fn a ->
+              a
+              |> Map.put(:action_label, ActivityLogs.action_label(a.action))
+              |> Map.put(:nama, a.resource_name)
+              |> Map.put(:pengurus_display, extract_pengurus_from_details(a.details))
+              |> Map.put(:ketua_unit_display, actor_display(a.actor))
+            end)
+
+          {activities, length(activities)}
+        else
+          {[], 0}
+        end
+
+      socket =
+        socket
+        |> assign(:activities, activities)
+        |> assign(:notifications_count, notifications_count)
 
       projects = list_projects(socket)
       total_pages = calculate_total_pages(socket)
@@ -165,6 +188,28 @@ defmodule SppaWeb.PenyerahanProjekLive do
      |> assign(:total_pages, total_pages)
      |> assign(:pagination_pages, pagination_pages(socket.assigns.page, total_pages))
      |> put_flash(:info, "Data telah dikemaskini")}
+  end
+
+  defp actor_display(nil), do: nil
+
+  defp actor_display(actor) do
+    actor.name || actor.email || actor.no_kp
+  end
+
+  defp extract_pengurus_from_details(nil), do: nil
+  defp extract_pengurus_from_details(""), do: nil
+
+  defp extract_pengurus_from_details(details) when is_binary(details) do
+    cond do
+      String.starts_with?(details, "Pengurus projek dikeluarkan: ") ->
+        String.trim_leading(details, "Pengurus projek dikeluarkan: ")
+
+      String.starts_with?(details, "Pengurus projek: ") ->
+        String.trim_leading(details, "Pengurus projek: ")
+
+      true ->
+        details
+    end
   end
 
   defp list_projects(socket) do

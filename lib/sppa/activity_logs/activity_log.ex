@@ -13,12 +13,13 @@ defmodule Sppa.ActivityLogs.ActivityLog do
     field :details, :string
 
     belongs_to :actor, Sppa.Accounts.User, foreign_key: :actor_id
+    belongs_to :target_user, Sppa.Accounts.User, foreign_key: :target_user_id
 
     timestamps(type: :utc_datetime)
   end
 
   @required [:actor_id, :action, :resource_type, :resource_id, :resource_name]
-  @optional [:details]
+  @optional [:details, :target_user_id]
 
   @doc false
   def changeset(activity_log, attrs) do
@@ -26,5 +27,6 @@ defmodule Sppa.ActivityLogs.ActivityLog do
     |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
     |> foreign_key_constraint(:actor_id)
+    |> foreign_key_constraint(:target_user_id)
   end
 end
