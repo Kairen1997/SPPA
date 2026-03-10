@@ -33,15 +33,19 @@ defmodule SppaWeb.ProjectListLive do
         |> assign(:show_modal, false)
         |> assign(:form, to_form(%{}, as: :project))
 
-      # Muat aktiviti untuk notifikasi header (sama seperti dashboard)
-      raw_activities = ActivityLogs.list_recent_activities(socket.assigns.current_scope, 20)
+      # Muat aktiviti untuk notifikasi header – ikut logik Dashboard Pengurus Projek
+      project_activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
 
-      activities =
-        Enum.map(raw_activities, fn a ->
-          Map.put(a, :action_label, ActivityLogs.action_label(a.action))
-        end)
+      assignment_activities =
+        ActivityLogs.list_recent_assignment_activities_for_pengurus_projek(
+          socket.assigns.current_scope,
+          10
+        )
 
-      notifications_count = length(activities)
+      notification_activities =
+        merge_activities_for_notifications(project_activities, assignment_activities, 10)
+
+      notifications_count = length(notification_activities)
 
       # Always load projects and users so the page is populated immediately,
       # even before the LiveView JS socket connects.
@@ -54,7 +58,7 @@ defmodule SppaWeb.ProjectListLive do
        |> assign(:projects, projects)
        |> assign(:total_pages, total_pages)
        |> assign(:users, users)
-       |> assign(:activities, activities)
+       |> assign(:activities, notification_activities)
        |> assign(:notifications_count, notifications_count)}
     else
       socket =
@@ -258,6 +262,34 @@ defmodule SppaWeb.ProjectListLive do
     ceil(total / socket.assigns.per_page)
   end
 
+  # Sama seperti di Dashboard Pengurus Projek: gabungkan aktiviti projek
+  # dan aktiviti penugasan untuk dropdown notifikasi.
+  defp merge_activities_for_notifications(project_activities, assignment_activities, limit) do
+    project_items =
+      Enum.map(project_activities, fn p ->
+        sort_at = p.last_updated || Map.get(p, :updated_at) || DateTime.utc_now()
+        %{nama: p.nama, status: p.status, last_updated: p.last_updated, sort_at: sort_at}
+      end)
+
+    assignment_items =
+      Enum.map(assignment_activities, fn a ->
+        sort_at = a.inserted_at || DateTime.utc_now()
+
+        %{
+          resource_name: a.resource_name,
+          action_label: a.action_label,
+          details: a.details,
+          inserted_at: a.inserted_at,
+          sort_at: sort_at
+        }
+      end)
+
+    (project_items ++ assignment_items)
+    |> Enum.sort_by(& &1.sort_at, {:desc, DateTime})
+    |> Enum.take(limit)
+    |> Enum.map(&Map.delete(&1, :sort_at))
+  end
+
   # Returns all approved projects visible to the current pengurus projek,
   # before pagination. Visibility is based on ketua unit assignments in
   # approved_project.pengurus_projek (by no_kp). If no assignments exist yet,
@@ -281,12 +313,20 @@ defmodule SppaWeb.ProjectListLive do
         base_query
       end
 
-    # Apply status filter (based on linked internal project status)
+    # Apply status filter: "Pembangun belum di lantik" / "Dalam Pembangunan" by pembangun_sistem; "Selesai" by project status
     base_query =
-      if socket.assigns.status_filter != "" do
-        where(base_query, [_ap, p], p.status == ^socket.assigns.status_filter)
-      else
-        base_query
+      case socket.assigns.status_filter do
+        "Pembangun belum di lantik" ->
+          where(base_query, [ap, _p], is_nil(ap.pembangun_sistem) or ap.pembangun_sistem == "")
+
+        "Dalam Pembangunan" ->
+          where(base_query, [ap, _p], not is_nil(ap.pembangun_sistem) and ap.pembangun_sistem != "")
+
+        "Selesai" ->
+          where(base_query, [_ap, p], p.status == "Selesai")
+
+        _ ->
+          base_query
       end
 
     approved_projects =
@@ -326,6 +366,18 @@ defmodule SppaWeb.ProjectListLive do
       end
 
     Map.put(approved_project, :project, project)
+  end
+
+  # Status lajur: "Pembangun belum di lantik" jika tiada pembangun; "Dalam Pembangunan" jika pembangun sudah dilantik; "Selesai" jika projek selesai.
+  def status_display(approved_project) do
+    internal_status = approved_project.project && approved_project.project.status
+    has_pembangun = approved_project.pembangun_sistem && String.trim(approved_project.pembangun_sistem) != ""
+
+    cond do
+      internal_status == "Selesai" -> "Selesai"
+      has_pembangun -> "Dalam Pembangunan"
+      true -> "Pembangun belum di lantik"
+    end
   end
 
   defp has_pm_assignment?(approved_project, user_no_kp) when is_binary(user_no_kp) do
@@ -444,9 +496,8 @@ defmodule SppaWeb.ProjectListLive do
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     >
                       <option value="">Semua</option>
-
+                      <option value="Pembangun belum di lantik">Pembangun belum di lantik</option>
                       <option value="Dalam Pembangunan">Dalam Pembangunan</option>
-
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
@@ -483,6 +534,10 @@ defmodule SppaWeb.ProjectListLive do
                       </th>
 
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Status
+                      </th>
+
+                      <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Tarikh
                       </th>
 
@@ -504,6 +559,10 @@ defmodule SppaWeb.ProjectListLive do
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {project.jabatan || "-"}
+                      </td>
+
+                      <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                        <%= status_display(project) %>
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">

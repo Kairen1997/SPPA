@@ -124,7 +124,22 @@ defmodule SppaWeb.ApprovedProjectLive do
          current_scope
        ) do
     all_users = Accounts.list_users()
-    all_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
+    base_developers = Enum.filter(all_users, fn user -> user.role == "pembangun sistem" end)
+
+    # Benarkan pengurus projek melantik diri sendiri sebagai pembangun:
+    # tambah pengguna semasa ke dalam senarai pembangun jika belum ada.
+    all_developers =
+      if user_role == "pengurus projek" do
+        current_user = current_scope.user
+
+        if current_user && !Enum.any?(base_developers, fn dev -> dev.id == current_user.id end) do
+          [current_user | base_developers]
+        else
+          base_developers
+        end
+      else
+        base_developers
+      end
 
     all_project_managers =
       Enum.filter(all_users, fn user -> user.role == "pengurus projek" end)
@@ -165,21 +180,32 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp format_date(nil), do: "-"
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
 
-  # Status for approved project details: "Belum Lantik Pengurus" if no pengurus appointed;
-  # otherwise project status (e.g. "Dalam Pembangunan", "Selesai").
+  # Status untuk halaman butiran projek diluluskan.
+  # - Jika TIADA pembangun dilantik -> "Belum Lantik Pembangun"
+  # - Jika ada pembangun tapi TIADA pengurus -> "Belum Lantik Pengurus"
+  # - Jika kedua-dua dilantik -> guna status projek (contoh: "Dalam Pembangunan", "Selesai")
   def status_display_approved_project(approved_project) do
+    pembangun_dilantik? =
+      (approved_project.project && approved_project.project.developer_id) ||
+        (approved_project.pembangun_sistem && approved_project.pembangun_sistem != "")
+
     pengurus_dilantik? =
       (approved_project.project && approved_project.project.project_manager_id) ||
         (approved_project.pengurus_projek && approved_project.pengurus_projek != "")
 
-    if pengurus_dilantik? do
-      if approved_project.project && approved_project.project.status && approved_project.project.status != "" do
+    cond do
+      !pembangun_dilantik? ->
+        "Belum Lantik Pembangun"
+
+      !pengurus_dilantik? ->
+        "Belum Lantik Pengurus"
+
+      approved_project.project && approved_project.project.status &&
+          approved_project.project.status != "" ->
         approved_project.project.status
-      else
+
+      true ->
         "Dalam Pembangunan"
-      end
-    else
-      "Belum Lantik Pengurus"
     end
   end
 
@@ -493,28 +519,17 @@ defmodule SppaWeb.ApprovedProjectLive do
 
         if project_manager &&
              project_manager.no_kp not in socket.assigns.selected_project_managers do
+          pm_display_name =
+            project_manager.name || project_manager.email || project_manager.no_kp || "Unknown"
+
           # Add to selected pengurus projek list
           new_selected_pms = socket.assigns.selected_project_managers ++ [project_manager.no_kp]
 
-          # Also ensure the same user is included in pembangun_sistem so that
-          # assigned pengurus projek automatically has developer-style access
-          # to the project.
-          existing_devs = socket.assigns.selected_developers || []
-
-          new_selected_devs =
-            if project_manager.no_kp in existing_devs do
-              existing_devs
-            else
-              existing_devs ++ [project_manager.no_kp]
-            end
-
           pengurus_projek_str = format_pengurus_projek(new_selected_pms)
-          pembangun_sistem_str = format_pembangun_sistem(new_selected_devs)
 
           # Update the approved project
           case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-                 "pengurus_projek" => pengurus_projek_str,
-                 "pembangun_sistem" => pembangun_sistem_str
+                 "pengurus_projek" => pengurus_projek_str
                }) do
             {:ok, updated_project} ->
               # Ensure there's an internal project linked to this approved project
@@ -543,18 +558,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                 socket.assigns.project_managers
                 |> Enum.filter(fn pm -> pm.no_kp not in new_selected_pms end)
 
-              # Update available developers (exclude selected ones)
-              available_developers =
-                socket.assigns.developers
-                |> Enum.filter(fn dev -> dev.no_kp not in new_selected_devs end)
-
-              # Log activity for dashboard "Aktiviti Terkini"
-              pm_display_name =
-                project_manager.name ||
-                  project_manager.email ||
-                  project_manager.no_kp ||
-                  "Pengurus Projek"
-
+              # Log activity so pengurus projek receives notification (dashboard PP)
               if project_for_log do
                 ActivityLogs.log_activity(%{
                   actor_id: socket.assigns.current_scope.user.id,
@@ -562,6 +566,36 @@ defmodule SppaWeb.ApprovedProjectLive do
                   resource_type: "project",
                   resource_id: project_for_log.id,
                   resource_name: project_for_log.nama,
+                  details: "Ketua unit telah menugaskan projek ini kepada anda.",
+                  target_user_id: project_manager.id
+                })
+
+                # Separate log entry for ketua unit dashboard (no target_user; includes pengurus name)
+                ActivityLogs.log_activity(%{
+                  actor_id: socket.assigns.current_scope.user.id,
+                  action: "pengurus_projek_dilantik",
+                  resource_type: "project",
+                  resource_id: project_for_log.id,
+                  resource_name: project_for_log.nama,
+                  details: "Pengurus projek: #{pm_display_name}"
+                })
+              else
+                ActivityLogs.log_activity(%{
+                  actor_id: socket.assigns.current_scope.user.id,
+                  action: "pengurus_projek_dilantik",
+                  resource_type: "approved_project",
+                  resource_id: reloaded_approved_project.id,
+                  resource_name: reloaded_approved_project.nama_projek || "Projek",
+                  details: "Ketua unit telah menugaskan projek ini kepada anda.",
+                  target_user_id: project_manager.id
+                })
+
+                ActivityLogs.log_activity(%{
+                  actor_id: socket.assigns.current_scope.user.id,
+                  action: "pengurus_projek_dilantik",
+                  resource_type: "approved_project",
+                  resource_id: reloaded_approved_project.id,
+                  resource_name: reloaded_approved_project.nama_projek || "Projek",
                   details: "Pengurus projek: #{pm_display_name}"
                 })
               end
@@ -571,8 +605,6 @@ defmodule SppaWeb.ApprovedProjectLive do
                |> assign(:approved_project, updated_project)
                |> assign(:selected_project_managers, new_selected_pms)
                |> assign(:available_project_managers, available_project_managers)
-               |> assign(:selected_developers, new_selected_devs)
-               |> assign(:available_developers, available_developers)
                |> put_flash(:info, "Pengurus projek telah ditambah.")}
 
             {:error, _changeset} ->

@@ -4,6 +4,7 @@ defmodule SppaWeb.DashboardPPLive do
   alias Sppa.Projects
   alias Sppa.ApprovedProjects
   alias Sppa.Accounts
+  alias Sppa.ActivityLogs
 
   @impl true
   def mount(_params, _session, socket) do
@@ -26,25 +27,42 @@ defmodule SppaWeb.DashboardPPLive do
         # Subscribe to approved projects updates for live updates
         Phoenix.PubSub.subscribe(Sppa.PubSub, "approved_projects")
 
-        # Get approved project stats
-        stats = ApprovedProjects.get_dashboard_stats()
-        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-        notifications_count = length(activities)
+        # Stats: kad kuning = projek ditugaskan; kad biru = dalam pembangunan; kad hijau = selesai dibangun
+        assigned = Projects.list_approved_projects_for_pengurus_projek(socket.assigns.current_scope)
+        stats =
+          ApprovedProjects.get_dashboard_stats()
+          |> Map.put(:jumlah, length(assigned))
+          |> Map.put(:jumlah_dalam_pembangunan, count_dalam_pembangunan(assigned))
+          |> Map.put(:jumlah_selesai, count_selesai(assigned))
+
+        project_activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+        assignment_activities =
+          ActivityLogs.list_recent_assignment_activities_for_pengurus_projek(
+            socket.assigns.current_scope,
+            10
+          )
+
+        notification_activities =
+          merge_activities_for_notifications(project_activities, assignment_activities, 10)
 
         {:ok,
          socket
          |> assign(:stats, stats)
-         |> assign(:activities, activities)
-         |> assign(:notifications_count, notifications_count)}
+         |> assign(:activities, project_activities)
+         |> assign(:notification_activities, notification_activities)
+         |> assign(:notifications_count, length(notification_activities))}
       else
         {:ok,
          socket
          |> assign(:stats, %{
            jumlah: 0,
            jumlah_projek_berdaftar: 0,
-           jumlah_projek_perlu_didaftar: 0
+           jumlah_projek_perlu_didaftar: 0,
+           jumlah_dalam_pembangunan: 0,
+           jumlah_selesai: 0
          })
          |> assign(:activities, [])
+         |> assign(:notification_activities, [])
          |> assign(:notifications_count, 0)}
       end
     else
@@ -62,15 +80,23 @@ defmodule SppaWeb.DashboardPPLive do
 
   @impl true
   def handle_info({:created, _approved_project}, socket) do
-    # Refresh stats when a new approved project is created
-    stats = ApprovedProjects.get_dashboard_stats()
+    assigned = Projects.list_approved_projects_for_pengurus_projek(socket.assigns.current_scope)
+    stats =
+      ApprovedProjects.get_dashboard_stats()
+      |> Map.put(:jumlah, length(assigned))
+      |> Map.put(:jumlah_dalam_pembangunan, count_dalam_pembangunan(assigned))
+      |> Map.put(:jumlah_selesai, count_selesai(assigned))
     {:noreply, assign(socket, :stats, stats)}
   end
 
   @impl true
   def handle_info({:updated, _approved_project}, socket) do
-    # Refresh stats when an approved project is updated (e.g., linked to internal project)
-    stats = ApprovedProjects.get_dashboard_stats()
+    assigned = Projects.list_approved_projects_for_pengurus_projek(socket.assigns.current_scope)
+    stats =
+      ApprovedProjects.get_dashboard_stats()
+      |> Map.put(:jumlah, length(assigned))
+      |> Map.put(:jumlah_dalam_pembangunan, count_dalam_pembangunan(assigned))
+      |> Map.put(:jumlah_selesai, count_selesai(assigned))
     {:noreply, assign(socket, :stats, stats)}
   end
 
@@ -130,6 +156,13 @@ defmodule SppaWeb.DashboardPPLive do
 
   # Helper function to get all team members (developers and project managers) with their roles
   defp get_team_members(project) do
+    dev_no_kps =
+      if project.approved_project && project.approved_project.pembangun_sistem do
+        parse_pembangun_sistem(project.approved_project.pembangun_sistem)
+      else
+        []
+      end
+
     team_members = []
 
     # Add main developer if exists
@@ -194,7 +227,11 @@ defmodule SppaWeb.DashboardPPLive do
           true -> "N/A"
         end
 
-      %{name: name, role: role}
+      is_developer =
+        role == "pembangun sistem" ||
+          (user.no_kp && user.no_kp in dev_no_kps)
+
+      %{name: name, role: role, is_developer: is_developer}
     end)
     |> Enum.filter(fn %{name: name} -> name != nil end)
     |> Enum.sort_by(fn %{role: role} ->
@@ -205,6 +242,52 @@ defmodule SppaWeb.DashboardPPLive do
         _ -> 2
       end
     end)
+  end
+
+  # Kira projek yang "dalam pembangunan": pengurus sudah melantik pembangun
+  # (approved_project.pembangun_sistem tidak kosong ATAU project.developer_id ada)
+  defp count_dalam_pembangunan(approved_projects) when is_list(approved_projects) do
+    Enum.count(approved_projects, fn ap ->
+      has_pembangun =
+        (is_binary(ap.pembangun_sistem) and String.trim(ap.pembangun_sistem) != "") or
+          (ap.project && is_struct(ap.project) and ap.project.developer_id != nil)
+
+      has_pembangun
+    end)
+  end
+
+  # Kira projek yang telah selesai dibangun: projek dalaman dengan status "Selesai"
+  defp count_selesai(approved_projects) when is_list(approved_projects) do
+    Enum.count(approved_projects, fn ap ->
+      ap.project && is_struct(ap.project) and ap.project.status == "Selesai"
+    end)
+  end
+
+  # Merge project-based activities and assignment activities (ketua unit menugaskan projek)
+  # for the notification dropdown, sorted by date descending.
+  defp merge_activities_for_notifications(project_activities, assignment_activities, limit) do
+    project_items =
+      Enum.map(project_activities, fn p ->
+        sort_at = p.last_updated || Map.get(p, :updated_at) || DateTime.utc_now()
+        %{nama: p.nama, status: p.status, last_updated: p.last_updated, sort_at: sort_at}
+      end)
+
+    assignment_items =
+      Enum.map(assignment_activities, fn a ->
+        sort_at = a.inserted_at || DateTime.utc_now()
+        %{
+          resource_name: a.resource_name,
+          action_label: a.action_label,
+          details: a.details,
+          inserted_at: a.inserted_at,
+          sort_at: sort_at
+        }
+      end)
+
+    (project_items ++ assignment_items)
+    |> Enum.sort_by(& &1.sort_at, {:desc, DateTime})
+    |> Enum.take(limit)
+    |> Enum.map(&Map.delete(&1, :sort_at))
   end
 
   # Parse comma-separated pengurus_projek string into list of no_kp values
@@ -284,7 +367,7 @@ defmodule SppaWeb.DashboardPPLive do
               <.header_actions
                 notifications_open={@notifications_open}
                 notifications_count={@notifications_count}
-                activities={@activities}
+                activities={@notification_activities}
                 profile_menu_open={@profile_menu_open}
                 current_scope={@current_scope}
               />
@@ -300,7 +383,7 @@ defmodule SppaWeb.DashboardPPLive do
               </div>
                <%!-- Summary Cards --%>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                <%!-- Jumlah --%>
+                <%!-- Jumlah projek ditugaskan kepada pengurus --%>
                 <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-folder-open" class="w-8 h-8 text-yellow-800 opacity-80" />
@@ -308,31 +391,33 @@ defmodule SppaWeb.DashboardPPLive do
 
                   <div class="text-4xl font-bold text-gray-900 mb-1">{@stats[:jumlah] || 0}</div>
 
-                  <div class="text-sm font-medium text-gray-800">Jumlah</div>
+                  <div class="text-sm font-medium text-gray-800">Jumlah projek ditugaskan kepada anda</div>
                 </div>
-                 <%!-- Jumlah Projek Berdaftar --%>
+                 <%!-- Dalam Pembangunan: projek yang pengurus sudah melantik pembangun --%>
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
-                    <.icon name="hero-check-circle" class="w-8 h-8 text-white opacity-90" />
+                    <.icon name="hero-cog-6-tooth" class="w-8 h-8 text-white opacity-90" />
                   </div>
 
                   <div class="text-4xl font-bold text-white mb-1">
-                    {@stats[:jumlah_projek_berdaftar] || 0}
+                    {@stats[:jumlah_dalam_pembangunan] || 0}
                   </div>
 
-                  <div class="text-sm font-medium text-blue-50">Jumlah Projek Berdaftar</div>
+                  <div class="text-sm font-medium text-blue-50">Dalam Pembangunan</div>
+                  <p class="text-xs text-blue-100/90 mt-1">Projek yang anda sudah melantik pembangun</p>
                 </div>
-                 <%!-- Jumlah Projek Perlu Didaftar --%>
+                 <%!-- Selesai: projek yang telah selesai dibangun --%>
                 <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
-                    <.icon name="hero-exclamation-triangle" class="w-8 h-8 text-white opacity-90" />
+                    <.icon name="hero-check-badge" class="w-8 h-8 text-white opacity-90" />
                   </div>
 
                   <div class="text-4xl font-bold text-white mb-1">
-                    {@stats[:jumlah_projek_perlu_didaftar] || 0}
+                    {@stats[:jumlah_selesai] || 0}
                   </div>
 
-                  <div class="text-sm font-medium text-green-50">Jumlah Projek Perlu Didaftar</div>
+                  <div class="text-sm font-medium text-green-50">Selesai</div>
+                  <p class="text-xs text-green-100/90 mt-1">Projek yang telah selesai dibangun</p>
                 </div>
               </div>
                <%!-- Latest Activities --%>
@@ -355,7 +440,7 @@ defmodule SppaWeb.DashboardPPLive do
                         </th>
 
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Pembangun / Pengurus Projek
+                          Pembangun
                         </th>
 
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -393,37 +478,17 @@ defmodule SppaWeb.DashboardPPLive do
 
                             <td class="px-6 py-4">
                               <div class="text-sm text-gray-600">
-                                <%= case get_team_members(activity) do %>
+                                <%= case Enum.filter(get_team_members(activity), fn member ->
+                                      member.is_developer
+                                    end) do %>
                                   <% [] -> %>
-                                    <span class="text-gray-400">Tiada pembangun/pengurus projek</span>
-                                  <% team_members -> %>
+                                    <span class="text-gray-400">Tiada pembangun</span>
+                                  <% developers -> %>
                                     <div class="flex flex-col gap-1">
-                                      <%= for member <- team_members do %>
-                                        <div class="flex items-center gap-2">
-                                          <%= if member.role == "pembangun sistem" do %>
-                                            <.icon
-                                              name="hero-code-bracket"
-                                              class="w-4 h-4 text-blue-500"
-                                            />
-                                            <span class="font-medium text-gray-900">
-                                              {member.name}
-                                            </span>
-                                            <span class="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                                              Pembangun
-                                            </span>
-                                          <% else %>
-                                            <.icon
-                                              name="hero-user-circle"
-                                              class="w-4 h-4 text-purple-500"
-                                            />
-                                            <span class="font-medium text-gray-900">
-                                              {member.name}
-                                            </span>
-                                            <span class="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
-                                              Pengurus
-                                            </span>
-                                          <% end %>
-                                        </div>
+                                      <%= for member <- developers do %>
+                                        <span class="font-medium text-gray-900">
+                                          {member.name}
+                                        </span>
                                       <% end %>
                                     </div>
                                 <% end %>
@@ -432,7 +497,15 @@ defmodule SppaWeb.DashboardPPLive do
 
                             <td class="px-6 py-4 whitespace-nowrap">
                               <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {activity.status}
+                                <%= if Enum.any?(
+                                      Enum.filter(get_team_members(activity), fn member ->
+                                        member.is_developer
+                                      end)
+                                    ) do %>
+                                  {activity.status}
+                                <% else %>
+                                  Belum lantik pembangun
+                                <% end %>
                               </span>
                             </td>
 
