@@ -1,23 +1,72 @@
-defmodule SppaWeb.Internal.ApprovedProjectController do
+defmodule SppaWeb.ApprovedProjectController do
   use SppaWeb, :controller
 
-  plug :verify_internal_token
+  alias Sppa.ApprovedProjects
 
-  def create(conn, params) do
-    case Sppa.ApprovedProjects.create_approved_project(params) do
-      {:ok, _record} ->
-        send_resp(conn, 201, "Created")
+  def kertas_kerja(conn, %{"id" => id}) do
+    current_scope = conn.assigns[:current_scope]
+    current_user = current_scope && current_scope.user
 
-      {:error, _changeset} ->
-        send_resp(conn, 422, "Invalid data")
+    if is_nil(current_user) do
+      conn
+      |> put_status(404)
+      |> put_view(html: SppaWeb.ErrorHTML)
+      |> render(:"404")
+      |> halt()
+    else
+      load_and_send_kertas_kerja(conn, id)
     end
   end
 
-  defp verify_internal_token(conn, _opts) do
-    if get_req_header(conn, "authorization") == ["Bearer Sppa_INTERNAL_SECRET"] do
-      conn
+  def kertas_kerja(conn, _params) do
+    conn
+    |> put_status(404)
+    |> put_view(html: SppaWeb.ErrorHTML)
+    |> render(:"404")
+    |> halt()
+  end
+
+  defp load_and_send_kertas_kerja(conn, id) do
+    approved_project = ApprovedProjects.get_approved_project!(id)
+    path = approved_project.kertas_kerja_path
+
+    if is_nil(path) or path == "" do
+      not_found(conn)
     else
-      conn |> send_resp(403, "Forbidden") |> halt()
+      app_root = Application.get_env(:sppa, :root_path) || File.cwd!()
+      base = Path.expand(app_root)
+      resolved = Path.expand(path, app_root)
+
+      safe_documents = Path.expand(Path.join(app_root, "priv/static/documents"))
+
+      under_root = String.starts_with?(resolved, base)
+      under_documents = String.starts_with?(resolved, safe_documents)
+
+      if (under_root or under_documents) and File.regular?(resolved) do
+        filename = Path.basename(resolved)
+        content_type = MIME.from_path(resolved)
+
+        sent_conn =
+          conn
+          |> put_resp_content_type(content_type)
+          |> put_resp_header("content-disposition", ~s(inline; filename="#{filename}"))
+          |> Plug.Conn.send_file(200, resolved)
+          |> halt()
+
+        sent_conn
+      else
+        not_found(conn)
+      end
     end
+  rescue
+    Ecto.NoResultsError -> not_found(conn)
+  end
+
+  defp not_found(conn) do
+    conn
+    |> put_status(404)
+    |> put_view(html: SppaWeb.ErrorHTML)
+    |> render(:"404")
+    |> halt()
   end
 end

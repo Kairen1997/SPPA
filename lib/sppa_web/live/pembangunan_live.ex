@@ -2,6 +2,7 @@ defmodule SppaWeb.PembangunanLive do
   use SppaWeb, :live_view
 
   alias Sppa.Projects
+  alias Sppa.ActivityLogs
   alias Sppa.AnalisisDanRekabentuk
   alias Sppa.ModulPengaturcaraan
   alias Sppa.ProjectModules
@@ -97,13 +98,22 @@ defmodule SppaWeb.PembangunanLive do
         |> assign(:notifications_count, 0)
 
       if connected?(socket) do
-        activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
-        notifications_count = length(activities)
+        current_scope = socket.assigns.current_scope
+        project_activities = Projects.list_recent_activities(current_scope, 10)
+
+        assignment_activities =
+          ActivityLogs.list_recent_assignment_activities_for_pembangun_sistem(
+            current_scope,
+            10
+          )
+
+        notification_activities =
+          merge_activities_for_notifications(project_activities, assignment_activities, 10)
 
         {:ok,
          socket
-         |> assign(:activities, activities)
-         |> assign(:notifications_count, notifications_count)}
+         |> assign(:activities, notification_activities)
+         |> assign(:notifications_count, length(notification_activities))}
       else
         {:ok, socket}
       end
@@ -509,5 +519,33 @@ defmodule SppaWeb.PembangunanLive do
 
   def days_between(start_date, end_date) do
     Date.diff(end_date, start_date) + 1
+  end
+
+  # Merge project-based activities and assignment activities (pembangun dilantik)
+  # for the notification dropdown, sorted by date descending.
+  defp merge_activities_for_notifications(project_activities, assignment_activities, limit) do
+    project_items =
+      Enum.map(project_activities, fn p ->
+        sort_at = p.last_updated || Map.get(p, :updated_at) || DateTime.utc_now()
+        %{nama: p.nama, status: p.status, last_updated: p.last_updated, sort_at: sort_at}
+      end)
+
+    assignment_items =
+      Enum.map(assignment_activities, fn a ->
+        sort_at = a.inserted_at || DateTime.utc_now()
+
+        %{
+          resource_name: a.resource_name,
+          action_label: a.action_label,
+          details: a.details,
+          inserted_at: a.inserted_at,
+          sort_at: sort_at
+        }
+      end)
+
+    (project_items ++ assignment_items)
+    |> Enum.sort_by(& &1.sort_at, {:desc, DateTime})
+    |> Enum.take(limit)
+    |> Enum.map(&Map.delete(&1, :sort_at))
   end
 end

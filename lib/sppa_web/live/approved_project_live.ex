@@ -477,14 +477,45 @@ defmodule SppaWeb.ApprovedProjectLive do
                 |> Sppa.Repo.preload([project: [:project_manager, :approved_project]])
 
               # Create or get the internal project - this ensures the project exists and is linked
-              case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
-                {:ok, _project} ->
-                  :ok
+              project_for_log =
+                case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
+                  {:ok, project} ->
+                    project
 
-                {:error, changeset} ->
-                  require Logger
-                  Logger.error("Failed to ensure internal project: #{inspect(changeset.errors)}")
-                  :error
+                  {:error, changeset} ->
+                    require Logger
+                    Logger.error("Failed to ensure internal project: #{inspect(changeset.errors)}")
+                    nil
+                end
+
+              # Log activity so pembangun sistem receives notification when appointed
+              if developer do
+                display_name =
+                  developer.name || developer.email || developer.no_kp || "Pembangun sistem"
+
+                if project_for_log do
+                  ActivityLogs.log_activity(%{
+                    actor_id: socket.assigns.current_scope.user.id,
+                    action: "pembangun_sistem_dilantik",
+                    resource_type: "project",
+                    resource_id: project_for_log.id,
+                    resource_name: project_for_log.nama,
+                    details:
+                      "Anda telah dilantik sebagai pembangun sistem bagi projek ini (#{display_name}).",
+                    target_user_id: developer.id
+                  })
+                else
+                  ActivityLogs.log_activity(%{
+                    actor_id: socket.assigns.current_scope.user.id,
+                    action: "pembangun_sistem_dilantik",
+                    resource_type: "approved_project",
+                    resource_id: reloaded_approved_project.id,
+                    resource_name: reloaded_approved_project.nama_projek || "Projek",
+                    details:
+                      "Anda telah dilantik sebagai pembangun sistem bagi projek ini (#{display_name}).",
+                    target_user_id: developer.id
+                  })
+                end
               end
 
               # Update available developers (exclude selected ones)
