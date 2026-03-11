@@ -1,7 +1,7 @@
 defmodule Sppa.Integrations.ExternalClient do
   require Logger
 
-  @default_external_url "http://10.71.69.25:4000/api/requests?status=Diluluskan"
+  @default_external_url "http://10.71.69.197:4000/api/requests?status=Diluluskan"
 
   defp requests_url do
     config = Application.get_env(:sppa, :system_permohonan_aplikasi, [])
