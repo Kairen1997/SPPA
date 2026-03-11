@@ -2,6 +2,7 @@ defmodule SppaWeb.ModulProjekLive do
   use SppaWeb, :live_view
 
   alias Sppa.Accounts
+  alias Sppa.ActivityLogs
   alias Sppa.ProjectModules
   alias Sppa.Projects
 
@@ -28,6 +29,8 @@ defmodule SppaWeb.ModulProjekLive do
         |> assign(:selected_task, nil)
         |> assign(:form, to_form(%{}, as: :task))
         |> assign(:project_id, project_id)
+        |> assign(:activities, [])
+        |> assign(:notifications_count, 0)
 
       # Always load project + tasks immediately so the page shows the
       # correct data and action buttons even before the LV socket connects.
@@ -53,12 +56,41 @@ defmodule SppaWeb.ModulProjekLive do
 
         sorted_tasks = sort_tasks_by_created_at(tasks)
 
+        socket =
+          socket
+          |> assign(:project, project)
+          |> assign(:tasks, sorted_tasks)
+          |> assign(:users, users)
+          |> assign(:developers, developers)
+
+        # Sumber notifikasi sama seperti Dashboard PP (projek + penugasan) supaya kiraan selaras.
+        {activities, notifications_count} =
+          if connected?(socket) do
+            project_activities =
+              Projects.list_recent_activities(socket.assigns.current_scope, 10)
+
+            assignment_activities =
+              ActivityLogs.list_recent_assignment_activities_for_pengurus_projek(
+                socket.assigns.current_scope,
+                10
+              )
+
+            notification_activities =
+              merge_activities_for_notifications(
+                project_activities,
+                assignment_activities,
+                10
+              )
+
+            {notification_activities, length(notification_activities)}
+          else
+            {[], 0}
+          end
+
         {:ok,
          socket
-         |> assign(:project, project)
-         |> assign(:tasks, sorted_tasks)
-         |> assign(:users, users)
-         |> assign(:developers, developers)}
+         |> assign(:activities, activities)
+         |> assign(:notifications_count, notifications_count)}
       else
         socket =
           socket
@@ -461,6 +493,32 @@ defmodule SppaWeb.ModulProjekLive do
   @impl true
   def handle_info(:close_settings_modal, socket) do
     {:noreply, assign(socket, :show_settings_modal, false)}
+  end
+
+  # Gabung aktiviti projek dan penugasan untuk notifikasi (sama seperti Dashboard PP).
+  defp merge_activities_for_notifications(project_activities, assignment_activities, limit) do
+    project_items =
+      Enum.map(project_activities, fn p ->
+        sort_at = p.last_updated || Map.get(p, :updated_at) || DateTime.utc_now()
+        %{nama: p.nama, status: p.status, last_updated: p.last_updated, sort_at: sort_at}
+      end)
+
+    assignment_items =
+      Enum.map(assignment_activities, fn a ->
+        sort_at = a.inserted_at || DateTime.utc_now()
+        %{
+          resource_name: a.resource_name,
+          action_label: a.action_label,
+          details: a.details,
+          inserted_at: a.inserted_at,
+          sort_at: sort_at
+        }
+      end)
+
+    (project_items ++ assignment_items)
+    |> Enum.sort_by(& &1.sort_at, {:desc, DateTime})
+    |> Enum.take(limit)
+    |> Enum.map(&Map.delete(&1, :sort_at))
   end
 
   # Sort tasks by creation datetime so numbering follows creation order

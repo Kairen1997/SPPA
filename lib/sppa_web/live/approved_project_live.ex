@@ -155,6 +155,34 @@ defmodule SppaWeb.ApprovedProjectLive do
       all_project_managers
       |> Enum.filter(fn pm -> pm.no_kp not in selected_project_managers end)
 
+    # Untuk pengurus projek: gunakan sumber notifikasi yang sama seperti Dashboard PP
+    # (aktiviti projek + aktiviti penugasan digabung) supaya kiraan selaras (cth. 8).
+    {activities, notifications_count} =
+      if connected?(socket) do
+        if user_role == "pengurus projek" do
+          project_activities = Projects.list_recent_activities(current_scope, 10)
+          assignment_activities =
+            ActivityLogs.list_recent_assignment_activities_for_pengurus_projek(
+              current_scope,
+              10
+            )
+
+          notification_activities =
+            merge_activities_for_notifications(
+              project_activities,
+              assignment_activities,
+              10
+            )
+
+          {notification_activities, length(notification_activities)}
+        else
+          activities = Projects.list_recent_activities(current_scope, 10)
+          {activities, length(activities)}
+        end
+      else
+        {[], 0}
+      end
+
     {:ok,
      socket
      |> assign(:approved_project, approved_project)
@@ -174,7 +202,9 @@ defmodule SppaWeb.ApprovedProjectLive do
      |> assign(
        :form_pembangun,
        to_form(%{"pembangun_sistem" => selected_developers}, as: :project)
-     )}
+     )
+     |> assign(:activities, activities)
+     |> assign(:notifications_count, notifications_count)}
   end
 
   defp format_date(nil), do: "-"
@@ -207,6 +237,32 @@ defmodule SppaWeb.ApprovedProjectLive do
       true ->
         "Dalam Pembangunan"
     end
+  end
+
+  # Gabung aktiviti projek dan penugasan untuk notifikasi (sama seperti Dashboard PP).
+  defp merge_activities_for_notifications(project_activities, assignment_activities, limit) do
+    project_items =
+      Enum.map(project_activities, fn p ->
+        sort_at = p.last_updated || Map.get(p, :updated_at) || DateTime.utc_now()
+        %{nama: p.nama, status: p.status, last_updated: p.last_updated, sort_at: sort_at}
+      end)
+
+    assignment_items =
+      Enum.map(assignment_activities, fn a ->
+        sort_at = a.inserted_at || DateTime.utc_now()
+        %{
+          resource_name: a.resource_name,
+          action_label: a.action_label,
+          details: a.details,
+          inserted_at: a.inserted_at,
+          sort_at: sort_at
+        }
+      end)
+
+    (project_items ++ assignment_items)
+    |> Enum.sort_by(& &1.sort_at, {:desc, DateTime})
+    |> Enum.take(limit)
+    |> Enum.map(&Map.delete(&1, :sort_at))
   end
 
   defp external_api_base_url do

@@ -43,22 +43,13 @@
         <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
         
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          <button
-            type="button"
-            phx-click="open_settings_modal"
-            class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200"
-            aria-label="Tetapan"
-          >
-            <.icon name="hero-user-circle" class="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-          <.form for={%{}} action={~p"/users/log-out"} method="delete" class="inline">
-            <button
-              type="submit"
-              class="text-white hover:text-red-100 hover:bg-red-500/30 p-1.5 sm:p-2 rounded-lg transition-all duration-200"
-            >
-              <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5" />
-            </button>
-          </.form>
+          <.header_actions
+            notifications_open={@notifications_open}
+            notifications_count={@notifications_count}
+            activities={@activities}
+            profile_menu_open={@profile_menu_open}
+            current_scope={@current_scope}
+          />
         </div>
       </header>
        <%!-- Content --%>
