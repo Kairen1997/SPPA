@@ -47,12 +47,24 @@
        <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
-          <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Penyerahan</h1>
-            
-            <p class="text-gray-600">
-              Senarai projek dari pautan luar. Sinkronkan data untuk kemaskini terkini.
-            </p>
+          <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900 mb-2">Penyerahan</h1>
+
+              <p class="text-gray-600">
+                Senarai projek dari pautan luar. Sinkronkan data untuk kemaskini terkini.
+              </p>
+            </div>
+            <div class="flex-shrink-0">
+              <.link
+                href={~p"/senarai-projek-diluluskan/pdf"}
+                target="_blank"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+              >
+                <.icon name="hero-printer" class="w-5 h-5" />
+                <span>Cetak Dokumen</span>
+              </.link>
+            </div>
           </div>
            <%!-- Filter section --%>
           <div class="rounded-xl bg-white p-6 shadow-sm">
