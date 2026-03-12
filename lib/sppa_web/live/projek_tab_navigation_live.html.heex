@@ -1581,11 +1581,17 @@
                             <div>
                               <.input
                                 field={@form[:modul_terlibat]}
-                                type="text"
+                                type="select"
                                 label="Modul Terlibat"
+                                prompt="Pilih modul"
+                                options={
+                                  Enum.map(@developer_tasks || [], fn t ->
+                                    title = t.title || "—"
+                                    {title, title}
+                                  end)
+                                }
                                 required
-                                placeholder="Masukkan nama modul"
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                               />
                             </div>
                             
@@ -1807,11 +1813,17 @@
                             <div>
                               <.input
                                 field={@form[:modul_terlibat]}
-                                type="text"
+                                type="select"
                                 label="Modul Terlibat"
+                                prompt="Pilih modul"
+                                options={
+                                  Enum.map(@developer_tasks || [], fn t ->
+                                    title = t.title || "—"
+                                    {title, title}
+                                  end)
+                                }
                                 required
-                                placeholder="Masukkan nama modul"
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                               />
                             </div>
                             
@@ -2558,13 +2570,13 @@
                                 value={@uat_form[:modul].value}
                               >
                                 <option value="">-- Pilih Modul --</option>
-                                
+                                <%!-- Modul dari tab Pengaturcaraan (Tugasan Anda) --%>
                                 <option
-                                  :for={mod <- @senarai_nama_modul_ordered}
-                                  value={mod}
-                                  selected={@uat_form[:modul].value == mod}
+                                  :for={task <- @developer_tasks}
+                                  value={task.title || "—"}
+                                  selected={@uat_form[:modul].value == (task.title || "—")}
                                 >
-                                  {mod}
+                                  {task.title || "—"}
                                 </option>
                               </select>
                             </div>

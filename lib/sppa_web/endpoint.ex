@@ -26,6 +26,12 @@ defmodule SppaWeb.Endpoint do
     gzip: not code_reloading?,
     only: SppaWeb.static_paths()
 
+  # Serve uploaded files from priv/static/uploads at /uploads (ensures uploads are reachable)
+  plug Plug.Static,
+    at: "/uploads",
+    from: {:sppa, "priv/static/uploads"},
+    gzip: false
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
