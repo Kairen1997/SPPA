@@ -1596,6 +1596,12 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   end
 
   @impl true
+  def handle_event("validate_perubahan", %{"perubahan" => perubahan_params}, socket) do
+    form = to_form(perubahan_params, as: :perubahan)
+    {:noreply, assign(socket, :form, form)}
+  end
+
+  @impl true
   def handle_event("open_edit_modal", %{"perubahan_id" => perubahan_id}, socket) do
     id = parse_perubahan_id(perubahan_id)
     perubahan = id && Enum.find(socket.assigns.perubahan, fn p -> p.id == id end)

@@ -1194,12 +1194,32 @@ const PrintGanttChart = {
   }
 }
 
+// Modal backdrop: only close when click target is the backdrop itself (avoids closing
+// when native select dropdown option is clicked, which can bubble to backdrop)
+const ModalBackdrop = {
+  mounted() {
+    const eventName = this.el.dataset.closeEvent || "close_modal"
+    this.handleClick = (e) => {
+      if (e.target === this.el) {
+        this.pushEvent(eventName, {})
+      }
+    }
+    this.el.addEventListener("click", this.handleClick)
+  },
+  destroyed() {
+    if (this.handleClick) {
+      this.el.removeEventListener("click", this.handleClick)
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   hooks: {
     ...colocatedHooks,
+    ModalBackdrop,
     SubFunctionInputBlur,
     SingleClick,
     PreventEnterSubmit,

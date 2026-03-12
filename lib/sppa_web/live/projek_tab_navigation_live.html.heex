@@ -1201,10 +1201,6 @@
                             </th>
                             
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                              Catatan
-                            </th>
-                            
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tindakan
                             </th>
                           </tr>
@@ -1264,18 +1260,6 @@
                                 <div class="max-w-xs">
                                   <p class="text-xs text-gray-700 line-clamp-2">
                                     {perubahan.kesan}
-                                  </p>
-                                </div>
-                              <% else %>
-                                <span class="text-xs text-gray-400 italic">-</span>
-                              <% end %>
-                            </td>
-                            
-                            <td class="px-3 py-2">
-                              <%= if perubahan.catatan do %>
-                                <div class="max-w-xs">
-                                  <p class="text-xs text-gray-700 line-clamp-2">
-                                    {perubahan.catatan}
                                   </p>
                                 </div>
                               <% else %>
@@ -1388,86 +1372,6 @@
                                   {@selected_perubahan.modul_terlibat}
                                 </p>
                               </div>
-                              
-                              <div>
-                                <label class="block text-sm font-medium text-gray-800 mb-1">
-                                  Status
-                                </label>
-                                <span class={[
-                                  "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border",
-                                  case @selected_perubahan.status do
-                                    "Dalam Semakan" ->
-                                      "bg-yellow-100 text-yellow-800 border-yellow-200"
-
-                                    "Diluluskan" ->
-                                      "bg-green-100 text-green-800 border-green-200"
-
-                                    "Ditolak" ->
-                                      "bg-red-100 text-red-800 border-red-200"
-
-                                    "Dalam Pelaksanaan" ->
-                                      "bg-blue-100 text-blue-800 border-blue-200"
-
-                                    "Selesai" ->
-                                      "bg-gray-100 text-gray-800 border-gray-200"
-
-                                    _ ->
-                                      "bg-gray-100 text-gray-800 border-gray-200"
-                                  end
-                                ]}>
-                                  <.icon
-                                    name={
-                                      case @selected_perubahan.status do
-                                        "Dalam Semakan" -> "hero-clock"
-                                        "Diluluskan" -> "hero-check-circle"
-                                        "Ditolak" -> "hero-x-circle"
-                                        "Dalam Pelaksanaan" -> "hero-arrow-path"
-                                        "Selesai" -> "hero-check-badge"
-                                        _ -> "hero-information-circle"
-                                      end
-                                    }
-                                    class="w-4 h-4 mr-1"
-                                  /> {@selected_perubahan.status}
-                                </span>
-                              </div>
-                              
-                              <div>
-                                <label class="block text-sm font-medium text-gray-800 mb-1">
-                                  Keutamaan
-                                </label>
-                                <span class={[
-                                  "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border",
-                                  case @selected_perubahan.keutamaan do
-                                    "Sangat Tinggi" ->
-                                      "bg-red-100 text-red-800 border-red-200"
-
-                                    "Tinggi" ->
-                                      "bg-orange-100 text-orange-800 border-orange-200"
-
-                                    "Sederhana" ->
-                                      "bg-yellow-100 text-yellow-800 border-yellow-200"
-
-                                    "Rendah" ->
-                                      "bg-blue-100 text-blue-800 border-blue-200"
-
-                                    _ ->
-                                      "bg-gray-100 text-gray-800 border-gray-200"
-                                  end
-                                ]}>
-                                  <.icon
-                                    name={
-                                      case @selected_perubahan.keutamaan do
-                                        "Sangat Tinggi" -> "hero-exclamation-triangle"
-                                        "Tinggi" -> "hero-arrow-up"
-                                        "Sederhana" -> "hero-minus"
-                                        "Rendah" -> "hero-arrow-down"
-                                        _ -> "hero-information-circle"
-                                      end
-                                    }
-                                    class="w-4 h-4 mr-1"
-                                  /> {@selected_perubahan.keutamaan}
-                                </span>
-                              </div>
                             </div>
                           </div>
                            <%!-- Timeline --%>
@@ -1540,20 +1444,6 @@
                               </div>
                             </div>
                           <% end %>
-                           <%!-- Notes --%>
-                          <%= if @selected_perubahan.catatan do %>
-                            <div class="space-y-4">
-                              <div class="border-b border-gray-200 pb-2">
-                                <h3 class="text-lg font-semibold text-gray-900">Catatan</h3>
-                              </div>
-                              
-                              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                <p class="text-sm text-gray-700 whitespace-pre-wrap">
-                                  {@selected_perubahan.catatan}
-                                </p>
-                              </div>
-                            </div>
-                          <% end %>
                         </div>
                       </div>
                        <%!-- Modal footer --%>
@@ -1585,11 +1475,13 @@
                   role="dialog"
                   aria-modal="true"
                 >
-                  <%!-- Backdrop: tutup modal hanya bila klik pada kawasan gelap --%>
+                  <%!-- Backdrop: tutup modal hanya bila klik terus pada kawasan gelap (bukan bila pilih jenis) --%>
                   <div
+                    id="create-perubahan-modal-backdrop"
                     class="fixed inset-0 bg-black/60 transition-opacity z-40"
                     aria-hidden="true"
-                    phx-click="close_create_modal"
+                    phx-hook="ModalBackdrop"
+                    data-close-event="close_create_modal"
                   >
                   </div>
                    <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
@@ -1757,44 +1649,6 @@
                               <% end %>
                             </div>
                             
-                            <div>
-                              <label class="block text-sm font-medium text-gray-800 mb-2">
-                                Keutamaan
-                              </label>
-                              <select
-                                name="perubahan[keutamaan]"
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                              >
-                                <option
-                                  value="Sangat Tinggi"
-                                  selected={@form[:keutamaan].value == "Sangat Tinggi"}
-                                >
-                                  Sangat Tinggi
-                                </option>
-                                
-                                <option
-                                  value="Tinggi"
-                                  selected={@form[:keutamaan].value == "Tinggi"}
-                                >
-                                  Tinggi
-                                </option>
-                                
-                                <option
-                                  value="Sederhana"
-                                  selected={@form[:keutamaan].value == "Sederhana"}
-                                >
-                                  Sederhana
-                                </option>
-                                
-                                <option
-                                  value="Rendah"
-                                  selected={@form[:keutamaan].value == "Rendah"}
-                                >
-                                  Rendah
-                                </option>
-                              </select>
-                            </div>
-                            
                             <div class="md:col-span-2">
                               <label class="block text-sm font-medium text-gray-800 mb-2">
                                 Justifikasi
@@ -1815,17 +1669,6 @@
                                 placeholder="Masukkan kesan perubahan..."
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                               ><%= if @form[:kesan] && @form[:kesan].value, do: @form[:kesan].value, else: "" %></textarea>
-                            </div>
-                            
-                            <div class="md:col-span-2">
-                              <label class="block text-sm font-medium text-gray-800 mb-2">
-                                Catatan
-                              </label> <textarea
-                                name="perubahan[catatan]"
-                                rows="3"
-                                placeholder="Masukkan catatan..."
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
-                              ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
                             </div>
                           </div>
                         </.form>
@@ -1858,11 +1701,13 @@
                   role="dialog"
                   aria-modal="true"
                 >
-                  <%!-- Backdrop: tutup modal hanya bila klik pada kawasan gelap --%>
+                  <%!-- Backdrop: tutup modal hanya bila klik terus pada kawasan gelap (bukan bila pilih jenis) --%>
                   <div
+                    id="edit-perubahan-modal-backdrop"
                     class="fixed inset-0 bg-black/60 transition-opacity z-40"
                     aria-hidden="true"
-                    phx-click="close_edit_modal"
+                    phx-hook="ModalBackdrop"
+                    data-close-event="close_edit_modal"
                   >
                   </div>
                    <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
@@ -2030,44 +1875,6 @@
                               <% end %>
                             </div>
                             
-                            <div>
-                              <label class="block text-sm font-medium text-gray-800 mb-2">
-                                Keutamaan
-                              </label>
-                              <select
-                                name="perubahan[keutamaan]"
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                              >
-                                <option
-                                  value="Sangat Tinggi"
-                                  selected={@form[:keutamaan].value == "Sangat Tinggi"}
-                                >
-                                  Sangat Tinggi
-                                </option>
-                                
-                                <option
-                                  value="Tinggi"
-                                  selected={@form[:keutamaan].value == "Tinggi"}
-                                >
-                                  Tinggi
-                                </option>
-                                
-                                <option
-                                  value="Sederhana"
-                                  selected={@form[:keutamaan].value == "Sederhana"}
-                                >
-                                  Sederhana
-                                </option>
-                                
-                                <option
-                                  value="Rendah"
-                                  selected={@form[:keutamaan].value == "Rendah"}
-                                >
-                                  Rendah
-                                </option>
-                              </select>
-                            </div>
-                            
                             <div class="md:col-span-2">
                               <label class="block text-sm font-medium text-gray-800 mb-2">
                                 Justifikasi
@@ -2088,17 +1895,6 @@
                                 placeholder="Masukkan kesan perubahan..."
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                               ><%= if @form[:kesan] && @form[:kesan].value, do: @form[:kesan].value, else: "" %></textarea>
-                            </div>
-                            
-                            <div class="md:col-span-2">
-                              <label class="block text-sm font-medium text-gray-800 mb-2">
-                                Catatan
-                              </label> <textarea
-                                name="perubahan[catatan]"
-                                rows="3"
-                                placeholder="Masukkan catatan..."
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
-                              ><%= if @form[:catatan] && @form[:catatan].value, do: @form[:catatan].value, else: "" %></textarea>
                             </div>
                           </div>
                         </.form>
