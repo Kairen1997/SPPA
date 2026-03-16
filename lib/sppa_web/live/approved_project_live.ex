@@ -213,7 +213,9 @@ defmodule SppaWeb.ApprovedProjectLive do
   # Status untuk halaman butiran projek diluluskan.
   # - Jika TIADA pembangun dilantik -> "Belum Lantik Pembangun"
   # - Jika ada pembangun tapi TIADA pengurus -> "Belum Lantik Pengurus"
-  # - Jika kedua-dua dilantik -> guna status projek (contoh: "Dalam Pembangunan", "Selesai")
+  # - Jika pengurus sudah dilantik (dengan atau tanpa pembangun) tetapi tiada status projek
+  #   khusus -> "Sudah Lantik Pengurus"
+  # - Jika kedua-dua dilantik dan projek ada status -> guna status projek (contoh: "Dalam Pembangunan", "Selesai")
   def status_display_approved_project(approved_project) do
     pembangun_dilantik? =
       (approved_project.project && approved_project.project.developer_id) ||
@@ -235,7 +237,7 @@ defmodule SppaWeb.ApprovedProjectLive do
         approved_project.project.status
 
       true ->
-        "Dalam Pembangunan"
+        "Sudah Lantik Pengurus"
     end
   end
 

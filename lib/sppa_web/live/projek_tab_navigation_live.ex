@@ -294,6 +294,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
            max_entries: 1,
            max_file_size: 10_000_000
          )
+         |> allow_upload(:maklumbalas_file,
+           accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg),
+           max_entries: 1,
+           max_file_size: 10_000_000
+         )
          |> allow_upload(:penyerahan_manual,
            accept: ~w(.pdf .doc .docx),
            max_entries: 1,
@@ -2871,6 +2876,23 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     project = socket.assigns.project
     project_id = project && project.id
 
+    upload_meta =
+      consume_uploaded_entries(socket, :maklumbalas_file, fn %{path: path}, entry ->
+        filename = maklumbalas_upload_filename(project_id, entry)
+        dest_dir = Path.join(File.cwd!(), "priv/static/uploads/maklumbalas")
+        File.mkdir_p!(dest_dir)
+        dest = Path.join(dest_dir, filename)
+        File.cp!(path, dest)
+        {:ok, %{path: "maklumbalas/#{filename}", original_name: entry.client_name}}
+      end)
+      |> List.first()
+
+    {attachment_path, attachment_original_name} =
+      case upload_meta do
+        %{path: p, original_name: n} -> {p, n}
+        _ -> {nil, nil}
+      end
+
     tarikh_maklumbalas =
       if params["tarikh_maklumbalas"] && params["tarikh_maklumbalas"] != "" do
         case Date.from_iso8601(params["tarikh_maklumbalas"]) do
@@ -2889,7 +2911,9 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       tarikh_maklumbalas: tarikh_maklumbalas,
       jabatan: params["jabatan"] || jabatan_from_project,
       responden: params["responden"] || "",
-      butiran: params["butiran"] || ""
+      butiran: params["butiran"] || "",
+      attachment_path: attachment_path,
+      attachment_original_name: attachment_original_name
     }
 
     case Maklumbalas.create_maklumbalas(attrs) do
@@ -2958,6 +2982,17 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     project_id = project && project.id
 
     if editing && project_id do
+      upload_meta =
+        consume_uploaded_entries(socket, :maklumbalas_file, fn %{path: path}, entry ->
+          filename = maklumbalas_upload_filename(project_id, entry)
+          dest_dir = Path.join(File.cwd!(), "priv/static/uploads/maklumbalas")
+          File.mkdir_p!(dest_dir)
+          dest = Path.join(dest_dir, filename)
+          File.cp!(path, dest)
+          {:ok, %{path: "maklumbalas/#{filename}", original_name: entry.client_name}}
+        end)
+        |> List.first()
+
       tarikh_maklumbalas =
         if params["tarikh_maklumbalas"] && params["tarikh_maklumbalas"] != "" do
           case Date.from_iso8601(params["tarikh_maklumbalas"]) do
@@ -2970,12 +3005,23 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
       jabatan_from_project = (project && Map.get(project, :jabatan)) || ""
 
-      attrs = %{
+      base_attrs = %{
         tarikh_maklumbalas: tarikh_maklumbalas,
         jabatan: params["jabatan"] || jabatan_from_project || editing.jabatan,
         responden: params["responden"] || "",
         butiran: params["butiran"] || ""
       }
+
+      attrs =
+        case upload_meta do
+          %{path: p, original_name: n} ->
+            base_attrs
+            |> Map.put(:attachment_path, p)
+            |> Map.put(:attachment_original_name, n)
+
+          _ ->
+            base_attrs
+        end
 
       case Maklumbalas.update_maklumbalas(editing, attrs) do
         {:ok, _updated} ->
@@ -3348,6 +3394,12 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   defp kes_format_date_for_form(nil), do: ""
   defp kes_format_date_for_form(%Date{} = d), do: Calendar.strftime(d, "%Y-%m-%d")
   defp kes_format_date_for_form(_), do: ""
+
+  defp maklumbalas_upload_filename(project_id, entry) do
+    ext = Path.extname(entry.client_name || "")
+    uniq = System.unique_integer([:positive])
+    "maklumbalas_p#{project_id || "na"}_#{uniq}#{ext}"
+  end
 
   # Builds a unique filename that keeps the original document name (sanitized).
   defp kes_upload_filename(project_id, entry) do
