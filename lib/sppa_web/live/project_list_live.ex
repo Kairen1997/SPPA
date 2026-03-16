@@ -165,28 +165,19 @@ defmodule SppaWeb.ProjectListLive do
 
   @impl true
   def handle_event("sync_external_data", _params, socket) do
-    # Check if Oban is running
     try do
-      # Manually trigger the sync worker
-      job = Sppa.Workers.ExternalSyncWorker.new(%{})
+      # Run sync immediately in this process so the user
+      # sees updated data without relying on background workers.
+      _ = Sppa.Workers.ExternalSyncWorker.perform(%{})
 
-      case Oban.insert(job) do
-        {:ok, inserted_job} ->
-          Logger.info("Sync job inserted: #{inspect(inserted_job.id)}")
-          # Reload projects after a short delay
-          Process.send_after(self(), :reload_projects, 3000)
+      projects = list_projects(socket)
+      total_pages = calculate_total_pages(socket)
 
-          {:noreply,
-           socket
-           |> put_flash(:info, "Sinkronisasi data telah dimulakan. Sila tunggu sebentar...")}
-
-        {:error, reason} ->
-          Logger.error("Failed to insert sync job: #{inspect(reason)}")
-
-          {:noreply,
-           socket
-           |> put_flash(:error, "Ralat semasa memulakan sinkronisasi: #{inspect(reason)}")}
-      end
+      {:noreply,
+       socket
+       |> assign(:projects, projects)
+       |> assign(:total_pages, total_pages)
+       |> put_flash(:info, "Sinkronisasi data telah selesai.")}
     rescue
       e ->
         Logger.error("Exception during sync: #{inspect(e)}")

@@ -268,7 +268,7 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp external_api_base_url do
     full_url =
       Application.get_env(:sppa, :system_permohonan_aplikasi, [])[:base_url] ||
-        "http://10.71.69.197:4000/api/requests?status=Diluluskan"
+        "http://10.71.69.238:4000/api/requests?status=Diluluskan"
 
     # Extract base URL (remove path and query string)
     case URI.parse(full_url) do
@@ -277,7 +277,7 @@ defmodule SppaWeb.ApprovedProjectLive do
         "#{scheme}://#{host}#{port_str}"
 
       _ ->
-        "http://10.71.69.197:4000"
+        "http://10.71.69.238:4000"
     end
   end
 
