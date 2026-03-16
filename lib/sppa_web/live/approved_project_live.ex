@@ -428,6 +428,56 @@ defmodule SppaWeb.ApprovedProjectLive do
   end
 
   @impl true
+  def handle_event("update_tarikh_mula", %{"tarikh_mula" => date_str}, socket) do
+    if socket.assigns.approved_project.project do
+      tarikh_jangkaan_siap = socket.assigns.approved_project.tarikh_jangkaan_siap
+
+      date_value =
+        if date_str == "" or date_str == nil do
+          nil
+        else
+          case Date.from_iso8601(date_str) do
+            {:ok, date} -> date
+            {:error, _} -> nil
+          end
+        end
+
+      cond do
+        # If tarikh jangkaan siap already set, tarikh mula cannot be after it
+        tarikh_jangkaan_siap && date_value &&
+            Date.compare(date_value, tarikh_jangkaan_siap) == :gt ->
+          {:noreply,
+           put_flash(
+             socket,
+             :error,
+             "Tarikh mula tidak boleh selepas tarikh jangkaan siap."
+           )}
+
+        true ->
+          case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+                 "tarikh_mula" => date_value
+               }) do
+            {:ok, updated_project} ->
+              {:noreply,
+               socket
+               |> assign(:approved_project, updated_project)
+               |> put_flash(:info, "Tarikh mula telah dikemaskini.")}
+
+            {:error, _changeset} ->
+              {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh mula.")}
+          end
+      end
+    else
+      {:noreply,
+       socket
+       |> put_flash(
+         :error,
+         "Sila daftar projek terlebih dahulu sebelum menetapkan tarikh mula."
+       )}
+    end
+  end
+
+  @impl true
   def handle_event("add_pengurus_projek", %{"project_manager_id" => pm_id_str}, socket) do
     unless socket.assigns.current_scope.user.role == "ketua unit" do
       {:noreply,
@@ -473,8 +523,9 @@ defmodule SppaWeb.ApprovedProjectLive do
 
   @impl true
   def handle_event("update_tarikh_jangkaan_siap", %{"tarikh_jangkaan_siap" => date_str}, socket) do
-    # Only allow update if project has been registered (daftar projek)
     if socket.assigns.approved_project.project do
+      tarikh_mula = socket.assigns.approved_project.tarikh_mula
+
       date_value =
         if date_str == "" or date_str == nil do
           nil
@@ -485,17 +536,39 @@ defmodule SppaWeb.ApprovedProjectLive do
           end
         end
 
-      case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
-             "tarikh_jangkaan_siap" => date_value
-           }) do
-        {:ok, updated_project} ->
+      cond do
+        # Must set tarikh mula first before setting tarikh jangkaan siap
+        is_nil(tarikh_mula) && date_value ->
           {:noreply,
-           socket
-           |> assign(:approved_project, updated_project)
-           |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
+           put_flash(
+             socket,
+             :error,
+             "Sila tetapkan tarikh mula terlebih dahulu sebelum menetapkan tarikh jangkaan siap."
+           )}
 
-        {:error, _changeset} ->
-          {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
+        # Must set tarikh mula first before setting tarikh jangkaan siap
+        tarikh_mula && date_value && Date.compare(date_value, tarikh_mula) == :lt ->
+          {:noreply,
+           put_flash(
+             socket,
+             :error,
+             "Tarikh jangkaan siap tidak boleh sebelum tarikh mula."
+           )}
+
+        true ->
+          case ApprovedProjects.update_approved_project(socket.assigns.approved_project, %{
+                 "tarikh_jangkaan_siap" => date_value
+               }) do
+            {:ok, updated_project} ->
+              {:noreply,
+               socket
+               |> assign(:approved_project, updated_project)
+               |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
+
+            {:error, _changeset} ->
+              {:noreply,
+               put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
+          end
       end
     else
       {:noreply,
@@ -811,8 +884,6 @@ defmodule SppaWeb.ApprovedProjectLive do
         {:noreply, put_flash(socket, :error, "Gagal mengeluarkan pembangun sistem.")}
     end
   end
-
-  # Note: update_tarikh_mula handler removed - tarikh_mula is read-only and comes from external link
 
   @impl true
   def handle_info(:close_settings_modal, socket) do
@@ -1326,17 +1397,47 @@ defmodule SppaWeb.ApprovedProjectLive do
                         </dt>
 
                         <dd>
-                          <div class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                            <%= if @approved_project.tarikh_mula do %>
-                              {format_date(@approved_project.tarikh_mula)}
-                            <% else %>
-                              <span class="text-gray-400 italic">Tiada tarikh mula</span>
-                            <% end %>
-                          </div>
+                          <%= if @approved_project.project && @current_scope.user.role == "pengurus projek" do %>
+                            <%!-- Editable only for pengurus projek when project is registered --%>
+                            <.form
+                              for={%{}}
+                              phx-change="update_tarikh_mula"
+                              id="tarikh-mula-form"
+                            >
+                              <input
+                                type="date"
+                                name="tarikh_mula"
+                                value={
+                                  if @approved_project.tarikh_mula,
+                                    do: Date.to_iso8601(@approved_project.tarikh_mula),
+                                    else: ""
+                                }
+                                max={
+                                  if @approved_project.tarikh_jangkaan_siap,
+                                    do: Date.to_iso8601(@approved_project.tarikh_jangkaan_siap),
+                                    else: nil
+                                }
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
+                              />
+                            </.form>
+                          <% else %>
+                            <%!-- Read-only for ketua unit or if project not registered --%>
+                            <div class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                              <%= if @approved_project.tarikh_mula do %>
+                                {format_date(@approved_project.tarikh_mula)}
+                              <% else %>
+                                <span class="text-gray-400 italic">Tiada tarikh mula</span>
+                              <% end %>
+                            </div>
 
-                          <p class="mt-1 text-xs text-gray-500 italic">
-                            Tarikh mula ditetapkan dari sistem luaran dan tidak boleh diubah
-                          </p>
+                            <p class="mt-1 text-xs text-gray-500 italic">
+                              <%= if @approved_project.project do %>
+                                Hanya pengurus projek boleh mengemaskini tarikh mula.
+                              <% else %>
+                                Sila daftar projek terlebih dahulu untuk menetapkan tarikh mula.
+                              <% end %>
+                            </p>
+                          <% end %>
                         </dd>
                       </div>
 
@@ -1346,8 +1447,8 @@ defmodule SppaWeb.ApprovedProjectLive do
                         </dt>
 
                         <dd>
-                          <%= if @approved_project.project do %>
-                            <%!-- Editable if project has been registered --%>
+                          <%= if @approved_project.project && @current_scope.user.role == "pengurus projek" do %>
+                            <%!-- Editable only for pengurus projek when project is registered --%>
                             <.form
                               for={%{}}
                               phx-change="update_tarikh_jangkaan_siap"
@@ -1365,7 +1466,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                               />
                             </.form>
                           <% else %>
-                            <%!-- Read-only if project has not been registered --%>
+                            <%!-- Read-only for ketua unit or if project not registered --%>
                             <div class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                               <%= if @approved_project.tarikh_jangkaan_siap do %>
                                 {format_date(@approved_project.tarikh_jangkaan_siap)}
@@ -1375,7 +1476,14 @@ defmodule SppaWeb.ApprovedProjectLive do
                             </div>
 
                             <p class="mt-1 text-xs text-gray-500 italic">
-                              Sila daftar projek terlebih dahulu untuk menetapkan tarikh jangkaan siap
+                              <%= cond do %>
+                                <% @current_scope.user.role != "pengurus projek" && @approved_project.project -> %>
+                                  Hanya pengurus projek boleh mengemaskini tarikh jangkaan siap.
+                                <% !@approved_project.project -> %>
+                                  Sila daftar projek terlebih dahulu untuk menetapkan tarikh jangkaan siap.
+                                <% true -> %>
+                                  &nbsp;
+                              <% end %>
                             </p>
                           <% end %>
                         </dd>

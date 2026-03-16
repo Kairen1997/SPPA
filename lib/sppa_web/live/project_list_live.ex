@@ -492,16 +492,7 @@ defmodule SppaWeb.ProjectListLive do
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
-                  <%!-- Action buttons (sync only for ketua unit on Penyerahan Projek) --%>
-                  <div class="flex-shrink-0 flex gap-3">
-                    <button
-                      type="button"
-                      phx-click="open_new_project_modal"
-                      class="rounded-lg bg-[#2F80ED] px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#2563EB] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                      Projek Baru
-                    </button>
-                  </div>
+                  <%!-- Tiada butang Projek Baru di Senarai Projek Diluluskan (pengurus projek) --%>
                 </.form>
               </div>
               <%!-- Projects table (main printable content) --%>
