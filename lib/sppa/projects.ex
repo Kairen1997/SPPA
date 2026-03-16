@@ -5,6 +5,7 @@ defmodule Sppa.Projects do
 
   import Ecto.Query, warn: false
   import Ecto.Changeset
+  require Logger
   alias Sppa.Repo
   alias Sppa.Accounts
   alias Sppa.Projects.Project
@@ -846,11 +847,29 @@ defmodule Sppa.Projects do
   def ensure_internal_project_for_approved(
         %Sppa.ApprovedProjects.ApprovedProject{} = approved_project
       ) do
-    existing =
+    existing_projects =
       Project
       |> where([p], p.approved_project_id == ^approved_project.id)
       |> preload([:approved_project, :developer, :project_manager])
-      |> Repo.one()
+      |> Repo.all()
+
+    existing =
+      case existing_projects do
+        [] ->
+          nil
+
+        [project] ->
+          project
+
+        [project | _rest] ->
+          # Multiple projects found for the same approved_project_id – keep the first
+          # and log a warning so the duplicates can be cleaned up later.
+          Logger.warning(
+            "Multiple projects found for approved_project_id=#{approved_project.id}. Using the first one and ignoring the rest."
+          )
+
+          project
+      end
 
     if existing do
       # Update existing project with data from approved_project if fields are null/empty
