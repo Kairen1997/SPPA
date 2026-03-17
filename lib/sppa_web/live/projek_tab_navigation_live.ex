@@ -965,6 +965,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       form_data = %{
         "tajuk" => ujian.tajuk,
         "modul" => ujian.modul,
+        "no_ujian" => ujian.no_ujian || "",
         "tarikh_ujian" => Calendar.strftime(ujian.tarikh_ujian, "%Y-%m-%d"),
         "tarikh_dijangka_siap" => Calendar.strftime(ujian.tarikh_dijangka_siap, "%Y-%m-%d"),
         "status" => ujian.status,
@@ -996,6 +997,19 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
   @impl true
   def handle_event("validate_uat_ujian", %{"ujian" => ujian_params}, socket) do
+    ujian_params =
+      if socket.assigns[:uat_show_create_modal] do
+        modul = (ujian_params["modul"] || "") |> to_string() |> String.trim()
+        no_ujian =
+          if modul != "",
+            do: UjianPenerimaanPengguna.next_no_ujian(socket.assigns.project.id, modul),
+            else: ""
+
+        Map.put(ujian_params, "no_ujian", no_ujian)
+      else
+        ujian_params
+      end
+
     form = to_form(ujian_params, as: :ujian)
     {:noreply, assign(socket, :uat_form, form)}
   end
@@ -1021,6 +1035,15 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       |> to_string()
       |> String.trim()
 
+    no_ujian_value =
+      ujian_params["no_ujian"]
+      |> to_string()
+      |> String.trim()
+      |> case do
+        "" -> UjianPenerimaanPengguna.next_no_ujian(project_id, modul_name)
+        value -> value
+      end
+
     tajuk_default =
       modul_name
       |> then(fn name ->
@@ -1035,6 +1058,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       project_id: project_id,
       tajuk: tajuk_default,
       modul: ujian_params["modul"],
+      no_ujian: no_ujian_value,
       tarikh_ujian: uat_parse_date(ujian_params["tarikh_ujian"], Date.utc_today()),
       tarikh_dijangka_siap:
         uat_parse_date(ujian_params["tarikh_dijangka_siap"], Date.utc_today()),
@@ -1096,6 +1120,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       attrs = %{
         tajuk: ujian_params["tajuk"] || editing_ujian.tajuk,
         modul: ujian_params["modul"],
+        no_ujian: uat_empty_to_nil(ujian_params["no_ujian"]) || editing_ujian.no_ujian,
         tarikh_ujian: uat_parse_date(ujian_params["tarikh_ujian"], editing_ujian.tarikh_ujian),
         tarikh_dijangka_siap:
           uat_parse_date(ujian_params["tarikh_dijangka_siap"], editing_ujian.tarikh_dijangka_siap),
