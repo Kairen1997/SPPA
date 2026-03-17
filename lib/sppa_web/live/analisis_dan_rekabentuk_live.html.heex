@@ -62,7 +62,9 @@
               <.icon name="hero-arrow-left" class="w-4 h-4" /> <span>Kembali</span>
             </.link>
           </div>
+          
           <h1 class="text-xl font-bold text-slate-800 tracking-tight">Analisis dan Rekabentuk</h1>
+          
           <p class="text-sm text-slate-600 mt-0.5">Borang Verifikasi Spesifikasi Aplikasi</p>
         </div>
       </div>
@@ -80,8 +82,10 @@
                   <h2 class="text-lg font-bold text-slate-800 tracking-tight uppercase">
                     Borang Verifikasi Spesifikasi Aplikasi
                   </h2>
+                  
                   <p class="text-sm text-slate-500 mt-0.5">Analisis dan Rekabentuk</p>
                 </div>
+                
                 <span class="text-sm font-semibold text-slate-600 shrink-0">
                   {@document_id || "JPKN-BPA-01/B2"}
                 </span>
@@ -101,100 +105,101 @@
                     1. Maklumat Projek
                   </h3>
                 </div>
+                
                 <div class="p-4 sm:p-5">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div class="space-y-1">
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">
-                      Nama Projek
-                    </label>
-                    <%= if @project do %>
-                      <input
-                        type="text"
-                        name="analisis_dan_rekabentuk[nama_projek]"
-                        value={@project.nama || ""}
-                        readonly
-                        class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-slate-50 cursor-not-allowed"
-                      />
-                    <% else %>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">
+                        Nama Projek
+                      </label>
+                      <%= if @project do %>
+                        <input
+                          type="text"
+                          name="analisis_dan_rekabentuk[nama_projek]"
+                          value={@project.nama || ""}
+                          readonly
+                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-slate-50 cursor-not-allowed"
+                        />
+                      <% else %>
+                        <.input
+                          field={@form[:nama_projek]}
+                          type="text"
+                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 placeholder:text-slate-400"
+                          placeholder="Masukkan nama projek"
+                        />
+                      <% end %>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">
+                        Nama Jabatan
+                      </label>
+                      <%= if @project do %>
+                        <input
+                          type="text"
+                          name="analisis_dan_rekabentuk[nama_agensi]"
+                          value={@project.jabatan || ""}
+                          readonly
+                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-slate-50 cursor-not-allowed"
+                        />
+                      <% else %>
+                        <.input
+                          field={@form[:nama_agensi]}
+                          type="text"
+                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 placeholder:text-slate-400"
+                          placeholder="Masukkan Jabatan"
+                        />
+                      <% end %>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">
+                        Versi Sistem
+                      </label>
                       <.input
-                        field={@form[:nama_projek]}
+                        field={@form[:versi]}
                         type="text"
                         class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 placeholder:text-slate-400"
-                        placeholder="Masukkan nama projek"
+                        placeholder="Contoh: 1.0.0"
                       />
-                    <% end %>
-                  </div>
-                  
-                  <div class="space-y-1">
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">
-                      Nama Jabatan
-                    </label>
-                    <%= if @project do %>
-                      <input
-                        type="text"
-                        name="analisis_dan_rekabentuk[nama_agensi]"
-                        value={@project.jabatan || ""}
-                        readonly
-                        class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-slate-50 cursor-not-allowed"
-                      />
-                    <% else %>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">
+                        Tarikh Semakan
+                      </label>
+                      <div class="relative">
+                        <.input
+                          field={@form[:tarikh_semakan]}
+                          id="tarikh_semakan_date"
+                          type="date"
+                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 placeholder:text-slate-400"
+                          placeholder="dd/mm/yyyy"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div class="sm:col-span-2 space-y-1">
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">
+                        Rujukan Perubahan
+                      </label>
                       <.input
-                        field={@form[:nama_agensi]}
+                        field={@form[:rujukan_perubahan]}
                         type="text"
                         class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 placeholder:text-slate-400"
-                        placeholder="Masukkan Jabatan"
-                      />
-                    <% end %>
-                  </div>
-                  
-                  <div class="space-y-1">
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">
-                      Versi Sistem
-                    </label>
-                    <.input
-                      field={@form[:versi]}
-                      type="text"
-                      class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 placeholder:text-slate-400"
-                      placeholder="Contoh: 1.0.0"
-                    />
-                  </div>
-                  
-                  <div class="space-y-1">
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">
-                      Tarikh Semakan
-                    </label>
-                    <div class="relative">
-                      <.input
-                        field={@form[:tarikh_semakan]}
-                        id="tarikh_semakan_date"
-                        type="date"
-                        class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 placeholder:text-slate-400"
-                        placeholder="dd/mm/yyyy"
+                        placeholder="Nyatakan nama mesyuarat / perbincangan / tajuk kertas kerja dan Tarikh"
                       />
                     </div>
                   </div>
-                  
-                  <div class="sm:col-span-2 space-y-1">
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">
-                      Rujukan Perubahan
-                    </label>
-                    <.input
-                      field={@form[:rujukan_perubahan]}
-                      type="text"
-                      class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 placeholder:text-slate-400"
-                      placeholder="Nyatakan nama mesyuarat / perbincangan / tajuk kertas kerja dan Tarikh"
-                    />
-                  </div>
-                </div>
                 </div>
               </div>
-              
-              <%!-- Section 2: Modul Sistem --%>
+               <%!-- Section 2: Modul Sistem --%>
               <div class="mb-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3">
                   <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">
                     2. Modul Sistem
                   </h3>
+                  
                   <%= if @project == nil or @project_modules == [] do %>
                     <button
                       id="tambah-modul-btn"
@@ -205,37 +210,51 @@
                       data-single-click-ms="700"
                       class="shrink-0 px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold rounded flex items-center gap-1 print:hidden disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      <.icon name="hero-plus-circle" class="w-3.5 h-3.5" /> <span>Tambah Modul</span>
+                      <.icon name="hero-plus-circle" class="w-3.5 h-3.5" />
+                      <span>Tambah Modul</span>
                     </button>
                   <% end %>
                 </div>
+                
                 <div class="p-4 sm:p-5">
-                <%!-- Read-only: modul from pengurus projek --%>
-                <%= if @project != nil && @project_modules != [] do %>
-                  <p class="text-xs text-slate-600 mb-3">
-                    Modul berikut telah dicipta oleh pengurus projek untuk projek ini. Paparan hanya baca (tajuk tugasan dan penerangan).
-                  </p>
-                  <div id="project-modules-readonly" class="space-y-4">
-                    <%= for {pm, index} <- Enum.with_index(@project_modules) do %>
-                      <div>
-                        <p class="text-xs font-bold text-slate-800 mb-0.5">{index + 1}. Tajuk Tugasan</p>
-                        <p class="text-sm text-slate-900 mb-2">{pm.title || "—"}</p>
-                        <p class="text-xs font-bold text-slate-800 mb-0.5">Penerangan</p>
-                        <p class="text-sm text-slate-800 whitespace-pre-wrap leading-snug">{pm.description || "—"}</p>
-                      </div>
+                  <%!-- Read-only: modul from pengurus projek --%>
+                  <%= if @project != nil && @project_modules != [] do %>
+                    <p class="text-xs text-slate-600 mb-3">
+                      Modul berikut telah dicipta oleh pengurus projek untuk projek ini. Paparan hanya baca (tajuk tugasan dan penerangan).
+                    </p>
+                    
+                    <div id="project-modules-readonly" class="space-y-4">
+                      <%= for {pm, index} <- Enum.with_index(@project_modules) do %>
+                        <div>
+                          <p class="text-xs font-bold text-slate-800 mb-0.5">
+                            {index + 1}. Tajuk Tugasan
+                          </p>
+                          
+                          <p class="text-sm text-slate-900 mb-2">{pm.title || "—"}</p>
+                          
+                          <p class="text-xs font-bold text-slate-800 mb-0.5">Penerangan</p>
+                          
+                          <p class="text-sm text-slate-800 whitespace-pre-wrap leading-snug">
+                            {pm.description || "—"}
+                          </p>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <%= if @project != nil && @project_modules == [] do %>
+                      <p class="text-sm text-slate-500 italic">
+                        Tiada modul dicipta oleh pengurus projek untuk projek ini.
+                      </p>
                     <% end %>
-                  </div>
-                <% else %>
-                  <%= if @project != nil && @project_modules == [] do %>
-                    <p class="text-sm text-slate-500 italic">Tiada modul dicipta oleh pengurus projek untuk projek ini.</p>
-                  <% end %>
-                  <%!-- Editable modules list --%>
-                  <div id="modules" class="space-y-3">
-                    <%= for module <- @modules_list do %>
-                      <div id={"module-#{module.id}"}>
-                        <div class="flex items-center gap-2 py-2">
+                     <%!-- Editable modules list --%>
+                    <div id="modules" class="space-y-3">
+                      <%= for module <- @modules_list do %>
+                        <div id={"module-#{module.id}"}>
+                          <div class="flex items-center gap-2 py-2">
                             <div class="flex-1 min-w-0">
-                              <label for={"module-name-#{module.id}"} class="sr-only">Nama Modul</label>
+                              <label for={"module-name-#{module.id}"} class="sr-only">
+                                Nama Modul
+                              </label>
                               <input
                                 id={"module-name-#{module.id}"}
                                 type="text"
@@ -248,6 +267,7 @@
                                 placeholder="Nama modul"
                               />
                             </div>
+                            
                             <div class="flex items-center gap-1 print:hidden shrink-0">
                               <button
                                 type="button"
@@ -268,31 +288,55 @@
                                 <.icon name="hero-trash" class="w-3.5 h-3.5" />
                               </button>
                             </div>
-                        </div>
-                        <%= if length(module.functions) > 0 do %>
-                          <div class="ml-2 mt-1 pl-3">
-                            <p class="text-xs font-semibold text-slate-600 mb-1">Fungsi dalam modul</p>
-                            <div class="space-y-0.5">
-                              <%= for {func, index} <- Enum.with_index(module.functions) do %>
-                                <div class="text-xs text-slate-700">
-                                  <span class="font-semibold text-slate-600">{Enum.at(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], index)}.</span>
-                                  <span>{func.name}</span>
-                                  <%= if length(func.sub_functions) > 0 do %>
-                                    <div class="ml-4 mt-0.5 space-y-0.5">
-                                      <%= for {sub_func, sub_index} <- Enum.with_index(func.sub_functions) do %>
-                                        <div class="text-xs text-slate-600">{Enum.at(["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"], sub_index)}. {sub_func.name}</div>
-                                      <% end %>
-                                    </div>
-                                  <% end %>
-                                </div>
-                              <% end %>
-                            </div>
                           </div>
-                        <% end %>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
+                          
+                          <%= if length(module.functions) > 0 do %>
+                            <div class="ml-2 mt-1 pl-3">
+                              <p class="text-xs font-semibold text-slate-600 mb-1">
+                                Fungsi dalam modul
+                              </p>
+                              
+                              <div class="space-y-0.5">
+                                <%= for {func, index} <- Enum.with_index(module.functions) do %>
+                                  <div class="text-xs text-slate-700">
+                                    <span class="font-semibold text-slate-600">
+                                      {Enum.at(
+                                        ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
+                                        index
+                                      )}.
+                                    </span> <span>{func.name}</span>
+                                    <%= if length(func.sub_functions) > 0 do %>
+                                      <div class="ml-4 mt-0.5 space-y-0.5">
+                                        <%= for {sub_func, sub_index} <- Enum.with_index(func.sub_functions) do %>
+                                          <div class="text-xs text-slate-600">
+                                            {Enum.at(
+                                              [
+                                                "i",
+                                                "ii",
+                                                "iii",
+                                                "iv",
+                                                "v",
+                                                "vi",
+                                                "vii",
+                                                "viii",
+                                                "ix",
+                                                "x"
+                                              ],
+                                              sub_index
+                                            )}. {sub_func.name}
+                                          </div>
+                                        <% end %>
+                                      </div>
+                                    <% end %>
+                                  </div>
+                                <% end %>
+                              </div>
+                            </div>
+                          <% end %>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
                 </div>
               </div>
                <%!-- Section 3: Fungsi Modul (for selected module) --%>
@@ -304,8 +348,12 @@
                       <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide pb-2 border-b border-slate-300">
                         3. Fungsi Modul
                       </h3>
-                      <p class="text-xs text-slate-600 mt-1">Modul: {selected_module.number}. {selected_module.name}</p>
+                      
+                      <p class="text-xs text-slate-600 mt-1">
+                        Modul: {selected_module.number}. {selected_module.name}
+                      </p>
                     </div>
+                    
                     <button
                       id="tambah-fungsi-btn"
                       type="button"
@@ -314,16 +362,18 @@
                       phx-value-module_id={selected_module.id}
                       class="shrink-0 px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold rounded flex items-center gap-1 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      <.icon name="hero-plus-circle" class="w-4 h-4" />
-                      <span>Tambah Fungsi</span>
+                      <.icon name="hero-plus-circle" class="w-4 h-4" /> <span>Tambah Fungsi</span>
                     </button>
                   </div>
+                  
                   <div class="space-y-4">
                     <%= if length(selected_module.functions) > 0 do %>
                       <%= for {func, index} <- Enum.with_index(selected_module.functions) do %>
                         <div>
                           <div class="flex items-center gap-3 py-2">
-                            <span class="font-semibold text-sm text-slate-600 shrink-0 w-6">{Enum.at(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], index)}.</span>
+                            <span class="font-semibold text-sm text-slate-600 shrink-0 w-6">
+                              {Enum.at(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], index)}.
+                            </span>
                             <input
                               id={"function-name-input-#{func.id}"}
                               type="text"
@@ -347,10 +397,16 @@
                               <.icon name="hero-trash" class="w-4 h-4" />
                             </button>
                           </div>
+                          
                           <div class="ml-6 mt-1 space-y-2">
                             <%= for {sub_func, sub_index} <- Enum.with_index(func.sub_functions) do %>
                               <div class="flex items-center gap-2">
-                                <span class="text-slate-500 text-xs font-medium shrink-0 w-8">{Enum.at(["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"], sub_index)}.</span>
+                                <span class="text-slate-500 text-xs font-medium shrink-0 w-8">
+                                  {Enum.at(
+                                    ["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"],
+                                    sub_index
+                                  )}.
+                                </span>
                                 <input
                                   id={"sub-function-input-#{sub_func.id}"}
                                   type="text"
@@ -376,6 +432,7 @@
                                 </button>
                               </div>
                             <% end %>
+                            
                             <button
                               type="button"
                               phx-click="add_sub_function"
@@ -390,7 +447,9 @@
                         </div>
                       <% end %>
                     <% else %>
-                      <p class="text-sm text-slate-500 py-4">Tiada fungsi ditambah lagi. Klik "Tambah Fungsi" untuk mula.</p>
+                      <p class="text-sm text-slate-500 py-4">
+                        Tiada fungsi ditambah lagi. Klik "Tambah Fungsi" untuk mula.
+                      </p>
                     <% end %>
                   </div>
                 </div>
@@ -402,79 +461,93 @@
                     4. Pengesahan & Perakuan
                   </h3>
                 </div>
+                
                 <div class="p-4 sm:p-5">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div class="disediakan-oleh-section">
-                    <h4 class="text-sm font-bold text-slate-800 mb-1">Disediakan Oleh</h4>
-                    <p class="text-xs text-slate-600 mb-2">Pengurus Projek / Pembangun</p>
-                    <div class="space-y-3">
-                      <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-slate-700">Nama</label>
-                        <input
-                          type="text"
-                          name="analisis_dan_rekabentuk[prepared_by_name]"
-                          value={Map.get(@form.params || %{}, "prepared_by_name", "")}
-                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
-                        />
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="disediakan-oleh-section">
+                      <h4 class="text-sm font-bold text-slate-800 mb-1">Disediakan Oleh</h4>
+                      
+                      <p class="text-xs text-slate-600 mb-2">Pengurus Projek / Pembangun</p>
+                      
+                      <div class="space-y-3">
+                        <div class="space-y-1">
+                          <label class="block text-xs font-semibold text-slate-700">Nama</label>
+                          <input
+                            type="text"
+                            name="analisis_dan_rekabentuk[prepared_by_name]"
+                            value={Map.get(@form.params || %{}, "prepared_by_name", "")}
+                            class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                          />
+                        </div>
+                        
+                        <div class="space-y-1">
+                          <label class="block text-xs font-semibold text-slate-700">
+                            Jawatan
+                          </label>
+                          <input
+                            type="text"
+                            name="analisis_dan_rekabentuk[prepared_by_position]"
+                            value={Map.get(@form.params || %{}, "prepared_by_position", "")}
+                            class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                          />
+                        </div>
+                        
+                        <div class="space-y-1">
+                          <label class="block text-xs font-semibold text-slate-700">Tarikh</label>
+                          <input
+                            id="prepared_by_date"
+                            type="date"
+                            name="analisis_dan_rekabentuk[prepared_by_date]"
+                            value={Map.get(@form.params || %{}, "prepared_by_date", "")}
+                            class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600 placeholder:text-slate-400"
+                            placeholder="dd/mm/yyyy"
+                          />
+                        </div>
                       </div>
-                      <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-slate-700">Jawatan</label>
-                        <input
-                          type="text"
-                          name="analisis_dan_rekabentuk[prepared_by_position]"
-                          value={Map.get(@form.params || %{}, "prepared_by_position", "")}
-                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
-                        />
-                      </div>
-                      <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-slate-700">Tarikh</label>
-                        <input
-                          id="prepared_by_date"
-                          type="date"
-                          name="analisis_dan_rekabentuk[prepared_by_date]"
-                          value={Map.get(@form.params || %{}, "prepared_by_date", "")}
-                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600 placeholder:text-slate-400"
-                          placeholder="dd/mm/yyyy"
-                        />
+                    </div>
+                    
+                    <div>
+                      <h4 class="text-sm font-bold text-slate-800 mb-1">Dipersetujui Oleh</h4>
+                      
+                      <p class="text-xs text-slate-600 mb-2">Pemohon</p>
+                      
+                      <div class="space-y-3">
+                        <div class="space-y-1">
+                          <label class="block text-xs font-semibold text-slate-700">Nama</label>
+                          <input
+                            type="text"
+                            name="analisis_dan_rekabentuk[approved_by_name]"
+                            value={Map.get(@form.params || %{}, "approved_by_name", "")}
+                            class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                          />
+                        </div>
+                        
+                        <div class="space-y-1">
+                          <label class="block text-xs font-semibold text-slate-700">
+                            Jawatan
+                          </label>
+                          <input
+                            type="text"
+                            name="analisis_dan_rekabentuk[approved_by_position]"
+                            value={Map.get(@form.params || %{}, "approved_by_position", "")}
+                            class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                          />
+                        </div>
+                        
+                        <div class="space-y-1">
+                          <label class="block text-xs font-semibold text-slate-700">Tarikh</label>
+                          <input
+                            id="approved_by_date"
+                            type="date"
+                            name="analisis_dan_rekabentuk[approved_by_date]"
+                            value={Map.get(@form.params || %{}, "approved_by_date", "")}
+                            class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600 placeholder:text-slate-400"
+                            placeholder="dd/mm/yyyy"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <h4 class="text-sm font-bold text-slate-800 mb-1">Dipersetujui Oleh</h4>
-                    <p class="text-xs text-slate-600 mb-2">Pemohon</p>
-                    <div class="space-y-3">
-                      <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-slate-700">Nama</label>
-                        <input
-                          type="text"
-                          name="analisis_dan_rekabentuk[approved_by_name]"
-                          value={Map.get(@form.params || %{}, "approved_by_name", "")}
-                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
-                        />
-                      </div>
-                      <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-slate-700">Jawatan</label>
-                        <input
-                          type="text"
-                          name="analisis_dan_rekabentuk[approved_by_position]"
-                          value={Map.get(@form.params || %{}, "approved_by_position", "")}
-                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
-                        />
-                      </div>
-                      <div class="space-y-1">
-                        <label class="block text-xs font-semibold text-slate-700">Tarikh</label>
-                        <input
-                          id="approved_by_date"
-                          type="date"
-                          name="analisis_dan_rekabentuk[approved_by_date]"
-                          value={Map.get(@form.params || %{}, "approved_by_date", "")}
-                          class="w-full px-3 py-2 text-sm text-slate-800 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-600 focus:border-blue-600 placeholder:text-slate-400"
-                          placeholder="dd/mm/yyyy"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 </div>
               </div>
                <%!-- Action Buttons --%>

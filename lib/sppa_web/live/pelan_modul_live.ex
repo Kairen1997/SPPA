@@ -60,6 +60,12 @@ defmodule SppaWeb.PelanModulLive do
           {"ketua penolong pengarah", _} ->
             Projects.get_project_by_id(project_id)
 
+          {"ketua unit", _} ->
+            # Ketua unit: benarkan capaian jika projek wujud dan boleh dilihat pada dashboard mereka.
+            # Dashboard ketua unit kira projek yang mempunyai approved_project_id, jadi kita
+            # benarkan capaian terus berdasarkan project_id di sini (router sudah pastikan login & peranan).
+            Projects.get_project_by_id(project_id)
+
           _ ->
             nil
         end

@@ -71,8 +71,12 @@ defmodule SppaWeb.Router do
       get "/senarai-projek-diluluskan/:id/kertas-kerja", ApprovedProjectController, :kertas_kerja
       live "/senarai-projek-diluluskan/:id", ApprovedProjectLive, :show
       live "/projek/:project_id/modul", ModulProjekLive, :index
+      # Read-only view of Modul Projek for ketua unit
+      live "/projek/:project_id/modul-kk", ModulProjekLive, :index
       get "/projek/:project_id/modul/pdf", ModulProjekPdfController, :show
       live "/projek/:project_id/pelan-modul", PelanModulLive, :index
+      # Read-only view of Pelan Modul for ketua unit
+      live "/projek/:project_id/pelan-modul-kk", PelanModulLive, :index
       get "/pelan-modul/:project_id/pdf", PelanModulPdfController, :show
       post "/projek/:project_id/penyerahan/upload", PenyerahanUploadController, :create
       live "/analisis-dan-rekabentuk", AnalisisDanRekabentukLive, :index

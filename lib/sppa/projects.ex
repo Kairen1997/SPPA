@@ -423,6 +423,7 @@ defmodule Sppa.Projects do
   """
   def list_recently_registered_projects(current_scope, limit \\ 20) do
     visible_ids = visible_project_ids(current_scope)
+
     if visible_ids == [] do
       []
     else
@@ -441,9 +442,11 @@ defmodule Sppa.Projects do
   Used e.g. on Penyerahan page to show lantikan by ketua unit.
   """
   def approved_project_pengurus_display(nil), do: ""
+
   def approved_project_pengurus_display(%ApprovedProject{} = ap) do
     if ap.pengurus_projek && ap.pengurus_projek != "" do
       no_kps = parse_pengurus_projek(ap.pengurus_projek)
+
       names =
         Enum.map(no_kps, fn no_kp ->
           case Accounts.get_user_by_no_kp(no_kp) do
@@ -452,6 +455,7 @@ defmodule Sppa.Projects do
           end
         end)
         |> Enum.reject(&is_nil/1)
+
       if names == [], do: "", else: Enum.join(names, ", ")
     else
       ""
@@ -464,8 +468,10 @@ defmodule Sppa.Projects do
   """
   def project_pengurus_projek_display(project) do
     ap = project.approved_project
+
     if ap && ap.pengurus_projek && ap.pengurus_projek != "" do
       no_kps = parse_pengurus_projek(ap.pengurus_projek)
+
       names =
         Enum.map(no_kps, fn no_kp ->
           case Accounts.get_user_by_no_kp(no_kp) do
@@ -474,10 +480,12 @@ defmodule Sppa.Projects do
           end
         end)
         |> Enum.reject(&is_nil/1)
+
       if names == [], do: "-", else: Enum.join(names, ", ")
     else
       if project.project_manager do
-        project.project_manager.name || project.project_manager.email || project.project_manager.no_kp || "-"
+        project.project_manager.name || project.project_manager.email ||
+          project.project_manager.no_kp || "-"
       else
         "-"
       end
@@ -666,7 +674,9 @@ defmodule Sppa.Projects do
         join: ap in assoc(p, :approved_project),
         where: not is_nil(p.approved_project_id),
         where: p.status == "Dalam Pembangunan",
-        where: not is_nil(p.project_manager_id) or (not is_nil(ap.pengurus_projek) and ap.pengurus_projek != ""),
+        where:
+          not is_nil(p.project_manager_id) or
+            (not is_nil(ap.pengurus_projek) and ap.pengurus_projek != ""),
         select: count(p.id)
       )
       |> Repo.one()

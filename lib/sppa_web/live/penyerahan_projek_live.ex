@@ -291,7 +291,8 @@ defmodule SppaWeb.PenyerahanProjekLive do
         (approved_project.pengurus_projek && approved_project.pengurus_projek != "")
 
     if pengurus_dilantik? do
-      if approved_project.project && approved_project.project.status && approved_project.project.status != "" do
+      if approved_project.project && approved_project.project.status &&
+           approved_project.project.status != "" do
         approved_project.project.status
       else
         "Dalam Pembangunan"

@@ -5,7 +5,7 @@ defmodule SppaWeb.AnalisisDanRekabentukLive do
   alias Sppa.AnalisisDanRekabentuk
   alias Sppa.ProjectModules
 
-  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah", "ketua unit"]
 
   @impl true
   def mount(_params, _session, socket) do

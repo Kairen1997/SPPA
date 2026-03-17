@@ -19,11 +19,14 @@
       dashboard_path={dashboard_path}
       logo_src={~p"/images/logojpkn.png"}
       current_scope={@current_scope}
-      current_path={"/pengaturcaraan"}
+      current_path="/pengaturcaraan"
     />
     <div class="flex-1 flex flex-col overflow-hidden relative z-[50]">
       <header class="bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700 px-3 sm:px-6 py-3 sm:py-4 flex items-center shadow-md relative gap-2 sm:gap-4">
-        <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0" style="max-width: min(30%, 200px);">
+        <div
+          class="flex items-center gap-2 sm:gap-4 flex-shrink-0"
+          style="max-width: min(30%, 200px);"
+        >
           <button
             type="button"
             phx-click="toggle_sidebar"
@@ -47,9 +50,16 @@
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10">
         <div class="max-w-[1800px] mx-auto space-y-6">
           <%!-- Breadcrumb --%>
-          <% dashboard_href = if @current_scope && @current_scope.user && @current_scope.user.role == "pengurus projek", do: ~p"/dashboard-pp", else: ~p"/dashboard" %>
+          <% dashboard_href =
+            if @current_scope && @current_scope.user &&
+                 @current_scope.user.role == "pengurus projek",
+               do: ~p"/dashboard-pp",
+               else: ~p"/dashboard" %>
           <nav class="flex items-center gap-2 text-sm" aria-label="Breadcrumb">
-            <.link navigate={dashboard_href} class="text-gray-500 hover:text-blue-600 transition-colors duration-200">
+            <.link
+              navigate={dashboard_href}
+              class="text-gray-500 hover:text-blue-600 transition-colors duration-200"
+            >
               Dashboard
             </.link>
             <span class="text-gray-400" aria-hidden="true">/</span>
@@ -92,8 +102,7 @@
                     navigate={dashboard_href}
                     class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
                   >
-                    <.icon name="hero-arrow-left" class="w-4 h-4" />
-                    Kembali ke Dashboard
+                    <.icon name="hero-arrow-left" class="w-4 h-4" /> Kembali ke Dashboard
                   </.link>
                 </div>
               </div>
@@ -106,7 +115,9 @@
                   </div>
                   <div>
                     <p class="text-2xl font-bold text-gray-900">{@pengaturcaraan_stats.total}</p>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Jumlah Tugasan</p>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Jumlah Tugasan
+                    </p>
                   </div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center gap-4">
@@ -115,7 +126,9 @@
                   </div>
                   <div>
                     <p class="text-2xl font-bold text-gray-900">{@pengaturcaraan_stats.done}</p>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Selesai</p>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Selesai
+                    </p>
                   </div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center gap-4">
@@ -123,8 +136,12 @@
                     <.icon name="hero-arrow-path" class="w-6 h-6 text-amber-600" />
                   </div>
                   <div>
-                    <p class="text-2xl font-bold text-gray-900">{@pengaturcaraan_stats.in_progress}</p>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Dalam Proses</p>
+                    <p class="text-2xl font-bold text-gray-900">
+                      {@pengaturcaraan_stats.in_progress}
+                    </p>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Dalam Proses
+                    </p>
                   </div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center gap-4">
@@ -132,8 +149,12 @@
                     <.icon name="hero-folder" class="w-6 h-6 text-slate-600" />
                   </div>
                   <div>
-                    <p class="text-2xl font-bold text-gray-900">{@pengaturcaraan_stats.project_count}</p>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Projek</p>
+                    <p class="text-2xl font-bold text-gray-900">
+                      {@pengaturcaraan_stats.project_count}
+                    </p>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Projek
+                    </p>
                   </div>
                 </div>
               </div>
@@ -142,22 +163,58 @@
               <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <.icon name="hero-list-bullet" class="w-5 h-5 text-gray-600" />
-                    Tugasan Anda
+                    <.icon name="hero-list-bullet" class="w-5 h-5 text-gray-600" /> Tugasan Anda
                   </h2>
-                  <p class="text-sm text-gray-500">{length(@assigned_modules)} tugasan dipaparkan</p>
+                  <p class="text-sm text-gray-500">
+                    {length(@assigned_modules)} tugasan dipaparkan
+                  </p>
                 </div>
                 <div class="overflow-x-auto">
                   <table class="min-w-full divide-y divide-gray-200" role="table">
                     <thead class="bg-gray-50">
                       <tr>
-                        <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Projek</th>
-                        <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tajuk</th>
-                        <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Keutamaan</th>
-                        <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tarikh Mula</th>
-                        <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tarikh Tamat</th>
-                        <th scope="col" class="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Tindakan</th>
+                        <th
+                          scope="col"
+                          class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                        >
+                          Projek
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                        >
+                          Tajuk
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                        >
+                          Keutamaan
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                        >
+                          Status
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                        >
+                          Tarikh Mula
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                        >
+                          Tarikh Tamat
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                        >
+                          Tindakan
+                        </th>
                       </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -172,19 +229,35 @@
                           </td>
                           <td class="px-4 sm:px-6 py-4">
                             <div class="max-w-[200px] sm:max-w-xs">
-                              <p class="text-sm font-medium text-gray-900 truncate" title={task.title}>{task.title || "—"}</p>
+                              <p
+                                class="text-sm font-medium text-gray-900 truncate"
+                                title={task.title}
+                              >
+                                {task.title || "—"}
+                              </p>
                               <%= if task.description && task.description != "" do %>
-                                <p class="text-xs text-gray-500 truncate mt-0.5" title={task.description}>{task.description}</p>
+                                <p
+                                  class="text-xs text-gray-500 truncate mt-0.5"
+                                  title={task.description}
+                                >
+                                  {task.description}
+                                </p>
                               <% end %>
                             </div>
                           </td>
                           <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
-                            <span class={["inline-flex px-2 py-0.5 rounded text-xs font-medium border", priority_color(task.priority)]}>
+                            <span class={[
+                              "inline-flex px-2 py-0.5 rounded text-xs font-medium border",
+                              priority_color(task.priority)
+                            ]}>
                               {priority_label(task.priority)}
                             </span>
                           </td>
                           <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
-                            <span class={["inline-flex px-2 py-0.5 rounded text-xs font-medium border", status_color(task.status)]}>
+                            <span class={[
+                              "inline-flex px-2 py-0.5 rounded text-xs font-medium border",
+                              status_color(task.status)
+                            ]}>
                               {status_label(task.status)}
                             </span>
                           </td>
@@ -209,8 +282,7 @@
                               phx-value-task_id={task.id}
                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors duration-200"
                             >
-                              <.icon name="hero-pencil-square" class="w-4 h-4" />
-                              Catatan
+                              <.icon name="hero-pencil-square" class="w-4 h-4" /> Catatan
                             </button>
                           </td>
                         </tr>
@@ -238,8 +310,7 @@
                           navigate={~p"/projek/#{gantt_data.project.id}/pelan-modul"}
                           class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200 border border-blue-200"
                         >
-                          <.icon name="hero-chart-bar" class="w-4 h-4" />
-                          Buka Pelan Modul
+                          <.icon name="hero-chart-bar" class="w-4 h-4" /> Buka Pelan Modul
                         </.link>
                       <% end %>
                     </div>
@@ -252,13 +323,20 @@
                         <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-gray-200">
                           <div class="flex items-center justify-between">
                             <div>
-                              <h3 class="text-lg font-semibold text-gray-900">{gantt_data.project.nama}</h3>
-                              <p class="text-sm text-gray-600 mt-1">{gantt_data.project.jabatan}</p>
+                              <h3 class="text-lg font-semibold text-gray-900">
+                                {gantt_data.project.nama}
+                              </h3>
+                              <p class="text-sm text-gray-600 mt-1">
+                                {gantt_data.project.jabatan}
+                              </p>
                             </div>
                             <div class="text-right">
                               <p class="text-xs text-gray-500">Tempoh</p>
                               <p class="text-sm font-medium text-gray-700">
-                                {Calendar.strftime(gantt_data.start_date, "%d/%m/%Y")} – {Calendar.strftime(gantt_data.end_date, "%d/%m/%Y")}
+                                {Calendar.strftime(gantt_data.start_date, "%d/%m/%Y")} – {Calendar.strftime(
+                                  gantt_data.end_date,
+                                  "%d/%m/%Y"
+                                )}
                               </p>
                             </div>
                           </div>
@@ -280,45 +358,81 @@
                             offset_days = days_between(timeline_start, module.start_date)
                             offset_percent = offset_days / total_days * 100
                             width_percent = module_days / total_days * 100
-                            is_overdue = module.status == "in_progress" && Date.compare(module.end_date, today) == :lt
+
+                            is_overdue =
+                              module.status == "in_progress" &&
+                                Date.compare(module.end_date, today) == :lt
+
                             bar_color_class =
                               cond do
                                 module.status == "done" -> "bg-green-500"
                                 is_overdue -> "bg-red-400"
                                 true -> "bg-blue-500"
                               end
-                            previous_module = if index > 0, do: Enum.at(gantt_data.modules, index - 1), else: nil
-                            is_new_phase = previous_module == nil || (previous_module.fasa != module.fasa) %>
+
+                            previous_module =
+                              if index > 0, do: Enum.at(gantt_data.modules, index - 1), else: nil
+
+                            is_new_phase =
+                              previous_module == nil || previous_module.fasa != module.fasa %>
                             <%= if is_new_phase do %>
-                              <div class={["pt-4", if(index > 0, do: "border-t border-gray-300 mt-4", else: "")]}>
+                              <div class={[
+                                "pt-4",
+                                if(index > 0, do: "border-t border-gray-300 mt-4", else: "")
+                              ]}>
                                 <div class="mb-3 flex items-center gap-2">
-                                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-                                  <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">Fasa {module.fasa}</span>
-                                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent">
+                                  </div>
+                                  <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                    Fasa {module.fasa}
+                                  </span>
+                                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent">
+                                  </div>
                                 </div>
                               </div>
                             <% end %>
                             <div class="flex items-center gap-4 min-h-[60px]">
                               <div class="w-64 flex-shrink-0">
-                                <h4 class="text-sm font-semibold text-gray-900">{module.title}</h4>
+                                <h4 class="text-sm font-semibold text-gray-900">
+                                  {module.title}
+                                </h4>
                                 <div class="flex items-center gap-2 flex-wrap mt-1">
-                                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">Fasa {module.fasa}</span>
-                                  <span class={["inline-flex items-center px-2 py-0.5 rounded text-xs font-medium", status_color(module.status)]}>{status_label(module.status)}</span>
-                                  <span class={["inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border", priority_color(module.priority)]}>{priority_label(module.priority)}</span>
+                                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                    Fasa {module.fasa}
+                                  </span>
+                                  <span class={[
+                                    "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                                    status_color(module.status)
+                                  ]}>
+                                    {status_label(module.status)}
+                                  </span>
+                                  <span class={[
+                                    "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
+                                    priority_color(module.priority)
+                                  ]}>
+                                    {priority_label(module.priority)}
+                                  </span>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">{module.developer_name}</p>
                               </div>
                               <div class="flex-1 relative h-12 bg-gray-100 rounded border border-gray-200 overflow-hidden">
                                 <div
-                                  class={["absolute h-full rounded transition-all duration-200", bar_color_class]}
+                                  class={[
+                                    "absolute h-full rounded transition-all duration-200",
+                                    bar_color_class
+                                  ]}
                                   style={"left: #{offset_percent}%; width: #{width_percent}%;"}
                                   title={"#{module.title} – #{Calendar.strftime(module.start_date, "%d/%m/%Y")} hingga #{Calendar.strftime(module.end_date, "%d/%m/%Y")}"}
                                 >
                                 </div>
                               </div>
                               <div class="w-32 flex-shrink-0 text-right">
-                                <p class="text-xs font-medium text-gray-700">{Calendar.strftime(module.start_date, "%d/%m/%Y")}</p>
-                                <p class="text-xs text-gray-500">{Calendar.strftime(module.end_date, "%d/%m/%Y")}</p>
+                                <p class="text-xs font-medium text-gray-700">
+                                  {Calendar.strftime(module.start_date, "%d/%m/%Y")}
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                  {Calendar.strftime(module.end_date, "%d/%m/%Y")}
+                                </p>
                                 <p class="text-xs text-gray-400 mt-1">{module_days} hari</p>
                               </div>
                             </div>
@@ -328,10 +442,21 @@
                     </div>
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
                       <div class="flex flex-wrap items-center gap-4 sm:gap-6">
-                        <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Petunjuk status:</span>
-                        <div class="flex items-center gap-2"><div class="w-3.5 h-3.5 bg-blue-500 rounded flex-shrink-0"></div><span class="text-xs text-gray-600">Dalam Proses</span></div>
-                        <div class="flex items-center gap-2"><div class="w-3.5 h-3.5 bg-green-500 rounded flex-shrink-0"></div><span class="text-xs text-gray-600">Selesai</span></div>
-                        <div class="flex items-center gap-2"><div class="w-3.5 h-3.5 bg-red-400 rounded flex-shrink-0"></div><span class="text-xs text-gray-600">Lewat</span></div>
+                        <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                          Petunjuk status:
+                        </span>
+                        <div class="flex items-center gap-2">
+                          <div class="w-3.5 h-3.5 bg-blue-500 rounded flex-shrink-0"></div>
+                          <span class="text-xs text-gray-600">Dalam Proses</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <div class="w-3.5 h-3.5 bg-green-500 rounded flex-shrink-0"></div>
+                          <span class="text-xs text-gray-600">Selesai</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <div class="w-3.5 h-3.5 bg-red-400 rounded flex-shrink-0"></div>
+                          <span class="text-xs text-gray-600">Lewat</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -349,9 +474,11 @@
                 <p class="text-sm text-gray-600 max-w-md mx-auto">
                   Halaman ini memaparkan modul yang ditugaskan kepada Pengurus Projek dan Pembangun Sistem. Sila log masuk dengan peranan tersebut untuk melihat tugasan anda.
                 </p>
-                <.link navigate={dashboard_href} class="inline-flex items-center gap-2 mt-6 text-sm font-medium text-blue-600 hover:text-blue-800">
-                  <.icon name="hero-arrow-left" class="w-4 h-4" />
-                  Kembali ke Dashboard
+                <.link
+                  navigate={dashboard_href}
+                  class="inline-flex items-center gap-2 mt-6 text-sm font-medium text-blue-600 hover:text-blue-800"
+                >
+                  <.icon name="hero-arrow-left" class="w-4 h-4" /> Kembali ke Dashboard
                 </.link>
               </div>
             </div>

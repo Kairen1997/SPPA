@@ -15,7 +15,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   alias Sppa.ModulPengaturcaraan
   alias Sppa.GanttData
 
-  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah"]
+  @allowed_roles ["pembangun sistem", "pengurus projek", "ketua penolong pengarah", "ketua unit"]
   @module_page_size 10
 
   @tab_slug_to_label %{
@@ -32,8 +32,12 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   }
 
   # Helpers for Pengaturcaraan tab (assigned modul + Gantt)
-  def pengaturcaraan_status_color("in_progress"), do: "bg-blue-100 text-blue-800 border border-blue-200"
-  def pengaturcaraan_status_color("done"), do: "bg-green-100 text-green-800 border border-green-200"
+  def pengaturcaraan_status_color("in_progress"),
+    do: "bg-blue-100 text-blue-800 border border-blue-200"
+
+  def pengaturcaraan_status_color("done"),
+    do: "bg-green-100 text-green-800 border border-green-200"
+
   def pengaturcaraan_status_color(_), do: "bg-gray-100 text-gray-800 border border-gray-200"
 
   def pengaturcaraan_status_label("in_progress"), do: "Dalam Proses"
@@ -282,6 +286,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:maklumbalas_editing, nil)
          |> assign(:maklumbalas_form, to_form(%{}, as: :maklumbalas))
          |> assign(:current_tab, "Soal Selidik")
+         |> assign(:read_only_ketua_unit, user_role == "ketua unit")
          |> assign(:activities, activities)
          |> assign(:notifications_count, notifications_count)
          |> allow_upload(:kes_file,
@@ -351,6 +356,20 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     {params_map, uri_string} = normalize_params_uri(params, uri)
     current_tab = tab_from_params(params_map, uri_string)
 
+    user_role =
+      socket.assigns.current_scope && socket.assigns.current_scope.user &&
+        socket.assigns.current_scope.user.role
+
+    # Ketua unit cannot access Pengaturcaraan tab; redirect to Soal Selidik
+    if user_role == "ketua unit" && current_tab == "Pengaturcaraan" do
+      {:noreply,
+       push_patch(socket, to: ~p"/projek/#{socket.assigns.project.id}?tab=soal-selidik")}
+    else
+      handle_params_continue(params_map, uri_string, current_tab, socket)
+    end
+  end
+
+  defp handle_params_continue(params_map, _uri_string, current_tab, socket) do
     # Simpan fasa semasa projek berdasarkan tab yang dibuka (fasa di mana pembangun berada)
     if socket.assigns[:project] && current_tab do
       Projects.update_project_fasa(socket.assigns.project.id, current_tab)
@@ -617,6 +636,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         {:ok, _updated} ->
           project_id = socket.assigns.project.id
           project = socket.assigns.project
+
           project_modules =
             ProjectModules.list_modules_by_project_id(project_id)
 

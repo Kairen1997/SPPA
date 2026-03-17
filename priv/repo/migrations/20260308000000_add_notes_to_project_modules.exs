@@ -7,4 +7,3 @@ defmodule Sppa.Repo.Migrations.AddNotesToProjectModules do
     end
   end
 end
-
