@@ -8,6 +8,7 @@ defmodule Sppa.UjianPenerimaanPengguna.UjianPenerimaanPengguna do
   schema "ujian_penerimaan_pengguna" do
     field :tajuk, :string
     field :modul, :string
+    field :no_ujian, :string
     field :tarikh_ujian, :date
     field :tarikh_dijangka_siap, :date
     field :status, :string, default: "Menunggu"
@@ -30,6 +31,7 @@ defmodule Sppa.UjianPenerimaanPengguna.UjianPenerimaanPengguna do
     |> cast(attrs, [
       :tajuk,
       :modul,
+      :no_ujian,
       :tarikh_ujian,
       :tarikh_dijangka_siap,
       :status,

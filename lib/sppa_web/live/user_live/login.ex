@@ -54,7 +54,7 @@ defmodule SppaWeb.UserLive.Login do
                     field={@form[:no_kp]}
                     type="text"
                     placeholder="Masukkan No K/P"
-                    class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                    class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-base text-black placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                   />
                 </div>
               </div>
@@ -71,7 +71,7 @@ defmodule SppaWeb.UserLive.Login do
                     field={@form[:password]}
                     type="password"
                     placeholder="Masukkan Kata Laluan"
-                    class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                    class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-base text-black placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                   />
                 </div>
               </div>

@@ -103,6 +103,7 @@
 
 /* This file is for your main application CSS */
 
+
 /* Auto-hide flash toasts after 5 seconds */
 .flash-auto-hide {
   animation: flash-fade-out 5s ease-in-out forwards;

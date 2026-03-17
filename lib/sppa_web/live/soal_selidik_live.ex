@@ -1593,9 +1593,14 @@ defmodule SppaWeb.SoalSelidikLive do
         nil
       end
 
-    # First try soal_selidik linked to this project
+    # First try soal_selidik linked to this project (for display),
+    # which returns the latest record for the project regardless of
+    # siapa yang mengisi (pembangun atau pengurus projek).
     case project_id &&
-           SoalSelidiks.get_soal_selidik_by_project(project_id, socket.assigns.current_scope) do
+           SoalSelidiks.get_soal_selidik_by_project_for_display(
+             project_id,
+             socket.assigns.current_scope
+           ) do
       %{} = soal_selidik ->
         build_initial_from_soal_selidik(soal_selidik, project_id)
 

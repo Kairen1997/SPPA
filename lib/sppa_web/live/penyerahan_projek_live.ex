@@ -284,7 +284,8 @@ defmodule SppaWeb.PenyerahanProjekLive do
   end
 
   # Returns status label for table: "Belum Lantik Pengurus" if no pengurus appointed;
-  # after appointment, show "Dalam Pembangunan" or the project status (e.g. "Selesai").
+  # selepas lantikan, paparkan "Sudah Lantik Pengurus" jika tiada status projek
+  # khusus, atau status projek (cth. "Dalam Pembangunan" / "Selesai") jika ada.
   def status_display(approved_project) do
     pengurus_dilantik? =
       (approved_project.project && approved_project.project.project_manager_id) ||
@@ -294,7 +295,7 @@ defmodule SppaWeb.PenyerahanProjekLive do
       if approved_project.project && approved_project.project.status && approved_project.project.status != "" do
         approved_project.project.status
       else
-        "Dalam Pembangunan"
+        "Sudah Lantik Pengurus"
       end
     else
       "Belum Lantik Pengurus"

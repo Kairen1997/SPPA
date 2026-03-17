@@ -139,7 +139,7 @@ defmodule Sppa.ActivityLogs do
   def action_label("projek_dicipta"), do: "Projek dicipta"
   def action_label("projek_dikemaskini"), do: "Projek dikemaskini"
   def action_label("pengurus_projek_dilantik"), do: "Pengurus projek dilantik"
-  def action_label("pengurus_projek_dikeluarkan"), do: "Pengurus projek dikeluarkan"
+  def action_label("pengurus_projek_dikeluarkan"), do: "Pengurus belum dilantik"
   def action_label("pembangun_sistem_dilantik"), do: "Pembangun sistem dilantik"
   def action_label(action), do: action
 end
