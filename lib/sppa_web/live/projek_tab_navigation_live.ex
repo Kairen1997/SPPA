@@ -530,7 +530,27 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     ujian = socket.assigns[:ujian] || []
     uat_ok = ujian != []
 
-    soal_selidik_ok and modules_ok and jadual_ok and penempatan_ok and uat_ok
+    pengaturcaraan_tasks = socket.assigns[:developer_tasks] || []
+    pengaturcaraan_ok = pengaturcaraan_tasks != []
+
+    ujian_keselamatan_rows = socket.assigns[:ujian_keselamatan] || []
+    ujian_keselamatan_ok = ujian_keselamatan_rows != []
+
+    penyerahan_list = socket.assigns[:penyerahan] || []
+    penyerahan_ok = penyerahan_list != []
+
+    maklumbalas_list = socket.assigns[:maklumbalas_list] || []
+    maklumbalas_ok = maklumbalas_list != []
+
+    soal_selidik_ok and
+      modules_ok and
+      jadual_ok and
+      pengaturcaraan_ok and
+      uat_ok and
+      ujian_keselamatan_ok and
+      penempatan_ok and
+      penyerahan_ok and
+      maklumbalas_ok
   end
 
   @impl true
@@ -1761,7 +1781,30 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
   @impl true
   def handle_event("penyerahan_open_create_modal", _params, socket) do
-    form = to_form(%{}, as: :penyerahan)
+    project = socket.assigns[:project]
+
+    jabatan =
+      if project && Map.get(project, :jabatan) && project.jabatan != "" do
+        project.jabatan
+      else
+        "Tidak Ditetapkan"
+      end
+
+    pengurus_projek =
+      if project && Map.get(project, :pengurus_projek) && project.pengurus_projek != "" do
+        project.pengurus_projek
+      else
+        "Tidak Ditetapkan"
+      end
+
+    form_data = %{
+      "nama_sistem" => (project && project.nama) || "",
+      "versi" => versi_for_project(project),
+      "penerima" => jabatan,
+      "pengurus_projek" => pengurus_projek
+    }
+
+    form = to_form(form_data, as: :penyerahan)
 
     {:noreply,
      socket
@@ -1785,8 +1828,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
   @impl true
   def handle_event("penyerahan_create", %{"penyerahan" => penyerahan_params}, socket) do
-    new_id = "penyerahan_#{length(socket.assigns.penyerahan) + 1}"
-    new_number = length(socket.assigns.penyerahan) + 1
+    project = socket.assigns[:project]
+    project_id = project && Map.get(project, :id)
 
     tarikh_penyerahan =
       if penyerahan_params["tarikh_penyerahan"] && penyerahan_params["tarikh_penyerahan"] != "" do
@@ -1798,58 +1841,47 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         nil
       end
 
-    tarikh_dijangka =
-      if penyerahan_params["tarikh_dijangka"] && penyerahan_params["tarikh_dijangka"] != "" do
-        case Date.from_iso8601(penyerahan_params["tarikh_dijangka"]) do
-          {:ok, date} -> date
-          _ -> nil
-        end
+    db_attrs =
+      if project_id do
+        %{
+          project_id: project_id,
+          nama_sistem: penyerahan_params["nama_sistem"],
+          versi: penyerahan_params["versi"] || "",
+          penerima: penyerahan_params["penerima"],
+          pengurus_projek:
+            if(penyerahan_params["pengurus_projek"] in [nil, ""],
+              do: nil,
+              else: penyerahan_params["pengurus_projek"]
+            ),
+          tarikh_penyerahan: tarikh_penyerahan
+        }
       else
         nil
       end
 
-    new_penyerahan = %{
-      id: new_id,
-      number: new_number,
-      nama_sistem: penyerahan_params["nama_sistem"],
-      versi: penyerahan_params["versi"] || "",
-      tarikh_penyerahan: tarikh_penyerahan,
-      tarikh_dijangka: tarikh_dijangka,
-      status: penyerahan_params["status"] || "Menunggu",
-      penerima: penyerahan_params["penerima"],
-      pembangun_team: nil,
-      pengurus_projek:
-        if(penyerahan_params["pengurus_projek"] == "",
-          do: nil,
-          else: penyerahan_params["pengurus_projek"]
-        ),
-      lokasi: penyerahan_params["lokasi"],
-      catatan:
-        if(penyerahan_params["catatan"] == "", do: nil, else: penyerahan_params["catatan"]),
-      manual_pengguna: nil,
-      surat_akuan_penerimaan: nil,
-      diserahkan_oleh:
-        if(penyerahan_params["diserahkan_oleh"] == "",
-          do: nil,
-          else: penyerahan_params["diserahkan_oleh"]
-        ),
-      diterima_oleh:
-        if(penyerahan_params["diterima_oleh"] == "",
-          do: nil,
-          else: penyerahan_params["diterima_oleh"]
-        ),
-      tarikh_diserahkan: tarikh_penyerahan,
-      tarikh_diterima: nil
-    }
+    cond do
+      is_nil(project_id) or is_nil(db_attrs) ->
+        {:noreply, put_flash(socket, :error, "Projek tidak sah, penyerahan tidak dapat didaftarkan.")}
 
-    updated_penyerahan = [new_penyerahan | socket.assigns.penyerahan]
+      true ->
+        case Penyerahans.create_penyerahan(db_attrs) do
+          {:ok, _penyerahan} ->
+            # Refresh senarai penyerahan dari DB supaya UI sentiasa selaras
+            updated_list = get_penyerahan_for_project(project)
 
-    {:noreply,
-     socket
-     |> assign(:penyerahan, updated_penyerahan)
-     |> assign(:penyerahan_show_create_modal, false)
-     |> assign(:penyerahan_form, to_form(%{}, as: :penyerahan))
-     |> put_flash(:info, "Penyerahan berjaya didaftarkan")}
+            {:noreply,
+             socket
+             |> assign(:penyerahan, updated_list)
+             |> assign(:penyerahan_show_create_modal, false)
+             |> assign(:penyerahan_form, to_form(%{}, as: :penyerahan))
+             |> put_flash(:info, "Penyerahan berjaya didaftarkan")}
+
+          {:error, _changeset} ->
+            {:noreply,
+             socket
+             |> put_flash(:error, "Gagal mendaftar penyerahan. Sila semak maklumat dan cuba lagi.")}
+        end
+    end
   end
 
   @impl true
@@ -1911,7 +1943,15 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
       updated_penyerahan_data = %{
         editing_penyerahan
-        | tarikh_penyerahan: tarikh_penyerahan
+        | versi: penyerahan_params["versi"] || editing_penyerahan.versi,
+          penerima: penyerahan_params["penerima"] || editing_penyerahan.penerima,
+          pengurus_projek:
+            if(penyerahan_params["pengurus_projek"] == nil or
+                 penyerahan_params["pengurus_projek"] == "",
+               do: nil,
+               else: penyerahan_params["pengurus_projek"]
+            ),
+          tarikh_penyerahan: tarikh_penyerahan
       }
 
       updated_penyerahan_list =

@@ -1569,12 +1569,6 @@
                                   Peningkatan Keselamatan
                                 </option>
                                 
-                                <option
-                                  value="Modul Baharu"
-                                  selected={@form[:jenis].value == "Modul Baharu"}
-                                >
-                                  Modul Baharu
-                                </option>
                               </select>
                             </div>
                             
@@ -1801,12 +1795,6 @@
                                   Peningkatan Keselamatan
                                 </option>
                                 
-                                <option
-                                  value="Modul Baharu"
-                                  selected={@form[:jenis].value == "Modul Baharu"}
-                                >
-                                  Modul Baharu
-                                </option>
                               </select>
                             </div>
                             
@@ -2600,8 +2588,9 @@
                                   value={@uat_form[:status].value || "Dalam Progres"}
                                 >
                                   <option value="Dalam Progres">Dalam Progres</option>
-                                  
                                   <option value="Selesai">Selesai</option>
+                                  <option value="Gagal">Gagal</option>
+                                  <option value="Lulus">Lulus</option>
                                 </select>
                               </div>
                               
@@ -3762,10 +3751,20 @@
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <h2 class="text-2xl font-bold text-gray-900">Penyerahan</h2>
-                    
+
                     <p class="text-gray-600">Urus dan pantau penyerahan sistem kepada jabatan.</p>
                   </div>
-                  <!-- Penyerahan Baharu button removed as per request -->
+
+                  <div class="flex items-center gap-3">
+                    <button
+                      type="button"
+                      phx-click="penyerahan_open_create_modal"
+                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                    >
+                      <.icon name="hero-plus-circle" class="w-5 h-5" />
+                      <span>Penyerahan Baharu</span>
+                    </button>
+                  </div>
                 </div>
                 
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -3933,16 +3932,6 @@
                             
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
-                                <button
-                                  type="button"
-                                  phx-click="penyerahan_open_upload_modal"
-                                  phx-value-penyerahan_id={penyerahan.id}
-                                  phx-value-target="all"
-                                  class="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-md transition-colors duration-200"
-                                  title="Muat naik"
-                                >
-                                  <.icon name="hero-arrow-up-tray" class="w-4 h-4" />
-                                </button>
                                 <button
                                   type="button"
                                   phx-click="penyerahan_open_edit_modal"
@@ -4391,6 +4380,128 @@
       </div>
     </div>
   <% end %>
+   <%!-- Penyerahan: Daftar Penyerahan Baharu Modal --%>
+  <%= if assigns[:penyerahan_show_create_modal] do %>
+    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+      <div
+        class="fixed inset-0 bg-black/60 transition-opacity"
+        aria-hidden="true"
+        phx-click="penyerahan_close_create_modal"
+      >
+      </div>
+
+      <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
+          <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-white">Daftar Penyerahan Baharu</h2>
+
+                <p class="mt-1 text-sm text-blue-100">
+                  Isi maklumat penyerahan sistem kepada jabatan penerima.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                phx-click="penyerahan_close_create_modal"
+                class="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                aria-label="Tutup"
+              >
+                <.icon name="hero-x-mark" class="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+
+          <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
+            <.form
+              for={@penyerahan_form}
+              phx-change="penyerahan_validate"
+              phx-submit="penyerahan_create"
+              id="projek-tab-penyerahan-create-form"
+              class="space-y-6"
+            >
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <.input
+                    field={@penyerahan_form[:nama_sistem]}
+                    type="text"
+                    label="Nama Sistem"
+                    placeholder="Nama sistem yang diserahkan"
+                    readonly
+                    class="w-full bg-gray-50 text-gray-700"
+                  />
+                </div>
+
+                <div>
+                  <.input
+                    field={@penyerahan_form[:versi]}
+                    type="text"
+                    label="Versi Sistem"
+                    placeholder="Contoh: 1.0.0"
+                    class="w-full"
+                  />
+                </div>
+
+                <div>
+                  <.input
+                    field={@penyerahan_form[:tarikh_penyerahan]}
+                    type="date"
+                    label="Tarikh Penyerahan"
+                    placeholder="Pilih tarikh penyerahan"
+                    class="w-full"
+                  />
+                </div>
+
+                <div>
+                  <.input
+                    field={@penyerahan_form[:penerima]}
+                    type="text"
+                    label="Jabatan Penerima"
+                    placeholder="Contoh: JPKN"
+                    class="w-full"
+                  />
+                </div>
+
+                <div>
+                  <.input
+                    field={@penyerahan_form[:pengurus_projek]}
+                    type="text"
+                    label="Pengurus Projek"
+                    placeholder="Nama pengurus projek"
+                    class="w-full"
+                  />
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center pt-4 border-t border-gray-100 mt-2">
+                <p class="text-xs text-gray-500">
+                  Pastikan semua maklumat penyerahan telah disemak sebelum didaftarkan.
+                </p>
+
+                <div class="flex items-center gap-3">
+                  <button
+                    type="button"
+                    phx-click="penyerahan_close_create_modal"
+                    class="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    Batal
+                  </button>
+
+                  <button
+                    type="submit"
+                    class="inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-lg shadow-sm transition-colors duration-200 text-white bg-blue-600 hover:bg-blue-700 hover:shadow-md"
+                  >
+                    <.icon name="hero-check-circle" class="w-5 h-5 mr-2" /> Daftar Penyerahan
+                  </button>
+                </div>
+              </div>
+            </.form>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
    <%!-- Penyerahan: Edit Modal --%>
   <%= if @penyerahan_show_edit_modal do %>
     <div
@@ -4440,7 +4551,6 @@
                     field={@penyerahan_form[:nama_sistem]}
                     type="text"
                     label="Nama Sistem"
-                    disabled
                     class="w-full bg-gray-50 text-gray-700"
                   />
                 </div>
@@ -4450,8 +4560,7 @@
                     field={@penyerahan_form[:versi]}
                     type="text"
                     label="Versi"
-                    disabled
-                    class="w-full bg-gray-50 text-gray-700"
+                    class="w-full"
                   />
                 </div>
                 
@@ -4460,8 +4569,7 @@
                     field={@penyerahan_form[:penerima]}
                     type="text"
                     label="Jabatan"
-                    disabled
-                    class="w-full bg-gray-50 text-gray-700"
+                    class="w-full"
                   />
                 </div>
                 
@@ -4470,8 +4578,7 @@
                     field={@penyerahan_form[:pengurus_projek]}
                     type="text"
                     label="Pengurus"
-                    disabled
-                    class="w-full bg-gray-50 text-gray-700"
+                    class="w-full"
                   />
                 </div>
                 
@@ -4484,7 +4591,6 @@
                     class="w-full"
                   />
                 </div>
-                <!-- Catatan field removed as per request -->
               </div>
               
               <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6 mt-6">
