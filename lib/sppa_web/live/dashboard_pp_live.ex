@@ -28,7 +28,9 @@ defmodule SppaWeb.DashboardPPLive do
         Phoenix.PubSub.subscribe(Sppa.PubSub, "approved_projects")
 
         # Stats: kad kuning = projek ditugaskan; kad biru = dalam pembangunan; kad hijau = selesai dibangun
-        assigned = Projects.list_approved_projects_for_pengurus_projek(socket.assigns.current_scope)
+        assigned =
+          Projects.list_approved_projects_for_pengurus_projek(socket.assigns.current_scope)
+
         stats =
           ApprovedProjects.get_dashboard_stats()
           |> Map.put(:jumlah, length(assigned))
@@ -36,6 +38,7 @@ defmodule SppaWeb.DashboardPPLive do
           |> Map.put(:jumlah_selesai, count_selesai(assigned))
 
         project_activities = Projects.list_recent_activities(socket.assigns.current_scope, 10)
+
         assignment_activities =
           ActivityLogs.list_recent_assignment_activities_for_pengurus_projek(
             socket.assigns.current_scope,
@@ -81,22 +84,26 @@ defmodule SppaWeb.DashboardPPLive do
   @impl true
   def handle_info({:created, _approved_project}, socket) do
     assigned = Projects.list_approved_projects_for_pengurus_projek(socket.assigns.current_scope)
+
     stats =
       ApprovedProjects.get_dashboard_stats()
       |> Map.put(:jumlah, length(assigned))
       |> Map.put(:jumlah_dalam_pembangunan, count_dalam_pembangunan(assigned))
       |> Map.put(:jumlah_selesai, count_selesai(assigned))
+
     {:noreply, assign(socket, :stats, stats)}
   end
 
   @impl true
   def handle_info({:updated, _approved_project}, socket) do
     assigned = Projects.list_approved_projects_for_pengurus_projek(socket.assigns.current_scope)
+
     stats =
       ApprovedProjects.get_dashboard_stats()
       |> Map.put(:jumlah, length(assigned))
       |> Map.put(:jumlah_dalam_pembangunan, count_dalam_pembangunan(assigned))
       |> Map.put(:jumlah_selesai, count_selesai(assigned))
+
     {:noreply, assign(socket, :stats, stats)}
   end
 
@@ -250,7 +257,7 @@ defmodule SppaWeb.DashboardPPLive do
     Enum.count(approved_projects, fn ap ->
       has_pembangun =
         (is_binary(ap.pembangun_sistem) and String.trim(ap.pembangun_sistem) != "") or
-          (ap.project && is_struct(ap.project) and ap.project.developer_id != nil)
+          ((ap.project && is_struct(ap.project)) and ap.project.developer_id != nil)
 
       has_pembangun
     end)
@@ -259,7 +266,7 @@ defmodule SppaWeb.DashboardPPLive do
   # Kira projek yang telah selesai dibangun: projek dalaman dengan status "Selesai"
   defp count_selesai(approved_projects) when is_list(approved_projects) do
     Enum.count(approved_projects, fn ap ->
-      ap.project && is_struct(ap.project) and ap.project.status == "Selesai"
+      (ap.project && is_struct(ap.project)) and ap.project.status == "Selesai"
     end)
   end
 
@@ -275,6 +282,7 @@ defmodule SppaWeb.DashboardPPLive do
     assignment_items =
       Enum.map(assignment_activities, fn a ->
         sort_at = a.inserted_at || DateTime.utc_now()
+
         %{
           resource_name: a.resource_name,
           action_label: a.action_label,
@@ -327,7 +335,7 @@ defmodule SppaWeb.DashboardPPLive do
           current_scope={@current_scope}
         />
       <% end %>
-
+      
       <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
         <%!-- Overlay --%>
         <div
@@ -360,9 +368,9 @@ defmodule SppaWeb.DashboardPPLive do
                 <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
               </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
-
+            
             <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
-
+            
             <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <.header_actions
                 notifications_open={@notifications_open}
@@ -378,7 +386,7 @@ defmodule SppaWeb.DashboardPPLive do
             <div class="max-w-7xl mx-auto">
               <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard Pengurus Projek</h1>
-
+                
                 <p class="text-gray-600">Gambaran keseluruhan projek dan aktiviti terkini</p>
               </div>
                <%!-- Summary Cards --%>
@@ -388,35 +396,39 @@ defmodule SppaWeb.DashboardPPLive do
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-folder-open" class="w-8 h-8 text-yellow-800 opacity-80" />
                   </div>
-
+                  
                   <div class="text-4xl font-bold text-gray-900 mb-1">{@stats[:jumlah] || 0}</div>
-
-                  <div class="text-sm font-medium text-gray-800">Jumlah projek ditugaskan kepada anda</div>
+                  
+                  <div class="text-sm font-medium text-gray-800">
+                    Jumlah projek ditugaskan kepada anda
+                  </div>
                 </div>
                  <%!-- Dalam Pembangunan: projek yang pengurus sudah melantik pembangun --%>
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-cog-6-tooth" class="w-8 h-8 text-white opacity-90" />
                   </div>
-
+                  
                   <div class="text-4xl font-bold text-white mb-1">
                     {@stats[:jumlah_dalam_pembangunan] || 0}
                   </div>
-
+                  
                   <div class="text-sm font-medium text-blue-50">Dalam Pembangunan</div>
-                  <p class="text-xs text-blue-100/90 mt-1">Projek yang anda sudah melantik pembangun</p>
+                  
+                  <p class="text-xs text-blue-100/90 mt-1">
+                    Projek yang anda sudah melantik pembangun
+                  </p>
                 </div>
                  <%!-- Selesai: projek yang telah selesai dibangun --%>
                 <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div class="flex items-center justify-between mb-4">
                     <.icon name="hero-check-badge" class="w-8 h-8 text-white opacity-90" />
                   </div>
-
-                  <div class="text-4xl font-bold text-white mb-1">
-                    {@stats[:jumlah_selesai] || 0}
-                  </div>
-
+                  
+                  <div class="text-4xl font-bold text-white mb-1">{@stats[:jumlah_selesai] || 0}</div>
+                  
                   <div class="text-sm font-medium text-green-50">Selesai</div>
+                  
                   <p class="text-xs text-green-100/90 mt-1">Projek yang telah selesai dibangun</p>
                 </div>
               </div>
@@ -430,7 +442,7 @@ defmodule SppaWeb.DashboardPPLive do
                     </div>
                   </div>
                 </div>
-
+                
                 <div class="overflow-x-auto">
                   <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -438,21 +450,21 @@ defmodule SppaWeb.DashboardPPLive do
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Nama Projek
                         </th>
-
+                        
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Pembangun
                         </th>
-
+                        
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Status Terkini
                         </th>
-
+                        
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Tarikh Akhir Kemaskini
                         </th>
                       </tr>
                     </thead>
-
+                    
                     <tbody class="bg-white divide-y divide-gray-200">
                       <%= if Enum.empty?(@activities) do %>
                         <tr>
@@ -471,11 +483,11 @@ defmodule SppaWeb.DashboardPPLive do
                                 <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
                                   <.icon name="hero-folder" class="w-5 h-5 text-white" />
                                 </div>
-
+                                
                                 <div class="text-sm font-medium text-gray-900">{activity.nama}</div>
                               </div>
                             </td>
-
+                            
                             <td class="px-6 py-4">
                               <div class="text-sm text-gray-600">
                                 <%= case Enum.filter(get_team_members(activity), fn member ->
@@ -486,15 +498,13 @@ defmodule SppaWeb.DashboardPPLive do
                                   <% developers -> %>
                                     <div class="flex flex-col gap-1">
                                       <%= for member <- developers do %>
-                                        <span class="font-medium text-gray-900">
-                                          {member.name}
-                                        </span>
+                                        <span class="font-medium text-gray-900">{member.name}</span>
                                       <% end %>
                                     </div>
                                 <% end %>
                               </div>
                             </td>
-
+                            
                             <td class="px-6 py-4 whitespace-nowrap">
                               <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 <%= if Enum.any?(
@@ -508,7 +518,7 @@ defmodule SppaWeb.DashboardPPLive do
                                 <% end %>
                               </span>
                             </td>
-
+                            
                             <td class="px-6 py-4 whitespace-nowrap">
                               <div class="flex items-center text-sm text-gray-600">
                                 <.icon name="hero-calendar" class="w-4 h-4 text-gray-400 mr-2" />

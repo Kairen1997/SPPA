@@ -311,7 +311,11 @@ defmodule SppaWeb.ProjectListLive do
           where(base_query, [ap, _p], is_nil(ap.pembangun_sistem) or ap.pembangun_sistem == "")
 
         "Dalam Pembangunan" ->
-          where(base_query, [ap, _p], not is_nil(ap.pembangun_sistem) and ap.pembangun_sistem != "")
+          where(
+            base_query,
+            [ap, _p],
+            not is_nil(ap.pembangun_sistem) and ap.pembangun_sistem != ""
+          )
 
         "Selesai" ->
           where(base_query, [_ap, p], p.status == "Selesai")
@@ -362,7 +366,9 @@ defmodule SppaWeb.ProjectListLive do
   # Status lajur: "Pembangun belum di lantik" jika tiada pembangun; "Dalam Pembangunan" jika pembangun sudah dilantik; "Selesai" jika projek selesai.
   def status_display(approved_project) do
     internal_status = approved_project.project && approved_project.project.status
-    has_pembangun = approved_project.pembangun_sistem && String.trim(approved_project.pembangun_sistem) != ""
+
+    has_pembangun =
+      approved_project.pembangun_sistem && String.trim(approved_project.pembangun_sistem) != ""
 
     cond do
       internal_status == "Selesai" -> "Selesai"
@@ -425,7 +431,7 @@ defmodule SppaWeb.ProjectListLive do
               >
                 <.icon name="hero-bars-3" class="w-6 h-6" />
               </button>
-               <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+              <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
 
             <.header_actions
@@ -544,7 +550,7 @@ defmodule SppaWeb.ProjectListLive do
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                        <%= status_display(project) %>
+                        {status_display(project)}
                       </td>
 
                       <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
@@ -565,7 +571,7 @@ defmodule SppaWeb.ProjectListLive do
                             <.icon name="hero-eye" class="w-4 h-4" />
                             <span class="hidden lg:inline">Lihat</span>
                           </.link>
-                           <%!-- Modul link hanya untuk projek dalaman yang sedia ada --%>
+                          <%!-- Modul link hanya untuk projek dalaman yang sedia ada --%>
                           <%= if project.project do %>
                             <.link
                               navigate={~p"/projek/#{project.project.id}/modul"}

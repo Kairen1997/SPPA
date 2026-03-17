@@ -42,16 +42,17 @@ defmodule Sppa.Repo.Migrations.RemoveDuplicateApprovedProjects do
 
     # 3) Optional safety: enforce uniqueness on approved_project_id at DB level
     create unique_index(:projects, [:approved_project_id],
-      where: "approved_project_id IS NOT NULL",
-      name: :projects_approved_project_id_unique
-    )
+             where: "approved_project_id IS NOT NULL",
+             name: :projects_approved_project_id_unique
+           )
   end
 
   def down do
-    drop_if_exists(index(:projects, [:approved_project_id], name: :projects_approved_project_id_unique))
+    drop_if_exists(
+      index(:projects, [:approved_project_id], name: :projects_approved_project_id_unique)
+    )
 
     # Data deletions in up/0 are irreversible in a meaningful way, so we leave them as-is.
     :ok
   end
 end
-

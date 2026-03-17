@@ -26,7 +26,7 @@ defmodule SppaWeb.PembangunanLive do
             assigned
             |> Enum.group_by(fn m -> m.project_id end)
             |> Enum.map(fn {_pid, modules} ->
-              project = (List.first(modules)).project
+              project = List.first(modules).project
               if project, do: GanttData.build_project_gantt(project, modules), else: nil
             end)
             |> Enum.reject(&is_nil/1)
@@ -245,7 +245,7 @@ defmodule SppaWeb.PembangunanLive do
             assigned
             |> Enum.group_by(fn m -> m.project_id end)
             |> Enum.map(fn {_pid, modules} ->
-              project = (List.first(modules)).project
+              project = List.first(modules).project
               if project, do: GanttData.build_project_gantt(project, modules), else: nil
             end)
             |> Enum.reject(&is_nil/1)

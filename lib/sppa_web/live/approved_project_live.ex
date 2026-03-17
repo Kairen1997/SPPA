@@ -44,7 +44,7 @@ defmodule SppaWeb.ApprovedProjectLive do
           # so the page renders full information even before the LV socket connects.
           approved_project =
             ApprovedProjects.get_approved_project!(approved_id)
-            |> Sppa.Repo.preload([project: [:project_manager, :approved_project]])
+            |> Sppa.Repo.preload(project: [:project_manager, :approved_project])
 
           # Parse pengurus projek and pembangun sistem lists
           stored_pm_names = parse_pengurus_projek(approved_project.pengurus_projek)
@@ -161,6 +161,7 @@ defmodule SppaWeb.ApprovedProjectLive do
       if connected?(socket) do
         if user_role == "pengurus projek" do
           project_activities = Projects.list_recent_activities(current_scope, 10)
+
           assignment_activities =
             ActivityLogs.list_recent_assignment_activities_for_pengurus_projek(
               current_scope,
@@ -252,6 +253,7 @@ defmodule SppaWeb.ApprovedProjectLive do
     assignment_items =
       Enum.map(assignment_activities, fn a ->
         sort_at = a.inserted_at || DateTime.utc_now()
+
         %{
           resource_name: a.resource_name,
           action_label: a.action_label,
@@ -568,8 +570,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                |> put_flash(:info, "Tarikh jangkaan siap telah dikemaskini.")}
 
             {:error, _changeset} ->
-              {:noreply,
-               put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
+              {:noreply, put_flash(socket, :error, "Gagal mengemaskini tarikh jangkaan siap.")}
           end
       end
     else
@@ -605,7 +606,7 @@ defmodule SppaWeb.ApprovedProjectLive do
               # Reload the approved_project to ensure we have the latest data from database
               reloaded_approved_project =
                 ApprovedProjects.get_approved_project!(updated_project.id)
-                |> Sppa.Repo.preload([project: [:project_manager, :approved_project]])
+                |> Sppa.Repo.preload(project: [:project_manager, :approved_project])
 
               # Create or get the internal project - this ensures the project exists and is linked
               project_for_log =
@@ -615,7 +616,11 @@ defmodule SppaWeb.ApprovedProjectLive do
 
                   {:error, changeset} ->
                     require Logger
-                    Logger.error("Failed to ensure internal project: #{inspect(changeset.errors)}")
+
+                    Logger.error(
+                      "Failed to ensure internal project: #{inspect(changeset.errors)}"
+                    )
+
                     nil
                 end
 
@@ -699,7 +704,7 @@ defmodule SppaWeb.ApprovedProjectLive do
               # Reload the approved_project to ensure we have the latest data
               reloaded_approved_project =
                 ApprovedProjects.get_approved_project!(updated_project.id)
-                |> Sppa.Repo.preload([project: [:project_manager, :approved_project]])
+                |> Sppa.Repo.preload(project: [:project_manager, :approved_project])
 
               project_for_log =
                 case Projects.ensure_internal_project_for_approved(reloaded_approved_project) do
@@ -708,6 +713,7 @@ defmodule SppaWeb.ApprovedProjectLive do
 
                   {:error, changeset} ->
                     require Logger
+
                     Logger.error(
                       "Failed to ensure internal project: #{inspect(changeset.errors)}"
                     )
@@ -802,6 +808,7 @@ defmodule SppaWeb.ApprovedProjectLive do
       {:ok, updated_project} ->
         # Log activity for dashboard "Aktiviti Terkini Unit" (ketua unit)
         removed_user = Accounts.get_user_by_no_kp(no_kp)
+
         pm_display_name =
           if removed_user do
             removed_user.name || removed_user.email || removed_user.no_kp || no_kp
@@ -914,7 +921,7 @@ defmodule SppaWeb.ApprovedProjectLive do
           phx-click="close_sidebar"
         >
         </div>
-         <%!-- Sidebar --%>
+        <%!-- Sidebar --%>
         <.dashboard_sidebar
           sidebar_open={@sidebar_open}
           dashboard_path={@sidebar_dashboard_path}
@@ -932,7 +939,8 @@ defmodule SppaWeb.ApprovedProjectLive do
                 class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
               >
                 <.icon name="hero-bars-3" class="w-6 h-6" />
-              </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+              </button>
+               <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
 
             <.header_actions
@@ -943,7 +951,7 @@ defmodule SppaWeb.ApprovedProjectLive do
               current_scope={@current_scope}
             />
           </header>
-           <%!-- Content --%>
+          <%!-- Content --%>
           <main class="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
             <div class="text-center text-gray-600 space-y-2">
               <p class="text-base font-medium">Memuatkan maklumat projek yang diluluskan...</p>
@@ -978,7 +986,7 @@ defmodule SppaWeb.ApprovedProjectLive do
           phx-click="close_sidebar"
         >
         </div>
-         <%!-- Sidebar --%>
+        <%!-- Sidebar --%>
         <.dashboard_sidebar
           sidebar_open={@sidebar_open}
           dashboard_path={@sidebar_dashboard_path}
@@ -996,7 +1004,8 @@ defmodule SppaWeb.ApprovedProjectLive do
                 class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-2 rounded-lg transition-all duration-200"
               >
                 <.icon name="hero-bars-3" class="w-6 h-6" />
-              </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+              </button>
+               <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
 
             <.header_actions
@@ -1007,7 +1016,7 @@ defmodule SppaWeb.ApprovedProjectLive do
               current_scope={@current_scope}
             />
           </header>
-           <%!-- Content --%>
+          <%!-- Content --%>
           <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10">
             <div class="max-w-6xl mx-auto space-y-8">
               <%!-- Page Header --%>
@@ -1024,8 +1033,13 @@ defmodule SppaWeb.ApprovedProjectLive do
 
                 <div class="flex items-center gap-3">
                   <%= if @approved_project.project do %>
+                    <% modul_path =
+                      case @current_scope.user.role do
+                        "ketua unit" -> ~p"/projek/#{@approved_project.project.id}/modul-kk"
+                        _ -> ~p"/projek/#{@approved_project.project.id}/modul"
+                      end %>
                     <.link
-                      navigate={~p"/projek/#{@approved_project.project.id}/modul"}
+                      navigate={modul_path}
                       class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-all duration-200"
                     >
                       <.icon name="hero-cog-6-tooth" class="w-4 h-4" /> <span>Modul Projek</span>
@@ -1040,7 +1054,79 @@ defmodule SppaWeb.ApprovedProjectLive do
                   </.link>
                 </div>
               </div>
-               <%!-- Main Project Card --%>
+
+              <%!-- Ketua unit: quick links to project tab pages (view-only; Pengaturcaraan excluded) --%>
+              <%= if @approved_project.project && @current_scope.user.role == "ketua unit" do %>
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                  <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2.5">
+                      <.icon name="hero-squares-2x2" class="w-5 h-5 text-gray-600" />
+                      Laman Projek (Lihat sahaja)
+                    </h2>
+                    <p class="text-sm text-gray-600 mt-1">Pilih halaman projek untuk dilihat.</p>
+                  </div>
+                  <div class="p-4 flex flex-wrap gap-2">
+                    <.link
+                      navigate={~p"/projek/#{@approved_project.project.id}?tab=soal-selidik"}
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
+                      Soal Selidik
+                    </.link>
+                    <.link
+                      navigate={
+                        ~p"/projek/#{@approved_project.project.id}?tab=analisis-dan-rekabentuk"
+                      }
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
+                      Analisis dan Rekabentuk
+                    </.link>
+                    <.link
+                      navigate={~p"/projek/#{@approved_project.project.id}?tab=jadual-projek"}
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
+                      Jadual Projek
+                    </.link>
+                    <.link
+                      navigate={~p"/projek/#{@approved_project.project.id}?tab=pengurus-perubahan"}
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
+                      Pengurusan Perubahan
+                    </.link>
+                    <.link
+                      navigate={~p"/projek/#{@approved_project.project.id}?tab=uat"}
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
+                      UAT
+                    </.link>
+                    <.link
+                      navigate={~p"/projek/#{@approved_project.project.id}?tab=ujian-keselamatan"}
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
+                      Ujian Keselamatan
+                    </.link>
+                    <.link
+                      navigate={~p"/projek/#{@approved_project.project.id}?tab=penempatan"}
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
+                      Penempatan
+                    </.link>
+                    <.link
+                      navigate={~p"/projek/#{@approved_project.project.id}?tab=penyerahan"}
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
+                      Penyerahan
+                    </.link>
+                    <.link
+                      navigate={~p"/projek/#{@approved_project.project.id}?tab=maklumbalas-pelanggan"}
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
+                      Maklumbalas Pelanggan
+                    </.link>
+                  </div>
+                </div>
+              <% end %>
+
+              <%!-- Main Project Card --%>
               <div class="bg-white rounded-2xl shadow-lg border border-gray-200/80 overflow-hidden">
                 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 md:px-8 py-5">
                   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -1101,7 +1187,10 @@ defmodule SppaWeb.ApprovedProjectLive do
 
                         <div class="flex items-center gap-2 text-gray-600">
                           <span class="font-medium">Pengurus Projek:</span>
-                          <% pengurus = if @approved_project.project, do: Projects.project_pengurus_projek_display(@approved_project.project), else: Projects.approved_project_pengurus_display(@approved_project) %>
+                          <% pengurus =
+                            if @approved_project.project,
+                              do: Projects.project_pengurus_projek_display(@approved_project.project),
+                              else: Projects.approved_project_pengurus_display(@approved_project) %>
                           <%= if pengurus && pengurus != "" && pengurus != "-" do %>
                             <span class="text-gray-900">{pengurus}</span>
                           <% else %>
@@ -1113,7 +1202,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                   </div>
                 </div>
               </div>
-               <%!-- Information Cards Grid --%>
+              <%!-- Information Cards Grid --%>
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <%!-- Maklumat Pemohon --%>
                 <section class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
@@ -1158,7 +1247,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                     </dl>
                   </div>
                 </section>
-                 <%!-- Maklumat Sistem --%>
+                <%!-- Maklumat Sistem --%>
                 <section class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                   <div class="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-gray-200">
                     <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2.5">
@@ -1494,7 +1583,7 @@ defmodule SppaWeb.ApprovedProjectLive do
                   </div>
                 </section>
               </div>
-               <%!-- Maklumat Terperinci --%>
+              <%!-- Maklumat Terperinci --%>
               <section class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                 <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
                   <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2.5">

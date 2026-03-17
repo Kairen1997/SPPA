@@ -8,12 +8,12 @@ defmodule SppaWeb.ModulProjekLive do
 
   @impl true
   def mount(%{"project_id" => project_id}, _session, socket) do
-    # Verify user is pengurus projek
+    # Verify user role
     user_role =
       socket.assigns.current_scope && socket.assigns.current_scope.user &&
         socket.assigns.current_scope.user.role
 
-    if user_role && user_role == "pengurus projek" do
+    if user_role && user_role in ["pengurus projek", "ketua unit"] do
       project_id = String.to_integer(project_id)
 
       socket =
@@ -46,13 +46,23 @@ defmodule SppaWeb.ModulProjekLive do
         all_developers = Enum.filter(users, fn user -> user.role == "pembangun sistem" end)
 
         # Filter developers to only include those selected in the approved project's pembangun_sistem
-        developers_from_pembangun = filter_developers_by_project_involvement(all_developers, project)
+        developers_from_pembangun =
+          filter_developers_by_project_involvement(all_developers, project)
+
         # Include assigned pengurus projek so they can be set as pembangun (pengurus projek can also be pembangun sistem)
         assigned_pengurus = assigned_pengurus_projek_for_project(users, project)
         developers = (developers_from_pembangun ++ assigned_pengurus) |> Enum.uniq_by(& &1.id)
 
         tasks =
-          ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
+          case user_role do
+            # Ketua unit: view all modules created for this project, regardless of assignment
+            "ketua unit" ->
+              ProjectModules.list_modules_by_project_id(project_id)
+
+            # Pengurus projek: keep existing visibility rules (only modules they can access)
+            _ ->
+              ProjectModules.list_modules_for_project(socket.assigns.current_scope, project_id)
+          end
 
         sorted_tasks = sort_tasks_by_created_at(tasks)
 
@@ -161,13 +171,17 @@ defmodule SppaWeb.ModulProjekLive do
 
   @impl true
   def handle_event("open_new_task_modal", _params, socket) do
-    # Pre-fill project_id in the form
-    form_data = %{"project_id" => Integer.to_string(socket.assigns.project_id)}
+    if socket.assigns.current_scope.user.role == "ketua unit" do
+      {:noreply, socket}
+    else
+      # Pre-fill project_id in the form
+      form_data = %{"project_id" => Integer.to_string(socket.assigns.project_id)}
 
-    {:noreply,
-     socket
-     |> assign(:show_new_task_modal, true)
-     |> assign(:form, to_form(form_data, as: :task))}
+      {:noreply,
+       socket
+       |> assign(:show_new_task_modal, true)
+       |> assign(:form, to_form(form_data, as: :task))}
+    end
   end
 
   @impl true
@@ -180,31 +194,35 @@ defmodule SppaWeb.ModulProjekLive do
 
   @impl true
   def handle_event("open_edit_task_modal", %{"task_id" => task_id}, socket) do
-    task_id = String.to_integer(task_id)
-    task = Enum.find(socket.assigns.tasks, fn t -> t.id == task_id end)
-
-    if task do
-      form_data = %{
-        "title" => task.title,
-        "description" => task.description || "",
-        "developer_id" =>
-          if(task.developer_id, do: Integer.to_string(task.developer_id), else: ""),
-        "priority" => task.priority || "medium",
-        "status" => task.status || "in_progress",
-        "fasa" => task.fasa || "",
-        "versi" => task.versi || "",
-        "tarikh_mula" => if(task.tarikh_mula, do: Date.to_iso8601(task.tarikh_mula), else: ""),
-        "due_date" => if(task.due_date, do: Date.to_iso8601(task.due_date), else: ""),
-        "project_id" => Integer.to_string(socket.assigns.project_id)
-      }
-
-      {:noreply,
-       socket
-       |> assign(:show_edit_task_modal, true)
-       |> assign(:selected_task, task)
-       |> assign(:form, to_form(form_data, as: :task))}
-    else
+    if socket.assigns.current_scope.user.role == "ketua unit" do
       {:noreply, socket}
+    else
+      task_id = String.to_integer(task_id)
+      task = Enum.find(socket.assigns.tasks, fn t -> t.id == task_id end)
+
+      if task do
+        form_data = %{
+          "title" => task.title,
+          "description" => task.description || "",
+          "developer_id" =>
+            if(task.developer_id, do: Integer.to_string(task.developer_id), else: ""),
+          "priority" => task.priority || "medium",
+          "status" => task.status || "in_progress",
+          "fasa" => task.fasa || "",
+          "versi" => task.versi || "",
+          "tarikh_mula" => if(task.tarikh_mula, do: Date.to_iso8601(task.tarikh_mula), else: ""),
+          "due_date" => if(task.due_date, do: Date.to_iso8601(task.due_date), else: ""),
+          "project_id" => Integer.to_string(socket.assigns.project_id)
+        }
+
+        {:noreply,
+         socket
+         |> assign(:show_edit_task_modal, true)
+         |> assign(:selected_task, task)
+         |> assign(:form, to_form(form_data, as: :task))}
+      else
+        {:noreply, socket}
+      end
     end
   end
 
@@ -219,182 +237,275 @@ defmodule SppaWeb.ModulProjekLive do
 
   @impl true
   def handle_event("validate_task", %{"task" => task_params}, socket) do
-    form = to_form(task_params, as: :task)
-    {:noreply, assign(socket, :form, form)}
+    if socket.assigns.current_scope.user.role == "ketua unit" do
+      {:noreply, socket}
+    else
+      form = to_form(task_params, as: :task)
+      {:noreply, assign(socket, :form, form)}
+    end
   end
 
   @impl true
   def handle_event("save_task", %{"task" => task_params}, socket) do
-    # Parse developer_id if provided
-    developer_id =
-      if task_params["developer_id"] && task_params["developer_id"] != "" do
-        String.to_integer(task_params["developer_id"])
-      else
-        nil
-      end
-
-    # Parse tarikh_mula if provided
-    tarikh_mula =
-      if task_params["tarikh_mula"] && task_params["tarikh_mula"] != "" do
-        case Date.from_iso8601(task_params["tarikh_mula"]) do
-          {:ok, date} -> date
-          _ -> nil
-        end
-      else
-        nil
-      end
-
-    # Parse due_date if provided
-    due_date =
-      if task_params["due_date"] && task_params["due_date"] != "" do
-        case Date.from_iso8601(task_params["due_date"]) do
-          {:ok, date} -> date
-          _ -> nil
-        end
-      else
-        nil
-      end
-
-    project_start = project_start_date(socket.assigns.project)
-    project_end = project_end_date(socket.assigns.project)
-
-    # Validate tarikh_mula
-    validation_error =
-      cond do
-        tarikh_mula && project_start && Date.compare(tarikh_mula, project_start) == :lt ->
-          "Tarikh mula tidak boleh sebelum tarikh mula projek (#{Date.to_iso8601(project_start)})."
-
-        tarikh_mula && due_date && Date.compare(tarikh_mula, due_date) == :gt ->
-          "Tarikh mula tidak boleh selepas tarikh akhir."
-
-        true ->
-          nil
-      end
-
-    if validation_error do
-      {:noreply,
-       socket
-       |> put_flash(:error, validation_error)}
+    if socket.assigns.current_scope.user.role == "ketua unit" do
+      {:noreply, socket}
     else
-      attrs = %{
-        "title" => task_params["title"] || "",
-        "description" => task_params["description"] || "",
-        "developer_id" => developer_id,
-        "priority" => task_params["priority"] || "medium",
-        "status" => task_params["status"] || "in_progress",
-        "fasa" => task_params["fasa"] || "",
-        "versi" => task_params["versi"] || "",
-        "tarikh_mula" => tarikh_mula,
-        "due_date" => due_date,
-        "project_id" => socket.assigns.project_id
-      }
+      # Parse developer_id if provided
+      developer_id =
+        if task_params["developer_id"] && task_params["developer_id"] != "" do
+          String.to_integer(task_params["developer_id"])
+        else
+          nil
+        end
 
-      case ProjectModules.create_module(attrs) do
-        {:ok, _module} ->
-          tasks =
-            ProjectModules.list_modules_for_project(
-              socket.assigns.current_scope,
-              socket.assigns.project_id
-            )
+      # Parse tarikh_mula if provided
+      tarikh_mula =
+        if task_params["tarikh_mula"] && task_params["tarikh_mula"] != "" do
+          case Date.from_iso8601(task_params["tarikh_mula"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
+        end
 
-          sorted_tasks = sort_tasks_by_created_at(tasks)
+      # Parse due_date if provided
+      due_date =
+        if task_params["due_date"] && task_params["due_date"] != "" do
+          case Date.from_iso8601(task_params["due_date"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
+        end
 
-          socket =
-            socket
-            |> assign(:tasks, sorted_tasks)
-            |> assign(:show_new_task_modal, false)
-            |> assign(:form, to_form(%{}, as: :task))
-            |> put_flash(:info, "Modul baru telah ditambah")
+      project_start = project_start_date(socket.assigns.project)
+      project_end = project_end_date(socket.assigns.project)
 
-          socket =
-            if project_end && due_date && Date.compare(due_date, project_end) == :gt do
-              put_flash(
-                socket,
-                :error,
-                "Tarikh tugasan melebihi tarikh jangkaan siap projek. Sila semak semula jadual."
+      # Validate tarikh_mula
+      validation_error =
+        cond do
+          tarikh_mula && project_start && Date.compare(tarikh_mula, project_start) == :lt ->
+            "Tarikh mula tidak boleh sebelum tarikh mula projek (#{Date.to_iso8601(project_start)})."
+
+          tarikh_mula && due_date && Date.compare(tarikh_mula, due_date) == :gt ->
+            "Tarikh mula tidak boleh selepas tarikh akhir."
+
+          true ->
+            nil
+        end
+
+      if validation_error do
+        {:noreply,
+         socket
+         |> put_flash(:error, validation_error)}
+      else
+        attrs = %{
+          "title" => task_params["title"] || "",
+          "description" => task_params["description"] || "",
+          "developer_id" => developer_id,
+          "priority" => task_params["priority"] || "medium",
+          "status" => task_params["status"] || "in_progress",
+          "fasa" => task_params["fasa"] || "",
+          "versi" => task_params["versi"] || "",
+          "tarikh_mula" => tarikh_mula,
+          "due_date" => due_date,
+          "project_id" => socket.assigns.project_id
+        }
+
+        case ProjectModules.create_module(attrs) do
+          {:ok, _module} ->
+            tasks =
+              ProjectModules.list_modules_for_project(
+                socket.assigns.current_scope,
+                socket.assigns.project_id
               )
-            else
+
+            sorted_tasks = sort_tasks_by_created_at(tasks)
+
+            socket =
               socket
-            end
+              |> assign(:tasks, sorted_tasks)
+              |> assign(:show_new_task_modal, false)
+              |> assign(:form, to_form(%{}, as: :task))
+              |> put_flash(:info, "Modul baru telah ditambah")
 
-          {:noreply, socket}
+            socket =
+              if project_end && due_date && Date.compare(due_date, project_end) == :gt do
+                put_flash(
+                  socket,
+                  :error,
+                  "Tarikh tugasan melebihi tarikh jangkaan siap projek. Sila semak semula jadual."
+                )
+              else
+                socket
+              end
 
-        {:error, _changeset} ->
-          {:noreply,
-           socket
-           |> put_flash(:error, "Gagal menyimpan modul. Sila cuba lagi.")}
+            {:noreply, socket}
+
+          {:error, _changeset} ->
+            {:noreply,
+             socket
+             |> put_flash(:error, "Gagal menyimpan modul. Sila cuba lagi.")}
+        end
       end
     end
   end
 
   @impl true
   def handle_event("update_task", %{"task" => task_params}, socket) do
-    task_id = socket.assigns.selected_task.id
-
-    # Parse developer_id if provided
-    developer_id =
-      if task_params["developer_id"] && task_params["developer_id"] != "" do
-        String.to_integer(task_params["developer_id"])
-      else
-        nil
-      end
-
-    # Parse tarikh_mula if provided
-    tarikh_mula =
-      if task_params["tarikh_mula"] && task_params["tarikh_mula"] != "" do
-        case Date.from_iso8601(task_params["tarikh_mula"]) do
-          {:ok, date} -> date
-          _ -> nil
-        end
-      else
-        nil
-      end
-
-    # Parse due_date if provided
-    due_date =
-      if task_params["due_date"] && task_params["due_date"] != "" do
-        case Date.from_iso8601(task_params["due_date"]) do
-          {:ok, date} -> date
-          _ -> nil
-        end
-      else
-        nil
-      end
-
-    project_start = project_start_date(socket.assigns.project)
-    project_end = project_end_date(socket.assigns.project)
-
-    # Validate tarikh_mula
-    validation_error =
-      cond do
-        tarikh_mula && project_start && Date.compare(tarikh_mula, project_start) == :lt ->
-          "Tarikh mula tidak boleh sebelum tarikh mula projek (#{Date.to_iso8601(project_start)})."
-
-        tarikh_mula && due_date && Date.compare(tarikh_mula, due_date) == :gt ->
-          "Tarikh mula tidak boleh selepas tarikh akhir."
-
-        true ->
-          nil
-      end
-
-    if validation_error do
-      {:noreply,
-       socket
-       |> put_flash(:error, validation_error)}
+    if socket.assigns.current_scope.user.role == "ketua unit" do
+      {:noreply, socket}
     else
-      attrs = %{
-        "title" => task_params["title"] || socket.assigns.selected_task.title,
-        "description" => task_params["description"] || socket.assigns.selected_task.description,
-        "developer_id" => developer_id,
-        "priority" => task_params["priority"] || socket.assigns.selected_task.priority,
-        "status" => task_params["status"] || socket.assigns.selected_task.status,
-        "fasa" => task_params["fasa"] || socket.assigns.selected_task.fasa,
-        "versi" => task_params["versi"] || socket.assigns.selected_task.versi,
-        "tarikh_mula" => tarikh_mula,
-        "due_date" => due_date
-      }
+      task_id = socket.assigns.selected_task.id
 
-      case ProjectModules.get_module!(task_id) |> ProjectModules.update_module(attrs) do
+      # Parse developer_id if provided
+      developer_id =
+        if task_params["developer_id"] && task_params["developer_id"] != "" do
+          String.to_integer(task_params["developer_id"])
+        else
+          nil
+        end
+
+      # Parse tarikh_mula if provided
+      tarikh_mula =
+        if task_params["tarikh_mula"] && task_params["tarikh_mula"] != "" do
+          case Date.from_iso8601(task_params["tarikh_mula"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
+        end
+
+      # Parse due_date if provided
+      due_date =
+        if task_params["due_date"] && task_params["due_date"] != "" do
+          case Date.from_iso8601(task_params["due_date"]) do
+            {:ok, date} -> date
+            _ -> nil
+          end
+        else
+          nil
+        end
+
+      project_start = project_start_date(socket.assigns.project)
+      project_end = project_end_date(socket.assigns.project)
+
+      # Validate tarikh_mula
+      validation_error =
+        cond do
+          tarikh_mula && project_start && Date.compare(tarikh_mula, project_start) == :lt ->
+            "Tarikh mula tidak boleh sebelum tarikh mula projek (#{Date.to_iso8601(project_start)})."
+
+          tarikh_mula && due_date && Date.compare(tarikh_mula, due_date) == :gt ->
+            "Tarikh mula tidak boleh selepas tarikh akhir."
+
+          true ->
+            nil
+        end
+
+      if validation_error do
+        {:noreply,
+         socket
+         |> put_flash(:error, validation_error)}
+      else
+        attrs = %{
+          "title" => task_params["title"] || socket.assigns.selected_task.title,
+          "description" => task_params["description"] || socket.assigns.selected_task.description,
+          "developer_id" => developer_id,
+          "priority" => task_params["priority"] || socket.assigns.selected_task.priority,
+          "status" => task_params["status"] || socket.assigns.selected_task.status,
+          "fasa" => task_params["fasa"] || socket.assigns.selected_task.fasa,
+          "versi" => task_params["versi"] || socket.assigns.selected_task.versi,
+          "tarikh_mula" => tarikh_mula,
+          "due_date" => due_date
+        }
+
+        case ProjectModules.get_module!(task_id) |> ProjectModules.update_module(attrs) do
+          {:ok, _module} ->
+            tasks =
+              ProjectModules.list_modules_for_project(
+                socket.assigns.current_scope,
+                socket.assigns.project_id
+              )
+
+            sorted_tasks = sort_tasks_by_created_at(tasks)
+
+            socket =
+              socket
+              |> assign(:tasks, sorted_tasks)
+              |> assign(:show_edit_task_modal, false)
+              |> assign(:selected_task, nil)
+              |> assign(:form, to_form(%{}, as: :task))
+              |> put_flash(:info, "Tugasan telah dikemaskini")
+
+            socket =
+              if project_end && due_date && Date.compare(due_date, project_end) == :gt do
+                put_flash(
+                  socket,
+                  :error,
+                  "Tarikh tugasan melebihi tarikh jangkaan siap projek. Sila semak semula jadual."
+                )
+              else
+                socket
+              end
+
+            {:noreply, socket}
+
+          {:error, _changeset} ->
+            {:noreply,
+             socket
+             |> put_flash(:error, "Gagal mengemaskini tugasan. Sila cuba lagi.")}
+        end
+      end
+    end
+  end
+
+  @impl true
+  def handle_event("delete_task", %{"task_id" => task_id}, socket) do
+    if socket.assigns.current_scope.user.role == "ketua unit" do
+      {:noreply, socket}
+    else
+      task_id = String.to_integer(task_id)
+
+      module = ProjectModules.get_module!(task_id)
+
+      case ProjectModules.delete_module(module) do
+        {:ok, _} ->
+          tasks =
+            ProjectModules.list_modules_for_project(
+              socket.assigns.current_scope,
+              socket.assigns.project_id
+            )
+
+          sorted_tasks = sort_tasks_by_created_at(tasks)
+
+          {:noreply,
+           socket
+           |> assign(:tasks, sorted_tasks)
+           |> put_flash(:info, "Tugasan telah dipadam")}
+
+        {:error, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Gagal memadam tugasan. Sila cuba lagi.")}
+      end
+    end
+  end
+
+  @impl true
+  def handle_event("update_task_status", %{"task_id" => task_id} = params, socket) do
+    if socket.assigns.current_scope.user.role == "ketua unit" do
+      {:noreply, socket}
+    else
+      task_id = String.to_integer(task_id)
+      # phx-change sends the select value as "status" when name="status"
+      status = Map.get(params, "status", "in_progress")
+
+      case ProjectModules.get_module!(task_id)
+           |> ProjectModules.update_module(%{"status" => status}) do
         {:ok, _module} ->
           tasks =
             ProjectModules.list_modules_for_project(
@@ -404,89 +515,16 @@ defmodule SppaWeb.ModulProjekLive do
 
           sorted_tasks = sort_tasks_by_created_at(tasks)
 
-          socket =
-            socket
-            |> assign(:tasks, sorted_tasks)
-            |> assign(:show_edit_task_modal, false)
-            |> assign(:selected_task, nil)
-            |> assign(:form, to_form(%{}, as: :task))
-            |> put_flash(:info, "Tugasan telah dikemaskini")
-
-          socket =
-            if project_end && due_date && Date.compare(due_date, project_end) == :gt do
-              put_flash(
-                socket,
-                :error,
-                "Tarikh tugasan melebihi tarikh jangkaan siap projek. Sila semak semula jadual."
-              )
-            else
-              socket
-            end
-
-          {:noreply, socket}
+          {:noreply,
+           socket
+           |> assign(:tasks, sorted_tasks)
+           |> put_flash(:info, "Status tugasan telah dikemaskini")}
 
         {:error, _changeset} ->
           {:noreply,
            socket
-           |> put_flash(:error, "Gagal mengemaskini tugasan. Sila cuba lagi.")}
+           |> put_flash(:error, "Gagal mengemaskini status tugasan. Sila cuba lagi.")}
       end
-    end
-  end
-
-  @impl true
-  def handle_event("delete_task", %{"task_id" => task_id}, socket) do
-    task_id = String.to_integer(task_id)
-
-    module = ProjectModules.get_module!(task_id)
-
-    case ProjectModules.delete_module(module) do
-      {:ok, _} ->
-        tasks =
-          ProjectModules.list_modules_for_project(
-            socket.assigns.current_scope,
-            socket.assigns.project_id
-          )
-
-        sorted_tasks = sort_tasks_by_created_at(tasks)
-
-        {:noreply,
-         socket
-         |> assign(:tasks, sorted_tasks)
-         |> put_flash(:info, "Tugasan telah dipadam")}
-
-      {:error, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Gagal memadam tugasan. Sila cuba lagi.")}
-    end
-  end
-
-  @impl true
-  def handle_event("update_task_status", %{"task_id" => task_id} = params, socket) do
-    task_id = String.to_integer(task_id)
-    # phx-change sends the select value as "status" when name="status"
-    status = Map.get(params, "status", "in_progress")
-
-    case ProjectModules.get_module!(task_id)
-         |> ProjectModules.update_module(%{"status" => status}) do
-      {:ok, _module} ->
-        tasks =
-          ProjectModules.list_modules_for_project(
-            socket.assigns.current_scope,
-            socket.assigns.project_id
-          )
-
-        sorted_tasks = sort_tasks_by_created_at(tasks)
-
-        {:noreply,
-         socket
-         |> assign(:tasks, sorted_tasks)
-         |> put_flash(:info, "Status tugasan telah dikemaskini")}
-
-      {:error, _changeset} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Gagal mengemaskini status tugasan. Sila cuba lagi.")}
     end
   end
 
@@ -506,6 +544,7 @@ defmodule SppaWeb.ModulProjekLive do
     assignment_items =
       Enum.map(assignment_activities, fn a ->
         sort_at = a.inserted_at || DateTime.utc_now()
+
         %{
           resource_name: a.resource_name,
           action_label: a.action_label,
@@ -633,8 +672,11 @@ defmodule SppaWeb.ModulProjekLive do
   # Pengurus projek can also be assigned as pembangun sistem in the Modul Baru form.
   defp assigned_pengurus_projek_for_project(users, project) do
     approved_project = project.approved_project
-    if approved_project && approved_project.pengurus_projek && approved_project.pengurus_projek != "" do
+
+    if approved_project && approved_project.pengurus_projek &&
+         approved_project.pengurus_projek != "" do
       no_kps = parse_pengurus_projek(approved_project.pengurus_projek)
+
       users
       |> Enum.filter(fn u -> u.role == "pengurus projek" && u.no_kp && u.no_kp in no_kps end)
     else

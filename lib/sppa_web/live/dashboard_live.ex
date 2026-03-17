@@ -25,8 +25,10 @@ defmodule SppaWeb.DashboardLive do
 
       # Always load stats and activities from database so metric cards show actual counts
       stats = Projects.get_dashboard_stats(socket.assigns.current_scope)
+
       # Aktiviti Terkini: recently registered projects (from external link), latest first (visible to current role)
       registered = Projects.list_recently_registered_projects(socket.assigns.current_scope, 20)
+
       activities =
         Enum.map(registered, fn p ->
           %{

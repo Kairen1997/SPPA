@@ -61,7 +61,8 @@ defmodule Sppa.ActivityLogs do
   project manager sees "Ketua unit telah menugaskan projek X kepada anda."
   """
   def list_recent_assignment_activities_for_pengurus_projek(current_scope, limit \\ 10) do
-    if is_nil(current_scope) or is_nil(current_scope.user) or current_scope.user.role != "pengurus projek" do
+    if is_nil(current_scope) or is_nil(current_scope.user) or
+         current_scope.user.role != "pengurus projek" do
       []
     else
       from(a in ActivityLog,

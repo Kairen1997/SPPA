@@ -57,11 +57,23 @@
           <%!-- Back Button (without project title above tabs) --%>
           <div class="mb-6">
             <div class="flex items-center gap-4">
+              <% back_path =
+                case @current_scope.user.role do
+                  "ketua unit" -> ~p"/penyerahan-projek"
+                  _ -> ~p"/projek"
+                end %>
+
               <.link
-                navigate={~p"/projek"}
+                navigate={back_path}
                 class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 hover:shadow"
               >
-                <span>Kembali ke Senarai Sistem</span>
+                <span>
+                  <%= if @current_scope.user.role == "ketua unit" do %>
+                    Kembali ke Penyerahan Projek
+                  <% else %>
+                    Kembali ke Senarai Sistem
+                  <% end %>
+                </span>
               </.link>
             </div>
           </div>
@@ -114,19 +126,22 @@
                 >
                   Jadual Projek
                 </.link>
-                <.link
-                  patch={~p"/projek/#{@project.id}?tab=pengaturcaraan"}
-                  class={[
-                    "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
-                    if(@current_tab == "Pengaturcaraan",
-                      do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
-                      else:
-                        "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
-                    )
-                  ]}
-                >
-                  Pengaturcaraan
-                </.link>
+                <%= if !@read_only_ketua_unit do %>
+                  <.link
+                    patch={~p"/projek/#{@project.id}?tab=pengaturcaraan"}
+                    class={[
+                      "px-4 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 whitespace-nowrap -mb-px",
+                      if(@current_tab == "Pengaturcaraan",
+                        do: "bg-white text-blue-600 border border-b-0 border-gray-200 shadow-sm",
+                        else:
+                          "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
+                      )
+                    ]}
+                  >
+                    Pengaturcaraan
+                  </.link>
+                <% end %>
+                
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=pengurus-perubahan"}
                   class={[
@@ -212,28 +227,30 @@
           <%= cond do %>
             <% @current_tab == "Soal Selidik" -> %>
               <div class="space-y-6">
-                <div class="flex flex-wrap items-center justify-end gap-3 mb-4 print:hidden">
-                  <div class="flex gap-3">
-                    <.link
-                      id="edit-soal-selidik-form"
-                      navigate={~p"/soal-selidik?project_id=#{@project.id}"}
-                      class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
-                    >
-                      <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
-                      <span>Edit Borang</span>
-                    </.link>
-                    <button
-                      id="print-soal-selidik-btn"
-                      phx-hook="PrintDocument"
-                      data-target="soal-selidik-document"
-                      type="button"
-                      title="Cetak borang"
-                      class="inline-flex items-center justify-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-                    >
-                      <.icon name="hero-printer" class="w-5 h-5" />
-                    </button>
+                <%= if !@read_only_ketua_unit do %>
+                  <div class="flex flex-wrap items-center justify-end gap-3 mb-4 print:hidden">
+                    <div class="flex gap-3">
+                      <.link
+                        id="edit-soal-selidik-form"
+                        navigate={~p"/soal-selidik?project_id=#{@project.id}"}
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
+                      >
+                        <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
+                        <span>Edit Borang</span>
+                      </.link>
+                      <button
+                        id="print-soal-selidik-btn"
+                        phx-hook="PrintDocument"
+                        data-target="soal-selidik-document"
+                        type="button"
+                        title="Cetak borang"
+                        class="inline-flex items-center justify-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                      >
+                        <.icon name="hero-printer" class="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                <% end %>
                 
                 <div
                   id="soal-selidik-document"
@@ -629,26 +646,28 @@
               </div>
             <% @current_tab == "Analisis dan Rekabentuk" -> %>
               <div class="space-y-6">
-                <div class="flex justify-end gap-3 mb-4 print:hidden">
-                  <.link
-                    id="edit-analisis-form"
-                    navigate={~p"/analisis-dan-rekabentuk?project_id=#{@project.id}"}
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
-                  >
-                    <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
-                    <span>Edit Borang</span>
-                  </.link>
-                  <button
-                    id="print-analisis-btn"
-                    phx-hook="PrintDocument"
-                    data-target="analisis-document"
-                    type="button"
-                    title="Cetak borang"
-                    class="inline-flex items-center justify-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-                  >
-                    <.icon name="hero-printer" class="w-5 h-5" />
-                  </button>
-                </div>
+                <%= if !@read_only_ketua_unit do %>
+                  <div class="flex justify-end gap-3 mb-4 print:hidden">
+                    <.link
+                      id="edit-analisis-form"
+                      navigate={~p"/analisis-dan-rekabentuk?project_id=#{@project.id}"}
+                      class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg border border-gray-200 transition-colors duration-200 shadow-sm hover:shadow"
+                    >
+                      <.icon name="hero-pencil-square" class="w-5 h-5 text-gray-700" />
+                      <span>Edit Borang</span>
+                    </.link>
+                    <button
+                      id="print-analisis-btn"
+                      phx-hook="PrintDocument"
+                      data-target="analisis-document"
+                      type="button"
+                      title="Cetak borang"
+                      class="inline-flex items-center justify-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                    >
+                      <.icon name="hero-printer" class="w-5 h-5" />
+                    </button>
+                  </div>
+                <% end %>
                 
                 <div
                   id="analisis-document"
@@ -660,6 +679,7 @@
                     <div class="mb-6">
                       <div class="flex justify-between items-start gap-4">
                         <div class="flex-1"></div>
+                        
                         <div class="flex-1 flex justify-center">
                           <img
                             src={~p"/images/logojpkn.png"}
@@ -667,102 +687,160 @@
                             class="h-14 w-auto object-contain print:h-12"
                           />
                         </div>
+                        
                         <div class="flex-1 flex justify-end text-sm font-semibold text-slate-700">
                           {@analisis_pdf_data.document_id}
                         </div>
                       </div>
+                      
                       <h2 class="text-center font-bold text-slate-900 mt-4 mb-0 uppercase tracking-wide text-base sm:text-lg pb-3 border-b border-slate-300">
                         Borang Verifikasi Spesifikasi Aplikasi
                       </h2>
                     </div>
-                    
-                    <%!-- 1. Maklumat Projek --%>
+                     <%!-- 1. Maklumat Projek --%>
                     <div class="mb-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                       <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200">
                         <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
                           1. Maklumat Projek
                         </h3>
                       </div>
+                      
                       <div class="p-4 sm:p-5">
-                      <table class="w-full border-collapse text-sm">
-                        <tbody>
-                          <tr class="border-b border-slate-200">
-                            <td class="py-2 font-semibold text-slate-800 w-1/3">Nama Projek</td>
-                            <td class="py-2 text-slate-900">{@analisis_pdf_data.nama_projek}</td>
-                          </tr>
-                          <tr class="border-b border-slate-200">
-                            <td class="py-2 font-semibold text-slate-800">Nama Agensi</td>
-                            <td class="py-2 text-slate-900">{@analisis_pdf_data.nama_agensi}</td>
-                          </tr>
-                          <tr class="border-b border-slate-200">
-                            <td class="py-2 font-semibold text-slate-800">Versi</td>
-                            <td class="py-2 text-slate-900">{@analisis_pdf_data.versi}</td>
-                          </tr>
-                          <tr class="border-b border-slate-200">
-                            <td class="py-2 font-semibold text-slate-800">Tarikh Semakan (jika ada)</td>
-                            <td class="py-2 text-slate-900">{@analisis_pdf_data.tarikh_semakan}</td>
-                          </tr>
-                          <tr>
-                            <td class="py-2 font-semibold text-slate-800">Rujukan Perubahan (jika ada)</td>
-                            <td class="py-2 text-slate-900">{@analisis_pdf_data.rujukan_perubahan}</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                        <table class="w-full border-collapse text-sm">
+                          <tbody>
+                            <tr class="border-b border-slate-200">
+                              <td class="py-2 font-semibold text-slate-800 w-1/3">Nama Projek</td>
+                              
+                              <td class="py-2 text-slate-900">
+                                {@analisis_pdf_data.nama_projek}
+                              </td>
+                            </tr>
+                            
+                            <tr class="border-b border-slate-200">
+                              <td class="py-2 font-semibold text-slate-800">Nama Agensi</td>
+                              
+                              <td class="py-2 text-slate-900">
+                                {@analisis_pdf_data.nama_agensi}
+                              </td>
+                            </tr>
+                            
+                            <tr class="border-b border-slate-200">
+                              <td class="py-2 font-semibold text-slate-800">Versi</td>
+                              
+                              <td class="py-2 text-slate-900">{@analisis_pdf_data.versi}</td>
+                            </tr>
+                            
+                            <tr class="border-b border-slate-200">
+                              <td class="py-2 font-semibold text-slate-800">
+                                Tarikh Semakan (jika ada)
+                              </td>
+                              
+                              <td class="py-2 text-slate-900">
+                                {@analisis_pdf_data.tarikh_semakan}
+                              </td>
+                            </tr>
+                            
+                            <tr>
+                              <td class="py-2 font-semibold text-slate-800">
+                                Rujukan Perubahan (jika ada)
+                              </td>
+                              
+                              <td class="py-2 text-slate-900">
+                                {@analisis_pdf_data.rujukan_perubahan}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </div>
-                    
-                    <%!-- 2. Modul Sistem --%>
+                     <%!-- 2. Modul Sistem --%>
                     <div class="mb-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                       <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200">
                         <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
                           2. Modul Sistem
                         </h3>
                       </div>
+                      
                       <div class="p-4 sm:p-5">
-                      <p class="text-xs text-slate-600 mb-3">
-                        Modul berikut telah dicipta oleh pengurus projek untuk projek ini. Paparan hanya baca (tajuk tugasan dan penerangan).
-                      </p>
-                      <%= if @project_modules != [] do %>
-                        <div class="space-y-4">
-                          <%= for {pm, index} <- Enum.with_index(@project_modules) do %>
-                            <div>
-                              <p class="text-xs font-bold text-slate-800 mb-0.5">{index + 1}. Tajuk Tugasan</p>
-                              <p class="text-sm text-slate-900 mb-2">{pm.title || "—"}</p>
-                              <p class="text-xs font-bold text-slate-800 mb-0.5">Penerangan</p>
-                              <p class="text-sm text-slate-800 whitespace-pre-wrap leading-snug">{pm.description || "—"}</p>
-                            </div>
-                          <% end %>
-                        </div>
-                      <% else %>
-                        <p class="text-sm text-slate-500 italic">Tiada modul dicipta oleh pengurus projek untuk projek ini.</p>
-                      <% end %>
+                        <p class="text-xs text-slate-600 mb-3">
+                          Modul berikut telah dicipta oleh pengurus projek untuk projek ini. Paparan hanya baca (tajuk tugasan dan penerangan).
+                        </p>
+                        
+                        <%= if @project_modules != [] do %>
+                          <div class="space-y-4">
+                            <%= for {pm, index} <- Enum.with_index(@project_modules) do %>
+                              <div>
+                                <p class="text-xs font-bold text-slate-800 mb-0.5">
+                                  {index + 1}. Tajuk Tugasan
+                                </p>
+                                
+                                <p class="text-sm text-slate-900 mb-2">{pm.title || "—"}</p>
+                                
+                                <p class="text-xs font-bold text-slate-800 mb-0.5">Penerangan</p>
+                                
+                                <p class="text-sm text-slate-800 whitespace-pre-wrap leading-snug">
+                                  {pm.description || "—"}
+                                </p>
+                              </div>
+                            <% end %>
+                          </div>
+                        <% else %>
+                          <p class="text-sm text-slate-500 italic">
+                            Tiada modul dicipta oleh pengurus projek untuk projek ini.
+                          </p>
+                        <% end %>
                       </div>
                     </div>
-                    
-                    <%!-- 3. Pengesahan & Perakuan --%>
+                     <%!-- 3. Pengesahan & Perakuan --%>
                     <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                       <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200">
                         <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
                           3. Pengesahan & Perakuan
                         </h3>
                       </div>
+                      
                       <div class="p-4 sm:p-5">
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                        <div>
-                          <h4 class="font-bold text-slate-900 text-sm mb-1">Dipersetujui Oleh:</h4>
-                          <p class="text-xs text-slate-600 mb-2">Pemohon</p>
-                          <p class="text-sm text-slate-800"><span class="font-semibold text-slate-700">Nama:</span> {@analisis_pdf_data.approved_by_name}</p>
-                          <p class="text-sm text-slate-800 mt-1"><span class="font-semibold text-slate-700">Jawatan:</span> {@analisis_pdf_data.approved_by_position}</p>
-                          <p class="text-sm text-slate-800 mt-1"><span class="font-semibold text-slate-700">Tarikh:</span> {@analisis_pdf_data.approved_by_date}</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                          <div>
+                            <h4 class="font-bold text-slate-900 text-sm mb-1">
+                              Dipersetujui Oleh:
+                            </h4>
+                            
+                            <p class="text-xs text-slate-600 mb-2">Pemohon</p>
+                            
+                            <p class="text-sm text-slate-800">
+                              <span class="font-semibold text-slate-700">Nama:</span> {@analisis_pdf_data.approved_by_name}
+                            </p>
+                            
+                            <p class="text-sm text-slate-800 mt-1">
+                              <span class="font-semibold text-slate-700">Jawatan:</span> {@analisis_pdf_data.approved_by_position}
+                            </p>
+                            
+                            <p class="text-sm text-slate-800 mt-1">
+                              <span class="font-semibold text-slate-700">Tarikh:</span> {@analisis_pdf_data.approved_by_date}
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <h4 class="font-bold text-slate-900 text-sm mb-1">
+                              Disediakan Oleh:
+                            </h4>
+                            
+                            <p class="text-xs text-slate-600 mb-2">Pengurus Projek / Pembangun</p>
+                            
+                            <p class="text-sm text-slate-800">
+                              <span class="font-semibold text-slate-700">Nama:</span> {@analisis_pdf_data.prepared_by_name}
+                            </p>
+                            
+                            <p class="text-sm text-slate-800 mt-1">
+                              <span class="font-semibold text-slate-700">Jawatan:</span> {@analisis_pdf_data.prepared_by_position}
+                            </p>
+                            
+                            <p class="text-sm text-slate-800 mt-1">
+                              <span class="font-semibold text-slate-700">Tarikh:</span> {@analisis_pdf_data.prepared_by_date}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 class="font-bold text-slate-900 text-sm mb-1">Disediakan Oleh:</h4>
-                          <p class="text-xs text-slate-600 mb-2">Pengurus Projek / Pembangun</p>
-                          <p class="text-sm text-slate-800"><span class="font-semibold text-slate-700">Nama:</span> {@analisis_pdf_data.prepared_by_name}</p>
-                          <p class="text-sm text-slate-800 mt-1"><span class="font-semibold text-slate-700">Jawatan:</span> {@analisis_pdf_data.prepared_by_position}</p>
-                          <p class="text-sm text-slate-800 mt-1"><span class="font-semibold text-slate-700">Tarikh:</span> {@analisis_pdf_data.prepared_by_date}</p>
-                        </div>
-                      </div>
                       </div>
                     </div>
                   <% else %>
@@ -987,24 +1065,35 @@
                 <p class="text-sm text-gray-600">
                   Modul yang ditugaskan kepada anda untuk projek ini (ditetapkan oleh Pengurus Projek dari halaman Modul Projek).
                 </p>
+                
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                   <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                      <.icon name="hero-list-bullet" class="w-5 h-5 text-gray-600" />
-                      Tugasan Anda
+                      <.icon name="hero-list-bullet" class="w-5 h-5 text-gray-600" /> Tugasan Anda
                     </h2>
+                    
                     <p class="text-sm text-gray-500">{length(@developer_tasks)} modul</p>
                   </div>
+                  
                   <%= if Enum.empty?(@developer_tasks) do %>
                     <div class="px-6 py-12 text-center">
                       <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 text-gray-400 mb-4">
                         <.icon name="hero-clipboard-document-list" class="w-7 h-7" />
                       </div>
-                      <p class="text-sm font-medium text-gray-700 mb-1">Tiada modul ditugaskan kepada anda untuk projek ini</p>
-                      <p class="text-xs text-gray-500 mb-4">Pengurus projek boleh menetapkan tugasan di halaman Modul Projek.</p>
-                      <.link navigate={~p"/projek/#{@project.id}/modul"} class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                        <.icon name="hero-folder" class="w-4 h-4" />
-                        Modul Projek
+                      
+                      <p class="text-sm font-medium text-gray-700 mb-1">
+                        Tiada modul ditugaskan kepada anda untuk projek ini
+                      </p>
+                      
+                      <p class="text-xs text-gray-500 mb-4">
+                        Pengurus projek boleh menetapkan tugasan di halaman Modul Projek.
+                      </p>
+                      
+                      <.link
+                        navigate={~p"/projek/#{@project.id}/modul"}
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <.icon name="hero-folder" class="w-4 h-4" /> Modul Projek
                       </.link>
                     </div>
                   <% else %>
@@ -1012,33 +1101,84 @@
                       <table class="w-full text-sm">
                         <thead class="bg-gray-50 border-b border-gray-200">
                           <tr>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tajuk</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Keutamaan</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tarikh Mula</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tarikh Tamat</th>
-                            <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Tindakan</th>
+                            <th
+                              scope="col"
+                              class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                            >
+                              Tajuk
+                            </th>
+                            
+                            <th
+                              scope="col"
+                              class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                            >
+                              Keutamaan
+                            </th>
+                            
+                            <th
+                              scope="col"
+                              class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                            >
+                              Status
+                            </th>
+                            
+                            <th
+                              scope="col"
+                              class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                            >
+                              Tarikh Mula
+                            </th>
+                            
+                            <th
+                              scope="col"
+                              class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                            >
+                              Tarikh Tamat
+                            </th>
+                            
+                            <th
+                              scope="col"
+                              class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                            >
+                              Tindakan
+                            </th>
                           </tr>
                         </thead>
+                        
                         <tbody class="bg-white divide-y divide-gray-200">
                           <%= for task <- @developer_tasks do %>
                             <tr class="hover:bg-gray-50/80 transition-colors duration-150">
                               <td class="px-4 py-3">
                                 <p class="font-medium text-gray-900">{task.title || "—"}</p>
+                                
                                 <%= if task.description && task.description != "" do %>
-                                  <p class="text-xs text-gray-500 truncate max-w-xs mt-0.5" title={task.description}>{task.description}</p>
+                                  <p
+                                    class="text-xs text-gray-500 truncate max-w-xs mt-0.5"
+                                    title={task.description}
+                                  >
+                                    {task.description}
+                                  </p>
                                 <% end %>
                               </td>
+                              
                               <td class="px-4 py-3 whitespace-nowrap">
-                                <span class={["inline-flex px-2 py-0.5 rounded text-xs font-medium border", pengaturcaraan_priority_color(task.priority)]}>
+                                <span class={[
+                                  "inline-flex px-2 py-0.5 rounded text-xs font-medium border",
+                                  pengaturcaraan_priority_color(task.priority)
+                                ]}>
                                   {pengaturcaraan_priority_label(task.priority)}
                                 </span>
                               </td>
+                              
                               <td class="px-4 py-3 whitespace-nowrap">
-                                <span class={["inline-flex px-2 py-0.5 rounded text-xs font-medium border", pengaturcaraan_status_color(task.status)]}>
+                                <span class={[
+                                  "inline-flex px-2 py-0.5 rounded text-xs font-medium border",
+                                  pengaturcaraan_status_color(task.status)
+                                ]}>
                                   {pengaturcaraan_status_label(task.status)}
                                 </span>
                               </td>
+                              
                               <td class="px-4 py-3 whitespace-nowrap text-gray-600">
                                 <%= if task.tarikh_mula do %>
                                   {Calendar.strftime(task.tarikh_mula, "%d/%m/%Y")}
@@ -1046,6 +1186,7 @@
                                   <span class="text-gray-400">—</span>
                                 <% end %>
                               </td>
+                              
                               <td class="px-4 py-3 whitespace-nowrap text-gray-600">
                                 <%= if task.due_date do %>
                                   {Calendar.strftime(task.due_date, "%d/%m/%Y")}
@@ -1053,6 +1194,7 @@
                                   <span class="text-gray-400">—</span>
                                 <% end %>
                               </td>
+                              
                               <td class="px-4 py-3 text-right">
                                 <button
                                   type="button"
@@ -1060,8 +1202,7 @@
                                   phx-value-task_id={task.id}
                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors duration-200"
                                 >
-                                  <.icon name="hero-pencil-square" class="w-4 h-4" />
-                                  Catatan
+                                  <.icon name="hero-pencil-square" class="w-4 h-4" /> Catatan
                                 </button>
                               </td>
                             </tr>
@@ -1071,6 +1212,7 @@
                     </div>
                   <% end %>
                 </div>
+                
                 <%= if @project_pengaturcaraan_gantt_data && !Enum.empty?(@project_pengaturcaraan_gantt_data.modules) do %>
                   <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
@@ -1079,7 +1221,7 @@
                         Carta Gantt Modul
                       </h2>
                     </div>
-                    <% gd = @project_pengaturcaraan_gantt_data
+                     <% gd = @project_pengaturcaraan_gantt_data
                     timeline_start = gd.start_date
                     timeline_end = gd.end_date
                     total_days = pengaturcaraan_days_between(timeline_start, timeline_end)
@@ -1088,47 +1230,97 @@
                       <div class="border border-gray-200 rounded-lg overflow-hidden">
                         <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-gray-200">
                           <h3 class="text-lg font-semibold text-gray-900">{gd.project.nama}</h3>
+                          
                           <p class="text-sm text-gray-600 mt-1">{gd.project.jabatan}</p>
-                          <p class="text-xs text-gray-500 mt-1">{Calendar.strftime(gd.start_date, "%d/%m/%Y")} – {Calendar.strftime(gd.end_date, "%d/%m/%Y")}</p>
+                          
+                          <p class="text-xs text-gray-500 mt-1">
+                            {Calendar.strftime(gd.start_date, "%d/%m/%Y")} – {Calendar.strftime(
+                              gd.end_date,
+                              "%d/%m/%Y"
+                            )}
+                          </p>
                         </div>
+                        
                         <div class="p-4 space-y-3">
                           <%= for {module, index} <- Enum.with_index(gd.modules) do %>
-                            <% module_days = pengaturcaraan_days_between(module.start_date, module.end_date)
-                            offset_days = pengaturcaraan_days_between(timeline_start, module.start_date)
+                            <% module_days =
+                              pengaturcaraan_days_between(module.start_date, module.end_date)
+
+                            offset_days =
+                              pengaturcaraan_days_between(timeline_start, module.start_date)
+
                             offset_percent = offset_days / total_days * 100
                             width_percent = module_days / total_days * 100
-                            is_overdue = module.status == "in_progress" && Date.compare(module.end_date, today) == :lt
-                            bar_color_class = cond do
-                              module.status == "done" -> "bg-green-500"
-                              is_overdue -> "bg-red-400"
-                              true -> "bg-blue-500"
-                            end %>
+
+                            is_overdue =
+                              module.status == "in_progress" &&
+                                Date.compare(module.end_date, today) == :lt
+
+                            bar_color_class =
+                              cond do
+                                module.status == "done" -> "bg-green-500"
+                                is_overdue -> "bg-red-400"
+                                true -> "bg-blue-500"
+                              end %>
                             <div class="flex items-center gap-4 min-h-[56px]">
                               <div class="w-56 flex-shrink-0">
-                                <h4 class="text-sm font-semibold text-gray-900">{module.title}</h4>
+                                <h4 class="text-sm font-semibold text-gray-900">
+                                  {module.title}
+                                </h4>
+                                
                                 <div class="flex items-center gap-2 flex-wrap mt-1">
-                                  <span class={["inline-flex items-center px-2 py-0.5 rounded text-xs font-medium", pengaturcaraan_status_color(module.status)]}>{pengaturcaraan_status_label(module.status)}</span>
-                                  <span class={["inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border", pengaturcaraan_priority_color(module.priority)]}>{pengaturcaraan_priority_label(module.priority)}</span>
+                                  <span class={[
+                                    "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                                    pengaturcaraan_status_color(module.status)
+                                  ]}>
+                                    {pengaturcaraan_status_label(module.status)}
+                                  </span>
+                                  <span class={[
+                                    "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border",
+                                    pengaturcaraan_priority_color(module.priority)
+                                  ]}>
+                                    {pengaturcaraan_priority_label(module.priority)}
+                                  </span>
                                 </div>
                               </div>
+                              
                               <div class="flex-1 relative h-10 bg-gray-100 rounded border border-gray-200 overflow-hidden">
-                                <div class={["absolute h-full rounded transition-all duration-200", bar_color_class]} style={"left: #{offset_percent}%; width: #{width_percent}%;"}></div>
+                                <div
+                                  class={[
+                                    "absolute h-full rounded transition-all duration-200",
+                                    bar_color_class
+                                  ]}
+                                  style={"left: #{offset_percent}%; width: #{width_percent}%;"}
+                                >
+                                </div>
                               </div>
+                              
                               <div class="w-28 flex-shrink-0 text-right text-xs text-gray-600">
-                                {Calendar.strftime(module.start_date, "%d/%m/%Y")} – {Calendar.strftime(module.end_date, "%d/%m/%Y")}
+                                {Calendar.strftime(module.start_date, "%d/%m/%Y")} – {Calendar.strftime(
+                                  module.end_date,
+                                  "%d/%m/%Y"
+                                )}
                               </div>
                             </div>
                           <% end %>
                         </div>
+                        
                         <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center gap-6 flex-wrap text-xs text-gray-600">
-                          <span><span class="inline-block w-3 h-3 rounded bg-blue-500 mr-1"></span>Dalam Proses</span>
-                          <span><span class="inline-block w-3 h-3 rounded bg-green-500 mr-1"></span>Selesai</span>
-                          <span><span class="inline-block w-3 h-3 rounded bg-red-400 mr-1"></span>Lewat</span>
+                          <span>
+                            <span class="inline-block w-3 h-3 rounded bg-blue-500 mr-1"></span>Dalam Proses
+                          </span>
+                          <span>
+                            <span class="inline-block w-3 h-3 rounded bg-green-500 mr-1"></span>Selesai
+                          </span>
+                          <span>
+                            <span class="inline-block w-3 h-3 rounded bg-red-400 mr-1"></span>Lewat
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 <% end %>
+                
                 <%!-- Old Analisis board/table view removed; Pengaturcaraan tab now shows assigned modul + Gantt only --%>
               </div>
             <% @current_tab == "Pengurus Perubahan" -> %>
@@ -1142,13 +1334,15 @@
                     </p>
                   </div>
                   
-                  <button
-                    phx-click="open_create_modal"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
-                  >
-                    <.icon name="hero-plus-circle" class="w-5 h-5" />
-                    <span>Daftar Perubahan</span>
-                  </button>
+                  <%= if !@read_only_ketua_unit do %>
+                    <button
+                      phx-click="open_create_modal"
+                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                    >
+                      <.icon name="hero-plus-circle" class="w-5 h-5" />
+                      <span>Daftar Perubahan</span>
+                    </button>
+                  <% end %>
                 </div>
                 
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -1278,15 +1472,17 @@
                                 >
                                   <.icon name="hero-eye" class="w-4 h-4" />
                                 </button>
-                                <button
-                                  type="button"
-                                  phx-click="open_edit_modal"
-                                  phx-value-perubahan_id={perubahan.id}
-                                  class="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200"
-                                  title="Kemaskini"
-                                >
-                                  <.icon name="hero-pencil-square" class="w-4 h-4" />
-                                </button>
+                                <%= if !@read_only_ketua_unit do %>
+                                  <button
+                                    type="button"
+                                    phx-click="open_edit_modal"
+                                    phx-value-perubahan_id={perubahan.id}
+                                    class="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200"
+                                    title="Kemaskini"
+                                  >
+                                    <.icon name="hero-pencil-square" class="w-4 h-4" />
+                                  </button>
+                                <% end %>
                               </div>
                             </td>
                           </tr>
@@ -1937,16 +2133,18 @@
                       Projek: <span class="font-semibold text-gray-800">{@project.nama}</span>
                     </p>
                   </div>
-                  
-                  <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <button
-                      phx-click="open_uat_create_modal"
-                      class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 text-sm font-medium shadow-md hover:shadow-lg transition"
-                    >
-                      <.icon name="hero-plus-circle" class="w-5 h-5" />
-                      <span>Daftar Ujian Baharu</span>
-                    </button>
-                  </div>
+
+                  <%= if !@read_only_ketua_unit do %>
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <button
+                        phx-click="open_uat_create_modal"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 text-sm font-medium shadow-md hover:shadow-lg transition"
+                      >
+                        <.icon name="hero-plus-circle" class="w-5 h-5" />
+                        <span>Daftar Ujian Baharu</span>
+                      </button>
+                    </div>
+                  <% end %>
                 </div>
                 
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
@@ -1967,11 +2165,18 @@
                       <div class="flex flex-col items-center justify-center text-gray-400">
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada ujian penerimaan pengguna.</p>
-                        
-                        <p class="text-xs mt-1">
-                          Klik &quot;Daftar Ujian Baharu&quot; untuk menambah rekod ujian bagi modul
-                          projek.
-                        </p>
+
+                        <%= if !@read_only_ketua_unit do %>
+                          <p class="text-xs mt-1">
+                            Klik &quot;Daftar Ujian Baharu&quot; untuk menambah rekod ujian bagi modul
+                            projek.
+                          </p>
+                        <% else %>
+                          <p class="text-xs mt-1 text-gray-500">
+                            Rekod ujian akan dipaparkan di sini selepas didaftarkan oleh pengurus
+                            projek atau pembangun sistem.
+                          </p>
+                        <% end %>
                       </div>
                     </div>
                   <% else %>
@@ -2177,25 +2382,27 @@
                                           </p>
                                         </div>
                                         
-                                        <div class="inline-flex items-center gap-2">
-                                          <button
-                                            type="button"
-                                            phx-click="open_uat_add_column_modal"
-                                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/90 hover:bg-amber-500 text-white border border-amber-400 rounded-lg text-xs font-medium shadow-sm transition"
-                                          >
-                                            <.icon name="hero-plus" class="w-4 h-4" />
-                                            <span>Tambah Lajur</span>
-                                          </button>
-                                          <button
-                                            type="button"
-                                            phx-click="open_add_kes_modal"
-                                            phx-value-ujian_id={@uat_expanded_ujian.id}
-                                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-lg text-xs font-medium shadow-sm transition"
-                                          >
-                                            <.icon name="hero-plus" class="w-4 h-4" />
-                                            <span>Tambah Kes Ujian</span>
-                                          </button>
-                                        </div>
+                                        <%= if !@read_only_ketua_unit do %>
+                                          <div class="inline-flex items-center gap-2">
+                                            <button
+                                              type="button"
+                                              phx-click="open_uat_add_column_modal"
+                                              class="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/90 hover:bg-amber-500 text-white border border-amber-400 rounded-lg text-xs font-medium shadow-sm transition"
+                                            >
+                                              <.icon name="hero-plus" class="w-4 h-4" />
+                                              <span>Tambah Lajur</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              phx-click="open_add_kes_modal"
+                                              phx-value-ujian_id={@uat_expanded_ujian.id}
+                                              class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-lg text-xs font-medium shadow-sm transition"
+                                            >
+                                              <.icon name="hero-plus" class="w-4 h-4" />
+                                              <span>Tambah Kes Ujian</span>
+                                            </button>
+                                          </div>
+                                        <% end %>
                                       </div>
                                       
                                       <%= if @uat_expanded_ujian.senarai_kes_ujian && @uat_expanded_ujian.senarai_kes_ujian != [] do %>
@@ -2239,19 +2446,23 @@
                                                 >
                                                   <div class="flex items-center justify-between gap-1">
                                                     <span>{col["label"]}</span>
-                                                    <button
-                                                      type="button"
-                                                      phx-click="remove_uat_column"
-                                                      phx-value-column_id={col["id"]}
-                                                      phx-value-ujian_id={@uat_expanded_ujian.id}
-                                                      class="p-0.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50"
-                                                      title="Buang lajur"
-                                                    >
-                                                      <.icon
-                                                        name="hero-x-mark"
-                                                        class="w-3.5 h-3.5"
-                                                      />
-                                                    </button>
+                                                    <%= if !@read_only_ketua_unit do %>
+                                                      <button
+                                                        type="button"
+                                                        phx-click="remove_uat_column"
+                                                        phx-value-column_id={col["id"]}
+                                                        phx-value-ujian_id={
+                                                          @uat_expanded_ujian.id
+                                                        }
+                                                        class="p-0.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                                        title="Buang lajur"
+                                                      >
+                                                        <.icon
+                                                          name="hero-x-mark"
+                                                          class="w-3.5 h-3.5"
+                                                        />
+                                                      </button>
+                                                    <% end %>
                                                   </div>
                                                 </th>
                                                 
@@ -2400,28 +2611,30 @@
                                                 
                                                 <td class="px-3 py-2 text-xs text-center">
                                                   <div class="inline-flex items-center gap-1">
-                                                    <button
-                                                      type="button"
-                                                      phx-click="edit_kes_ujian"
-                                                      phx-value-kes_id={kes.id}
-                                                      class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition"
-                                                      title="Kemaskini kes ujian"
-                                                    >
-                                                      <.icon
-                                                        name="hero-pencil-square"
-                                                        class="w-4 h-4"
-                                                      />
-                                                    </button>
-                                                    <button
-                                                      type="button"
-                                                      phx-click="delete_kes_ujian"
-                                                      phx-value-kes_id={kes.id}
-                                                      data-confirm="Padam kes ujian ini?"
-                                                      class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition"
-                                                      title="Padam kes ujian"
-                                                    >
-                                                      <.icon name="hero-trash" class="w-4 h-4" />
-                                                    </button>
+                                                    <%= if !@read_only_ketua_unit do %>
+                                                      <button
+                                                        type="button"
+                                                        phx-click="edit_kes_ujian"
+                                                        phx-value-kes_id={kes.id}
+                                                        class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition"
+                                                        title="Kemaskini kes ujian"
+                                                      >
+                                                        <.icon
+                                                          name="hero-pencil-square"
+                                                          class="w-4 h-4"
+                                                        />
+                                                      </button>
+                                                      <button
+                                                        type="button"
+                                                        phx-click="delete_kes_ujian"
+                                                        phx-value-kes_id={kes.id}
+                                                        data-confirm="Padam kes ujian ini?"
+                                                        class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition"
+                                                        title="Padam kes ujian"
+                                                      >
+                                                        <.icon name="hero-trash" class="w-4 h-4" />
+                                                      </button>
+                                                    <% end %>
                                                   </div>
                                                 </td>
                                               </tr>
@@ -2571,7 +2784,7 @@
                                 value={@uat_form[:modul].value}
                               >
                                 <option value="">-- Pilih Modul --</option>
-                                <%!-- Modul dari tab Pengaturcaraan (Tugasan Anda) --%>
+                                 <%!-- Modul dari tab Pengaturcaraan (Tugasan Anda) --%>
                                 <option
                                   :for={task <- @developer_tasks}
                                   value={task.title || "—"}
@@ -3165,22 +3378,24 @@
                               
                               <td class="px-3 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                  <button
-                                    phx-click="kes_edit_kes_ujian"
-                                    phx-value-kes_id={kes.id}
-                                    class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
-                                    title="Edit"
-                                  >
-                                    <.icon name="hero-pencil" class="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    phx-click="kes_delete_kes_ujian"
-                                    phx-value-kes_id={kes.id}
-                                    class="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors duration-200"
-                                    title="Padam"
-                                  >
-                                    <.icon name="hero-trash" class="w-4 h-4" />
-                                  </button>
+                                  <%= if !@read_only_ketua_unit do %>
+                                    <button
+                                      phx-click="kes_edit_kes_ujian"
+                                      phx-value-kes_id={kes.id}
+                                      class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                      title="Edit"
+                                    >
+                                      <.icon name="hero-pencil" class="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      phx-click="kes_delete_kes_ujian"
+                                      phx-value-kes_id={kes.id}
+                                      class="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors duration-200"
+                                      title="Padam"
+                                    >
+                                      <.icon name="hero-trash" class="w-4 h-4" />
+                                    </button>
+                                  <% end %>
                                 </div>
                               </td>
                             </tr>
@@ -3194,21 +3409,23 @@
                   <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <h2 class="text-2xl font-bold text-gray-900 mb-2">Ujian Keselamatan</h2>
-                      
+
                       <p class="text-gray-600">
                         Urus dan pantau ujian keselamatan untuk modul sistem
                       </p>
                     </div>
-                    
-                    <div class="flex-shrink-0">
-                      <button
-                        phx-click="open_kes_create_modal"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 text-sm font-medium shadow-md hover:shadow-lg transition"
-                      >
-                        <.icon name="hero-plus-circle" class="w-5 h-5" />
-                        <span>Daftar Ujian</span>
-                      </button>
-                    </div>
+
+                    <%= if !@read_only_ketua_unit do %>
+                      <div class="flex-shrink-0">
+                        <button
+                          phx-click="open_kes_create_modal"
+                          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 text-sm font-medium shadow-md hover:shadow-lg transition"
+                        >
+                          <.icon name="hero-plus-circle" class="w-5 h-5" />
+                          <span>Daftar Ujian</span>
+                        </button>
+                      </div>
+                    <% end %>
                   </div>
                   
                   <div class="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -3228,10 +3445,17 @@
                         <div class="flex flex-col items-center justify-center text-gray-400">
                           <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                           <p class="text-sm font-medium">Tiada ujian keselamatan</p>
-                          
-                          <p class="text-xs mt-1">
-                            Klik butang "Daftar Ujian" untuk menambah ujian baharu
-                          </p>
+
+                          <%= if !@read_only_ketua_unit do %>
+                            <p class="text-xs mt-1">
+                              Klik butang "Daftar Ujian" untuk menambah ujian baharu
+                            </p>
+                          <% else %>
+                            <p class="text-xs mt-1 text-gray-500">
+                              Rekod ujian akan dipaparkan di sini selepas didaftarkan oleh pengurus
+                              projek atau pembangun sistem.
+                            </p>
+                          <% end %>
                         </div>
                       </div>
                     <% else %>
@@ -3344,7 +3568,7 @@
                               
                               <td class="px-3 py-2 whitespace-nowrap text-left">
                                 <div class="flex items-center gap-1.5">
-                                  <%= if is_integer(ujian.id) do %>
+                                  <%= if !@read_only_ketua_unit && is_integer(ujian.id) do %>
                                     <button
                                       type="button"
                                       phx-click="kes_open_edit_modal"
@@ -3376,14 +3600,16 @@
                     </p>
                   </div>
                   
-                  <button
-                    type="button"
-                    phx-click="open_penempatan_create_modal"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
-                  >
-                    <.icon name="hero-plus-circle" class="w-5 h-5" />
-                    <span>Penempatan Baharu</span>
-                  </button>
+                  <%= if !@read_only_ketua_unit do %>
+                    <button
+                      type="button"
+                      phx-click="open_penempatan_create_modal"
+                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm"
+                    >
+                      <.icon name="hero-plus-circle" class="w-5 h-5" />
+                      <span>Penempatan Baharu</span>
+                    </button>
+                  <% end %>
                 </div>
                 
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -3544,25 +3770,27 @@
                             
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
-                                <button
-                                  type="button"
-                                  phx-click="open_penempatan_edit_modal"
-                                  phx-value-id={penempatan.id}
-                                  class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
-                                  title="Edit"
-                                >
-                                  <.icon name="hero-pencil" class="w-4 h-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  phx-click="delete_penempatan"
-                                  phx-value-id={penempatan.id}
-                                  data-confirm="Anda pasti ingin memadam penempatan ini?"
-                                  class="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors duration-200"
-                                  title="Padam"
-                                >
-                                  <.icon name="hero-trash" class="w-4 h-4" />
-                                </button>
+                                <%= if !@read_only_ketua_unit do %>
+                                  <button
+                                    type="button"
+                                    phx-click="open_penempatan_edit_modal"
+                                    phx-value-id={penempatan.id}
+                                    class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                    title="Edit"
+                                  >
+                                    <.icon name="hero-pencil" class="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    phx-click="delete_penempatan"
+                                    phx-value-id={penempatan.id}
+                                    data-confirm="Anda pasti ingin memadam penempatan ini?"
+                                    class="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors duration-200"
+                                    title="Padam"
+                                  >
+                                    <.icon name="hero-trash" class="w-4 h-4" />
+                                  </button>
+                                <% end %>
                               </div>
                             </td>
                           </tr>
@@ -3904,16 +4132,20 @@
                                   </span>
                                 </a>
                               <% else %>
-                                <button
-                                  type="button"
-                                  phx-click="penyerahan_open_upload_modal"
-                                  phx-value-penyerahan_id={penyerahan.id}
-                                  phx-value-target="manual"
-                                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 hover:text-gray-800 transition-colors"
-                                >
-                                  <.icon name="hero-arrow-up-tray" class="w-3 h-3 mr-1" />
-                                  <span>Muat naik dokumen</span>
-                                </button>
+                                <%= if !@read_only_ketua_unit do %>
+                                  <button
+                                    type="button"
+                                    phx-click="penyerahan_open_upload_modal"
+                                    phx-value-penyerahan_id={penyerahan.id}
+                                    phx-value-target="manual"
+                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                                  >
+                                    <.icon name="hero-arrow-up-tray" class="w-3 h-3 mr-1" />
+                                    <span>Muat naik dokumen</span>
+                                  </button>
+                                <% else %>
+                                  <span class="text-xs text-gray-400">-</span>
+                                <% end %>
                               <% end %>
                             </td>
                             
@@ -3931,16 +4163,20 @@
                                   </span>
                                 </a>
                               <% else %>
-                                <button
-                                  type="button"
-                                  phx-click="penyerahan_open_upload_modal"
-                                  phx-value-penyerahan_id={penyerahan.id}
-                                  phx-value-target="surat"
-                                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 hover:text-gray-800 transition-colors"
-                                >
-                                  <.icon name="hero-arrow-up-tray" class="w-3 h-3 mr-1" />
-                                  <span>Muat naik dokumen</span>
-                                </button>
+                                <%= if !@read_only_ketua_unit do %>
+                                  <button
+                                    type="button"
+                                    phx-click="penyerahan_open_upload_modal"
+                                    phx-value-penyerahan_id={penyerahan.id}
+                                    phx-value-target="surat"
+                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                                  >
+                                    <.icon name="hero-arrow-up-tray" class="w-3 h-3 mr-1" />
+                                    <span>Muat naik dokumen</span>
+                                  </button>
+                                <% else %>
+                                  <span class="text-xs text-gray-400">-</span>
+                                <% end %>
                               <% end %>
                             </td>
                             
@@ -3962,15 +4198,27 @@
                             
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
-                                <button
-                                  type="button"
-                                  phx-click="penyerahan_open_edit_modal"
-                                  phx-value-penyerahan_id={penyerahan.id}
-                                  class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
-                                  title="Edit"
-                                >
-                                  <.icon name="hero-pencil" class="w-4 h-4" />
-                                </button>
+                                <%= if !@read_only_ketua_unit do %>
+                                  <button
+                                    type="button"
+                                    phx-click="penyerahan_open_upload_modal"
+                                    phx-value-penyerahan_id={penyerahan.id}
+                                    phx-value-target="all"
+                                    class="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-md transition-colors duration-200"
+                                    title="Muat naik"
+                                  >
+                                    <.icon name="hero-arrow-up-tray" class="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    phx-click="penyerahan_open_edit_modal"
+                                    phx-value-penyerahan_id={penyerahan.id}
+                                    class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                    title="Edit"
+                                  >
+                                    <.icon name="hero-pencil" class="w-4 h-4" />
+                                  </button>
+                                <% end %>
                               </div>
                             </td>
                           </tr>
@@ -3991,15 +4239,17 @@
                     </p>
                   </div>
                   
-                  <div class="flex-shrink-0">
-                    <button
-                      type="button"
-                      phx-click="maklumbalas_open_create_modal"
-                      class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
-                    >
-                      <.icon name="hero-plus" class="w-5 h-5" /> <span>Maklumbalas baharu</span>
-                    </button>
-                  </div>
+                  <%= if !@read_only_ketua_unit do %>
+                    <div class="flex-shrink-0">
+                      <button
+                        type="button"
+                        phx-click="maklumbalas_open_create_modal"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
+                      >
+                        <.icon name="hero-plus" class="w-5 h-5" /> <span>Maklumbalas baharu</span>
+                      </button>
+                    </div>
+                  <% end %>
                 </div>
                 
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -4114,15 +4364,17 @@
                                   >
                                     <.icon name="hero-eye" class="w-4 h-4" />
                                   </button>
-                                  <button
-                                    type="button"
-                                    phx-click="maklumbalas_open_edit_modal"
-                                    phx-value-id={item.id}
-                                    class="p-1.5 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-md transition-colors duration-200"
-                                    title="Edit"
-                                  >
-                                    <.icon name="hero-pencil" class="w-4 h-4" />
-                                  </button>
+                                  <%= if !@read_only_ketua_unit do %>
+                                    <button
+                                      type="button"
+                                      phx-click="maklumbalas_open_edit_modal"
+                                      phx-value-id={item.id}
+                                      class="p-1.5 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-md transition-colors duration-200"
+                                      title="Edit"
+                                    >
+                                      <.icon name="hero-pencil" class="w-4 h-4" />
+                                    </button>
+                                  <% end %>
                                 </div>
                               </td>
                             </tr>
@@ -5263,8 +5515,7 @@
       </div>
     </div>
   <% end %>
-
-  <%!-- Catatan Tugasan Modal (Pengaturcaraan tab) --%>
+   <%!-- Catatan Tugasan Modal (Pengaturcaraan tab) --%>
   <div
     :if={@show_notes_modal && @notes_task}
     class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50"
@@ -5275,10 +5526,10 @@
       <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
         <div>
           <h2 class="text-lg font-semibold text-gray-900">Catatan Tugasan</h2>
-          <p class="text-xs text-gray-500 mt-1 max-w-sm truncate">
-            {@notes_task.title || "-"}
-          </p>
+          
+          <p class="text-xs text-gray-500 mt-1 max-w-sm truncate">{@notes_task.title || "-"}</p>
         </div>
+        
         <button
           type="button"
           phx-click="close_notes_modal"
@@ -5288,7 +5539,7 @@
           <.icon name="hero-x-mark" class="w-4 h-4" />
         </button>
       </div>
-
+      
       <.form for={@notes_form} phx-submit="save_notes" class="px-6 py-5 space-y-4">
         <.input
           field={@notes_form[:text]}
@@ -5298,7 +5549,6 @@
           rows="6"
           placeholder="Contoh: status terkini, isu yang diselesaikan, atau tindakan seterusnya."
         />
-
         <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
           <button
             type="button"
