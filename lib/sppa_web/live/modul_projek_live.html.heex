@@ -548,17 +548,18 @@
                 label="Tajuk Tugasan"
                 required
                 placeholder="Masukkan tajuk tugasan"
-                class="w-full"
+                class="w-full text-black placeholder:text-black"
               />
             </div>
             <%!-- Task Description --%>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Penerangan</label> <textarea
-                name="task[description]"
-                rows="4"
+              <.input
+                field={@form[:description]}
+                type="textarea"
+                label="Penerangan"
                 placeholder="Masukkan penerangan tugasan..."
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
-              ><%= if @form[:description] && @form[:description].value, do: @form[:description].value, else: "" %></textarea>
+                class="w-full text-black placeholder:text-black border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+              />
             </div>
             <%!-- Fasa and Versi --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -569,7 +570,7 @@
                   type="text"
                   label="Fasa"
                   placeholder="Masukkan fasa"
-                  class="w-full"
+                  class="w-full text-black placeholder:text-black"
                 />
               </div>
               <%!-- Versi --%>
@@ -579,7 +580,7 @@
                   type="text"
                   label="Versi"
                   placeholder="Masukkan versi"
-                  class="w-full"
+                  class="w-full text-black placeholder:text-black"
                 />
               </div>
             </div>
@@ -597,7 +598,7 @@
                       {"#{developer.name || developer.email || developer.no_kp}", developer.id}
                     end)
                   }
-                  class="w-full"
+                  class="w-full text-black"
                 />
               </div>
               <%!-- Priority --%>
@@ -611,7 +612,7 @@
                     {"Sederhana", "medium"},
                     {"Rendah", "low"}
                   ]}
-                  class="w-full"
+                  class="w-full text-black"
                 />
               </div>
             </div>
@@ -639,7 +640,7 @@
                   field={@form[:tarikh_mula]}
                   type="date"
                   label="Tarikh Mula"
-                  class="w-full"
+                  class="w-full text-black"
                   min={min_date}
                   max={max_date}
                 />
@@ -665,7 +666,7 @@
                   field={@form[:due_date]}
                   type="date"
                   label="Tarikh Akhir"
-                  class="w-full"
+                  class="w-full text-black"
                   min={min_date_due}
                   max={max_date_due}
                 />
@@ -681,7 +682,7 @@
                   {"Dalam Proses", "in_progress"},
                   {"Selesai", "done"}
                 ]}
-                class="w-full"
+                class="w-full text-black"
               />
             </div>
             <%!-- Form Actions --%>
@@ -723,8 +724,6 @@
     <div class="flex min-h-full items-center justify-center p-4">
       <div
         class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-        onclick="event.stopPropagation()"
-        phx-click-away="close_edit_task_modal"
       >
         <%!-- Modal header --%>
         <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
@@ -764,17 +763,18 @@
                 label="Tajuk Tugasan"
                 required
                 placeholder="Masukkan tajuk tugasan"
-                class="w-full"
+                class="w-full text-black placeholder:text-black"
               />
             </div>
             <%!-- Task Description --%>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Penerangan</label> <textarea
-                name="task[description]"
-                rows="4"
+              <.input
+                field={@form[:description]}
+                type="textarea"
+                label="Penerangan"
                 placeholder="Masukkan penerangan tugasan..."
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
-              ><%= if @form[:description] && @form[:description].value, do: @form[:description].value, else: "" %></textarea>
+                class="w-full text-black placeholder:text-black border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+              />
             </div>
             <%!-- Fasa and Versi --%>
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -785,7 +785,7 @@
                   type="text"
                   label="Fasa"
                   placeholder="Masukkan fasa"
-                  class="w-full"
+                  class="w-full text-black placeholder:text-black"
                 />
               </div>
               <%!-- Versi --%>
@@ -795,7 +795,7 @@
                   type="text"
                   label="Versi"
                   placeholder="Masukkan versi"
-                  class="w-full"
+                  class="w-full text-black placeholder:text-black"
                 />
               </div>
             </div>
@@ -813,7 +813,7 @@
                       {"#{developer.name || developer.email || developer.no_kp}", developer.id}
                     end)
                   }
-                  class="w-full"
+                  class="w-full text-black"
                 />
               </div>
               <%!-- Priority --%>
@@ -827,7 +827,7 @@
                     {"Sederhana", "medium"},
                     {"Rendah", "low"}
                   ]}
-                  class="w-full"
+                  class="w-full text-black"
                 />
               </div>
             </div>
@@ -855,7 +855,7 @@
                   field={@form[:tarikh_mula]}
                   type="date"
                   label="Tarikh Mula"
-                  class="w-full"
+                  class="w-full text-black"
                   min={min_date}
                   max={max_date}
                 />
@@ -881,7 +881,7 @@
                   field={@form[:due_date]}
                   type="date"
                   label="Tarikh Akhir"
-                  class="w-full"
+                  class="w-full text-black"
                   min={min_date_due}
                   max={max_date_due}
                 />
@@ -897,7 +897,7 @@
                   {"Dalam Proses", "in_progress"},
                   {"Selesai", "done"}
                 ]}
-                class="w-full"
+                class="w-full text-black"
               />
             </div>
             <%!-- Form Actions --%>

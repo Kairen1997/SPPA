@@ -299,6 +299,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
            max_entries: 1,
            max_file_size: 10_000_000
          )
+         |> allow_upload(:maklumbalas_file,
+           accept: ~w(.pdf .doc .docx .xls .xlsx .png .jpg .jpeg),
+           max_entries: 1,
+           max_file_size: 10_000_000
+         )
          |> allow_upload(:penyerahan_manual,
            accept: ~w(.pdf .doc .docx),
            max_entries: 1,
@@ -544,7 +549,27 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     ujian = socket.assigns[:ujian] || []
     uat_ok = ujian != []
 
-    soal_selidik_ok and modules_ok and jadual_ok and penempatan_ok and uat_ok
+    pengaturcaraan_tasks = socket.assigns[:developer_tasks] || []
+    pengaturcaraan_ok = pengaturcaraan_tasks != []
+
+    ujian_keselamatan_rows = socket.assigns[:ujian_keselamatan] || []
+    ujian_keselamatan_ok = ujian_keselamatan_rows != []
+
+    penyerahan_list = socket.assigns[:penyerahan] || []
+    penyerahan_ok = penyerahan_list != []
+
+    maklumbalas_list = socket.assigns[:maklumbalas_list] || []
+    maklumbalas_ok = maklumbalas_list != []
+
+    soal_selidik_ok and
+      modules_ok and
+      jadual_ok and
+      pengaturcaraan_ok and
+      uat_ok and
+      ujian_keselamatan_ok and
+      penempatan_ok and
+      penyerahan_ok and
+      maklumbalas_ok
   end
 
   @impl true
@@ -960,6 +985,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       form_data = %{
         "tajuk" => ujian.tajuk,
         "modul" => ujian.modul,
+        "no_ujian" => ujian.no_ujian || "",
         "tarikh_ujian" => Calendar.strftime(ujian.tarikh_ujian, "%Y-%m-%d"),
         "tarikh_dijangka_siap" => Calendar.strftime(ujian.tarikh_dijangka_siap, "%Y-%m-%d"),
         "status" => ujian.status,
@@ -991,6 +1017,19 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
   @impl true
   def handle_event("validate_uat_ujian", %{"ujian" => ujian_params}, socket) do
+    ujian_params =
+      if socket.assigns[:uat_show_create_modal] do
+        modul = (ujian_params["modul"] || "") |> to_string() |> String.trim()
+        no_ujian =
+          if modul != "",
+            do: UjianPenerimaanPengguna.next_no_ujian(socket.assigns.project.id, modul),
+            else: ""
+
+        Map.put(ujian_params, "no_ujian", no_ujian)
+      else
+        ujian_params
+      end
+
     form = to_form(ujian_params, as: :ujian)
     {:noreply, assign(socket, :uat_form, form)}
   end
@@ -1016,6 +1055,15 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       |> to_string()
       |> String.trim()
 
+    no_ujian_value =
+      ujian_params["no_ujian"]
+      |> to_string()
+      |> String.trim()
+      |> case do
+        "" -> UjianPenerimaanPengguna.next_no_ujian(project_id, modul_name)
+        value -> value
+      end
+
     tajuk_default =
       modul_name
       |> then(fn name ->
@@ -1030,6 +1078,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       project_id: project_id,
       tajuk: tajuk_default,
       modul: ujian_params["modul"],
+      no_ujian: no_ujian_value,
       tarikh_ujian: uat_parse_date(ujian_params["tarikh_ujian"], Date.utc_today()),
       tarikh_dijangka_siap:
         uat_parse_date(ujian_params["tarikh_dijangka_siap"], Date.utc_today()),
@@ -1091,6 +1140,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       attrs = %{
         tajuk: ujian_params["tajuk"] || editing_ujian.tajuk,
         modul: ujian_params["modul"],
+        no_ujian: uat_empty_to_nil(ujian_params["no_ujian"]) || editing_ujian.no_ujian,
         tarikh_ujian: uat_parse_date(ujian_params["tarikh_ujian"], editing_ujian.tarikh_ujian),
         tarikh_dijangka_siap:
           uat_parse_date(ujian_params["tarikh_dijangka_siap"], editing_ujian.tarikh_dijangka_siap),
@@ -1776,7 +1826,30 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
   @impl true
   def handle_event("penyerahan_open_create_modal", _params, socket) do
-    form = to_form(%{}, as: :penyerahan)
+    project = socket.assigns[:project]
+
+    jabatan =
+      if project && Map.get(project, :jabatan) && project.jabatan != "" do
+        project.jabatan
+      else
+        "Tidak Ditetapkan"
+      end
+
+    pengurus_projek =
+      if project && Map.get(project, :pengurus_projek) && project.pengurus_projek != "" do
+        project.pengurus_projek
+      else
+        "Tidak Ditetapkan"
+      end
+
+    form_data = %{
+      "nama_sistem" => (project && project.nama) || "",
+      "versi" => versi_for_project(project),
+      "penerima" => jabatan,
+      "pengurus_projek" => pengurus_projek
+    }
+
+    form = to_form(form_data, as: :penyerahan)
 
     {:noreply,
      socket
@@ -1800,8 +1873,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
   @impl true
   def handle_event("penyerahan_create", %{"penyerahan" => penyerahan_params}, socket) do
-    new_id = "penyerahan_#{length(socket.assigns.penyerahan) + 1}"
-    new_number = length(socket.assigns.penyerahan) + 1
+    project = socket.assigns[:project]
+    project_id = project && Map.get(project, :id)
 
     tarikh_penyerahan =
       if penyerahan_params["tarikh_penyerahan"] && penyerahan_params["tarikh_penyerahan"] != "" do
@@ -1813,58 +1886,47 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         nil
       end
 
-    tarikh_dijangka =
-      if penyerahan_params["tarikh_dijangka"] && penyerahan_params["tarikh_dijangka"] != "" do
-        case Date.from_iso8601(penyerahan_params["tarikh_dijangka"]) do
-          {:ok, date} -> date
-          _ -> nil
-        end
+    db_attrs =
+      if project_id do
+        %{
+          project_id: project_id,
+          nama_sistem: penyerahan_params["nama_sistem"],
+          versi: penyerahan_params["versi"] || "",
+          penerima: penyerahan_params["penerima"],
+          pengurus_projek:
+            if(penyerahan_params["pengurus_projek"] in [nil, ""],
+              do: nil,
+              else: penyerahan_params["pengurus_projek"]
+            ),
+          tarikh_penyerahan: tarikh_penyerahan
+        }
       else
         nil
       end
 
-    new_penyerahan = %{
-      id: new_id,
-      number: new_number,
-      nama_sistem: penyerahan_params["nama_sistem"],
-      versi: penyerahan_params["versi"] || "",
-      tarikh_penyerahan: tarikh_penyerahan,
-      tarikh_dijangka: tarikh_dijangka,
-      status: penyerahan_params["status"] || "Menunggu",
-      penerima: penyerahan_params["penerima"],
-      pembangun_team: nil,
-      pengurus_projek:
-        if(penyerahan_params["pengurus_projek"] == "",
-          do: nil,
-          else: penyerahan_params["pengurus_projek"]
-        ),
-      lokasi: penyerahan_params["lokasi"],
-      catatan:
-        if(penyerahan_params["catatan"] == "", do: nil, else: penyerahan_params["catatan"]),
-      manual_pengguna: nil,
-      surat_akuan_penerimaan: nil,
-      diserahkan_oleh:
-        if(penyerahan_params["diserahkan_oleh"] == "",
-          do: nil,
-          else: penyerahan_params["diserahkan_oleh"]
-        ),
-      diterima_oleh:
-        if(penyerahan_params["diterima_oleh"] == "",
-          do: nil,
-          else: penyerahan_params["diterima_oleh"]
-        ),
-      tarikh_diserahkan: tarikh_penyerahan,
-      tarikh_diterima: nil
-    }
+    cond do
+      is_nil(project_id) or is_nil(db_attrs) ->
+        {:noreply, put_flash(socket, :error, "Projek tidak sah, penyerahan tidak dapat didaftarkan.")}
 
-    updated_penyerahan = [new_penyerahan | socket.assigns.penyerahan]
+      true ->
+        case Penyerahans.create_penyerahan(db_attrs) do
+          {:ok, _penyerahan} ->
+            # Refresh senarai penyerahan dari DB supaya UI sentiasa selaras
+            updated_list = get_penyerahan_for_project(project)
 
-    {:noreply,
-     socket
-     |> assign(:penyerahan, updated_penyerahan)
-     |> assign(:penyerahan_show_create_modal, false)
-     |> assign(:penyerahan_form, to_form(%{}, as: :penyerahan))
-     |> put_flash(:info, "Penyerahan berjaya didaftarkan")}
+            {:noreply,
+             socket
+             |> assign(:penyerahan, updated_list)
+             |> assign(:penyerahan_show_create_modal, false)
+             |> assign(:penyerahan_form, to_form(%{}, as: :penyerahan))
+             |> put_flash(:info, "Penyerahan berjaya didaftarkan")}
+
+          {:error, _changeset} ->
+            {:noreply,
+             socket
+             |> put_flash(:error, "Gagal mendaftar penyerahan. Sila semak maklumat dan cuba lagi.")}
+        end
+    end
   end
 
   @impl true
@@ -1926,7 +1988,15 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
       updated_penyerahan_data = %{
         editing_penyerahan
-        | tarikh_penyerahan: tarikh_penyerahan
+        | versi: penyerahan_params["versi"] || editing_penyerahan.versi,
+          penerima: penyerahan_params["penerima"] || editing_penyerahan.penerima,
+          pengurus_projek:
+            if(penyerahan_params["pengurus_projek"] == nil or
+                 penyerahan_params["pengurus_projek"] == "",
+               do: nil,
+               else: penyerahan_params["pengurus_projek"]
+            ),
+          tarikh_penyerahan: tarikh_penyerahan
       }
 
       updated_penyerahan_list =
@@ -2891,6 +2961,23 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     project = socket.assigns.project
     project_id = project && project.id
 
+    upload_meta =
+      consume_uploaded_entries(socket, :maklumbalas_file, fn %{path: path}, entry ->
+        filename = maklumbalas_upload_filename(project_id, entry)
+        dest_dir = Path.join(File.cwd!(), "priv/static/uploads/maklumbalas")
+        File.mkdir_p!(dest_dir)
+        dest = Path.join(dest_dir, filename)
+        File.cp!(path, dest)
+        {:ok, %{path: "maklumbalas/#{filename}", original_name: entry.client_name}}
+      end)
+      |> List.first()
+
+    {attachment_path, attachment_original_name} =
+      case upload_meta do
+        %{path: p, original_name: n} -> {p, n}
+        _ -> {nil, nil}
+      end
+
     tarikh_maklumbalas =
       if params["tarikh_maklumbalas"] && params["tarikh_maklumbalas"] != "" do
         case Date.from_iso8601(params["tarikh_maklumbalas"]) do
@@ -2909,7 +2996,9 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       tarikh_maklumbalas: tarikh_maklumbalas,
       jabatan: params["jabatan"] || jabatan_from_project,
       responden: params["responden"] || "",
-      butiran: params["butiran"] || ""
+      butiran: params["butiran"] || "",
+      attachment_path: attachment_path,
+      attachment_original_name: attachment_original_name
     }
 
     case Maklumbalas.create_maklumbalas(attrs) do
@@ -2978,6 +3067,17 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     project_id = project && project.id
 
     if editing && project_id do
+      upload_meta =
+        consume_uploaded_entries(socket, :maklumbalas_file, fn %{path: path}, entry ->
+          filename = maklumbalas_upload_filename(project_id, entry)
+          dest_dir = Path.join(File.cwd!(), "priv/static/uploads/maklumbalas")
+          File.mkdir_p!(dest_dir)
+          dest = Path.join(dest_dir, filename)
+          File.cp!(path, dest)
+          {:ok, %{path: "maklumbalas/#{filename}", original_name: entry.client_name}}
+        end)
+        |> List.first()
+
       tarikh_maklumbalas =
         if params["tarikh_maklumbalas"] && params["tarikh_maklumbalas"] != "" do
           case Date.from_iso8601(params["tarikh_maklumbalas"]) do
@@ -2990,12 +3090,23 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
       jabatan_from_project = (project && Map.get(project, :jabatan)) || ""
 
-      attrs = %{
+      base_attrs = %{
         tarikh_maklumbalas: tarikh_maklumbalas,
         jabatan: params["jabatan"] || jabatan_from_project || editing.jabatan,
         responden: params["responden"] || "",
         butiran: params["butiran"] || ""
       }
+
+      attrs =
+        case upload_meta do
+          %{path: p, original_name: n} ->
+            base_attrs
+            |> Map.put(:attachment_path, p)
+            |> Map.put(:attachment_original_name, n)
+
+          _ ->
+            base_attrs
+        end
 
       case Maklumbalas.update_maklumbalas(editing, attrs) do
         {:ok, _updated} ->
@@ -3368,6 +3479,12 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   defp kes_format_date_for_form(nil), do: ""
   defp kes_format_date_for_form(%Date{} = d), do: Calendar.strftime(d, "%Y-%m-%d")
   defp kes_format_date_for_form(_), do: ""
+
+  defp maklumbalas_upload_filename(project_id, entry) do
+    ext = Path.extname(entry.client_name || "")
+    uniq = System.unique_integer([:positive])
+    "maklumbalas_p#{project_id || "na"}_#{uniq}#{ext}"
+  end
 
   # Builds a unique filename that keeps the original document name (sanitized).
   defp kes_upload_filename(project_id, entry) do

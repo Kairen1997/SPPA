@@ -49,6 +49,23 @@ defmodule Sppa.UjianPenerimaanPengguna do
   end
 
   @doc """
+  Mengira nombor ujian seterusnya untuk sesuatu modul dalam projek.
+  Contoh: jika sudah ada 2 rekod untuk modul yang sama, fungsi akan
+  memulangkan \"3\".
+  """
+  def next_no_ujian(project_id, modul_name) when is_integer(project_id) do
+    name = String.trim(modul_name || "")
+
+    count =
+      UjianPenerimaanPengguna
+      |> where([u], u.project_id == ^project_id and u.modul == ^name)
+      |> select([u], count(u.id))
+      |> Repo.one()
+
+    Integer.to_string((count || 0) + 1)
+  end
+
+  @doc """
   Returns the list of UAT records for a project.
   When project_id is nil, returns all ujian.
   """
@@ -304,6 +321,7 @@ defmodule Sppa.UjianPenerimaanPengguna do
       id: ujian.id,
       tajuk: ujian.tajuk,
       modul: ujian.modul,
+      no_ujian: ujian.no_ujian,
       tarikh_ujian: ujian.tarikh_ujian,
       tarikh_dijangka_siap: ujian.tarikh_dijangka_siap,
       status: ujian.status,
