@@ -56,7 +56,11 @@
         <div class="max-w-7xl mx-auto">
           <div class="flex items-center gap-4 mb-3">
             <.link
-              navigate={if @project, do: ~p"/projek/#{@project.id}", else: ~p"/projek"}
+              navigate={
+                if @project,
+                  do: ~p"/projek/#{@project.id}?tab=analisis-dan-rekabentuk",
+                  else: ~p"/projek"
+              }
               class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200 transition-colors duration-200"
             >
               <.icon name="hero-arrow-left" class="w-4 h-4" /> <span>Kembali</span>
