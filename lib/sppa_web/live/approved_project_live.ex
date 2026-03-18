@@ -9,13 +9,22 @@ defmodule SppaWeb.ApprovedProjectLive do
   @allowed_roles ["pengurus projek", "ketua penolong pengarah", "ketua unit"]
 
   @impl true
-  def mount(%{"id" => id}, _session, %{assigns: %{current_scope: current_scope}} = socket) do
+  def mount(%{"id" => id} = params, _session, %{assigns: %{current_scope: current_scope}} = socket) do
     user_role = current_scope && current_scope.user && current_scope.user.role
 
     if user_role in @allowed_roles do
       {sidebar_dashboard_path, sidebar_list_path, back_list_path} =
         if user_role == "ketua unit" do
-          {~p"/dashboard-kk", "/penyerahan-projek", ~p"/penyerahan-projek"}
+          from = Map.get(params, "from")
+
+          back_path =
+            case from do
+              "dashboard_kk" -> ~p"/dashboard-kk"
+              "penyerahan_projek" -> ~p"/penyerahan-projek"
+              _ -> ~p"/penyerahan-projek"
+            end
+
+          {~p"/dashboard-kk", "/penyerahan-projek", back_path}
         else
           {~p"/dashboard-pp", "/senarai-projek-diluluskan", ~p"/senarai-projek-diluluskan"}
         end

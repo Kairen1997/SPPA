@@ -127,6 +127,9 @@
             <table class="w-full">
               <thead class="bg-gray-50">
                 <tr>
+                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500 w-12">
+                    Bil
+                  </th>
                   <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Nama Sistem
                   </th>
@@ -159,9 +162,12 @@
               
               <tbody class="divide-y divide-gray-200 bg-white">
                 <tr
-                  :for={project <- @projects}
+                  :for={{project, index} <- Enum.with_index(@projects, 0)}
                   class="hover:bg-gray-50 transition-colors duration-150"
                 >
+                  <td class="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-900 text-center">
+                    {(@page - 1) * @per_page + index + 1}
+                  </td>
                   <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                     {project.nama_projek}
                   </td>
@@ -210,7 +216,9 @@
                   
                   <td class="whitespace-nowrap px-6 py-4 text-sm">
                     <.link
-                      navigate={~p"/senarai-projek-diluluskan/#{project.id}"}
+                      navigate={
+                        ~p"/senarai-projek-diluluskan/#{project.id}?#{[from: "penyerahan_projek"]}"
+                      }
                       class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200"
                     >
                       <.icon name="hero-eye" class="w-4 h-4" />
