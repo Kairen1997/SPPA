@@ -8,6 +8,8 @@ defmodule SppaWeb.DashboardKKLive do
   alias Sppa.ActivityLogs
   alias Sppa.ApprovedProjects.ApprovedProject
 
+  require Logger
+
   @impl true
   def mount(_params, _session, socket) do
     user_role =
@@ -222,28 +224,6 @@ defmodule SppaWeb.DashboardKKLive do
      |> assign(:total_pages, total_pages)
      |> assign(:pagination_pages, pagination_pages(socket.assigns.page, total_pages))
      |> put_flash(:info, "Data telah dikemaskini")}
-  end
-
-  defp actor_display(nil), do: nil
-
-  defp actor_display(actor) do
-    actor.name || actor.email || actor.no_kp
-  end
-
-  defp extract_pengurus_from_details(nil), do: nil
-  defp extract_pengurus_from_details(""), do: nil
-
-  defp extract_pengurus_from_details(details) when is_binary(details) do
-    cond do
-      String.starts_with?(details, "Pengurus projek dikeluarkan: ") ->
-        String.trim_leading(details, "Pengurus projek dikeluarkan: ")
-
-      String.starts_with?(details, "Pengurus projek: ") ->
-        String.trim_leading(details, "Pengurus projek: ")
-
-      true ->
-        details
-    end
   end
 
   defp list_projects(socket) do
