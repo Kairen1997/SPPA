@@ -147,27 +147,6 @@ defmodule SppaWeb.DashboardKKLive do
   end
 
   @impl true
-  def handle_event("filter", params, socket) do
-    status = Map.get(params, "status", "") || ""
-    search = Map.get(params, "search", "") || ""
-
-    socket =
-      socket
-      |> assign(:status_filter, status)
-      |> assign(:search_query, search)
-      |> assign(:page, 1)
-
-    projects = list_projects(socket)
-    total_pages = calculate_total_pages(socket)
-
-    {:noreply,
-     socket
-     |> assign(:projects, projects)
-     |> assign(:total_pages, total_pages)
-     |> assign(:pagination_pages, pagination_pages(socket.assigns.page, total_pages))}
-  end
-
-  @impl true
   def handle_event("paginate", %{"page" => page}, socket) do
     page = String.to_integer(page)
     socket = assign(socket, :page, page)
@@ -232,6 +211,12 @@ defmodule SppaWeb.DashboardKKLive do
         left_join: p in assoc(ap, :project),
         preload: [project: [:project_manager, :approved_project]]
 
+    # Hanya papar projek yang BELUM dilantik pengurus
+    base_query =
+      base_query
+      |> where([ap, p], is_nil(ap.pengurus_projek) or ap.pengurus_projek == "")
+      |> where([ap, p], is_nil(p.id) or is_nil(p.project_manager_id))
+
     search_q = socket.assigns.search_query || ""
 
     base_query =
@@ -244,10 +229,6 @@ defmodule SppaWeb.DashboardKKLive do
 
     base_query =
       case socket.assigns.status_filter do
-        "Belum lantik pengurus" ->
-          where(base_query, [ap, p], is_nil(ap.pengurus_projek) or ap.pengurus_projek == "")
-          |> where([ap, p], is_nil(p.id) or is_nil(p.project_manager_id))
-
         filter when is_binary(filter) and filter != "" ->
           where(base_query, [_ap, p], p.status == ^filter)
 
@@ -280,6 +261,12 @@ defmodule SppaWeb.DashboardKKLive do
       from ap in ApprovedProject,
         left_join: p in assoc(ap, :project)
 
+    # Hanya kira projek yang BELUM dilantik pengurus
+    base_query =
+      base_query
+      |> where([ap, p], is_nil(ap.pengurus_projek) or ap.pengurus_projek == "")
+      |> where([ap, p], is_nil(p.id) or is_nil(p.project_manager_id))
+
     search_q = socket.assigns.search_query || ""
 
     base_query =
@@ -292,10 +279,6 @@ defmodule SppaWeb.DashboardKKLive do
 
     base_query =
       case socket.assigns.status_filter do
-        "Belum lantik pengurus" ->
-          where(base_query, [ap, p], is_nil(ap.pengurus_projek) or ap.pengurus_projek == "")
-          |> where([ap, p], is_nil(p.id) or is_nil(p.project_manager_id))
-
         filter when is_binary(filter) and filter != "" ->
           where(base_query, [_ap, p], p.status == ^filter)
 

@@ -99,13 +99,13 @@
           </div>
 
           <div class="flex justify-end">
-            <.link
-              href={~p"/senarai-projek-diluluskan/pdf"}
-              target="_blank"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+            <button
+              type="button"
+              phx-click="sync_external_data"
+              class="rounded-lg bg-green-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center gap-2"
             >
-              <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak Dokumen</span>
-            </.link>
+              <.icon name="hero-arrow-path" class="w-4 h-4" /> <span>Sync Data</span>
+            </button>
           </div>
 
           <%!-- Penyerahan / Senarai Sistem dengan carian, status & sync --%>
@@ -114,66 +114,12 @@
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-3">
                   <.icon name="hero-list-bullet" class="w-5 h-5 text-gray-700" />
-                  <h2 class="text-xl font-semibold text-gray-900">Senarai Sistem</h2>
+                  <h2 class="text-xl font-semibold text-gray-900">Senarai Sistem Belum Lantik Pengurus</h2>
                 </div>
                 <p class="text-xs text-gray-500">
                   Paparan pantas sistem yang telah diluluskan di bawah unit anda.
                 </p>
               </div>
-
-              <.form
-                for={%{}}
-                phx-change="filter"
-                id="dashboard-kk-penyerahan-filter-form"
-                class="flex flex-wrap items-end gap-4"
-              >
-                <div class="flex-1 min-w-[200px]">
-                  <label class="mb-2 block text-sm font-medium text-gray-700">Carian</label>
-                  <input
-                    type="text"
-                    name="search"
-                    value={@search_query}
-                    placeholder="Carian projek..."
-                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
-                  />
-                </div>
-
-                <div class="flex-1 min-w-[200px]">
-                  <label class="mb-2 block text-sm font-medium text-gray-700">Status Projek</label>
-                  <select
-                    name="status"
-                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
-                  >
-                    <option value="" selected={@status_filter == ""}>Semua</option>
-
-                    <option
-                      value="Belum lantik pengurus"
-                      selected={@status_filter == "Belum lantik pengurus"}
-                    >
-                      Belum lantik pengurus
-                    </option>
-
-                    <option
-                      value="Dalam Pembangunan"
-                      selected={@status_filter == "Dalam Pembangunan"}
-                    >
-                      Dalam Pembangunan
-                    </option>
-
-                    <option value="Selesai" selected={@status_filter == "Selesai"}>Selesai</option>
-                  </select>
-                </div>
-
-                <div class="flex-shrink-0">
-                  <button
-                    type="button"
-                    phx-click="sync_external_data"
-                    class="rounded-lg bg-green-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center gap-2"
-                  >
-                    <.icon name="hero-arrow-path" class="w-4 h-4" /> <span>Sync Data</span>
-                  </button>
-                </div>
-              </.form>
             </div>
 
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
@@ -216,11 +162,11 @@
 
                   <tbody class="bg-white divide-y divide-gray-200">
                     <tr
-                      :for={{project, index} <- Enum.with_index(@projects, 1)}
+                      :for={{project, index} <- Enum.with_index(@projects, 0)}
                       class="hover:bg-gray-50 transition-colors duration-150"
                     >
                       <td class="px-3 py-4 text-sm font-medium text-gray-700 text-center">
-                        {index}
+                        {(@page - 1) * @per_page + index + 1}
                       </td>
                       <td class="px-4 py-4 text-sm font-medium text-gray-900">
                         {project.nama_projek}
@@ -265,7 +211,9 @@
 
                       <td class="px-4 py-4 text-sm text-center">
                         <.link
-                          navigate={~p"/senarai-projek-diluluskan/#{project.id}"}
+                          navigate={
+                            ~p"/senarai-projek-diluluskan/#{project.id}?#{[from: "dashboard_kk"]}"
+                          }
                           class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200"
                         >
                           <.icon name="hero-eye" class="w-4 h-4" />

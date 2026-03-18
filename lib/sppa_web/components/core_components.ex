@@ -641,7 +641,10 @@ defmodule SppaWeb.CoreComponents do
               phx-click="close_sidebar"
               class={[
                 "flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200",
-                "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md"
+                if(@current_path == @dashboard_path,
+                  do: "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md",
+                  else: "text-gray-300 hover:bg-gray-700 hover:text-white"
+                )
               ]}
             >
               <.icon name="hero-squares-2x2" class="w-5 h-5" />
