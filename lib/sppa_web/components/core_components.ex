@@ -662,7 +662,7 @@ defmodule SppaWeb.CoreComponents do
                   )
                 ]}
               >
-                <.icon name="hero-document-check" class="w-5 h-5" /> <span>Penyerahan Projek</span>
+                <.icon name="hero-document-check" class="w-5 h-5" /> <span>Senarai Projek</span>
               </.link>
             <% else %>
               <.link
