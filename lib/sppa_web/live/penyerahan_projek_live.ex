@@ -234,10 +234,17 @@ defmodule SppaWeb.PenyerahanProjekLive do
       end
 
     base_query =
-      if (socket.assigns.status_filter || "") != "" do
-        where(base_query, [_ap, p], p.status == ^socket.assigns.status_filter)
-      else
-        base_query
+      case socket.assigns.status_filter do
+        "Belum lantik pengurus" ->
+          # Projek yang tiada pengurus dilantik: tiada project_manager_id dan tiada pengurus_projek
+          where(base_query, [ap, p], is_nil(ap.pengurus_projek) or ap.pengurus_projek == "")
+          |> where([ap, p], is_nil(p.id) or is_nil(p.project_manager_id))
+
+        filter when is_binary(filter) and filter != "" ->
+          where(base_query, [_ap, p], p.status == ^filter)
+
+        _ ->
+          base_query
       end
 
     offset = (socket.assigns.page - 1) * socket.assigns.per_page
@@ -265,10 +272,16 @@ defmodule SppaWeb.PenyerahanProjekLive do
       end
 
     base_query =
-      if (socket.assigns.status_filter || "") != "" do
-        where(base_query, [_ap, p], p.status == ^socket.assigns.status_filter)
-      else
-        base_query
+      case socket.assigns.status_filter do
+        "Belum lantik pengurus" ->
+          where(base_query, [ap, p], is_nil(ap.pengurus_projek) or ap.pengurus_projek == "")
+          |> where([ap, p], is_nil(p.id) or is_nil(p.project_manager_id))
+
+        filter when is_binary(filter) and filter != "" ->
+          where(base_query, [_ap, p], p.status == ^filter)
+
+        _ ->
+          base_query
       end
 
     total = Repo.aggregate(base_query, :count, :id)
