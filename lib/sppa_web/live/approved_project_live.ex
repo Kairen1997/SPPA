@@ -165,7 +165,9 @@ defmodule SppaWeb.ApprovedProjectLive do
       |> Enum.filter(fn pm -> pm.no_kp not in selected_project_managers end)
 
     # Untuk pengurus projek: gunakan sumber notifikasi yang sama seperti Dashboard PP
-    # (aktiviti projek + aktiviti penugasan digabung) supaya kiraan selaras (cth. 8).
+    # (aktiviti projek + aktiviti penugasan digabung) supaya kiraan selaras.
+    # Untuk ketua unit: gunakan sumber yang sama seperti Dashboard KK (aktiviti penugasan)
+    # supaya kiraan notifikasi selaras antara dashboard dan halaman butiran.
     {activities, notifications_count} =
       if connected?(socket) do
         if user_role == "pengurus projek" do
@@ -186,8 +188,25 @@ defmodule SppaWeb.ApprovedProjectLive do
 
           {notification_activities, length(notification_activities)}
         else
-          activities = Projects.list_recent_activities(current_scope, 10)
-          {activities, length(activities)}
+          if user_role == "ketua unit" do
+            raw_activities =
+              ActivityLogs.list_recent_assignment_activities_for_ketua_unit(10)
+
+            activities =
+              Enum.map(raw_activities, fn a ->
+                a
+                |> Map.from_struct()
+                |> Map.put(:action_label, ActivityLogs.action_label(a.action))
+                |> Map.put(:nama, a.resource_name)
+                |> Map.put(:pengurus_display, extract_pengurus_from_details(a.details))
+                |> Map.put(:ketua_unit_display, actor_display(a.actor))
+              end)
+
+            {activities, length(activities)}
+          else
+            activities = Projects.list_recent_activities(current_scope, 10)
+            {activities, length(activities)}
+          end
         end
       else
         {[], 0}
@@ -219,6 +238,22 @@ defmodule SppaWeb.ApprovedProjectLive do
 
   defp format_date(nil), do: "-"
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
+
+  defp actor_display(nil), do: nil
+  defp actor_display(actor), do: actor.name || actor.email || actor.no_kp
+
+  defp extract_pengurus_from_details(nil), do: nil
+  defp extract_pengurus_from_details(""), do: nil
+  defp extract_pengurus_from_details(details) when is_binary(details) do
+    cond do
+      String.starts_with?(details, "Pengurus projek dikeluarkan: ") ->
+        String.trim_leading(details, "Pengurus projek dikeluarkan: ")
+      String.starts_with?(details, "Pengurus projek: ") ->
+        String.trim_leading(details, "Pengurus projek: ")
+      true ->
+        details
+    end
+  end
 
   # Status untuk halaman butiran projek diluluskan.
   # - Jika TIADA pembangun dilantik -> "Belum Lantik Pembangun"

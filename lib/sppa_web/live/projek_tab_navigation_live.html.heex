@@ -54,27 +54,24 @@
        <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
-          <%!-- Back Button (without project title above tabs) --%>
+          <%!-- Back Button: kembali ke halaman sebelumnya mengikut sejarah pelayar --%>
           <div class="mb-6">
             <div class="flex items-center gap-4">
-              <% back_path =
+              <% back_fallback =
                 case @current_scope.user.role do
                   "ketua unit" -> ~p"/penyerahan-projek"
                   _ -> ~p"/projek"
                 end %>
 
-              <.link
-                navigate={back_path}
+              <button
+                type="button"
+                id="projek-tab-back-button"
+                phx-hook="HistoryBack"
+                data-fallback-url={back_fallback}
                 class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 hover:shadow"
               >
-                <span>
-                  <%= if @current_scope.user.role == "ketua unit" do %>
-                    Kembali ke Senarai Projek
-                  <% else %>
-                    Kembali ke Senarai Sistem
-                  <% end %>
-                </span>
-              </.link>
+                <span>Kembali</span>
+              </button>
             </div>
           </div>
            <%!-- Navigation Tabs --%>
