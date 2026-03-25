@@ -239,6 +239,28 @@ defmodule SppaWeb.ApprovedProjectLive do
   defp format_date(nil), do: "-"
   defp format_date(%Date{} = date), do: Calendar.strftime(date, "%d/%m/%Y")
 
+  defp normalize_rich_text(nil), do: nil
+  defp normalize_rich_text(""), do: nil
+
+  defp normalize_rich_text(text) when is_binary(text) do
+    text
+    |> String.replace(~r/<[^>]*>/u, " ")
+    |> String.replace(~r/\s+/u, " ")
+    |> decode_basic_html_entities()
+    |> String.replace("\u00A0", " ")
+    |> String.trim()
+  end
+
+  defp decode_basic_html_entities(text) when is_binary(text) do
+    text
+    |> String.replace("&nbsp;", " ")
+    |> String.replace("&amp;", "&")
+    |> String.replace("&quot;", "\"")
+    |> String.replace("&#39;", "'")
+    |> String.replace("&lt;", "<")
+    |> String.replace("&gt;", ">")
+  end
+
   defp actor_display(nil), do: nil
   defp actor_display(actor), do: actor.name || actor.email || actor.no_kp
 
@@ -1680,9 +1702,9 @@ defmodule SppaWeb.ApprovedProjectLive do
                         </h3>
 
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                          <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
+                          <p class="text-sm leading-relaxed text-gray-700 whitespace-pre-line break-words">
                             <%= if @approved_project.skop do %>
-                              {@approved_project.skop}
+                              {normalize_rich_text(@approved_project.skop)}
                             <% else %>
                               <span class="text-gray-400 italic">Tiada maklumat</span>
                             <% end %>
