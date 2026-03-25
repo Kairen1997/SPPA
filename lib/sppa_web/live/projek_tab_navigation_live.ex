@@ -253,6 +253,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
          |> assign(:uat_selected_ujian, nil)
          |> assign(:uat_selected_kes, nil)
          |> assign(:uat_editing_ujian, nil)
+         |> assign(:uat_edit_row_status, nil)
          |> assign(:uat_expanded_ujian_id, nil)
          |> assign(:uat_expanded_ujian, nil)
          |> assign(:uat_add_kes_ujian_id, nil)
@@ -971,7 +972,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   end
 
   @impl true
-  def handle_event("open_uat_edit_modal", %{"ujian_id" => ujian_id}, socket) do
+  def handle_event("open_uat_edit_modal", params, socket) do
+    ujian_id = params["ujian_id"]
+    # Status dari baris jadual (phx-value-status); fallback dari rekod
+    row_status = params["status"] && to_string(params["status"])
+
     ujian_id_int = parse_ujian_id(ujian_id)
 
     ujian =
@@ -982,13 +987,24 @@ defmodule SppaWeb.ProjekTabNavigationLive do
       end
 
     if ujian do
+      # Status untuk form: guna nilai dari baris dahulu, else dari rekod (sumber sama dengan jadual)
+      status_value =
+        if is_binary(row_status) && String.trim(row_status) != "" do
+          uat_status_normalize(row_status)
+        else
+          # Langsung dari rekod yang sama seperti lajur STATUS
+          (Map.get(ujian, :status) || Map.get(ujian, "status") || "Dalam Progres")
+          |> to_string()
+          |> uat_status_normalize()
+        end
+
       form_data = %{
         "tajuk" => ujian.tajuk,
         "modul" => ujian.modul,
         "no_ujian" => ujian.no_ujian || "",
         "tarikh_ujian" => Calendar.strftime(ujian.tarikh_ujian, "%Y-%m-%d"),
         "tarikh_dijangka_siap" => Calendar.strftime(ujian.tarikh_dijangka_siap, "%Y-%m-%d"),
-        "status" => ujian.status,
+        "status" => status_value,
         "penguji" => ujian.penguji || "",
         "hasil" => ujian.hasil || "",
         "catatan" => ujian.catatan || ""
@@ -1000,6 +1016,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
        socket
        |> assign(:uat_show_edit_modal, true)
        |> assign(:uat_editing_ujian, ujian)
+       |> assign(:uat_edit_row_status, row_status)
        |> assign(:uat_form, form)}
     else
       {:noreply, socket}
@@ -1012,6 +1029,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
      socket
      |> assign(:uat_show_edit_modal, false)
      |> assign(:uat_editing_ujian, nil)
+     |> assign(:uat_edit_row_status, nil)
      |> assign(:uat_form, to_form(%{}, as: :ujian))}
   end
 
@@ -1184,6 +1202,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
             |> assign(:uat_total_pages, tp)
             |> assign(:uat_show_edit_modal, false)
             |> assign(:uat_editing_ujian, nil)
+            |> assign(:uat_edit_row_status, nil)
             |> assign(:uat_form, to_form(%{}, as: :ujian))
             |> put_flash(:info, "Ujian penerimaan pengguna berjaya dikemaskini")
 
@@ -3882,4 +3901,25 @@ defmodule SppaWeb.ProjekTabNavigationLive do
   defp uat_empty_to_nil(nil), do: nil
   defp uat_empty_to_nil(s) when is_binary(s), do: if(String.trim(s) == "", do: nil, else: s)
   defp uat_empty_to_nil(other), do: other
+
+  # Papar status dalam dropdown modal = status dari lajur jadual yang diklik.
+  # row_status ialah nilai yang dihantar dari baris jadual (phx-value-status).
+  def uat_status_display_value(show_edit_modal, row_status, _editing_ujian, form) do
+    raw =
+      if show_edit_modal && is_binary(row_status) && row_status != "" do
+        row_status
+      else
+        case form[:status] do
+          %{value: v} when is_binary(v) and v != "" -> v
+          _ -> nil
+        end
+      end
+    uat_status_normalize(raw)
+  end
+
+  defp uat_status_normalize(nil), do: "Dalam Progres"
+  defp uat_status_normalize(""), do: "Dalam Progres"
+  defp uat_status_normalize("Lulus"), do: "Lulus"
+  defp uat_status_normalize("Gagal"), do: "Gagal"
+  defp uat_status_normalize(_), do: "Dalam Progres"
 end

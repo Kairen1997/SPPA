@@ -26,6 +26,20 @@ import {hooks as colocatedHooks} from "phoenix-colocated/sppa"
 import topbar from "../vendor/topbar"
 import html2pdf from "html2pdf.js"
 
+// Back button: navigate to previous page in browser history
+const HistoryBack = {
+  mounted() {
+    this.el.addEventListener("click", (e) => {
+      e.preventDefault()
+      if (window.history.length > 1) {
+        window.history.back()
+      } else {
+        window.location.href = this.el.dataset.fallbackUrl || "/"
+      }
+    })
+  }
+}
+
 // Print Document Hook (simple, print main content only via CSS)
 const PrintDocument = {
   mounted() {
@@ -1219,6 +1233,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
   params: {_csrf_token: csrfToken},
   hooks: {
     ...colocatedHooks,
+    HistoryBack,
     ModalBackdrop,
     SubFunctionInputBlur,
     SingleClick,

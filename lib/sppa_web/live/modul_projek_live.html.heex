@@ -60,37 +60,31 @@
       <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 p-6 md:p-8 lg:p-10 print:overflow-visible print:p-0 print:bg-white">
         <div class="max-w-[1800px] mx-auto space-y-6 print:max-w-none print:mx-0 print:space-y-0">
-          <%!-- Back Button --%>
+          <%!-- Back Button: kembali ke halaman sebelumnya mengikut sejarah pelayar --%>
           <div class="mb-2 print:hidden">
-            <%= if @current_scope.user.role == "ketua unit" do %>
-              <div class="flex flex-wrap items-center gap-3">
-                <.link
-                  navigate={~p"/penyerahan-projek"}
-                  class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 group"
-                >
-                  <.icon
-                    name="hero-arrow-left"
-                    class="w-4 h-4 group-hover:-translate-x-1 transition-transform"
-                  /> <span>Kembali ke Senarai Projek</span>
-                </.link>
+            <div class="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                id="back-button"
+                phx-hook="HistoryBack"
+                data-fallback-url={if @current_scope.user.role == "ketua unit", do: ~p"/penyerahan-projek", else: ~p"/senarai-projek-diluluskan"}
+                class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 group"
+              >
+                <.icon
+                  name="hero-arrow-left"
+                  class="w-4 h-4 group-hover:-translate-x-1 transition-transform"
+                />
+                <span>Kembali</span>
+              </button>
+              <%= if @current_scope.user.role == "ketua unit" do %>
                 <.link
                   navigate={~p"/projek/#{@project_id}?tab=soal-selidik"}
                   class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200"
                 >
                   <.icon name="hero-squares-2x2" class="w-4 h-4" /> <span>Laman Projek</span>
                 </.link>
-              </div>
-            <% else %>
-              <.link
-                navigate={~p"/senarai-projek-diluluskan"}
-                class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 group"
-              >
-                <.icon
-                  name="hero-arrow-left"
-                  class="w-4 h-4 group-hover:-translate-x-1 transition-transform"
-                /> <span>Kembali ke Senarai Projek Diluluskan</span>
-              </.link>
-            <% end %>
+              <% end %>
+            </div>
           </div>
           <%!-- Page Header Section --%>
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
