@@ -45,8 +45,16 @@ defmodule Sppa.ActivityLogs do
     if visible_project_ids == [] do
       []
     else
+      current_user_id =
+        if current_scope && current_scope.user do
+          current_scope.user.id
+        else
+          nil
+        end
+
       from(a in ActivityLog,
         where: a.resource_type == "project" and a.resource_id in ^visible_project_ids,
+        where: is_nil(a.target_user_id) or a.target_user_id == ^current_user_id,
         order_by: [desc: a.inserted_at],
         limit: ^limit,
         preload: [:actor]
