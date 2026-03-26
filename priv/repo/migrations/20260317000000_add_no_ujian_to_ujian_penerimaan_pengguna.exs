@@ -7,4 +7,3 @@ defmodule Sppa.Repo.Migrations.AddNoUjianToUjianPenerimaanPengguna do
     end
   end
 end
-

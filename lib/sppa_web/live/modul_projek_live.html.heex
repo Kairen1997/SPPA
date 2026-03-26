@@ -67,14 +67,17 @@
                 type="button"
                 id="back-button"
                 phx-hook="HistoryBack"
-                data-fallback-url={if @current_scope.user.role == "ketua unit", do: ~p"/penyerahan-projek", else: ~p"/senarai-projek-diluluskan"}
+                data-fallback-url={
+                  if @current_scope.user.role == "ketua unit",
+                    do: ~p"/penyerahan-projek",
+                    else: ~p"/senarai-projek-diluluskan"
+                }
                 class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 group"
               >
                 <.icon
                   name="hero-arrow-left"
                   class="w-4 h-4 group-hover:-translate-x-1 transition-transform"
-                />
-                <span>Kembali</span>
+                /> <span>Kembali</span>
               </button>
               <%= if @current_scope.user.role == "ketua unit" do %>
                 <.link
@@ -124,6 +127,7 @@
                       <.icon name="hero-printer" class="w-5 h-5" /> <span>Cetak</span>
                     </.link>
                   <% end %>
+
                   <%= if @current_scope.user.role == "ketua unit" do %>
                     <.link
                       navigate={~p"/projek/#{@project_id}/pelan-modul-kk"}
@@ -716,9 +720,7 @@
     </div>
     <%!-- Modal container --%>
     <div class="flex min-h-full items-center justify-center p-4">
-      <div
-        class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
-      >
+      <div class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
         <%!-- Modal header --%>
         <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
           <div class="flex items-center justify-between">
