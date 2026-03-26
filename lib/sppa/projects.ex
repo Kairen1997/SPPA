@@ -379,8 +379,17 @@ defmodule Sppa.Projects do
 
   defp coalesce_pembangun(%{} = developer, _), do: get_user_display_name(developer)
 
-  defp coalesce_pembangun(nil, ap_pembangun) when is_binary(ap_pembangun) and ap_pembangun != "",
-    do: ap_pembangun
+  defp coalesce_pembangun(nil, ap_pembangun) when is_binary(ap_pembangun) and ap_pembangun != "" do
+    ap_pembangun
+    |> parse_pembangun_sistem()
+    |> Enum.map(fn no_kp ->
+      case Accounts.get_user_by_no_kp(no_kp) do
+        nil -> no_kp
+        user -> user.name || user.email || user.no_kp || no_kp
+      end
+    end)
+    |> Enum.join(", ")
+  end
 
   defp coalesce_pembangun(nil, _), do: nil
 
