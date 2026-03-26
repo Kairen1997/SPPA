@@ -9,7 +9,7 @@
       phx-click="close_sidebar"
     >
     </div>
-     <%!-- Sidebar --%>
+    <%!-- Sidebar --%>
     <.dashboard_sidebar
       sidebar_open={@sidebar_open}
       dashboard_path={~p"/dashboard-kk"}
@@ -29,11 +29,12 @@
             class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
           >
             <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
-          </button> <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+          </button>
+           <.header_logos height_class="h-12 sm:h-14 md:h-16" />
         </div>
-        
+
         <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
-        
+
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <.header_actions
             notifications_open={@notifications_open}
@@ -44,18 +45,18 @@
           />
         </div>
       </header>
-       <%!-- Content --%>
+      <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
           <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 class="text-3xl font-bold text-gray-900 mb-2">Penyerahan</h1>
-              
+
               <p class="text-gray-600">
                 Senarai projek dari pautan luar. Sinkronkan data untuk kemaskini terkini.
               </p>
             </div>
-            
+
             <div class="flex-shrink-0">
               <.link
                 href={~p"/senarai-projek-diluluskan/pdf"}
@@ -66,7 +67,7 @@
               </.link>
             </div>
           </div>
-           <%!-- Filter section --%>
+          <%!-- Filter section --%>
           <div class="rounded-xl bg-white p-6 shadow-sm">
             <.form
               for={%{}}
@@ -84,7 +85,7 @@
                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                 />
               </div>
-              
+
               <div class="flex-1 min-w-[200px]">
                 <label class="mb-2 block text-sm font-medium text-gray-700">Status Projek</label>
                 <select
@@ -92,25 +93,25 @@
                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                 >
                   <option value="" selected={@status_filter == ""}>Semua</option>
-                  
+
                   <option
                     value="Belum lantik pengurus"
                     selected={@status_filter == "Belum lantik pengurus"}
                   >
                     Belum lantik pengurus
                   </option>
-                  
+
                   <option
                     value="Dalam Pembangunan"
                     selected={@status_filter == "Dalam Pembangunan"}
                   >
                     Dalam Pembangunan
                   </option>
-                  
+
                   <option value="Selesai" selected={@status_filter == "Selesai"}>Selesai</option>
                 </select>
               </div>
-              
+
               <div class="flex-shrink-0">
                 <button
                   type="button"
@@ -122,74 +123,91 @@
               </div>
             </.form>
           </div>
-           <%!-- Projects table --%>
-          <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
-            <table class="w-full">
+          <%!-- Projects table --%>
+          <div class="mt-6 overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-gray-100">
+            <table class="w-full min-w-[56rem] table-fixed text-sm">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500 w-12">
+                  <th class="w-12 px-2 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Bil
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th class="w-[18%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Nama Sistem
                   </th>
-                  
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+
+                  <th class="w-[16%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Emel
                   </th>
-                  
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+
+                  <th class="w-[18%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Kementerian/Jabatan
                   </th>
-                  
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+
+                  <th class="w-[14%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Pengurus Projek
                   </th>
-                  
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+
+                  <th class="w-[14%] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Status
                   </th>
-                  
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+
+                  <th class="w-28 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Tarikh
                   </th>
-                  
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+
+                  <th class="w-28 px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Tindakan
                   </th>
                 </tr>
               </thead>
-              
+
               <tbody class="divide-y divide-gray-200 bg-white">
                 <tr
                   :for={{project, index} <- Enum.with_index(@projects, 0)}
                   class="hover:bg-gray-50 transition-colors duration-150"
                 >
-                  <td class="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-900 text-center">
+                  <% pengurus_label = pengurus_projek_display(project) %>
+                  <td class="whitespace-nowrap px-2 py-4 text-sm font-medium text-gray-900 text-center">
                     {(@page - 1) * @per_page + index + 1}
                   </td>
-                  <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                  <td
+                    class="max-w-0 px-3 py-4 text-sm font-medium text-gray-900 truncate"
+                    title={project.nama_projek}
+                  >
                     {project.nama_projek}
                   </td>
-                  
-                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+
+                  <td
+                    class="max-w-0 px-3 py-4 text-sm text-gray-700 truncate"
+                    title={project.pengurus_email || ""}
+                  >
                     {project.pengurus_email || "-"}
                   </td>
-                  
-                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+
+                  <td
+                    class="max-w-0 px-3 py-4 text-sm text-gray-700 truncate"
+                    title={project.jabatan || ""}
+                  >
                     {project.jabatan || "-"}
                   </td>
-                  
-                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                    <% display = pengurus_projek_display(project) %>
-                    <%= if display != "" and display != "-" do %>
-                      {display}
+
+                  <td
+                    class="max-w-0 px-3 py-4 text-sm text-gray-700 truncate"
+                    title={
+                      if(pengurus_label != "" and pengurus_label != "-",
+                        do: pengurus_label,
+                        else: nil
+                      )
+                    }
+                  >
+                    <%= if pengurus_label != "" and pengurus_label != "-" do %>
+                      {pengurus_label}
                     <% else %>
                       <%!-- Kosong jika pengurus belum dilantik --%>
                     <% end %>
                   </td>
-                  
-                  <td class="whitespace-nowrap px-6 py-4 text-sm">
+
+                  <td class="px-3 py-4 text-sm align-middle">
                     <% status_label = status_display(project) %>
                     <span class={[
                       "inline-flex px-2 py-0.5 rounded-full text-xs font-medium",
@@ -205,37 +223,37 @@
                       {status_label}
                     </span>
                   </td>
-                  
-                  <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
                     <%= if project.tarikh_mula do %>
                       {Calendar.strftime(project.tarikh_mula, "%d/%m/%Y")}
                     <% else %>
                       <span class="text-gray-400">-</span>
                     <% end %>
                   </td>
-                  
-                  <td class="whitespace-nowrap px-6 py-4 text-sm">
+
+                  <td class="whitespace-nowrap px-2 py-4 text-sm text-center align-middle">
                     <.link
                       navigate={
                         ~p"/senarai-projek-diluluskan/#{project.id}?#{[from: "penyerahan_projek"]}"
                       }
-                      class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200"
+                      class="inline-flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200"
                     >
-                      <.icon name="hero-eye" class="w-4 h-4" />
-                      <span class="hidden lg:inline">Lihat</span>
+                      <.icon name="hero-eye" class="w-4 h-4 shrink-0" />
+                      <span>Lihat</span>
                     </.link>
                   </td>
                 </tr>
-                
+
                 <tr :if={@projects == []}>
-                  <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
+                  <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">
                     Tiada projek dijumpai
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-           <%!-- Pagination --%>
+          <%!-- Pagination --%>
           <div :if={@total_pages > 1} class="mt-6 flex justify-center">
             <nav class="flex items-center gap-2" aria-label="Pagination">
               <button

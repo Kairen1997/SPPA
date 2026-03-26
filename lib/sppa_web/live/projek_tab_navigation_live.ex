@@ -1038,6 +1038,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     ujian_params =
       if socket.assigns[:uat_show_create_modal] do
         modul = (ujian_params["modul"] || "") |> to_string() |> String.trim()
+
         no_ujian =
           if modul != "",
             do: UjianPenerimaanPengguna.next_no_ujian(socket.assigns.project.id, modul),
@@ -1925,7 +1926,8 @@ defmodule SppaWeb.ProjekTabNavigationLive do
 
     cond do
       is_nil(project_id) or is_nil(db_attrs) ->
-        {:noreply, put_flash(socket, :error, "Projek tidak sah, penyerahan tidak dapat didaftarkan.")}
+        {:noreply,
+         put_flash(socket, :error, "Projek tidak sah, penyerahan tidak dapat didaftarkan.")}
 
       true ->
         case Penyerahans.create_penyerahan(db_attrs) do
@@ -1943,7 +1945,10 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           {:error, _changeset} ->
             {:noreply,
              socket
-             |> put_flash(:error, "Gagal mendaftar penyerahan. Sila semak maklumat dan cuba lagi.")}
+             |> put_flash(
+               :error,
+               "Gagal mendaftar penyerahan. Sila semak maklumat dan cuba lagi."
+             )}
         end
     end
   end
@@ -2010,10 +2015,11 @@ defmodule SppaWeb.ProjekTabNavigationLive do
         | versi: penyerahan_params["versi"] || editing_penyerahan.versi,
           penerima: penyerahan_params["penerima"] || editing_penyerahan.penerima,
           pengurus_projek:
-            if(penyerahan_params["pengurus_projek"] == nil or
-                 penyerahan_params["pengurus_projek"] == "",
-               do: nil,
-               else: penyerahan_params["pengurus_projek"]
+            if(
+              penyerahan_params["pengurus_projek"] == nil or
+                penyerahan_params["pengurus_projek"] == "",
+              do: nil,
+              else: penyerahan_params["pengurus_projek"]
             ),
           tarikh_penyerahan: tarikh_penyerahan
       }
@@ -3914,6 +3920,7 @@ defmodule SppaWeb.ProjekTabNavigationLive do
           _ -> nil
         end
       end
+
     uat_status_normalize(raw)
   end
 

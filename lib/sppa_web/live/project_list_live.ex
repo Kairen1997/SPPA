@@ -431,7 +431,7 @@ defmodule SppaWeb.ProjectListLive do
               >
                 <.icon name="hero-bars-3" class="w-6 h-6" />
               </button>
-              <.header_logos height_class="h-12 sm:h-14 md:h-16" />
+               <.header_logos height_class="h-12 sm:h-14 md:h-16" />
             </div>
 
             <.header_actions
@@ -493,8 +493,11 @@ defmodule SppaWeb.ProjectListLive do
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
                     >
                       <option value="">Semua</option>
+
                       <option value="Pembangun belum di lantik">Pembangun belum di lantik</option>
+
                       <option value="Dalam Pembangunan">Dalam Pembangunan</option>
+
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
@@ -571,7 +574,7 @@ defmodule SppaWeb.ProjectListLive do
                             <.icon name="hero-eye" class="w-4 h-4" />
                             <span class="hidden lg:inline">Lihat</span>
                           </.link>
-                          <%!-- Modul link hanya untuk projek dalaman yang sedia ada --%>
+                           <%!-- Modul link hanya untuk projek dalaman yang sedia ada --%>
                           <%= if project.project do %>
                             <.link
                               navigate={~p"/projek/#{project.project.id}/modul"}

@@ -7,4 +7,3 @@ defmodule Sppa.Repo.Migrations.AddAttachmentToMaklumbalas do
     end
   end
 end
-

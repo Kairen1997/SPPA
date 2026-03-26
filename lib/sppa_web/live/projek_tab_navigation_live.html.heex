@@ -6,7 +6,7 @@
       current_scope={@current_scope}
     />
   <% end %>
-  
+
   <div class="fixed inset-0 flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 z-50">
     <%!-- Overlay --%>
     <div
@@ -17,7 +17,7 @@
       phx-click="close_sidebar"
     >
     </div>
-     <%!-- Sidebar --%>
+    <%!-- Sidebar --%>
     <.dashboard_sidebar
       sidebar_open={@sidebar_open}
       dashboard_path={~p"/dashboard"}
@@ -36,11 +36,12 @@
             class="text-white hover:text-blue-100 hover:bg-blue-500/40 p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0"
           >
             <.icon name="hero-bars-3" class="w-5 h-5 sm:w-6 sm:h-6" />
-          </button> <.header_logos />
+          </button>
+          <.header_logos />
         </div>
-        
+
         <div class="flex-1 flex justify-center min-w-0"><.system_title /></div>
-        
+
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <.header_actions
             notifications_open={@notifications_open}
@@ -51,7 +52,7 @@
           />
         </div>
       </header>
-       <%!-- Content --%>
+      <%!-- Content --%>
       <main class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
           <%!-- Back Button: kembali ke halaman sebelumnya mengikut sejarah pelayar --%>
@@ -62,23 +63,22 @@
                   "ketua unit" -> ~p"/penyerahan-projek"
                   _ -> ~p"/projek"
                 end
-                back_label =
-                  case @current_scope.user.role do
-                    "ketua unit" -> "Kembali ke Penyerahan Projek"
-                    _ -> "Kembali ke Senarai Projek"
-                  end %>
 
+              back_label =
+                case @current_scope.user.role do
+                  "ketua unit" -> "Kembali ke Penyerahan Projek"
+                  _ -> "Kembali ke Senarai Projek"
+                end %>
               <.link
                 id="projek-tab-back-button"
                 navigate={back_url}
                 class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 hover:shadow"
               >
-                <.icon name="hero-arrow-left" class="w-4 h-4" />
-                <span>{back_label}</span>
+                <.icon name="hero-arrow-left" class="w-4 h-4" /> <span>{back_label}</span>
               </.link>
             </div>
           </div>
-           <%!-- Navigation Tabs --%>
+          <%!-- Navigation Tabs --%>
           <div
             id="project-tabs-navigation"
             class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden"
@@ -142,7 +142,7 @@
                     Pengaturcaraan
                   </.link>
                 <% end %>
-                
+
                 <.link
                   patch={~p"/projek/#{@project.id}?tab=pengurus-perubahan"}
                   class={[
@@ -224,7 +224,7 @@
               </nav>
             </div>
           </div>
-           <%!-- Tab Content --%>
+          <%!-- Tab Content --%>
           <%= cond do %>
             <% @current_tab == "Soal Selidik" -> %>
               <div class="space-y-6">
@@ -252,7 +252,7 @@
                     </div>
                   </div>
                 <% end %>
-                
+
                 <div
                   id="soal-selidik-document"
                   class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 print:shadow-none print:border-0"
@@ -265,7 +265,7 @@
                           {@soal_selidik_pdf_data.document_id}
                         </span>
                       </div>
-                      
+
                       <div class="flex justify-center mb-4">
                         <img
                           src={~p"/images/logojpkn.png"}
@@ -273,11 +273,11 @@
                           class="h-16 w-auto object-contain"
                         />
                       </div>
-                      
+
                       <h2 class="text-xl font-bold text-gray-900 mb-3 uppercase tracking-wide leading-tight">
                         Soal Selidik Kajian Keperluan Pembangunan Aplikasi
                       </h2>
-                      
+
                       <div class="text-sm text-gray-700 font-medium text-left mb-4 flex items-center gap-2">
                         <span>Nama Sistem :</span>
                         <span class="font-semibold text-gray-900">
@@ -285,12 +285,12 @@
                         </span>
                       </div>
                     </div>
-                     <%!-- Functional Requirements Section --%>
+                    <%!-- Functional Requirements Section --%>
                     <div class="mb-6">
                       <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
                         FUNCTIONAL REQUIREMENT
                       </h3>
-                      
+
                       <div class="space-y-4">
                         <%= for category <- @soal_selidik_pdf_data.fr_categories do %>
                           <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
@@ -299,7 +299,7 @@
                                 {category.title}
                               </h4>
                             </div>
-                            
+
                             <div class="p-2 overflow-x-auto">
                               <table class="w-full border-collapse text-xs">
                                 <thead>
@@ -310,21 +310,21 @@
                                     >
                                       No
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                       style="width: 40%;"
                                     >
                                       Soalan
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                       style="width: 27%;"
                                     >
                                       Maklumbalas
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700"
                                       style="width: 27%;"
@@ -333,7 +333,7 @@
                                     </th>
                                   </tr>
                                 </thead>
-                                
+
                                 <tbody class="divide-y divide-gray-300">
                                   <%= for question <- category.questions do %>
                                     <tr>
@@ -342,7 +342,7 @@
                                           {question.no}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 border-r border-gray-400 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-800">
                                           {question_data =
@@ -369,7 +369,7 @@
                                           end}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 border-r border-gray-400 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-700">
                                           {question_data =
@@ -404,7 +404,7 @@
                                           end}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-700">
                                           {question_data =
@@ -437,12 +437,12 @@
                         <% end %>
                       </div>
                     </div>
-                     <%!-- Non-Functional Requirements Section --%>
+                    <%!-- Non-Functional Requirements Section --%>
                     <div class="mb-6">
                       <h3 class="text-lg font-bold text-blue-700 mb-4 uppercase border-b-2 border-blue-500 pb-2">
                         NON-FUNCTIONAL REQUIREMENT
                       </h3>
-                      
+
                       <div class="space-y-4">
                         <%= for category <- @soal_selidik_pdf_data.nfr_categories do %>
                           <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
@@ -451,7 +451,7 @@
                                 {category.title}
                               </h4>
                             </div>
-                            
+
                             <div class="p-2 overflow-x-auto">
                               <table class="w-full border-collapse text-xs">
                                 <thead>
@@ -462,21 +462,21 @@
                                     >
                                       No
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                       style="width: 40%;"
                                     >
                                       Soalan
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700 border-r border-gray-400"
                                       style="width: 27%;"
                                     >
                                       Maklumbalas
                                     </th>
-                                    
+
                                     <th
                                       class="px-3 py-2 text-left font-semibold text-gray-700"
                                       style="width: 27%;"
@@ -485,7 +485,7 @@
                                     </th>
                                   </tr>
                                 </thead>
-                                
+
                                 <tbody class="divide-y divide-gray-300">
                                   <%= for question <- category.questions do %>
                                     <tr>
@@ -494,7 +494,7 @@
                                           {question.no}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 border-r border-gray-400 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-800">
                                           {question_data =
@@ -521,7 +521,7 @@
                                           end}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 border-r border-gray-400 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-700">
                                           {question_data =
@@ -556,7 +556,7 @@
                                           end}
                                         </div>
                                       </td>
-                                      
+
                                       <td class="px-3 py-2 align-top">
                                         <div class="px-2 py-1 text-sm text-gray-700">
                                           {question_data =
@@ -589,14 +589,14 @@
                         <% end %>
                       </div>
                     </div>
-                     <%!-- Disediakan Oleh Section --%>
+                    <%!-- Disediakan Oleh Section --%>
                     <div class="mb-2">
                       <h3 class="text-lg font-bold text-gray-900 mb-4">Disediakan Oleh :</h3>
-                      
+
                       <p class="text-sm text-gray-600 mb-6 italic">
                         (Diisi oleh Pengurus Projek/Pembangun Sistem)
                       </p>
-                      
+
                       <div class="space-y-4">
                         <div>
                           <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -607,7 +607,7 @@
                               Map.get(@soal_selidik_pdf_data.disediakan_oleh, "nama") || ""}
                           </div>
                         </div>
-                        
+
                         <div>
                           <label class="block text-sm font-medium text-gray-700 mb-1">
                             Jawatan:
@@ -617,7 +617,7 @@
                               Map.get(@soal_selidik_pdf_data.disediakan_oleh, "jawatan") || ""}
                           </div>
                         </div>
-                        
+
                         <div>
                           <label class="block text-sm font-medium text-gray-700 mb-1">
                             Tarikh:
@@ -636,7 +636,7 @@
                         <p class="text-sm font-medium text-gray-600 mb-2">
                           Tiada data Soal Selidik untuk dipaparkan.
                         </p>
-                        
+
                         <p class="text-xs text-gray-500">
                           Sila klik butang "Edit Borang" di atas untuk menambah atau mengisi soal selidik untuk projek ini.
                         </p>
@@ -669,7 +669,7 @@
                     </button>
                   </div>
                 <% end %>
-                
+
                 <div
                   id="analisis-document"
                   class="bg-white border border-slate-300 rounded-lg shadow-sm p-6 sm:p-8 print:p-4 print:shadow-none print:rounded-none"
@@ -680,7 +680,7 @@
                     <div class="mb-6">
                       <div class="flex justify-between items-start gap-4">
                         <div class="flex-1"></div>
-                        
+
                         <div class="flex-1 flex justify-center">
                           <img
                             src={~p"/images/logojpkn.png"}
@@ -688,64 +688,64 @@
                             class="h-14 w-auto object-contain print:h-12"
                           />
                         </div>
-                        
+
                         <div class="flex-1 flex justify-end text-sm font-semibold text-slate-700">
                           {@analisis_pdf_data.document_id}
                         </div>
                       </div>
-                      
+
                       <h2 class="text-center font-bold text-slate-900 mt-4 mb-0 uppercase tracking-wide text-base sm:text-lg pb-3 border-b border-slate-300">
                         Borang Verifikasi Spesifikasi Aplikasi
                       </h2>
                     </div>
-                     <%!-- 1. Maklumat Projek --%>
+                    <%!-- 1. Maklumat Projek --%>
                     <div class="mb-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                       <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200">
                         <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
                           1. Maklumat Projek
                         </h3>
                       </div>
-                      
+
                       <div class="p-4 sm:p-5">
                         <table class="w-full border-collapse text-sm">
                           <tbody>
                             <tr class="border-b border-slate-200">
                               <td class="py-2 font-semibold text-slate-800 w-1/3">Nama Projek</td>
-                              
+
                               <td class="py-2 text-slate-900">
                                 {@analisis_pdf_data.nama_projek}
                               </td>
                             </tr>
-                            
+
                             <tr class="border-b border-slate-200">
                               <td class="py-2 font-semibold text-slate-800">Nama Agensi</td>
-                              
+
                               <td class="py-2 text-slate-900">
                                 {@analisis_pdf_data.nama_agensi}
                               </td>
                             </tr>
-                            
+
                             <tr class="border-b border-slate-200">
                               <td class="py-2 font-semibold text-slate-800">Versi</td>
-                              
+
                               <td class="py-2 text-slate-900">{@analisis_pdf_data.versi}</td>
                             </tr>
-                            
+
                             <tr class="border-b border-slate-200">
                               <td class="py-2 font-semibold text-slate-800">
                                 Tarikh Semakan (jika ada)
                               </td>
-                              
+
                               <td class="py-2 text-slate-900">
                                 {@analisis_pdf_data.tarikh_semakan}
                               </td>
                             </tr>
-                            
+
                             <tr>
                               <td class="py-2 font-semibold text-slate-800">
                                 Rujukan Perubahan (jika ada)
                               </td>
-                              
+
                               <td class="py-2 text-slate-900">
                                 {@analisis_pdf_data.rujukan_perubahan}
                               </td>
@@ -754,19 +754,19 @@
                         </table>
                       </div>
                     </div>
-                     <%!-- 2. Modul Sistem --%>
+                    <%!-- 2. Modul Sistem --%>
                     <div class="mb-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                       <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200">
                         <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
                           2. Modul Sistem
                         </h3>
                       </div>
-                      
+
                       <div class="p-4 sm:p-5">
                         <p class="text-xs text-slate-600 mb-3">
                           Modul berikut telah dicipta oleh pengurus projek untuk projek ini. Paparan hanya baca (tajuk tugasan dan penerangan).
                         </p>
-                        
+
                         <%= if @project_modules != [] do %>
                           <div class="space-y-4">
                             <%= for {pm, index} <- Enum.with_index(@project_modules) do %>
@@ -774,11 +774,11 @@
                                 <p class="text-xs font-bold text-slate-800 mb-0.5">
                                   {index + 1}. Tajuk Tugasan
                                 </p>
-                                
+
                                 <p class="text-sm text-slate-900 mb-2">{pm.title || "—"}</p>
-                                
+
                                 <p class="text-xs font-bold text-slate-800 mb-0.5">Penerangan</p>
-                                
+
                                 <p class="text-sm text-slate-800 whitespace-pre-wrap leading-snug">
                                   {pm.description || "—"}
                                 </p>
@@ -792,51 +792,51 @@
                         <% end %>
                       </div>
                     </div>
-                     <%!-- 3. Pengesahan & Perakuan --%>
+                    <%!-- 3. Pengesahan & Perakuan --%>
                     <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                       <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200">
                         <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
                           3. Pengesahan & Perakuan
                         </h3>
                       </div>
-                      
+
                       <div class="p-4 sm:p-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
                           <div>
                             <h4 class="font-bold text-slate-900 text-sm mb-1">
                               Dipersetujui Oleh:
                             </h4>
-                            
+
                             <p class="text-xs text-slate-600 mb-2">Pemohon</p>
-                            
+
                             <p class="text-sm text-slate-800">
                               <span class="font-semibold text-slate-700">Nama:</span> {@analisis_pdf_data.approved_by_name}
                             </p>
-                            
+
                             <p class="text-sm text-slate-800 mt-1">
                               <span class="font-semibold text-slate-700">Jawatan:</span> {@analisis_pdf_data.approved_by_position}
                             </p>
-                            
+
                             <p class="text-sm text-slate-800 mt-1">
                               <span class="font-semibold text-slate-700">Tarikh:</span> {@analisis_pdf_data.approved_by_date}
                             </p>
                           </div>
-                          
+
                           <div>
                             <h4 class="font-bold text-slate-900 text-sm mb-1">
                               Disediakan Oleh:
                             </h4>
-                            
+
                             <p class="text-xs text-slate-600 mb-2">Pengurus Projek / Pembangun</p>
-                            
+
                             <p class="text-sm text-slate-800">
                               <span class="font-semibold text-slate-700">Nama:</span> {@analisis_pdf_data.prepared_by_name}
                             </p>
-                            
+
                             <p class="text-sm text-slate-800 mt-1">
                               <span class="font-semibold text-slate-700">Jawatan:</span> {@analisis_pdf_data.prepared_by_position}
                             </p>
-                            
+
                             <p class="text-sm text-slate-800 mt-1">
                               <span class="font-semibold text-slate-700">Tarikh:</span> {@analisis_pdf_data.prepared_by_date}
                             </p>
@@ -860,10 +860,10 @@
                       <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                           <div class="w-2 h-2 rounded-full bg-blue-600"></div>
-                          
+
                           <h2 class="text-xl font-bold text-gray-900">Gantt Chart Projek</h2>
                         </div>
-                        
+
                         <div class="text-sm text-gray-600">
                           <span class="font-semibold">Tempoh:</span> {Calendar.strftime(
                             @jadual_gantt_data.min_date,
@@ -872,7 +872,7 @@
                         </div>
                       </div>
                     </div>
-                    
+
                     <div class="p-6 overflow-x-auto">
                       <div class="mb-4" style="min-width: 100%;">
                         <div
@@ -882,13 +882,13 @@
                           <div class="w-64 flex-shrink-0 font-semibold text-gray-700">
                             Nama Projek
                           </div>
-                          
+
                           <div class="flex-1 relative">
                             <div class="flex justify-between text-xs text-gray-600">
                               <%= for month <- @jadual_month_labels do %>
                                 <div class="text-center" style="width: {month.width_percent}%;">
                                   <div class="font-semibold">{month.month}</div>
-                                  
+
                                   <div class="text-gray-500">{month.year}</div>
                                 </div>
                               <% end %>
@@ -896,19 +896,19 @@
                           </div>
                         </div>
                       </div>
-                      
+
                       <%= for project <- @jadual_gantt_data.projects do %>
                         <div class="flex items-center h-12" style="min-width: 800px;">
                           <div class="w-64 flex-shrink-0 pr-4">
                             <div class="font-medium text-gray-900 truncate" title={project.nama}>
                               {project.nama}
                             </div>
-                            
+
                             <div class="text-xs text-gray-500">
                               {project.fasa || "-"} • {project.status || "-"}
                             </div>
                           </div>
-                          
+
                           <div class="flex-1 relative h-full">
                             <div class="relative h-full">
                               <div
@@ -916,7 +916,7 @@
                                 style={"left: #{project.start_percent}%; width: #{project.width_percent}%; background-color: #{@jadual_get_status_color.(project.status)};"}
                               >
                               </div>
-                              
+
                               <div
                                 class="absolute h-6 rounded-md transition-all duration-300"
                                 style={[
@@ -938,16 +938,16 @@
                       <% end %>
                     </div>
                   </div>
-                   <%!-- Timeline View Section --%>
+                  <%!-- Timeline View Section --%>
                   <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">
                       <div class="flex items-center gap-3">
                         <div class="w-2 h-2 rounded-full bg-indigo-600"></div>
-                        
+
                         <h2 class="text-xl font-bold text-gray-900">Timeline Projek</h2>
                       </div>
                     </div>
-                    
+
                     <div class="p-6">
                       <%= for project <- @jadual_gantt_data.projects do %>
                         <div
@@ -959,7 +959,7 @@
                               <h3 class="text-lg font-semibold text-gray-900 mb-1">
                                 {project.nama}
                               </h3>
-                              
+
                               <div class="flex items-center gap-4 text-sm text-gray-600 mb-2">
                                 <span class="flex items-center gap-1">
                                   <.icon name="hero-calendar" class="w-4 h-4" /> {Calendar.strftime(
@@ -974,7 +974,7 @@
                                 <% end %>
                               </div>
                             </div>
-                            
+
                             <div class="flex items-center gap-2">
                               <span class={[
                                 "px-3 py-1 rounded-full text-xs font-semibold",
@@ -987,7 +987,7 @@
                               </span>
                             </div>
                           </div>
-                          
+
                           <div class="mb-3">
                             <div class="flex items-center justify-between mb-1">
                               <span class="text-sm font-medium text-gray-700">
@@ -997,7 +997,7 @@
                                 {project.progress}%
                               </span>
                             </div>
-                            
+
                             <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                               <div
                                 class="h-full rounded-full transition-all duration-500"
@@ -1006,13 +1006,13 @@
                               </div>
                             </div>
                           </div>
-                          
+
                           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div>
                               <span class="font-semibold text-gray-700">Tempoh:</span>
                               <span class="text-gray-600 ml-2">{project.duration} hari</span>
                             </div>
-                            
+
                             <div>
                               <span class="font-semibold text-gray-700">Baki:</span>
                               <span class="text-gray-600 ml-2">
@@ -1036,7 +1036,7 @@
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-6 py-4">
                       <h2 class="text-xl font-bold text-gray-900">Jadual Projek</h2>
                     </div>
-                    
+
                     <div class="p-8">
                       <div class="text-center py-12">
                         <.icon
@@ -1044,11 +1044,11 @@
                           class="w-16 h-16 text-gray-400 mb-4 mx-auto"
                         />
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">Tiada Jadual</h3>
-                        
+
                         <p class="text-gray-600 mb-6 max-w-md mx-auto">
                           Tarikh mula dan tarikh siap projek belum ditetapkan. Sila kemaskini projek untuk menambah maklumat jadual.
                         </p>
-                        
+
                         <.link
                           navigate={~p"/jadual-projek"}
                           class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
@@ -1066,30 +1066,30 @@
                 <p class="text-sm text-gray-600">
                   Modul yang ditugaskan kepada anda untuk projek ini (ditetapkan oleh Pengurus Projek dari halaman Modul Projek).
                 </p>
-                
+
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                   <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
                       <.icon name="hero-list-bullet" class="w-5 h-5 text-gray-600" /> Tugasan Anda
                     </h2>
-                    
+
                     <p class="text-sm text-gray-500">{length(@developer_tasks)} modul</p>
                   </div>
-                  
+
                   <%= if Enum.empty?(@developer_tasks) do %>
                     <div class="px-6 py-12 text-center">
                       <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 text-gray-400 mb-4">
                         <.icon name="hero-clipboard-document-list" class="w-7 h-7" />
                       </div>
-                      
+
                       <p class="text-sm font-medium text-gray-700 mb-1">
                         Tiada modul ditugaskan kepada anda untuk projek ini
                       </p>
-                      
+
                       <p class="text-xs text-gray-500 mb-4">
                         Pengurus projek boleh menetapkan tugasan di halaman Modul Projek.
                       </p>
-                      
+
                       <.link
                         navigate={~p"/projek/#{@project.id}/modul"}
                         class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -1108,35 +1108,35 @@
                             >
                               Tajuk
                             </th>
-                            
+
                             <th
                               scope="col"
                               class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                             >
                               Keutamaan
                             </th>
-                            
+
                             <th
                               scope="col"
                               class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                             >
                               Status
                             </th>
-                            
+
                             <th
                               scope="col"
                               class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                             >
                               Tarikh Mula
                             </th>
-                            
+
                             <th
                               scope="col"
                               class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
                             >
                               Tarikh Tamat
                             </th>
-                            
+
                             <%= if !@read_only_ketua_unit do %>
                               <th
                                 scope="col"
@@ -1147,13 +1147,13 @@
                             <% end %>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <%= for task <- @developer_tasks do %>
                             <tr class="hover:bg-gray-50/80 transition-colors duration-150">
                               <td class="px-4 py-3">
                                 <p class="font-medium text-gray-900">{task.title || "—"}</p>
-                                
+
                                 <%= if task.description && task.description != "" do %>
                                   <p
                                     class="text-xs text-gray-500 truncate max-w-xs mt-0.5"
@@ -1163,7 +1163,7 @@
                                   </p>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-4 py-3 whitespace-nowrap">
                                 <span class={[
                                   "inline-flex px-2 py-0.5 rounded text-xs font-medium border",
@@ -1172,7 +1172,7 @@
                                   {pengaturcaraan_priority_label(task.priority)}
                                 </span>
                               </td>
-                              
+
                               <td class="px-4 py-3 whitespace-nowrap">
                                 <span class={[
                                   "inline-flex px-2 py-0.5 rounded text-xs font-medium border",
@@ -1181,7 +1181,7 @@
                                   {pengaturcaraan_status_label(task.status)}
                                 </span>
                               </td>
-                              
+
                               <td class="px-4 py-3 whitespace-nowrap text-gray-600">
                                 <%= if task.tarikh_mula do %>
                                   {Calendar.strftime(task.tarikh_mula, "%d/%m/%Y")}
@@ -1189,7 +1189,7 @@
                                   <span class="text-gray-400">—</span>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-4 py-3 whitespace-nowrap text-gray-600">
                                 <%= if task.due_date do %>
                                   {Calendar.strftime(task.due_date, "%d/%m/%Y")}
@@ -1197,7 +1197,7 @@
                                   <span class="text-gray-400">—</span>
                                 <% end %>
                               </td>
-                              
+
                               <%= if !@read_only_ketua_unit do %>
                                 <td class="px-4 py-3 text-right">
                                   <button
@@ -1217,7 +1217,7 @@
                     </div>
                   <% end %>
                 </div>
-                
+
                 <%= if @project_pengaturcaraan_gantt_data && !Enum.empty?(@project_pengaturcaraan_gantt_data.modules) do %>
                   <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
@@ -1226,7 +1226,7 @@
                         Carta Gantt Modul
                       </h2>
                     </div>
-                     <% gd = @project_pengaturcaraan_gantt_data
+                    <% gd = @project_pengaturcaraan_gantt_data
                     timeline_start = gd.start_date
                     timeline_end = gd.end_date
                     total_days = pengaturcaraan_days_between(timeline_start, timeline_end)
@@ -1235,9 +1235,9 @@
                       <div class="border border-gray-200 rounded-lg overflow-hidden">
                         <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-gray-200">
                           <h3 class="text-lg font-semibold text-gray-900">{gd.project.nama}</h3>
-                          
+
                           <p class="text-sm text-gray-600 mt-1">{gd.project.jabatan}</p>
-                          
+
                           <p class="text-xs text-gray-500 mt-1">
                             {Calendar.strftime(gd.start_date, "%d/%m/%Y")} – {Calendar.strftime(
                               gd.end_date,
@@ -1245,7 +1245,7 @@
                             )}
                           </p>
                         </div>
-                        
+
                         <div class="p-4 space-y-3">
                           <%= for {module, index} <- Enum.with_index(gd.modules) do %>
                             <% module_days =
@@ -1272,7 +1272,7 @@
                                 <h4 class="text-sm font-semibold text-gray-900">
                                   {module.title}
                                 </h4>
-                                
+
                                 <div class="flex items-center gap-2 flex-wrap mt-1">
                                   <span class={[
                                     "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
@@ -1288,7 +1288,7 @@
                                   </span>
                                 </div>
                               </div>
-                              
+
                               <div class="flex-1 relative h-10 bg-gray-100 rounded border border-gray-200 overflow-hidden">
                                 <div
                                   class={[
@@ -1299,7 +1299,7 @@
                                 >
                                 </div>
                               </div>
-                              
+
                               <div class="w-28 flex-shrink-0 text-right text-xs text-gray-600">
                                 {Calendar.strftime(module.start_date, "%d/%m/%Y")} – {Calendar.strftime(
                                   module.end_date,
@@ -1309,7 +1309,7 @@
                             </div>
                           <% end %>
                         </div>
-                        
+
                         <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center gap-6 flex-wrap text-xs text-gray-600">
                           <span>
                             <span class="inline-block w-3 h-3 rounded bg-blue-500 mr-1"></span>Dalam Proses
@@ -1325,7 +1325,7 @@
                     </div>
                   </div>
                 <% end %>
-                
+
                 <%!-- Old Analisis board/table view removed; Pengaturcaraan tab now shows assigned modul + Gantt only --%>
               </div>
             <% @current_tab == "Pengurus Perubahan" -> %>
@@ -1333,12 +1333,12 @@
                 <div class="mb-4 flex items-center justify-between">
                   <div>
                     <h3 class="text-xl font-bold text-gray-900">Pengurusan Perubahan</h3>
-                    
+
                     <p class="text-gray-600 text-sm">
                       Urus dan pantau permohonan perubahan sistem
                     </p>
                   </div>
-                  
+
                   <%= if !@read_only_ketua_unit do %>
                     <button
                       phx-click="open_create_modal"
@@ -1349,18 +1349,18 @@
                     </button>
                   <% end %>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h3 class="text-lg font-semibold text-white">Senarai Permohonan Perubahan</h3>
                   </div>
-                  
+
                   <%= if length(@perubahan) == 0 do %>
                     <div class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-gray-400">
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada permohonan perubahan</p>
-                        
+
                         <p class="text-xs mt-1">
                           Klik butang "Daftar Perubahan" untuk menambah permohonan baharu
                         </p>
@@ -1374,27 +1374,27 @@
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-14">
                               Bil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tajuk Perubahan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Jenis
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Modul Terlibat
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Dibuat
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Justifikasi
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Kesan
                             </th>
@@ -1406,32 +1406,32 @@
                             <% end %>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{perubahan, bil} <- Enum.with_index(@perubahan, 1)}
                             class="hover:bg-gray-50 transition-colors duration-150"
                           >
                             <td class="px-3 py-2 text-center text-gray-600 font-medium">{bil}</td>
-                            
+
                             <td class="px-3 py-2">
                               <div class="text-xs font-semibold text-gray-900">
                                 {perubahan.tajuk}
                               </div>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-xs font-medium">
                                 {perubahan.jenis}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2">
                               <span class="text-xs text-gray-700">
                                 {perubahan.modul_terlibat}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 whitespace-nowrap">
                               <div class="flex items-center gap-1.5 justify-center">
                                 <.icon
@@ -1443,7 +1443,7 @@
                                 </span>
                               </div>
                             </td>
-                            
+
                             <td class="px-3 py-2">
                               <%= if perubahan.justifikasi do %>
                                 <div class="max-w-xs">
@@ -1455,7 +1455,7 @@
                                 <span class="text-xs text-gray-400 italic">-</span>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2">
                               <%= if perubahan.kesan do %>
                                 <div class="max-w-xs">
@@ -1467,7 +1467,7 @@
                                 <span class="text-xs text-gray-400 italic">-</span>
                               <% end %>
                             </td>
-                            
+
                             <%= if !@read_only_ketua_unit do %>
                               <td class="px-3 py-2 whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-1.5">
@@ -1499,7 +1499,7 @@
                   <% end %>
                 </div>
               </div>
-               <%!-- View Modal (Pengurus Perubahan tab) - paparan sahaja --%>
+              <%!-- View Modal (Pengurus Perubahan tab) - paparan sahaja --%>
               <%= if @show_view_modal && @selected_perubahan do %>
                 <div
                   class="fixed inset-0 z-50 overflow-y-auto"
@@ -1513,7 +1513,7 @@
                     phx-click="close_view_modal"
                   >
                   </div>
-                   <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
+                  <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
                   <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
                     <div class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
                       <%!-- Modal header --%>
@@ -1523,12 +1523,12 @@
                             <h2 class="text-2xl font-bold text-white">
                               Butiran Permohonan Perubahan
                             </h2>
-                            
+
                             <p class="mt-1 text-sm text-blue-100">
                               Maklumat lengkap permohonan perubahan
                             </p>
                           </div>
-                          
+
                           <button
                             type="button"
                             phx-click="close_view_modal"
@@ -1539,7 +1539,7 @@
                           </button>
                         </div>
                       </div>
-                       <%!-- Modal body --%>
+                      <%!-- Modal body --%>
                       <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
                         <div class="space-y-6">
                           <%!-- Basic Information --%>
@@ -1547,7 +1547,7 @@
                             <div class="border-b border-gray-200 pb-2">
                               <h3 class="text-lg font-semibold text-gray-900">Maklumat Asas</h3>
                             </div>
-                            
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-800 mb-1">
@@ -1557,7 +1557,7 @@
                                   {@selected_perubahan.tajuk}
                                 </p>
                               </div>
-                              
+
                               <div>
                                 <label class="block text-sm font-medium text-gray-800 mb-1">
                                   Jenis
@@ -1566,7 +1566,7 @@
                                   {@selected_perubahan.jenis}
                                 </span>
                               </div>
-                              
+
                               <div>
                                 <label class="block text-sm font-medium text-gray-800 mb-1">
                                   Modul Terlibat
@@ -1577,12 +1577,12 @@
                               </div>
                             </div>
                           </div>
-                           <%!-- Timeline --%>
+                          <%!-- Timeline --%>
                           <div class="space-y-4">
                             <div class="border-b border-gray-200 pb-2">
                               <h3 class="text-lg font-semibold text-gray-900">Jadual</h3>
                             </div>
-                            
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <label class="block text-sm font-medium text-gray-800 mb-1">
@@ -1598,7 +1598,7 @@
                                   </span>
                                 </div>
                               </div>
-                              
+
                               <div>
                                 <label class="block text-sm font-medium text-gray-800 mb-1">
                                   Tarikh Dijangka Siap
@@ -1619,13 +1619,13 @@
                               </div>
                             </div>
                           </div>
-                           <%!-- Justification --%>
+                          <%!-- Justification --%>
                           <%= if @selected_perubahan.justifikasi do %>
                             <div class="space-y-4">
                               <div class="border-b border-gray-200 pb-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Justifikasi</h3>
                               </div>
-                              
+
                               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <p class="text-sm text-gray-700 whitespace-pre-wrap">
                                   {@selected_perubahan.justifikasi}
@@ -1633,13 +1633,13 @@
                               </div>
                             </div>
                           <% end %>
-                           <%!-- Impact --%>
+                          <%!-- Impact --%>
                           <%= if @selected_perubahan.kesan do %>
                             <div class="space-y-4">
                               <div class="border-b border-gray-200 pb-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Kesan</h3>
                               </div>
-                              
+
                               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <p class="text-sm text-gray-700 whitespace-pre-wrap">
                                   {@selected_perubahan.kesan}
@@ -1649,7 +1649,7 @@
                           <% end %>
                         </div>
                       </div>
-                       <%!-- Modal footer --%>
+                      <%!-- Modal footer --%>
                       <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
                         <button
                           type="button"
@@ -1671,7 +1671,7 @@
                   </div>
                 </div>
               <% end %>
-               <%!-- Create Modal (Pengurusan Perubahan) --%>
+              <%!-- Create Modal (Pengurusan Perubahan) --%>
               <%= if @show_create_modal do %>
                 <div
                   class="fixed inset-0 z-50 overflow-y-auto"
@@ -1687,7 +1687,7 @@
                     data-close-event="close_create_modal"
                   >
                   </div>
-                   <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
+                  <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
                   <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
                     <div class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
                       <%!-- Modal header --%>
@@ -1697,12 +1697,12 @@
                             <h2 class="text-2xl font-bold text-white">
                               Daftar Permohonan Perubahan
                             </h2>
-                            
+
                             <p class="mt-1 text-sm text-blue-100">
                               Isi maklumat permohonan perubahan baharu
                             </p>
                           </div>
-                          
+
                           <button
                             type="button"
                             phx-click="close_create_modal"
@@ -1713,7 +1713,7 @@
                           </button>
                         </div>
                       </div>
-                       <%!-- Modal body --%>
+                      <%!-- Modal body --%>
                       <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
                         <.form
                           for={@form}
@@ -1733,7 +1733,7 @@
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                               />
                             </div>
-                            
+
                             <div>
                               <label class="block text-sm font-medium text-gray-800 mb-2">
                                 Jenis
@@ -1743,38 +1743,37 @@
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                               >
                                 <option value="">Pilih jenis</option>
-                                
+
                                 <option
                                   value="Perubahan Fungsian"
                                   selected={@form[:jenis].value == "Perubahan Fungsian"}
                                 >
                                   Perubahan Fungsian
                                 </option>
-                                
+
                                 <option
                                   value="Pembaikan Bug"
                                   selected={@form[:jenis].value == "Pembaikan Bug"}
                                 >
                                   Pembaikan Bug
                                 </option>
-                                
+
                                 <option
                                   value="Penambahbaikan"
                                   selected={@form[:jenis].value == "Penambahbaikan"}
                                 >
                                   Penambahbaikan
                                 </option>
-                                
+
                                 <option
                                   value="Peningkatan Keselamatan"
                                   selected={@form[:jenis].value == "Peningkatan Keselamatan"}
                                 >
                                   Peningkatan Keselamatan
                                 </option>
-                                
                               </select>
                             </div>
-                            
+
                             <div>
                               <.input
                                 field={@form[:modul_terlibat]}
@@ -1791,7 +1790,7 @@
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                               />
                             </div>
-                            
+
                             <div class="fieldset mb-2">
                               <label
                                 for={@form[:tarikh_dibuat].id}
@@ -1814,14 +1813,14 @@
                                   class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <%= for msg <- @form[:tarikh_dibuat].errors do %>
                                 <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                                   <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
                                 </p>
                               <% end %>
                             </div>
-                            
+
                             <div class="fieldset mb-2">
                               <label
                                 for={@form[:tarikh_dijangka_siap].id}
@@ -1844,29 +1843,31 @@
                                   class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <%= for msg <- @form[:tarikh_dijangka_siap].errors do %>
                                 <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                                   <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
                                 </p>
                               <% end %>
                             </div>
-                            
+
                             <div class="md:col-span-2">
                               <label class="block text-sm font-medium text-gray-800 mb-2">
                                 Justifikasi
-                              </label> <textarea
+                              </label>
+                              <textarea
                                 name="perubahan[justifikasi]"
                                 rows="3"
                                 placeholder="Masukkan justifikasi perubahan..."
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                               ><%= if @form[:justifikasi] && @form[:justifikasi].value, do: @form[:justifikasi].value, else: "" %></textarea>
                             </div>
-                            
+
                             <div class="md:col-span-2">
                               <label class="block text-sm font-medium text-gray-800 mb-2">
                                 Kesan
-                              </label> <textarea
+                              </label>
+                              <textarea
                                 name="perubahan[kesan]"
                                 rows="3"
                                 placeholder="Masukkan kesan perubahan..."
@@ -1876,7 +1877,7 @@
                           </div>
                         </.form>
                       </div>
-                       <%!-- Modal footer --%>
+                      <%!-- Modal footer --%>
                       <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
                         <button
                           type="button"
@@ -1897,7 +1898,7 @@
                   </div>
                 </div>
               <% end %>
-               <%!-- Edit Modal (Pengurusan Perubahan) --%>
+              <%!-- Edit Modal (Pengurusan Perubahan) --%>
               <%= if @show_edit_modal && @selected_perubahan do %>
                 <div
                   class="fixed inset-0 z-50 overflow-y-auto"
@@ -1913,7 +1914,7 @@
                     data-close-event="close_edit_modal"
                   >
                   </div>
-                   <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
+                  <%!-- Modal container: klik dalam kotak modal tidak menutup --%>
                   <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
                     <div class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
                       <%!-- Modal header --%>
@@ -1923,12 +1924,12 @@
                             <h2 class="text-2xl font-bold text-white">
                               Kemaskini Permohonan Perubahan
                             </h2>
-                            
+
                             <p class="mt-1 text-sm text-blue-100">
                               Edit maklumat permohonan perubahan
                             </p>
                           </div>
-                          
+
                           <button
                             type="button"
                             phx-click="close_edit_modal"
@@ -1939,7 +1940,7 @@
                           </button>
                         </div>
                       </div>
-                       <%!-- Modal body --%>
+                      <%!-- Modal body --%>
                       <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
                         <.form
                           for={@form}
@@ -1959,7 +1960,7 @@
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                               />
                             </div>
-                            
+
                             <div>
                               <label class="block text-sm font-medium text-gray-800 mb-2">
                                 Jenis
@@ -1969,38 +1970,37 @@
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                               >
                                 <option value="">Pilih jenis</option>
-                                
+
                                 <option
                                   value="Perubahan Fungsian"
                                   selected={@form[:jenis].value == "Perubahan Fungsian"}
                                 >
                                   Perubahan Fungsian
                                 </option>
-                                
+
                                 <option
                                   value="Pembaikan Bug"
                                   selected={@form[:jenis].value == "Pembaikan Bug"}
                                 >
                                   Pembaikan Bug
                                 </option>
-                                
+
                                 <option
                                   value="Penambahbaikan"
                                   selected={@form[:jenis].value == "Penambahbaikan"}
                                 >
                                   Penambahbaikan
                                 </option>
-                                
+
                                 <option
                                   value="Peningkatan Keselamatan"
                                   selected={@form[:jenis].value == "Peningkatan Keselamatan"}
                                 >
                                   Peningkatan Keselamatan
                                 </option>
-                                
                               </select>
                             </div>
-                            
+
                             <div>
                               <.input
                                 field={@form[:modul_terlibat]}
@@ -2017,7 +2017,7 @@
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                               />
                             </div>
-                            
+
                             <div class="fieldset mb-2">
                               <label
                                 for={@form[:tarikh_dibuat].id}
@@ -2040,14 +2040,14 @@
                                   class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <%= for msg <- @form[:tarikh_dibuat].errors do %>
                                 <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                                   <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
                                 </p>
                               <% end %>
                             </div>
-                            
+
                             <div class="fieldset mb-2">
                               <label
                                 for={@form[:tarikh_dijangka_siap].id}
@@ -2070,29 +2070,31 @@
                                   class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <%= for msg <- @form[:tarikh_dijangka_siap].errors do %>
                                 <p class="mt-1.5 flex gap-2 items-center text-sm text-red-600">
                                   <.icon name="hero-exclamation-circle" class="size-5 shrink-0" /> {msg}
                                 </p>
                               <% end %>
                             </div>
-                            
+
                             <div class="md:col-span-2">
                               <label class="block text-sm font-medium text-gray-800 mb-2">
                                 Justifikasi
-                              </label> <textarea
+                              </label>
+                              <textarea
                                 name="perubahan[justifikasi]"
                                 rows="3"
                                 placeholder="Masukkan justifikasi perubahan..."
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                               ><%= if @form[:justifikasi] && @form[:justifikasi].value, do: @form[:justifikasi].value, else: "" %></textarea>
                             </div>
-                            
+
                             <div class="md:col-span-2">
                               <label class="block text-sm font-medium text-gray-800 mb-2">
                                 Kesan
-                              </label> <textarea
+                              </label>
+                              <textarea
                                 name="perubahan[kesan]"
                                 rows="3"
                                 placeholder="Masukkan kesan perubahan..."
@@ -2102,7 +2104,7 @@
                           </div>
                         </.form>
                       </div>
-                       <%!-- Modal footer --%>
+                      <%!-- Modal footer --%>
                       <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
                         <button
                           type="button"
@@ -2131,11 +2133,11 @@
                     <h3 class="text-xl font-bold text-gray-900 mb-2">
                       Ujian Penerimaan Pengguna (UAT)
                     </h3>
-                    
+
                     <p class="text-gray-600 text-sm">
                       Urus dan pantau pelaksanaan ujian penerimaan pengguna bagi modul sistem.
                     </p>
-                    
+
                     <p class="mt-1 text-xs text-gray-500">
                       Projek: <span class="font-semibold text-gray-800">{@project.nama}</span>
                     </p>
@@ -2153,20 +2155,20 @@
                     </div>
                   <% end %>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800 flex items-center justify-between">
                     <div>
                       <h2 class="text-lg font-semibold text-white">
                         Senarai Ujian Penerimaan Pengguna
                       </h2>
-                      
+
                       <p class="text-xs text-blue-100">
                         {@uat_ujian_total} rekod ujian dijumpai.
                       </p>
                     </div>
                   </div>
-                  
+
                   <%= if @uat_ujian_total == 0 do %>
                     <div class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-gray-400">
@@ -2194,31 +2196,31 @@
                             <th class="px-2 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-10">
                               <span class="sr-only">Kembang</span>
                             </th>
-                            
+
                             <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-14">
                               Bil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-left">
                               Modul
                             </th>
-                            
+
                             <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-32">
                               No Ujian
                             </th>
-                            
+
                             <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-40">
                               Tarikh Ujian
                             </th>
-                            
+
                             <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-32">
                               Status
                             </th>
-                            
+
                             <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-40">
                               Penguji
                             </th>
-                            
+
                             <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-40">
                               Dokumen Ujian
                             </th>
@@ -2230,7 +2232,7 @@
                             <% end %>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <%= for {ujian, idx} <- Enum.with_index(@uat_paginated_ujian, 0) do %>
                             <tr class="hover:bg-gray-50 transition-colors duration-150">
@@ -2261,7 +2263,7 @@
                                   <.icon name="hero-chevron-right" class="w-5 h-5" />
                                 </button>
                               </td>
-                              
+
                               <td
                                 class="px-3 py-2 text-center text-xs font-medium text-gray-700 cursor-pointer"
                                 phx-click="uat_toggle_expand"
@@ -2270,7 +2272,7 @@
                               >
                                 {@uat_per_page * (@uat_page - 1) + idx + 1}
                               </td>
-                              
+
                               <td
                                 class="px-3 py-2 text-sm font-semibold text-gray-900 cursor-pointer"
                                 phx-click="uat_toggle_expand"
@@ -2279,7 +2281,7 @@
                               >
                                 {ujian.modul}
                               </td>
-                              
+
                               <td
                                 class="px-3 py-2 text-xs text-center text-gray-700 whitespace-nowrap cursor-pointer"
                                 phx-click="uat_toggle_expand"
@@ -2288,7 +2290,7 @@
                               >
                                 {Map.get(ujian, :no_ujian) || "-"}
                               </td>
-                              
+
                               <td
                                 class="px-3 py-2 text-xs text-center text-gray-700 whitespace-nowrap cursor-pointer"
                                 phx-click="uat_toggle_expand"
@@ -2301,7 +2303,7 @@
                                   <span class="text-gray-400 italic">-</span>
                                 <% end %>
                               </td>
-                              
+
                               <td
                                 class="px-3 py-2 text-xs text-center cursor-pointer"
                                 phx-click="uat_toggle_expand"
@@ -2320,7 +2322,7 @@
                                   {ujian.status || "Menunggu"}
                                 </span>
                               </td>
-                              
+
                               <td
                                 class="px-3 py-2 text-xs text-center text-gray-700 cursor-pointer"
                                 phx-click="uat_toggle_expand"
@@ -2333,7 +2335,7 @@
                                   <span class="text-gray-400 italic">Belum ditetapkan</span>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-3 py-2 text-xs text-center text-gray-700">
                                 <%= if ujian.dokumen_ujian do %>
                                   <a
@@ -2377,10 +2379,13 @@
                                 </td>
                               <% end %>
                             </tr>
-                            
+
                             <%= if @uat_expanded_ujian_id == ujian.id && @uat_expanded_ujian do %>
                               <tr class="bg-gray-50/80">
-                                <td colspan={if(@read_only_ketua_unit, do: 8, else: 9)} class="px-0 py-0 align-top">
+                                <td
+                                  colspan={if(@read_only_ketua_unit, do: 8, else: 9)}
+                                  class="px-0 py-0 align-top"
+                                >
                                   <div class="px-4 pb-4 pt-1">
                                     <div class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
                                       <div class="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800 flex items-center justify-between">
@@ -2388,12 +2393,12 @@
                                           <h3 class="text-base font-semibold text-white">
                                             Senarai Kes Ujian
                                           </h3>
-                                          
+
                                           <p class="text-xs text-blue-100">
                                             Rekod terperinci senario, langkah dan keputusan ujian.
                                           </p>
                                         </div>
-                                        
+
                                         <%= if !@read_only_ketua_unit do %>
                                           <div class="inline-flex items-center gap-2">
                                             <button
@@ -2416,7 +2421,7 @@
                                           </div>
                                         <% end %>
                                       </div>
-                                      
+
                                       <%= if @uat_expanded_ujian.senarai_kes_ujian && @uat_expanded_ujian.senarai_kes_ujian != [] do %>
                                         <div class="overflow-x-auto">
                                           <table class="w-full text-sm">
@@ -2425,31 +2430,31 @@
                                                 <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-left w-20">
                                                   Kod
                                                 </th>
-                                                
+
                                                 <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-left">
                                                   Senario
                                                 </th>
-                                                
+
                                                 <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-left w-44">
                                                   Keputusan Dijangka
                                                 </th>
-                                                
+
                                                 <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-left w-44">
                                                   Keputusan Sebenar
                                                 </th>
-                                                
+
                                                 <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-28">
                                                   Hasil
                                                 </th>
-                                                
+
                                                 <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-32">
                                                   Penguji / Tarikh
                                                 </th>
-                                                
+
                                                 <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-40">
                                                   Pengesahan
                                                 </th>
-                                                
+
                                                 <th
                                                   :for={
                                                     col <- @uat_expanded_ujian.extra_columns || []
@@ -2477,13 +2482,13 @@
                                                     <% end %>
                                                   </div>
                                                 </th>
-                                                
+
                                                 <th class="px-3 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider text-center w-32">
                                                   Tindakan
                                                 </th>
                                               </tr>
                                             </thead>
-                                            
+
                                             <tbody class="bg-white divide-y divide-gray-200">
                                               <tr
                                                 :for={
@@ -2494,19 +2499,19 @@
                                                 <td class="px-3 py-2 text-xs font-semibold text-gray-800 whitespace-nowrap">
                                                   {Map.get(kes, :kod, kes.id)}
                                                 </td>
-                                                
+
                                                 <td class="px-3 py-2 text-xs text-gray-800">
                                                   <p class="font-medium mb-0.5">
                                                     {if kes.senario, do: kes.senario, else: "-"}
                                                   </p>
-                                                  
+
                                                   <%= if kes.langkah do %>
                                                     <p class="text-[11px] text-gray-600 whitespace-pre-line">
                                                       {kes.langkah}
                                                     </p>
                                                   <% end %>
                                                 </td>
-                                                
+
                                                 <td class="px-3 py-2 text-xs text-gray-700">
                                                   <%= if kes.keputusan_dijangka do %>
                                                     <p class="whitespace-pre-line">
@@ -2516,7 +2521,7 @@
                                                     <span class="text-gray-400 italic">-</span>
                                                   <% end %>
                                                 </td>
-                                                
+
                                                 <td class="px-3 py-2 text-xs text-gray-700">
                                                   <%= if kes.keputusan_sebenar do %>
                                                     <p class="whitespace-pre-line">
@@ -2528,7 +2533,7 @@
                                                     </span>
                                                   <% end %>
                                                 </td>
-                                                
+
                                                 <td class="px-3 py-2 text-xs text-center">
                                                   <span class={[
                                                     "inline-flex items-center px-2 py-0.5 rounded-full border text-[11px] font-medium",
@@ -2546,14 +2551,14 @@
                                                     {kes.hasil || "Belum Ditentukan"}
                                                   </span>
                                                 </td>
-                                                
+
                                                 <td class="px-3 py-2 text-xs text-center">
                                                   <p class="font-medium">
                                                     {if Map.get(kes, :penguji),
                                                       do: kes.penguji,
                                                       else: "-"}
                                                   </p>
-                                                  
+
                                                   <p class="text-[11px] text-gray-500">
                                                     {if kes.tarikh_ujian,
                                                       do:
@@ -2564,14 +2569,14 @@
                                                       else: "Tiada tarikh"}
                                                   </p>
                                                 </td>
-                                                
+
                                                 <td class="px-3 py-2 text-xs text-center">
                                                   <p class="font-medium">
                                                     {if Map.get(kes, :disahkan_oleh),
                                                       do: kes.disahkan_oleh,
                                                       else: "Belum disahkan"}
                                                   </p>
-                                                  
+
                                                   <p class="text-[11px] text-gray-500">
                                                     {if kes.tarikh_pengesahan,
                                                       do:
@@ -2582,7 +2587,7 @@
                                                       else: "Tiada tarikh"}
                                                   </p>
                                                 </td>
-                                                
+
                                                 <td
                                                   :for={
                                                     col <- @uat_expanded_ujian.extra_columns || []
@@ -2620,7 +2625,7 @@
                                                     />
                                                   </form>
                                                 </td>
-                                                
+
                                                 <td class="px-3 py-2 text-xs text-center">
                                                   <div class="inline-flex items-center gap-1">
                                                     <%= if !@read_only_ketua_unit do %>
@@ -2658,7 +2663,7 @@
                                           <p class="text-sm font-medium">
                                             Tiada kes ujian direkodkan.
                                           </p>
-                                          
+
                                           <p class="text-xs mt-1">
                                             Klik &quot;Tambah Kes Ujian&quot; untuk mendaftarkan kes ujian pertama bagi modul ini.
                                           </p>
@@ -2673,7 +2678,7 @@
                         </tbody>
                       </table>
                     </div>
-                     <%!-- Pagination --%>
+                    <%!-- Pagination --%>
                     <div class="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50">
                       <p class="text-xs text-gray-500">
                         Menunjukkan
@@ -2691,7 +2696,7 @@
                         daripada <span class="font-semibold">{@uat_ujian_total}</span>
                         rekod
                       </p>
-                      
+
                       <div class="flex items-center gap-2">
                         <button
                           phx-click="uat_prev_page"
@@ -2721,7 +2726,7 @@
                             /> <span class="text-gray-500">/ {@uat_total_pages}</span>
                           </form>
                         </div>
-                        
+
                         <button
                           phx-click="uat_next_page"
                           class={[
@@ -2741,7 +2746,7 @@
                     </div>
                   <% end %>
                 </div>
-                 <%!-- Create / Edit ujian modal --%>
+                <%!-- Create / Edit ujian modal --%>
                 <%= if @uat_show_create_modal || @uat_show_edit_modal do %>
                   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm">
                     <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full mx-4 overflow-hidden border border-gray-200">
@@ -2754,12 +2759,12 @@
                               Kemaskini Ujian Penerimaan Pengguna
                             <% end %>
                           </h3>
-                          
+
                           <p class="text-[11px] text-blue-100 mt-0.5">
                             Lengkapkan maklumat ujian sebelum melaksanakan kes ujian terperinci.
                           </p>
                         </div>
-                        
+
                         <button
                           phx-click={
                             if(@uat_show_create_modal,
@@ -2772,7 +2777,7 @@
                           <.icon name="hero-x-mark" class="w-5 h-5" />
                         </button>
                       </div>
-                      
+
                       <div class="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto">
                         <.form
                           for={@uat_form}
@@ -2796,7 +2801,7 @@
                                 value={@uat_form[:modul].value}
                               >
                                 <option value="">-- Pilih Modul --</option>
-                                 <%!-- Modul dari tab Pengaturcaraan (Tugasan Anda) --%>
+                                <%!-- Modul dari tab Pengaturcaraan (Tugasan Anda) --%>
                                 <option
                                   :for={task <- @developer_tasks}
                                   value={task.title || "—"}
@@ -2806,24 +2811,31 @@
                                 </option>
                               </select>
                             </div>
-                            
+
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-1">
-                                No Ujian
-                              </label>
-                              <input type="hidden" name="ujian[no_ujian]" value={@uat_form[:no_ujian].value || ""} />
-                              <div class="block w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-700">
-                                <%= if @uat_form[:no_ujian].value && @uat_form[:no_ujian].value != "" do %>
-                                  {@uat_form[:no_ujian].value}
-                                <% else %>
-                                  <span class="text-gray-400 italic">Pilih modul terlebih dahulu</span>
-                                <% end %>
+                              <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                  No Ujian
+                                </label>
+                                <input
+                                  type="hidden"
+                                  name="ujian[no_ujian]"
+                                  value={@uat_form[:no_ujian].value || ""}
+                                />
+                                <div class="block w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-700">
+                                  <%= if @uat_form[:no_ujian].value && @uat_form[:no_ujian].value != "" do %>
+                                    {@uat_form[:no_ujian].value}
+                                  <% else %>
+                                    <span class="text-gray-400 italic">
+                                      Pilih modul terlebih dahulu
+                                    </span>
+                                  <% end %>
+                                </div>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                  Nombor ujian dikira secara automatik; tidak boleh diedit.
+                                </p>
                               </div>
-                              <p class="mt-1 text-xs text-gray-500">
-                                Nombor ujian dikira secara automatik; tidak boleh diedit.
-                              </p>
-                            </div>
 
                               <.input
                                 field={@uat_form[:tarikh_ujian]}
@@ -2831,7 +2843,7 @@
                                 label="Tarikh Ujian"
                               />
                             </div>
-                            
+
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <.input
@@ -2842,7 +2854,7 @@
                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                 />
                               </div>
-                              
+
                               <.input
                                 field={@uat_form[:penguji]}
                                 type="text"
@@ -2850,7 +2862,7 @@
                                 placeholder="Contoh: Ahmad bin Ali"
                               />
                             </div>
-                            
+
                             <div>
                               <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Dokumen Ujian
@@ -2882,7 +2894,7 @@
                                   <% end %>
                                 </span>
                               </div>
-                              
+
                               <%= if @uat_editing_ujian && @uat_editing_ujian.dokumen_ujian do %>
                                 <p class="mt-2 text-xs text-gray-600">
                                   Dokumen sedia ada:
@@ -2897,7 +2909,7 @@
                               <% end %>
                             </div>
                           </div>
-                          
+
                           <div class="mt-6 flex items-center justify-end gap-3">
                             <button
                               type="submit"
@@ -2918,19 +2930,19 @@
                     </div>
                   </div>
                 <% end %>
-                 <%!-- Edit kes ujian modal --%>
+                <%!-- Edit kes ujian modal --%>
                 <%= if @uat_show_edit_kes_modal do %>
                   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm">
                     <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 overflow-hidden border border-gray-200">
                       <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-between">
                         <div>
                           <h3 class="text-base font-semibold text-white">Kemaskini Kes Ujian</h3>
-                          
+
                           <p class="text-[11px] text-blue-100 mt-0.5">
                             Perincikan senario, langkah, keputusan dan maklumat pengesahan bagi kes ujian ini.
                           </p>
                         </div>
-                        
+
                         <button
                           phx-click="close_edit_kes_modal"
                           class="text-blue-100 hover:text-white rounded-full p-1.5 hover:bg-white/10 transition"
@@ -2938,7 +2950,7 @@
                           <.icon name="hero-x-mark" class="w-5 h-5" />
                         </button>
                       </div>
-                      
+
                       <div class="px-6 py-5 space-y-4 max-h-[80vh] overflow-y-auto">
                         <.form
                           for={@uat_kes_form}
@@ -3007,7 +3019,7 @@
                               />
                             </div>
                           </div>
-                          
+
                           <div class="mt-6 flex items-center justify-end gap-3">
                             <button
                               type="submit"
@@ -3022,7 +3034,7 @@
                     </div>
                   </div>
                 <% end %>
-                 <%!-- Add kes ujian modal --%>
+                <%!-- Add kes ujian modal --%>
                 <%= if @uat_show_add_kes_modal do %>
                   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm">
                     <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 overflow-hidden border border-gray-200">
@@ -3031,12 +3043,12 @@
                           <h3 class="text-base font-semibold text-white">
                             Tambah Kes Ujian Baharu
                           </h3>
-                          
+
                           <p class="text-[11px] text-blue-100 mt-0.5">
                             Rekodkan kes ujian baharu untuk modul ini bagi memastikan kualiti sistem terjamin.
                           </p>
                         </div>
-                        
+
                         <button
                           phx-click="close_add_kes_modal"
                           class="text-blue-100 hover:text-white rounded-full p-1.5 hover:bg-white/10 transition"
@@ -3044,7 +3056,7 @@
                           <.icon name="hero-x-mark" class="w-5 h-5" />
                         </button>
                       </div>
-                      
+
                       <div class="px-6 py-5 space-y-4 max-h-[80vh] overflow-y-auto">
                         <.form
                           for={@uat_kes_form}
@@ -3113,7 +3125,7 @@
                               />
                             </div>
                           </div>
-                          
+
                           <div class="mt-6 flex items-center justify-between gap-3">
                             <button
                               type="button"
@@ -3136,13 +3148,13 @@
                     </div>
                   </div>
                 <% end %>
-                 <%!-- Modal Tambah Lajur (dynamic column) --%>
+                <%!-- Modal Tambah Lajur (dynamic column) --%>
                 <%= if @uat_show_add_column_modal do %>
                   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm">
                     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-gray-200">
                       <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-between">
                         <h3 class="text-base font-semibold text-white">Tambah Lajur</h3>
-                        
+
                         <button
                           type="button"
                           phx-click="close_uat_add_column_modal"
@@ -3151,7 +3163,7 @@
                           <.icon name="hero-x-mark" class="w-5 h-5" />
                         </button>
                       </div>
-                      
+
                       <.form
                         for={@uat_kes_column_form}
                         id="uat-add-column-form"
@@ -3200,18 +3212,18 @@
                         <span>Kembali ke Senarai Ujian</span>
                       </.link>
                     </div>
-                    
+
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">
                       {@kes_selected_ujian.tajuk}
                     </h2>
-                    
+
                     <p class="text-gray-600">Butiran lengkap ujian keselamatan</p>
                   </div>
-                   <%!-- Maklumat Ujian Table --%>
+                  <%!-- Maklumat Ujian Table --%>
                   <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
                     <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800 flex items-center justify-between">
                       <h3 class="text-xl font-semibold text-white">Maklumat Ujian</h3>
-                      
+
                       <button
                         phx-click="kes_add_new_kes"
                         class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all duration-200 font-medium text-sm"
@@ -3220,7 +3232,7 @@
                         <span>Tambah Kes Ujian</span>
                       </button>
                     </div>
-                    
+
                     <div class="overflow-x-auto">
                       <table class="w-full text-sm table-auto">
                         <thead class="bg-gray-50 border-b border-gray-200">
@@ -3228,49 +3240,49 @@
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
                               ID Kes Ujian
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">
                               Senario Ujian
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[150px]">
                               Langkah Ujian
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
                               Keputusan Dijangka
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
                               Keputusan Sebenar
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
                               Hasil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[120px]">
                               Di Uji Oleh
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
                               Tarikh Ujian
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">
                               Disahkan Oleh
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-36">
                               Tarikh Pengesahan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">
                               Tindakan
                             </th>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <%= if length(Map.get(@kes_selected_ujian, :senarai_kes_ujian, [])) == 0 do %>
                             <tr>
@@ -3291,29 +3303,29 @@
                                   {kes[:kod] || kes.id}
                                 </span>
                               </td>
-                              
+
                               <td class="px-3 py-3">
                                 <span class="text-gray-900 font-semibold">{kes.senario}</span>
                               </td>
-                              
+
                               <td class="px-3 py-3">
                                 <span class="text-gray-900 text-xs whitespace-pre-wrap font-mono tabular-nums leading-relaxed">
                                   {kes.langkah}
                                 </span>
                               </td>
-                              
+
                               <td class="px-3 py-3">
                                 <span class="text-gray-900 text-xs whitespace-pre-wrap">
                                   {kes.keputusan_dijangka}
                                 </span>
                               </td>
-                              
+
                               <td class="px-3 py-3">
                                 <span class="text-gray-500 text-xs whitespace-pre-wrap">
                                   {if kes.keputusan_sebenar, do: kes.keputusan_sebenar, else: ""}
                                 </span>
                               </td>
-                              
+
                               <td class="px-3 py-3 text-center">
                                 <%= if kes.hasil do %>
                                   <span class={[
@@ -3339,13 +3351,13 @@
                                   </span>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-3 py-3">
                                 <span class="text-gray-900 text-xs">
                                   {Map.get(kes, :penguji, "")}
                                 </span>
                               </td>
-                              
+
                               <td class="px-3 py-3">
                                 <%= if Map.get(kes, :tarikh_ujian) do %>
                                   <div class="flex items-center gap-1.5">
@@ -3359,7 +3371,7 @@
                                   </div>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-3 py-3 text-center">
                                 <%= if Map.get(kes, :disahkan) do %>
                                   <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border bg-green-100 text-green-800 border-green-200">
@@ -3367,7 +3379,7 @@
                                   </span>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-3 py-3">
                                 <%= if Map.get(kes, :tarikh_pengesahan) do %>
                                   <div class="flex items-center gap-1.5">
@@ -3381,7 +3393,7 @@
                                   </div>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-3 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
                                   <%= if !@read_only_ketua_unit do %>
@@ -3433,12 +3445,12 @@
                       </div>
                     <% end %>
                   </div>
-                  
+
                   <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800 flex items-center justify-between">
                       <h3 class="text-xl font-semibold text-white">Senarai Ujian Keselamatan</h3>
                     </div>
-                     <% ujian_keselamatan_display =
+                    <% ujian_keselamatan_display =
                       Enum.filter(@ujian_keselamatan, fn u ->
                         Map.get(u, :tarikh_permohonan) != nil or
                           Map.get(u, :tarikh_kelulusan) != nil or
@@ -3472,19 +3484,19 @@
                               <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Tarikh Permohonan
                               </th>
-                              
+
                               <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Tarikh Kelulusan
                               </th>
-                              
+
                               <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Upload File
                               </th>
-                              
+
                               <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Status Kelulusan
                               </th>
-                              
+
                               <%= if !@read_only_ketua_unit do %>
                                 <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                   Tindakan
@@ -3492,7 +3504,7 @@
                               <% end %>
                             </tr>
                           </thead>
-                          
+
                           <tbody class="bg-white divide-y divide-gray-200">
                             <tr
                               :for={ujian <- ujian_keselamatan_display}
@@ -3513,7 +3525,7 @@
                                   <span class="text-xs text-gray-400">—</span>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-3 py-2 whitespace-nowrap text-left">
                                 <%= if Map.get(ujian, :tarikh_kelulusan) do %>
                                   <div class="flex items-center gap-1.5">
@@ -3529,7 +3541,7 @@
                                   <span class="text-xs text-gray-400">—</span>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-3 py-2 text-left">
                                 <%= if upload = Map.get(ujian, :upload_file) do %>
                                   <a
@@ -3544,7 +3556,7 @@
                                   <span class="text-xs text-gray-400">—</span>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-3 py-2 whitespace-nowrap text-left">
                                 <% status_kel = Map.get(ujian, :status_kelulusan) || "—" %>
                                 <span class={[
@@ -3573,7 +3585,7 @@
                                   /> {status_kel}
                                 </span>
                               </td>
-                              
+
                               <%= if !@read_only_ketua_unit do %>
                                 <td class="px-3 py-2 whitespace-nowrap text-left">
                                   <div class="flex items-center gap-1.5">
@@ -3604,12 +3616,12 @@
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <h2 class="text-xl font-semibold text-gray-900">Senarai Penempatan</h2>
-                    
+
                     <p class="text-sm text-gray-500 mt-0.5">
                       Pantau status penempatan mengikut versi dan persekitaran.
                     </p>
                   </div>
-                  
+
                   <%= if !@read_only_ketua_unit do %>
                     <button
                       type="button"
@@ -3621,22 +3633,22 @@
                     </button>
                   <% end %>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h3 class="text-lg font-semibold text-white">Senarai Penempatan</h3>
-                    
+
                     <p class="text-sm text-blue-100">
                       Pantau status penempatan mengikut versi dan persekitaran.
                     </p>
                   </div>
-                  
+
                   <%= if length(@penempatan) == 0 do %>
                     <div class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-gray-400">
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada penempatan</p>
-                        
+
                         <p class="text-xs mt-1">
                           Sila daftar penempatan baharu di modul Penempatan.
                         </p>
@@ -3650,43 +3662,43 @@
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
                               Bil
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[180px]">
                               Nama Sistem
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Versi
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Jenis
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Lokasi
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Penempatan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Permohonan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Spesifikasi
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Pemilik Sistem
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">
                               URL
                             </th>
-                            
+
                             <%= if !@read_only_ketua_unit do %>
                               <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-28">
                                 Tindakan
@@ -3694,7 +3706,7 @@
                             <% end %>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{penempatan, index} <- Enum.with_index(@penempatan, 1)}
@@ -3703,27 +3715,27 @@
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-600 font-medium">{index}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <div class="text-xs text-gray-900 font-semibold line-clamp-1">
                                 {penempatan.nama_sistem}
                               </div>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-700">{penempatan.versi || "-"}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-700">{penempatan.jenis || "-"}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <span class="text-xs text-gray-700">
                                 {penempatan.lokasi || "-"}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
                                 <.icon
@@ -3735,7 +3747,7 @@
                                 </span>
                               </div>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-700">
                                 <%= if penempatan.tarikh_dijangka do %>
@@ -3745,7 +3757,7 @@
                                 <% end %>
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <span class="text-xs text-gray-900">
                                 <%= if penempatan.status && penempatan.status != "" do %>
@@ -3755,7 +3767,7 @@
                                 <% end %>
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <span class="text-xs text-gray-900">
                                 <%= if penempatan.dibina_oleh && penempatan.dibina_oleh != "" do %>
@@ -3765,7 +3777,7 @@
                                 <% end %>
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left min-w-[200px] max-w-[260px]">
                               <%= if penempatan.url && penempatan.url != "" do %>
                                 <a
@@ -3779,7 +3791,7 @@
                                 <span class="text-xs text-gray-400">-</span>
                               <% end %>
                             </td>
-                            
+
                             <%= if !@read_only_ketua_unit do %>
                               <td class="px-3 py-2 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
@@ -3811,7 +3823,7 @@
                     </div>
                   <% end %>
                 </div>
-                 <%!-- Modal: Penempatan Baharu / Kemaskini Penempatan --%>
+                <%!-- Modal: Penempatan Baharu / Kemaskini Penempatan --%>
                 <%= if @penempatan_show_create_modal do %>
                   <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
                     <div
@@ -3820,7 +3832,7 @@
                       phx-click="close_penempatan_create_modal"
                     >
                     </div>
-                    
+
                     <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
                       <div class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
                         <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
@@ -3833,12 +3845,12 @@
                                   Daftar Penempatan Baharu
                                 <% end %>
                               </h2>
-                              
+
                               <p class="mt-1 text-sm text-blue-100">
                                 Isi maklumat penempatan sistem
                               </p>
                             </div>
-                            
+
                             <button
                               type="button"
                               phx-click="close_penempatan_create_modal"
@@ -3849,7 +3861,7 @@
                             </button>
                           </div>
                         </div>
-                        
+
                         <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
                           <.form
                             for={@penempatan_form}
@@ -3874,7 +3886,7 @@
                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <div>
                                 <.input
                                   field={@penempatan_form[:versi]}
@@ -3885,7 +3897,7 @@
                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <div>
                                 <.input
                                   field={@penempatan_form[:lokasi]}
@@ -3896,7 +3908,7 @@
                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <div>
                                 <label class="block text-sm font-medium text-gray-800 mb-1.5">
                                   Jenis
@@ -3911,14 +3923,14 @@
                                   >
                                     Produksi
                                   </option>
-                                  
+
                                   <option
                                     value="Staging"
                                     selected={@penempatan_form[:jenis].value == "Staging"}
                                   >
                                     Staging
                                   </option>
-                                  
+
                                   <option
                                     value="Development"
                                     selected={@penempatan_form[:jenis].value == "Development"}
@@ -3927,7 +3939,7 @@
                                   </option>
                                 </select>
                               </div>
-                              
+
                               <div>
                                 <.input
                                   field={@penempatan_form[:status]}
@@ -3937,7 +3949,7 @@
                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <div>
                                 <.input
                                   field={@penempatan_form[:tarikh_penempatan]}
@@ -3947,7 +3959,7 @@
                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <div>
                                 <.input
                                   field={@penempatan_form[:tarikh_dijangka]}
@@ -3956,7 +3968,7 @@
                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <div class="md:col-span-2">
                                 <.input
                                   field={@penempatan_form[:url]}
@@ -3966,7 +3978,7 @@
                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <div class="md:col-span-2">
                                 <.input
                                   field={@penempatan_form[:dibina_oleh]}
@@ -3976,7 +3988,7 @@
                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 />
                               </div>
-                              
+
                               <div class="md:col-span-2">
                                 <.input
                                   field={@penempatan_form[:catatan]}
@@ -3990,7 +4002,7 @@
                             </div>
                           </.form>
                         </div>
-                        
+
                         <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
                           <button
                             type="button"
@@ -4038,22 +4050,22 @@
                     <% end %>
                   </div>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h3 class="text-lg font-semibold text-white">Senarai Penyerahan</h3>
-                    
+
                     <p class="text-sm text-blue-100">
                       Pantau status penyerahan mengikut versi dan penerima.
                     </p>
                   </div>
-                  
+
                   <%= if length(@penyerahan) == 0 do %>
                     <div class="px-6 py-12 text-center">
                       <div class="flex flex-col items-center justify-center text-gray-400">
                         <.icon name="hero-inbox" class="w-12 h-12 mb-3" />
                         <p class="text-sm font-medium">Tiada penyerahan</p>
-                        
+
                         <p class="text-xs mt-1">Tiada rekod penyerahan pada masa ini.</p>
                       </div>
                     </div>
@@ -4065,35 +4077,35 @@
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
                               Bil.
                             </th>
-                            
+
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Nama Sistem
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Versi
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Jabatan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Pengurus Projek
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Manual Pengguna
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Surat Akuan
                             </th>
-                            
+
                             <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                               Tarikh Penyerahan
                             </th>
-                            
+
                             <%= if !@read_only_ketua_unit do %>
                               <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Tindakan
@@ -4101,7 +4113,7 @@
                             <% end %>
                           </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white divide-y divide-gray-200">
                           <tr
                             :for={{penyerahan, idx} <- Enum.with_index(@penyerahan, 1)}
@@ -4110,21 +4122,21 @@
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-600 font-medium">{idx}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <span class="text-xs text-gray-900 font-semibold">
                                 {penyerahan.nama_sistem}
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-700">{penyerahan.versi}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-left">
                               <span class="text-xs text-gray-700">{penyerahan.penerima}</span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <span class="text-xs text-gray-700">
                                 <%= if penyerahan.pengurus_projek do %>
@@ -4134,7 +4146,7 @@
                                 <% end %>
                               </span>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <%= if penyerahan.manual_pengguna do %>
                                 <a
@@ -4164,7 +4176,7 @@
                                 <% end %>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <%= if penyerahan.surat_akuan_penerimaan do %>
                                 <a
@@ -4195,7 +4207,7 @@
                                 <% end %>
                               <% end %>
                             </td>
-                            
+
                             <td class="px-3 py-2 text-center">
                               <div class="flex items-center justify-center gap-1.5">
                                 <.icon
@@ -4211,7 +4223,7 @@
                                 </span>
                               </div>
                             </td>
-                            
+
                             <%= if !@read_only_ketua_unit do %>
                               <td class="px-3 py-2 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
@@ -4249,12 +4261,12 @@
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <h2 class="text-2xl font-bold text-gray-900">Maklumbalas Pelanggan</h2>
-                    
+
                     <p class="text-gray-600">
                       Urus dan pantau maklumbalas daripada pelanggan selepas penyerahan
                     </p>
                   </div>
-                  
+
                   <%= if !@read_only_ketua_unit do %>
                     <div class="flex-shrink-0">
                       <button
@@ -4267,16 +4279,16 @@
                     </div>
                   <% end %>
                 </div>
-                
+
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                   <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
                     <h3 class="text-lg font-semibold text-white">Maklumbalas Pelanggan</h3>
-                    
+
                     <p class="text-sm text-blue-100">
                       Pantau maklumbalas, aduan dan cadangan penambahbaikan daripada pelanggan.
                     </p>
                   </div>
-                  
+
                   <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                       <thead class="bg-gray-50 border-b border-gray-200">
@@ -4284,27 +4296,27 @@
                           <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-14">
                             Bil
                           </th>
-                          
+
                           <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                             Tarikh Maklumbalas
                           </th>
-                          
+
                           <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                             Jabatan
                           </th>
-                          
+
                           <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                             Responden
                           </th>
-                          
+
                           <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">
                             Butiran Maklumbalas
                           </th>
-                          
+
                           <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
                             Dokumen
                           </th>
-                          
+
                           <%= if !@read_only_ketua_unit do %>
                             <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
                               Tindakan
@@ -4312,15 +4324,18 @@
                           <% end %>
                         </tr>
                       </thead>
-                      
+
                       <tbody class="bg-white divide-y divide-gray-200">
                         <%= if Enum.empty?(assigns[:maklumbalas_list] || []) do %>
                           <tr>
-                            <td colspan={if(@read_only_ketua_unit, do: 6, else: 7)} class="px-6 py-12 text-center">
+                            <td
+                              colspan={if(@read_only_ketua_unit, do: 6, else: 7)}
+                              class="px-6 py-12 text-center"
+                            >
                               <div class="flex flex-col items-center justify-center text-gray-400">
                                 <.icon name="hero-chat-bubble-left-right" class="w-12 h-12 mb-3" />
                                 <p class="text-sm font-medium">Tiada maklumbalas</p>
-                                
+
                                 <p class="text-xs mt-1">
                                   Kandungan maklumbalas pelanggan akan dipaparkan di sini
                                 </p>
@@ -4331,7 +4346,7 @@
                           <%= for {item, idx} <- Enum.with_index(assigns[:maklumbalas_list] || [], 1) do %>
                             <tr class="hover:bg-gray-50 transition-colors">
                               <td class="px-4 py-3 text-center text-sm text-gray-700">{idx}</td>
-                              
+
                               <td class="px-4 py-3 text-sm text-gray-700">
                                 <%= if item.tarikh_maklumbalas do %>
                                   {Calendar.strftime(item.tarikh_maklumbalas, "%d/%m/%Y")}
@@ -4339,15 +4354,15 @@
                                   <span class="text-gray-400">-</span>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-4 py-3 text-sm text-gray-700">
                                 {item.jabatan || Map.get(@project, :jabatan) || "-"}
                               </td>
-                              
+
                               <td class="px-4 py-3 text-sm text-gray-700">
                                 {item.responden || "-"}
                               </td>
-                              
+
                               <td class="px-4 py-3 text-sm text-gray-700 max-w-[320px]">
                                 <%= if item.butiran && item.butiran != "" do %>
                                   <span class="line-clamp-3" title={item.butiran}>
@@ -4357,7 +4372,7 @@
                                   <span class="text-gray-400">-</span>
                                 <% end %>
                               </td>
-                              
+
                               <td class="px-4 py-3 text-center text-sm text-gray-700">
                                 <%= if item.attachment_path do %>
                                   <a
@@ -4372,7 +4387,7 @@
                                   <span class="text-gray-400 text-xs">Tiada dokumen</span>
                                 <% end %>
                               </td>
-                              
+
                               <%= if !@read_only_ketua_unit do %>
                                 <td class="px-4 py-3 text-center">
                                   <div class="flex items-center justify-center gap-1.5">
@@ -4412,7 +4427,7 @@
       </main>
     </div>
   </div>
-   <%!-- Maklumbalas Pelanggan: Modal Maklumbalas baharu --%>
+  <%!-- Maklumbalas Pelanggan: Modal Maklumbalas baharu --%>
   <%= if assigns[:maklumbalas_show_create_modal] do %>
     <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       <div
@@ -4421,17 +4436,17 @@
         phx-click="maklumbalas_close_create_modal"
       >
       </div>
-      
+
       <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
         <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-xl font-bold text-white">Maklumbalas baharu</h2>
-                
+
                 <p class="mt-1 text-sm text-blue-100">Tambah rekod maklumbalas pelanggan</p>
               </div>
-              
+
               <button
                 type="button"
                 phx-click="maklumbalas_close_create_modal"
@@ -4442,7 +4457,7 @@
               </button>
             </div>
           </div>
-          
+
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@maklumbalas_form}
@@ -4459,20 +4474,20 @@
                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 />
               </div>
-              
+
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Jabatan</label>
                 <div class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
                   {@maklumbalas_form[:jabatan].value || "-"}
                 </div>
-                
+
                 <input
                   type="hidden"
                   name="maklumbalas[jabatan]"
                   value={@maklumbalas_form[:jabatan].value || ""}
                 />
               </div>
-              
+
               <div>
                 <.input
                   field={@maklumbalas_form[:responden]}
@@ -4482,7 +4497,7 @@
                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 />
               </div>
-              
+
               <div>
                 <.input
                   field={@maklumbalas_form[:butiran]}
@@ -4495,16 +4510,16 @@
               </div>
 
               <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">
-                  Dokumen
-                </label>
-
+                <label class="block text-sm font-medium text-gray-700">Dokumen</label>
                 <div class="flex items-center justify-between gap-3 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3">
                   <div class="flex-1 text-xs text-gray-600">
                     Muat naik dokumen sokongan seperti PDF, DOC, DOCX, JPG atau PNG. Saiz maksimum 10MB.
                   </div>
 
-                  <.live_file_input upload={@uploads.maklumbalas_file} class="text-xs text-gray-700" />
+                  <.live_file_input
+                    upload={@uploads.maklumbalas_file}
+                    class="text-xs text-gray-700"
+                  />
                 </div>
 
                 <%= for entry <- @uploads.maklumbalas_file.entries do %>
@@ -4518,7 +4533,7 @@
               </div>
             </.form>
           </div>
-          
+
           <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
             <button
               type="button"
@@ -4539,7 +4554,7 @@
       </div>
     </div>
   <% end %>
-   <%!-- Maklumbalas Pelanggan: Modal Kemaskini Maklumbalas --%>
+  <%!-- Maklumbalas Pelanggan: Modal Kemaskini Maklumbalas --%>
   <%= if assigns[:maklumbalas_show_edit_modal] do %>
     <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       <div
@@ -4548,17 +4563,17 @@
         phx-click="maklumbalas_close_edit_modal"
       >
       </div>
-      
+
       <div class="flex min-h-full items-center justify-center p-4 relative z-50 pointer-events-none">
         <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-xl font-bold text-white">Kemaskini Maklumbalas</h2>
-                
+
                 <p class="mt-1 text-sm text-blue-100">Kemaskini rekod maklumbalas pelanggan</p>
               </div>
-              
+
               <button
                 type="button"
                 phx-click="maklumbalas_close_edit_modal"
@@ -4569,7 +4584,7 @@
               </button>
             </div>
           </div>
-          
+
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@maklumbalas_form}
@@ -4586,20 +4601,20 @@
                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 />
               </div>
-              
+
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Jabatan</label>
                 <div class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
                   {@maklumbalas_form[:jabatan].value || "-"}
                 </div>
-                
+
                 <input
                   type="hidden"
                   name="maklumbalas[jabatan]"
                   value={@maklumbalas_form[:jabatan].value || ""}
                 />
               </div>
-              
+
               <div>
                 <.input
                   field={@maklumbalas_form[:responden]}
@@ -4609,7 +4624,7 @@
                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 />
               </div>
-              
+
               <div>
                 <.input
                   field={@maklumbalas_form[:butiran]}
@@ -4622,17 +4637,17 @@
               </div>
 
               <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">
-                  Dokumen
-                </label>
-
+                <label class="block text-sm font-medium text-gray-700">Dokumen</label>
                 <div class="space-y-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3">
                   <div class="flex items-center justify-between gap-3">
                     <div class="flex-1 text-xs text-gray-600">
                       Muat naik dokumen sokongan baharu jika perlu menggantikan lampiran sedia ada.
                     </div>
 
-                    <.live_file_input upload={@uploads.maklumbalas_file} class="text-xs text-gray-700" />
+                    <.live_file_input
+                      upload={@uploads.maklumbalas_file}
+                      class="text-xs text-gray-700"
+                    />
                   </div>
 
                   <%= if @maklumbalas_editing && @maklumbalas_editing.attachment_path do %>
@@ -4659,7 +4674,7 @@
               </div>
             </.form>
           </div>
-          
+
           <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
             <button
               type="button"
@@ -4680,7 +4695,7 @@
       </div>
     </div>
   <% end %>
-   <%!-- Penyerahan: Daftar Penyerahan Baharu Modal --%>
+  <%!-- Penyerahan: Daftar Penyerahan Baharu Modal --%>
   <%= if assigns[:penyerahan_show_create_modal] do %>
     <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       <div
@@ -4787,7 +4802,6 @@
                   >
                     Batal
                   </button>
-
                   <button
                     type="submit"
                     class="inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-lg shadow-sm transition-colors duration-200 text-white bg-blue-600 hover:bg-blue-700 hover:shadow-md"
@@ -4802,7 +4816,7 @@
       </div>
     </div>
   <% end %>
-   <%!-- Penyerahan: Edit Modal --%>
+  <%!-- Penyerahan: Edit Modal --%>
   <%= if @penyerahan_show_edit_modal do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
@@ -4815,17 +4829,17 @@
         phx-click="penyerahan_close_edit_modal"
       >
       </div>
-      
+
       <div class="flex min-h-full items-center justify-center p-4">
         <div class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Penyerahan</h2>
-                
+
                 <p class="mt-1 text-sm text-blue-100">Kemaskini maklumat penyerahan</p>
               </div>
-              
+
               <button
                 type="button"
                 phx-click="penyerahan_close_edit_modal"
@@ -4836,7 +4850,7 @@
               </button>
             </div>
           </div>
-          
+
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@penyerahan_form}
@@ -4854,7 +4868,7 @@
                     class="w-full bg-gray-50 text-gray-700"
                   />
                 </div>
-                
+
                 <div>
                   <.input
                     field={@penyerahan_form[:versi]}
@@ -4863,7 +4877,7 @@
                     class="w-full"
                   />
                 </div>
-                
+
                 <div>
                   <.input
                     field={@penyerahan_form[:penerima]}
@@ -4872,7 +4886,7 @@
                     class="w-full"
                   />
                 </div>
-                
+
                 <div>
                   <.input
                     field={@penyerahan_form[:pengurus_projek]}
@@ -4881,7 +4895,7 @@
                     class="w-full"
                   />
                 </div>
-                
+
                 <div>
                   <.input
                     field={@penyerahan_form[:tarikh_penyerahan]}
@@ -4892,7 +4906,7 @@
                   />
                 </div>
               </div>
-              
+
               <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6 mt-6">
                 <button
                   type="button"
@@ -4914,7 +4928,7 @@
       </div>
     </div>
   <% end %>
-   <%!-- Penyerahan: Upload Modal --%>
+  <%!-- Penyerahan: Upload Modal --%>
   <%= if @penyerahan_show_upload_modal do %>
     <div
       class="fixed inset-0 z-50 overflow-y-auto"
@@ -4927,7 +4941,7 @@
         phx-click="penyerahan_close_upload_modal"
       >
       </div>
-      
+
       <div class="flex min-h-full items-center justify-center px-4 py-6">
         <div
           class="relative w-full max-w-xl md:max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
@@ -4937,7 +4951,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Muat Naik Dokumen</h2>
-                
+
                 <p class="mt-1 text-sm text-blue-100">
                   <%= case @penyerahan_upload_target do %>
                     <% "surat" -> %>
@@ -4948,12 +4962,12 @@
                       Muat naik Manual Pengguna dan/atau Surat Akuan
                   <% end %>
                 </p>
-                
+
                 <p class="mt-0.5 text-xs text-blue-200/90">
                   Pilih fail kemudian klik Muat naik. PDF, DOC atau DOCX sehingga 10MB.
                 </p>
               </div>
-              
+
               <button
                 type="button"
                 phx-click="penyerahan_close_upload_modal"
@@ -4964,7 +4978,7 @@
               </button>
             </div>
           </div>
-          
+
           <.form
             for={%{}}
             action={~p"/projek/#{@project.id}/penyerahan/upload"}
@@ -4978,7 +4992,7 @@
                 <%= if @penyerahan_upload_target != "surat" do %>
                   <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900 mb-3">Manual Pengguna</h3>
-                    
+
                     <%= if @penyerahan_uploading_penyerahan &&
                           @penyerahan_uploading_penyerahan.manual_pengguna do %>
                       <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -4986,11 +5000,11 @@
                           <.icon name="hero-document-check" class="w-5 h-5 text-blue-600" />
                           <div class="flex-1">
                             <p class="text-sm font-medium text-blue-900">Dokumen sedia ada</p>
-                            
+
                             <p class="text-xs text-blue-700 mt-1">
                               {@penyerahan_uploading_penyerahan.manual_pengguna}
                             </p>
-                            
+
                             <p class="text-xs text-blue-600 mt-1 italic">
                               Muat naik dokumen baharu akan menggantikan dokumen sedia ada
                             </p>
@@ -4998,7 +5012,7 @@
                         </div>
                       </div>
                     <% end %>
-                    
+
                     <div class="space-y-4">
                       <label class="block text-sm font-medium text-gray-700 mb-2">
                         Pilih Fail
@@ -5013,13 +5027,13 @@
                     </div>
                   </div>
                 <% end %>
-                
+
                 <%= if @penyerahan_upload_target != "manual" do %>
                   <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900 mb-3">
                       Surat Akuan Penerimaan Aplikasi
                     </h3>
-                    
+
                     <%= if @penyerahan_uploading_penyerahan &&
                           @penyerahan_uploading_penyerahan.surat_akuan_penerimaan do %>
                       <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -5027,11 +5041,11 @@
                           <.icon name="hero-document-check" class="w-5 h-5 text-blue-600" />
                           <div class="flex-1">
                             <p class="text-sm font-medium text-blue-900">Dokumen sedia ada</p>
-                            
+
                             <p class="text-xs text-blue-700 mt-1">
                               {@penyerahan_uploading_penyerahan.surat_akuan_penerimaan}
                             </p>
-                            
+
                             <p class="text-xs text-blue-600 mt-1 italic">
                               Muat naik dokumen baharu akan menggantikan dokumen sedia ada
                             </p>
@@ -5039,7 +5053,7 @@
                         </div>
                       </div>
                     <% end %>
-                    
+
                     <div class="space-y-4">
                       <label class="block text-sm font-medium text-gray-700 mb-2">
                         Pilih Fail
@@ -5055,7 +5069,7 @@
                   </div>
                 <% end %>
               </div>
-              
+
               <div class="flex justify-end pt-4 pb-2">
                 <button
                   type="submit"
@@ -5070,19 +5084,19 @@
       </div>
     </div>
   <% end %>
-   <%!-- Ujian Keselamatan: Daftar Ujian Baharu Modal --%>
+  <%!-- Ujian Keselamatan: Daftar Ujian Baharu Modal --%>
   <%= if assigns[:kes_show_create_modal] do %>
     <div class="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm">
       <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full mx-4 overflow-hidden border border-gray-200">
         <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-between">
           <div>
             <h3 class="text-base font-semibold text-white">Daftar Ujian Keselamatan Baharu</h3>
-            
+
             <p class="text-[11px] text-blue-100 mt-0.5">
               Lengkapkan maklumat permohonan ujian keselamatan.
             </p>
           </div>
-          
+
           <button
             type="button"
             phx-click="close_kes_create_modal"
@@ -5091,7 +5105,7 @@
             <.icon name="hero-x-mark" class="w-5 h-5" />
           </button>
         </div>
-        
+
         <div class="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto">
           <.form
             for={@kes_form}
@@ -5112,7 +5126,7 @@
                     class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 text-gray-900"
                   />
                 </div>
-                
+
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">
                     Tarikh Kelulusan
@@ -5125,7 +5139,7 @@
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Upload File</label>
                 <div class="mt-1 flex items-center gap-3">
@@ -5150,18 +5164,18 @@
                     <% end %>
                   </span>
                 </div>
-                
+
                 <%= for err <- upload_errors(@uploads.kes_file) do %>
                   <p class="mt-1 text-sm text-red-600">{kes_upload_error_to_string(err)}</p>
                 <% end %>
-                
+
                 <%= for entry <- @uploads.kes_file.entries do %>
                   <%= for err <- upload_errors(@uploads.kes_file, entry) do %>
                     <p class="mt-1 text-sm text-red-600">{kes_upload_error_to_string(err)}</p>
                   <% end %>
                 <% end %>
               </div>
-              
+
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                   Status Kelulusan
@@ -5172,12 +5186,12 @@
                   value={@kes_form[:status_kelulusan].value || "Lulus"}
                 >
                   <option value="Lulus">Lulus</option>
-                  
+
                   <option value="Gagal">Gagal</option>
                 </select>
               </div>
             </div>
-            
+
             <div class="mt-6 flex items-center justify-between gap-3">
               <button
                 type="button"
@@ -5198,7 +5212,7 @@
       </div>
     </div>
   <% end %>
-   <%!-- Ujian Keselamatan: Edit Ujian Modal --%>
+  <%!-- Ujian Keselamatan: Edit Ujian Modal --%>
   <%= if assigns[:kes_show_edit_modal] && assigns[:kes_editing_ujian] do %>
     <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       <div
@@ -5207,17 +5221,17 @@
         phx-click="kes_close_edit_modal"
       >
       </div>
-      
+
       <div class="flex min-h-full items-center justify-center p-4 pointer-events-none">
         <div class="relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Ujian Keselamatan</h2>
-                
+
                 <p class="mt-1 text-sm text-blue-100">Edit maklumat ujian keselamatan</p>
               </div>
-              
+
               <button
                 type="button"
                 phx-click="kes_close_edit_modal"
@@ -5228,7 +5242,7 @@
               </button>
             </div>
           </div>
-          
+
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6 text-gray-900">
             <.form
               for={@kes_form}
@@ -5253,7 +5267,7 @@
                     class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 text-gray-900"
                   />
                 </div>
-                
+
                 <div>
                   <label
                     for="kes-edit-tarikh-kelulusan"
@@ -5269,7 +5283,7 @@
                     class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 text-gray-900"
                   />
                 </div>
-                
+
                 <div class="md:col-span-2">
                   <input
                     type="hidden"
@@ -5290,7 +5304,7 @@
                       </a>
                     </p>
                   <% end %>
-                  
+
                   <div class="flex items-center gap-3 flex-wrap">
                     <.live_file_input upload={@uploads.kes_edit_file} class="hidden" />
                     <button
@@ -5316,18 +5330,18 @@
                       <% end %>
                     </span>
                   </div>
-                  
+
                   <%= for err <- upload_errors(@uploads.kes_edit_file) do %>
                     <p class="mt-1 text-sm text-red-600">{kes_upload_error_to_string(err)}</p>
                   <% end %>
-                  
+
                   <%= for entry <- @uploads.kes_edit_file.entries do %>
                     <%= for err <- upload_errors(@uploads.kes_edit_file, entry) do %>
                       <p class="mt-1 text-sm text-red-600">{kes_upload_error_to_string(err)}</p>
                     <% end %>
                   <% end %>
                 </div>
-                
+
                 <div>
                   <label
                     for="kes-edit-status-kelulusan"
@@ -5343,7 +5357,7 @@
                     <option value="Lulus" selected={@kes_form[:status_kelulusan].value == "Lulus"}>
                       Lulus
                     </option>
-                    
+
                     <option value="Gagal" selected={@kes_form[:status_kelulusan].value == "Gagal"}>
                       Gagal
                     </option>
@@ -5352,7 +5366,7 @@
               </div>
             </.form>
           </div>
-          
+
           <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
             <button
               type="button"
@@ -5373,7 +5387,7 @@
       </div>
     </div>
   <% end %>
-   <%!-- Ujian Keselamatan: Edit Kes Ujian Modal --%>
+  <%!-- Ujian Keselamatan: Edit Kes Ujian Modal --%>
   <%= if assigns[:kes_show_edit_kes_modal] && assigns[:kes_selected_kes] do %>
     <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       <div
@@ -5382,19 +5396,19 @@
         phx-click="kes_close_edit_kes_modal"
       >
       </div>
-      
+
       <div class="flex min-h-full items-center justify-center p-4 pointer-events-none">
         <div class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all pointer-events-auto">
           <div class="border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-2xl font-bold text-white">Kemaskini Kes Ujian</h2>
-                
+
                 <p class="mt-1 text-sm text-blue-100">
                   Edit maklumat kes ujian: {@kes_selected_kes[:kod] || @kes_selected_kes.id}
                 </p>
               </div>
-              
+
               <button
                 type="button"
                 phx-click="kes_close_edit_kes_modal"
@@ -5405,7 +5419,7 @@
               </button>
             </div>
           </div>
-          
+
           <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
             <.form
               for={@kes_kes_form}
@@ -5425,7 +5439,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
-                
+
                 <div class="md:col-span-2">
                   <.input
                     field={@kes_kes_form[:langkah]}
@@ -5436,7 +5450,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
-                
+
                 <div class="md:col-span-2">
                   <.input
                     field={@kes_kes_form[:keputusan_dijangka]}
@@ -5447,7 +5461,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
-                
+
                 <div class="md:col-span-2">
                   <.input
                     field={@kes_kes_form[:keputusan_sebenar]}
@@ -5458,7 +5472,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   />
                 </div>
-                
+
                 <div>
                   <.input
                     field={@kes_kes_form[:hasil]}
@@ -5469,7 +5483,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
-                
+
                 <div>
                   <.input
                     field={@kes_kes_form[:penguji]}
@@ -5479,7 +5493,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
-                
+
                 <div>
                   <.input
                     field={@kes_kes_form[:tarikh_ujian]}
@@ -5489,7 +5503,7 @@
                     class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
-                
+
                 <div>
                   <.input
                     field={@kes_kes_form[:disahkan_oleh]}
@@ -5499,7 +5513,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   />
                 </div>
-                
+
                 <div>
                   <.input
                     field={@kes_kes_form[:tarikh_pengesahan]}
@@ -5512,7 +5526,7 @@
               </div>
             </.form>
           </div>
-          
+
           <div class="border-t border-gray-200 bg-gray-50 px-6 py-4 flex justify-end gap-3">
             <button
               type="button"
@@ -5533,7 +5547,7 @@
       </div>
     </div>
   <% end %>
-   <%!-- Catatan Tugasan Modal (Pengaturcaraan tab) --%>
+  <%!-- Catatan Tugasan Modal (Pengaturcaraan tab) --%>
   <div
     :if={@show_notes_modal && @notes_task}
     class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50"
@@ -5544,10 +5558,10 @@
       <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
         <div>
           <h2 class="text-lg font-semibold text-gray-900">Catatan Tugasan</h2>
-          
+
           <p class="text-xs text-gray-500 mt-1 max-w-sm truncate">{@notes_task.title || "-"}</p>
         </div>
-        
+
         <button
           type="button"
           phx-click="close_notes_modal"
@@ -5557,7 +5571,7 @@
           <.icon name="hero-x-mark" class="w-4 h-4" />
         </button>
       </div>
-      
+
       <.form for={@notes_form} phx-submit="save_notes" class="px-6 py-5 space-y-4">
         <.input
           field={@notes_form[:text]}
