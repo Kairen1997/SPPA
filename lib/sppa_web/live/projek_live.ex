@@ -32,7 +32,6 @@ defmodule SppaWeb.ProjekLive do
         |> assign(:per_page, 10)
         |> assign(:search_term, "")
         |> assign(:status_filter, "")
-        |> assign(:fasa_filter, "")
 
       # Always load projects on mount so data is shown on first render.
       # (When connected? is false, we still need to load so the initial HTML has the table.)
@@ -42,8 +41,7 @@ defmodule SppaWeb.ProjekLive do
         filter_projects(
           all_projects,
           socket.assigns.search_term,
-          socket.assigns.status_filter,
-          socket.assigns.fasa_filter
+          socket.assigns.status_filter
         )
 
       {paginated_projects, total_pages} =
@@ -134,8 +132,7 @@ defmodule SppaWeb.ProjekLive do
       filter_projects(
         socket.assigns.all_projects,
         socket.assigns.search_term,
-        socket.assigns.status_filter,
-        socket.assigns.fasa_filter
+        socket.assigns.status_filter
       )
 
     {paginated_projects, total_pages} =
@@ -154,10 +151,9 @@ defmodule SppaWeb.ProjekLive do
   def handle_event("filter_projects", params, socket) do
     search_term = Map.get(params, "search_term", "") |> String.trim()
     status_filter = Map.get(params, "status_filter", "")
-    fasa_filter = Map.get(params, "fasa_filter", "")
 
     filtered_projects =
-      filter_projects(socket.assigns.all_projects, search_term, status_filter, fasa_filter)
+      filter_projects(socket.assigns.all_projects, search_term, status_filter)
 
     {paginated_projects, total_pages} =
       paginate_projects(filtered_projects, 1, socket.assigns.per_page)
@@ -166,7 +162,6 @@ defmodule SppaWeb.ProjekLive do
      socket
      |> assign(:search_term, search_term)
      |> assign(:status_filter, status_filter)
-     |> assign(:fasa_filter, fasa_filter)
      |> assign(:page, 1)
      |> assign(:projects, paginated_projects)
      |> assign(:filtered_projects, filtered_projects)
@@ -183,7 +178,6 @@ defmodule SppaWeb.ProjekLive do
      socket
      |> assign(:search_term, "")
      |> assign(:status_filter, "")
-     |> assign(:fasa_filter, "")
      |> assign(:page, 1)
      |> assign(:projects, paginated_projects)
      |> assign(:filtered_projects, socket.assigns.all_projects)
@@ -216,12 +210,11 @@ defmodule SppaWeb.ProjekLive do
     end
   end
 
-  # Filter projects based on search term, status, and fasa
-  defp filter_projects(projects, search_term, status_filter, fasa_filter) do
+  # Filter projects based on search term and status
+  defp filter_projects(projects, search_term, status_filter) do
     projects
     |> filter_by_search(search_term)
     |> filter_by_status(status_filter)
-    |> filter_by_fasa(fasa_filter)
   end
 
   defp filter_by_search(projects, ""), do: projects
@@ -240,12 +233,6 @@ defmodule SppaWeb.ProjekLive do
 
   defp filter_by_status(projects, status) do
     Enum.filter(projects, fn project -> project.status == status end)
-  end
-
-  defp filter_by_fasa(projects, ""), do: projects
-
-  defp filter_by_fasa(projects, fasa) do
-    Enum.filter(projects, fn project -> project.fasa == fasa end)
   end
 
   # Paginate projects list

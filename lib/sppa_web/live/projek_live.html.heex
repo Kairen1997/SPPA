@@ -1283,7 +1283,7 @@
                 id="filter-form"
                 class="space-y-4"
               >
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <%!-- Search Input --%>
                   <div class="lg:col-span-2">
                     <label for="search_term" class="block text-sm font-medium text-gray-700 mb-2">
@@ -1326,43 +1326,9 @@
                       <option value="Selesai">Selesai</option>
                     </select>
                   </div>
-                  <%!-- Fasa Filter --%>
-                  <div>
-                    <label for="fasa_filter" class="block text-sm font-medium text-black mb-2">
-                      Fasa
-                    </label>
-                    <select
-                      id="fasa_filter"
-                      name="fasa_filter"
-                      value={@fasa_filter}
-                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-black"
-                    >
-                      <option value="">Semua Fasa</option>
-
-                      <option value="Analisis dan Rekabentuk">Analisis dan Rekabentuk</option>
-
-                      <option value="Soal Selidik">Soal Selidik</option>
-
-                      <option value="Jadual Projek">Jadual Projek</option>
-
-                      <option value="Pengaturcaraan">Pengaturcaraan</option>
-
-                      <option value="Pengurusan Perubahan">Pengurusan Perubahan</option>
-
-                      <option value="UAT">UAT</option>
-
-                      <option value="Ujian Keselamatan">Ujian Keselamatan</option>
-
-                      <option value="Penempatan">Penempatan</option>
-
-                      <option value="Penyerahan">Penyerahan</option>
-
-                      <option value="Maklumbalas Pelanggan">Maklumbalas Pelanggan</option>
-                    </select>
-                  </div>
                 </div>
                 <%!-- Clear Filters Button --%>
-                <%= if @search_term != "" || @status_filter != "" || @fasa_filter != "" do %>
+                <%= if @search_term != "" || @status_filter != "" do %>
                   <div class="flex items-center justify-end pt-2">
                     <button
                       type="button"
