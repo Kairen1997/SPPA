@@ -540,11 +540,14 @@ defmodule SppaWeb.ProjekTabNavigationLive do
     if is_nil(project), do: false, else: do_all_sections_complete?(socket, project)
   end
 
-  defp do_all_sections_complete?(socket, project) do
+  defp do_all_sections_complete?(socket, _project) do
     soal_selidik_ok = socket.assigns[:soal_selidik_pdf_data] != nil
-    modules = socket.assigns[:modules] || []
-    modules_ok = modules != []
-    jadual_ok = project[:tarikh_mula] != nil and project[:tarikh_siap] != nil
+    # "Modul" completion is based on modul assigned by Pengurus Projek (ProjectModules),
+    # not on Analisis & Rekabentuk modules.
+    project_modules = socket.assigns[:project_modules] || []
+    modules_ok = project_modules != []
+    # Jadual Projek tab is display-only; do not require dates for completion.
+    jadual_ok = true
     penempatan = socket.assigns[:penempatan] || []
     penempatan_ok = penempatan != []
     ujian = socket.assigns[:ujian] || []
