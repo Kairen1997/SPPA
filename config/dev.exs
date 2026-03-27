@@ -16,7 +16,7 @@ config :sppa, Sppa.Repo,
 # debugging and code reloading.
 # External System Permohonan Aplikasi API (base URL only; paths are appended in code)
 config :sppa, :system_permohonan_aplikasi,
-  base_url: "http://10.71.67.55:4000/api/requests?status=Diluluskan",
+  base_url: "http://10.71.65.109:4000/api/requests?status=Diluluskan",
   api_client: "sistem_pengurusan_pembangunan_aplikasi",
   api_key: "dev-change-me-sppa-api-key"
 
